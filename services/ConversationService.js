@@ -131,7 +131,7 @@ class ConversationService {
         if (msg.role === "user" || msg.role === "assistant") {
           messageCount++;
 
-          let roleName = msg.role === "user" ? "Bạn" : "Luna";
+          let roleName = msg.role === "user" ? "Bạn" : "Lunaby";
           let content = msg.content;
 
           if (content.length > 150) {

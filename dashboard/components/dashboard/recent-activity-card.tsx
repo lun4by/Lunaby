@@ -14,7 +14,7 @@ export function RecentActivityCard({ activities }: RecentActivityCardProps) {
     <Card className="bg-card/70">
       <CardHeader>
         <CardTitle>Hoạt động gần đây</CardTitle>
-        <CardDescription>10 thao tác cuối cùng Luna đã ghi nhận trong lịch sử quota.</CardDescription>
+        <CardDescription>10 thao tác cuối cùng Lunaby đã ghi nhận trong lịch sử quota.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {activities.length === 0 ? (

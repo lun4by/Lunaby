@@ -15,14 +15,14 @@ class APIProviderManager {
     const providers = [];
 
 
-    if (process.env.LUNA_BASE_URL && process.env.ENABLE_LOCAL_MODEL === 'true') {
+    if (process.env.LUNABY_BASE_URL && process.env.ENABLE_LOCAL_MODEL === 'true') {
         providers.push({
           name: "Local",
-          baseURL: process.env.LUNA_BASE_URL || "http://localhost:11434/v1",
+          baseURL: process.env.LUNABY_BASE_URL || "http://localhost:11434/v1",
           apiKey: "local-dummy-key-idk-what-to-put-maybe-empty",
           models: {
-            default: process.env.LUNA_DEFAULT_MODEL || "luna:30b",
-            thinking: process.env.LUNA_THINKING_MODEL || "luna:235b", 
+            default: process.env.LUNABY_DEFAULT_MODEL || "lunaby:30b",
+            thinking: process.env.LUNABY_THINKING_MODEL || "lunaby:235b", 
             image: process.env.GRADIO_IMAGE_SPACE || "stabilityai/stable-diffusion-3-medium"
           },
           headers: {
@@ -44,7 +44,7 @@ class APIProviderManager {
         },
         headers: {
           "Content-Type": "application/json",
-          "User-Agent": "Luna/v3"
+          "User-Agent": "Lunaby/v3"
         }
       });
     }
@@ -100,7 +100,7 @@ class APIProviderManager {
         headers: {
           "Content-Type": "application/json",
           "HTTP-Referer": process.env.OPENROUTER_REFERER || "https://lunaby.io.vn",
-          "X-Title": process.env.OPENROUTER_TITLE || "Luna-AI"
+          "X-Title": process.env.OPENROUTER_TITLE || "Lunaby-AI"
         }
       });
     }

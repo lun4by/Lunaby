@@ -1,8 +1,8 @@
 ﻿{
   "common": {
     "footer": {
-      "credit": "Luna AI - Phat trien boi s4ory",
-      "versionUptime": "Luna v{version} - {uptime}"
+      "credit": "Lunaby AI - Phat trien boi s4ory",
+      "versionUptime": "Lunaby v{version} - {uptime}"
     }
   },
   "commands": {
@@ -43,7 +43,7 @@
         }
       },
       "embeds": {
-        "welcomeTitle": "Tro giup Luna AI",
+        "welcomeTitle": "Tro giup Lunaby AI",
         "welcomeDescription": "Su dung menu o ben duoi de duyet cac lenh.",
         "allTitle": "Tat ca danh muc",
         "categoryTitle": "Tro giup lenh - {category}"

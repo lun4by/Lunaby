@@ -1,0 +1,29 @@
+{
+  "name": "lunaby",
+  "version": "1.0.0",
+  "description": "Bot Discord hỗ trợ trò chuyện AI và tạo hình ảnh",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": {
+    "name": "s4ory"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lun4by/Lunaby.git"
+  },
+  "dependencies": {
+    "@gradio/client": "^1.15.2",
+    "axios": "^1.10.0",
+    "canvas": "^3.1.0",
+    "discord.js": "^14.19.2",
+    "dotenv": "^16.3.1",
+    "mongodb": "^6.16.0",
+    "simple-git": "^3.26.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

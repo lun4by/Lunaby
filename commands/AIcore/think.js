@@ -84,7 +84,7 @@ module.exports = {
         errorMsg += '\n\nVui lòng thử lại sau hoặc liên hệ admin để được hỗ trợ.';
       }
       
-      errorMsg += '\n\nGợi ý: Thử sử dụng lệnh `@Luna` thay thế!';
+      errorMsg += '\n\nGợi ý: Thử sử dụng lệnh `@Lunaby` thay thế!';
 
       await interaction.editReply(errorMsg);
     }

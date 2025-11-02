@@ -38,20 +38,20 @@ async function initializeFileLogging() {
 
     logStream = fs.createWriteStream(currentLogFile, { flags: "a" });
 
-    const startupMessage = `\nLUNA AI STARTUP LOG\nStartup Time: ${new Date().toISOString()}\nEnvironment: ${
+    const startupMessage = `\nLUNABY AI STARTUP LOG\nStartup Time: ${new Date().toISOString()}\nEnvironment: ${
       process.env.NODE_ENV || "development"
     }\n=========================\n\n`;
     logStream.write(startupMessage);
 
     process.on("exit", () => {
       if (logStream) {
-        logStream.end("\nLUNA AI SHUTDOWN\n");
+        logStream.end("\nLUNABY AI SHUTDOWN\n");
       }
     });
 
     process.on("SIGINT", () => {
       if (logStream) {
-        logStream.end("\nLUNA AI INTERRUPTED\n");
+        logStream.end("\nLUNABY AI INTERRUPTED\n");
       }
       process.exit();
     });

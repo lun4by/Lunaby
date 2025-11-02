@@ -252,8 +252,8 @@ async function handleGuildJoin(guild, commands) {
     if (defaultChannel) {
       logger.info('GUILD', `Đang gửi thông báo chào tới kênh: ${defaultChannel.name}`);
       await defaultChannel.send({
-        content: `Xin chào! Luna đã sẵn sàng hỗ trợ server **${guild.name}**!\n` +
-                 `Bạn có thể chat với mình bằng cách @mention Luna hoặc sử dụng các lệnh slash.\n` +
+        content: `Xin chào! Lunaby đã sẵn sàng hỗ trợ server **${guild.name}**!\n` +
+                 `Bạn có thể chat với mình bằng cách @mention Lunaby hoặc sử dụng các lệnh slash.\n` +
                  `Cảm ơn đã thêm mình vào server!`
       });
       logger.info('GUILD', `Đã gửi thông báo chào`);

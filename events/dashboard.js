@@ -92,7 +92,7 @@ async function initDashboard(client) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %> | Luna AI</title>
+  <title><%= title %> | Lunaby AI</title>
 </head>
 <body style="font-family: Arial, sans-serif; background-color: #242629; color: #94A1B2; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
   <div style="text-align: center; padding: 20px; background-color: #16161A; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -107,13 +107,13 @@ async function initDashboard(client) {
 
     // Session configuration
     const sessionConfig = {
-      secret: 'luna-dashboard-secret',
+      secret: 'lunaby-dashboard-secret',
       cookie: {
         maxAge: 60000 * 60 * 24 // 24 hours
       },
       saveUninitialized: false,
       resave: false,
-      name: 'luna-dashboard-cookie'
+      name: 'lunaby-dashboard-cookie'
     };
 
     // Use MongoDB for session storage if available
@@ -168,17 +168,17 @@ async function initDashboard(client) {
       theme: "default"
     };
 
-    // Add Luna-specific data
+    // Add Lunaby-specific data
     try {
       const packageJson = require('../package.json');
-      dashboardApp.locals.luna = {
+      dashboardApp.locals.lunaby = {
         version: packageJson.version,
-        name: "Luna AI Dashboard"
+        name: "Lunaby AI Dashboard"
       };
     } catch (error) {
-      dashboardApp.locals.luna = {
+      dashboardApp.locals.lunaby = {
         version: '1.0.0',
-        name: "Luna AI Dashboard"
+        name: "Lunaby AI Dashboard"
       };
     }
 
