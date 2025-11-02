@@ -9,7 +9,7 @@ class DashboardService {
     this.isStarting = false;
     this.dashboardDir = path.join(process.cwd(), "dashboard");
     this.enabled =
-      (process.env.LUNA_DASHBOARD_ENABLED || "true").toLowerCase() !== "false";
+      (process.env.LUNABY_DASHBOARD_ENABLED || "true").toLowerCase() !== "false";
   }
 
   start() {
@@ -35,7 +35,7 @@ class DashboardService {
 
     const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
     const script =
-      process.env.LUNA_DASHBOARD_SCRIPT ||
+      process.env.LUNABY_DASHBOARD_SCRIPT ||
       (process.env.NODE_ENV === "production" ? "start" : "dev");
 
     logger.info(

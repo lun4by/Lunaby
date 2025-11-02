@@ -67,7 +67,7 @@ class AchievementCanvas {
       logger.warn('ACHIEVEMENT', `Không thể tải hình ảnh achievement ${path.basename(imagePath)}:`, error.message);
       
       // Fallback to default icon
-      const fallbackPath = path.join(ASSETS_PATH, 'luna-avatar.png');
+      const fallbackPath = path.join(ASSETS_PATH, 'lunaby-avatar.png');
       if (imagePath !== fallbackPath) {
         return this.loadImageWithCache(fallbackPath);
       }
@@ -233,7 +233,7 @@ class AchievementCanvas {
       // Tìm icon phù hợp
       let iconPath = path.join(ASSETS_PATH, 'xp-icon.png');
       if (!fs.existsSync(iconPath)) {
-        iconPath = path.join(ASSETS_PATH, 'luna-avatar.png');
+        iconPath = path.join(ASSETS_PATH, 'lunaby-avatar.png');
       }
       
       const icon = await this.loadImageWithCache(iconPath);

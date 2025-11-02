@@ -168,17 +168,17 @@ async function initDashboard(client) {
       theme: "default"
     };
 
-    // Add Luna-specific data
+    // Add Lunaby-specific data
     try {
       const packageJson = require('../package.json');
-      dashboardApp.locals.luna = {
+      dashboardApp.locals.lunaby = {
         version: packageJson.version,
-        name: "Luna AI Dashboard"
+        name: "Lunaby AI Dashboard"
       };
     } catch (error) {
-      dashboardApp.locals.luna = {
+      dashboardApp.locals.lunaby = {
         version: '1.0.0',
-        name: "Luna AI Dashboard"
+        name: "Lunaby AI Dashboard"
       };
     }
 

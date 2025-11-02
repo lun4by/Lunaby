@@ -69,7 +69,7 @@ class ProfileCanvas {
       logger.warn('PROFILE_CANVAS', `Không thể tải hình ảnh ${path.basename(imagePath)}:`, error.message);
       
       // Fallback to default avatar
-      const fallbackPath = path.join(ASSETS_PATH, 'luna-avatar.png');
+      const fallbackPath = path.join(ASSETS_PATH, 'lunaby-avatar.png');
       if (imagePath !== fallbackPath) {
         return this.loadImageWithCache(fallbackPath);
       }
@@ -204,7 +204,7 @@ class ProfileCanvas {
 
     // Banner overlay nếu có
     try {
-      const bannerImage = await this.loadImageWithCache(path.join(ASSETS_PATH, 'luna-banner.png'));
+      const bannerImage = await this.loadImageWithCache(path.join(ASSETS_PATH, 'lunaby-banner.png'));
       ctx.globalAlpha = 0.8;
       ctx.drawImage(bannerImage, 0, 0, width, height);
       ctx.globalAlpha = 1.0;
@@ -309,7 +309,7 @@ class ProfileCanvas {
     // Vẽ avatar image
     try {
       const avatarImage = await this.loadImageWithCache(
-        profileData.avatarURL || path.join(ASSETS_PATH, 'luna-avatar.png')
+        profileData.avatarURL || path.join(ASSETS_PATH, 'lunaby-avatar.png')
       );
       
       ctx.save();
