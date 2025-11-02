@@ -266,12 +266,12 @@ async function handleGuildJoin(guild, commands) {
 }
 
 /**
-* Thiết lập xử lý sự kiện guild cho client
-* @param {Discord.Client} client - Discord client cần thiết lập
+* Đồng bộ tất cả guilds với database và deploy commands
+* @param {Discord.Client} client - Discord client cần đồng bộ
 * @param {Array} commands - Mảng các lệnh đã tải (tùy chọn)
 */
-async function setupGuildHandlers(client, commands = null) {
-  logger.info('GUILD', 'THIẾT LẬP GUILD HANDLERS');
+async function syncAllGuilds(client, commands = null) {
+  logger.info('GUILD', 'ĐỒNG BỘ TẤT CẢ GUILDS');
 
   try {
     logger.info('GUILD', 'Đang chờ MongoDB sẵn sàng...');
@@ -282,12 +282,6 @@ async function setupGuildHandlers(client, commands = null) {
       logger.info('GUILD', 'Đang tải lệnh từ thư mục commands...');
       loadCommands(client);
     }
-
-    client.on('guildCreate', async guild => await handleGuildJoin(guild, commands));
-    logger.info('GUILD', 'Đã đăng ký event handler: guildCreate');
-
-    client.on('guildDelete', async guild => await handleGuildLeave(guild));
-    logger.info('GUILD', 'Đã đăng ký event handler: guildDelete');
 
     logger.info('GUILD', 'BẮT ĐẦU ĐỒNG BỘ VÀ DEPLOY CHO TẤT CẢ GUILDS');
     const guilds = client.guilds.cache;
@@ -357,7 +351,7 @@ module.exports = {
   handleGuildJoin,
   handleGuildLeave,
   deployCommandsToGuild,
-  setupGuildHandlers,
+  syncAllGuilds,
   getGuildFromDB,
   updateGuildSettings,
   storeGuildInDB
