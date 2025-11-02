@@ -229,7 +229,7 @@ class ImageService {
         buffer: imageBuffer,
         url: imageUrl.startsWith("data:image") ? "base64_image_data" : imageUrl,
         localPath: outputPath,
-        source: `Luna-image`,
+        source: `Lunaby-image`,
       };
     } catch (error) {
       if (!this.generateImage.isBlocked) {
