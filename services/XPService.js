@@ -1,0 +1,226 @@
+const ProfileDB = require('./profiledb');
+const logger = require('../utils/logger');
+
+/**
+ * Service quản lý hệ thống XP theo phong cách MaiSakurajima
+ * Tích hợp với profiledb.js có sẵn
+ */
+class XPService {
+  constructor() {
+    this.cooldowns = new Map();
+    this.cooldownTime = 60000; // 60 giây
+  }
+
+  /**
+   * Kiểm tra cooldown của user
+   */
+  isOnCooldown(userId) {
+    return this.cooldowns.has(userId);
+  }
+
+  /**
+   * Thêm user vào cooldown
+   */
+  addCooldown(userId) {
+    this.cooldowns.set(userId, Date.now());
+    setTimeout(() => {
+      this.cooldowns.delete(userId);
+    }, this.cooldownTime);
+  }
+
+  /**
+   * Tính XP cần thiết cho level tiếp theo
+   * Formula: lvlcap = 150 * (level * 2)
+   */
+  calculateLevelCap(level) {
+    return 150 * (level * 2);
+  }
+
+  /**
+   * Tính tổng XP cần để đạt level
+   */
+  calculateTotalXPForLevel(level) {
+    let total = 0;
+    for (let i = 1; i < level; i++) {
+      total += this.calculateLevelCap(i);
+    }
+    return total;
+  }
+
+  /**
+   * Tính XP hiện tại trong level
+   */
+  calculateCurrentLevelXP(totalXP, level) {
+    const previousLevelXP = this.calculateTotalXPForLevel(level);
+    return totalXP - previousLevelXP;
+  }
+
+  /**
+   * Tính XP tối đa trong level hiện tại
+   */
+  calculateMaxLevelXP(level) {
+    return this.calculateLevelCap(level);
+  }
+
+  /**
+   * Thêm XP cho user (dùng profiledb có sẵn)
+   */
+  async addXP(message) {
+    try {
+      // Kiểm tra điều kiện
+      if (message.author.bot) return null;
+      if (message.content.startsWith('!') || message.content.startsWith('/')) return null;
+      if (this.isOnCooldown(message.author.id)) return null;
+
+      // Lấy profile từ profiledb
+      const profile = await ProfileDB.getProfile(message.author.id);
+      
+      // Tìm hoặc tạo XP data cho guild này
+      let serverXP = profile.data.xp.find(x => x.id === message.guild.id);
+      
+      if (!serverXP) {
+        serverXP = {
+          id: message.guild.id,
+          xp: 0,
+          level: 1
+        };
+        profile.data.xp.push(serverXP);
+      }
+
+      // Tính XP ngẫu nhiên (15-25)
+      const xpAdd = Math.floor(Math.random() * 10) + 15;
+      const currentXP = serverXP.xp;
+      const currentLevel = serverXP.level;
+      
+      // Cập nhật XP
+      serverXP.xp = currentXP + xpAdd;
+
+      // Kiểm tra level up
+      const nextLevelXP = this.calculateTotalXPForLevel(currentLevel + 1);
+      
+      let leveledUp = false;
+      if (serverXP.xp >= nextLevelXP) {
+        serverXP.level = currentLevel + 1;
+        leveledUp = true;
+      }
+
+      // Lưu vào DB
+      const collection = await ProfileDB.getProfileCollection();
+      await collection.updateOne(
+        { _id: message.author.id },
+        { $set: { 'data.xp': profile.data.xp } }
+      );
+      
+      // Thêm cooldown
+      this.addCooldown(message.author.id);
+
+      logger.debug('XP', `${message.author.tag} +${xpAdd} XP (Level ${serverXP.level})`);
+
+      return {
+        xpAdded: true,
+        xpGained: xpAdd,
+        totalXP: serverXP.xp,
+        level: serverXP.level,
+        leveledUp: leveledUp,
+        previousLevel: currentLevel
+      };
+    } catch (error) {
+      logger.error('XP', 'Lỗi khi thêm XP:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Lấy thông tin XP của user
+   */
+  async getUserXP(guildId, userId) {
+    try {
+      const profile = await ProfileDB.getProfile(userId);
+      let serverXP = profile.data.xp.find(x => x.id === guildId);
+
+      if (!serverXP) {
+        serverXP = {
+          id: guildId,
+          xp: 0,
+          level: 1
+        };
+      }
+
+      const currentLevelXP = this.calculateCurrentLevelXP(serverXP.xp, serverXP.level);
+      const maxLevelXP = this.calculateMaxLevelXP(serverXP.level);
+      const percentage = Math.round((currentLevelXP / maxLevelXP) * 100);
+
+      return {
+        xp: serverXP.xp,
+        level: serverXP.level,
+        currentLevelXP: currentLevelXP,
+        maxLevelXP: maxLevelXP,
+        percentage: percentage
+      };
+    } catch (error) {
+      logger.error('XP', 'Lỗi khi lấy thông tin XP:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Lấy leaderboard của guild
+   */
+  async getLeaderboard(guildId, limit = 10) {
+    try {
+      const collection = await ProfileDB.getProfileCollection();
+      const profiles = await collection.find({
+        'data.xp': { $elemMatch: { id: guildId } }
+      }).toArray();
+
+      // Extract và sort XP data
+      const leaderboard = profiles
+        .map(profile => {
+          const serverXP = profile.data.xp.find(x => x.id === guildId);
+          return {
+            userId: profile._id,
+            xp: serverXP.xp,
+            level: serverXP.level
+          };
+        })
+        .sort((a, b) => b.xp - a.xp)
+        .slice(0, limit);
+
+      return leaderboard;
+    } catch (error) {
+      logger.error('XP', 'Lỗi khi lấy leaderboard:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Lấy rank của user trong guild
+   */
+  async getUserRank(guildId, userId) {
+    try {
+      const collection = await ProfileDB.getProfileCollection();
+      const profiles = await collection.find({
+        'data.xp': { $elemMatch: { id: guildId } }
+      }).toArray();
+
+      // Sort theo XP
+      const sorted = profiles
+        .map(profile => {
+          const serverXP = profile.data.xp.find(x => x.id === guildId);
+          return {
+            userId: profile._id,
+            xp: serverXP ? serverXP.xp : 0
+          };
+        })
+        .sort((a, b) => b.xp - a.xp);
+
+      const rank = sorted.findIndex(u => u.userId === userId) + 1;
+      return rank || sorted.length + 1;
+    } catch (error) {
+      logger.error('XP', 'Lỗi khi lấy rank:', error);
+      return 0;
+    }
+  }
+}
+
+module.exports = new XPService();
