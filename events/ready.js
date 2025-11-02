@@ -115,9 +115,9 @@ async function startbot(client, loadCommands) {
     }
 
     try {
-      await setupGuildHandlers(client);
+      await syncAllGuilds(client);
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi thiết lập guild handlers:', error);
+      logger.error('SYSTEM', 'Lỗi khi đồng bộ guilds:', error);
       logger.error('SYSTEM', 'Stack trace:', error.stack);
     }
 
