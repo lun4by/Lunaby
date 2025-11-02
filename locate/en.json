@@ -1,8 +1,8 @@
 ﻿{
   "common": {
     "footer": {
-      "credit": "Luna AI - Developed by s4ory",
-      "versionUptime": "Luna v{version} - {uptime}"
+      "credit": "Lunaby AI - Developed by s4ory",
+      "versionUptime": "Lunaby v{version} - {uptime}"
     }
   },
   "commands": {
@@ -43,7 +43,7 @@
         }
       },
       "embeds": {
-        "welcomeTitle": "Luna AI Help",
+        "welcomeTitle": "Lunaby AI Help",
         "welcomeDescription": "Use the dropdown menu below to explore commands.",
         "allTitle": "All Categories",
         "categoryTitle": "Command Help - {category}"
