@@ -116,7 +116,7 @@ function createStatusEmbed(context, { ping, ws }) {
 		.setColor(statusColor)
 		.setAuthor({
 			name: 'Lunaby AI',
-			iconURL: 'https://raw.githubusercontent.com/miyuki2002/Luna-AI/refs/heads/main/assets/lunaby-avatar.png',
+			iconURL: 'https://raw.githubusercontent.com/Lun4by/Lunaby/refs/heads/main/assets/lunaby-avatar.png',
 		})
 		.setTitle(t(context, 'commands.ping.embeds.status.title'))
 		.addFields({

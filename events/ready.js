@@ -4,7 +4,7 @@ const storageDB = require('../services/storagedb.js');
 const initSystem = require('../services/initSystem.js');
 const GuildProfileDB = require('../services/guildprofiledb.js');
 const ownerService = require('../services/ownerService.js');
-const { setupGuildHandlers } = require('../handlers/guildHandler');
+const { syncAllGuilds } = require('../handlers/guildHandler');
 const logger = require('../utils/logger.js');
 // const AutoUpdateService = require('../services/AutoUpdateService');
 const APIProviderManager = require('../services/providers.js');
@@ -115,9 +115,9 @@ async function startbot(client, loadCommands) {
     }
 
     try {
-      await setupGuildHandlers(client);
+      await syncAllGuilds(client);
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi thiết lập guild handlers:', error);
+      logger.error('SYSTEM', 'Lỗi khi đồng bộ guilds:', error);
       logger.error('SYSTEM', 'Stack trace:', error.stack);
     }
 

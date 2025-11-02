@@ -51,7 +51,7 @@ class ConsentService {
       .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512 }))
       .setFooter({ 
         text: 'Lunaby AI • Developed by s4ory', 
-        iconURL: 'https://raw.githubusercontent.com/miyuki2002/Luna-AI/refs/heads/main/assets/lunaby-avatar.png' 
+        iconURL: 'https://raw.githubusercontent.com/Lun4by/Lunaby/refs/heads/main/assets/lunaby-avatar.png' 
       })
       .setTimestamp();
 

@@ -3,15 +3,13 @@ const {
 	Client,
 	GatewayIntentBits,
 	Partials,
-	Events,
 	Collection,
 	} = require("discord.js");
-const { handleMentionMessage } = require("./handlers/messageHandler");
-const { handleCommand, loadCommands } = require("./handlers/commandHandler");
-const { handleConsentInteraction } = require("./handlers/consentHandler");
-const { handleResetdbInteraction } = require("./handlers/resetdbHandler");
+const { loadCommands } = require("./handlers/commandHandler");
 const { startbot } = require("./events/ready");
-const { setupGuildHandlers } = require("./handlers/guildHandler");
+const { setupGuildEvents } = require("./events/guildEvents");
+const { setupInteractionCreateEvent } = require("./events/interactionCreate");
+const { setupMessageCreateEvent } = require("./events/messageCreate");
 const logger = require("./utils/logger.js");
 
 const client = new Client({
@@ -29,23 +27,12 @@ const client = new Client({
 client.commands = new Collection();
 client.features = ["EXPERIENCE_POINTS"];
 
+// Setup event handlers
+setupGuildEvents(client);
+setupInteractionCreateEvent(client);
+setupMessageCreateEvent(client);
+
 startbot(client, () => loadCommands(client));
-
-client.on(Events.MessageCreate, async (message) => {
-	await handleMentionMessage(message, client);
-});
-
-client.on(Events.InteractionCreate, async (interaction) => {
-	if (interaction.isChatInputCommand()) {
-		await handleCommand(interaction, client);
-	} else if (interaction.isButton()) {
-		if (interaction.customId.startsWith('consent_')) {
-			await handleConsentInteraction(interaction);
-		} else if (interaction.customId.startsWith('resetdb_') || interaction.customId.startsWith('resetuser_')) {
-			await handleResetdbInteraction(interaction);
-		}
-	}
-});
 
 process.on("unhandledRejection", (error) => {
 	logger.error("SYSTEM", "Lỗi không được xử lý:", error);
