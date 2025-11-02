@@ -135,7 +135,7 @@ function buildActionRow(context) {
 			.setStyle(ButtonStyle.Link),
 		new ButtonBuilder()
 			.setLabel(t(context, 'commands.about.buttons.docs'))
-			.setURL('https://github.com/miyuki2002/Luna-AI')
+			.setURL('https://github.com/Lun4by/Lunaby')
 			.setStyle(ButtonStyle.Link),
 		new ButtonBuilder()
 			.setLabel(t(context, 'commands.about.buttons.support'))
