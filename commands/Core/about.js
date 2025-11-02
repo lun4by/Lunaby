@@ -94,7 +94,7 @@ async function renderAboutCanvas(context, data) {
 
 	ctx.font = 'bold 40px Sans';
 	ctx.fillStyle = '#FFFFFF';
-	ctx.fillText('Luna AI', 140, 85);
+	ctx.fillText('Lunaby AI', 140, 85);
 
 	ctx.font = '20px Sans';
 	ctx.fillStyle = '#AE86FD';
