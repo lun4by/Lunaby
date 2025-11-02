@@ -1,0 +1,113 @@
+[
+  {
+    "id": 1,
+    "name": "Sakura Background",
+    "description": "Nền hoa anh đào đẹp mắt cho profile card",
+    "type": "background",
+    "url": "https://i.imgur.com/57eRI6H.jpg",
+    "price": 5000,
+    "rarity": "common"
+  },
+  {
+    "id": 2,
+    "name": "Night Sky Background",
+    "description": "Nền bầu trời đêm đầy sao",
+    "type": "background",
+    "url": "https://i.imgur.com/djHyEE0.png",
+    "price": 8000,
+    "rarity": "rare"
+  },
+  {
+    "id": 3,
+    "name": "Ocean Waves Background",
+    "description": "Nền sóng biển xanh mát",
+    "type": "background",
+    "url": "https://i.imgur.com/bnLhXeW.jpg",
+    "price": 10000,
+    "rarity": "rare"
+  },
+  {
+    "id": 4,
+    "name": "Geometric Pattern",
+    "description": "Pattern hình học hiện đại",
+    "type": "pattern",
+    "url": "https://i.imgur.com/nx5qJUb.png",
+    "price": 3000,
+    "rarity": "common"
+  },
+  {
+    "id": 5,
+    "name": "Stars Pattern",
+    "description": "Pattern ngôi sao lấp lánh",
+    "type": "pattern",
+    "url": "https://i.imgur.com/bnLhXeW.jpg",
+    "price": 4000,
+    "rarity": "common"
+  },
+  {
+    "id": 6,
+    "name": "Gold Crown Emblem",
+    "description": "Biểu tượng vương miện vàng",
+    "type": "emblem",
+    "url": "https://i.imgur.com/example_crown.png",
+    "price": 15000,
+    "rarity": "epic"
+  },
+  {
+    "id": 7,
+    "name": "Dragon Emblem",
+    "description": "Biểu tượng rồng oán hận",
+    "type": "emblem",
+    "url": "https://i.imgur.com/example_dragon.png",
+    "price": 20000,
+    "rarity": "legendary"
+  },
+  {
+    "id": 8,
+    "name": "Bronze Wreath",
+    "description": "Vòng nguyệt quế đồng - Top 10 server",
+    "type": "wreath",
+    "url": "https://i.imgur.com/example_bronze_wreath.png",
+    "price": 0,
+    "rarity": "achievement",
+    "requirement": "Top 10 XP trong server"
+  },
+  {
+    "id": 9,
+    "name": "Silver Wreath",
+    "description": "Vòng nguyệt quế bạc - Top 5 server",
+    "type": "wreath",
+    "url": "https://i.imgur.com/example_silver_wreath.png",
+    "price": 0,
+    "rarity": "achievement",
+    "requirement": "Top 5 XP trong server"
+  },
+  {
+    "id": 10,
+    "name": "Gold Wreath",
+    "description": "Vòng nguyệt quế vàng - Top 1 server",
+    "type": "wreath",
+    "url": "https://i.imgur.com/example_gold_wreath.png",
+    "price": 0,
+    "rarity": "achievement",
+    "requirement": "Top 1 XP trong server"
+  },
+  {
+    "id": 11,
+    "name": "Party Hat",
+    "description": "Mũ tiệc vui vẻ",
+    "type": "hat",
+    "url": "https://i.imgur.com/example_party_hat.png",
+    "price": 5000,
+    "rarity": "common"
+  },
+  {
+    "id": 12,
+    "name": "Witch Hat",
+    "description": "Mũ phù thủy bí ẩn",
+    "type": "hat",
+    "url": "https://i.imgur.com/example_witch_hat.png",
+    "price": 12000,
+    "rarity": "rare"
+  }
+]
