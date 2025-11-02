@@ -15,7 +15,7 @@ const overviewConfig = [
     key: "daily",
     label: "Thông điệp hôm nay",
     icon: MessageCircle,
-    description: "Tổng số request Luna đã xử lý trong 24h qua."
+    description: "Tổng số request Lunaby đã xử lý trong 24h qua."
   },
   {
     key: "weekly",
@@ -27,7 +27,7 @@ const overviewConfig = [
     key: "activeUsers",
     label: "Người dùng hoạt động",
     icon: Clock,
-    description: "Người đã sử dụng Luna trong 24h gần nhất."
+    description: "Người đã sử dụng Lunaby trong 24h gần nhất."
   }
 ] as const;
 

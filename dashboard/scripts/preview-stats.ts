@@ -5,7 +5,7 @@ import { getDashboardStats } from "../lib/stats";
 async function main() {
   try {
     const stats = await getDashboardStats();
-    console.log("Luna Dashboard Preview");
+    console.log("Lunaby Dashboard Preview");
     console.log("Profiles:", stats.totals.totalProfiles);
     console.log("Guilds:", stats.totals.totalGuilds);
     console.log("Consent accepted:", stats.totals.consentAccepted);

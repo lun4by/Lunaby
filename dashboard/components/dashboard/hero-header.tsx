@@ -24,13 +24,13 @@ export const HeroHeader = memo(function HeroHeader({
         <div className="flex flex-col gap-2">
           <Badge variant="outline" className="w-fit bg-primary/10 text-primary">
             <RocketIcon className="mr-2 h-4 w-4" />
-            Luna Control Center
+            Lunaby Control Center
           </Badge>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
             Welcome back, Captain!
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-            Theo dõi tình trạng hoạt động của Luna AI, kiểm soát quota và hiểu rõ cách người dùng đang tương tác.
+            Theo dõi tình trạng hoạt động của Lunaby AI, kiểm soát quota và hiểu rõ cách người dùng đang tương tác.
             Dashboard làm mới mỗi phút hoặc bạn có thể cập nhật thủ công bất kỳ lúc nào.
           </p>
         </div>

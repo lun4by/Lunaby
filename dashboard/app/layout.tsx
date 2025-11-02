@@ -3,9 +3,9 @@ import { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Luna Control Center",
+  title: "Lunaby Control Center",
   description:
-    "Operational dashboard for Luna AI Discord bot with modern UI design.",
+    "Operational dashboard for Lunaby AI Discord bot with modern UI design.",
   viewport: {
     width: "device-width",
     initialScale: 1,
