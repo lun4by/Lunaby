@@ -15,7 +15,7 @@ const { translate: t } = require('../../utils/i18n');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('about')
-		.setDescription('Hiển thị thông tin chi tiết về Luna bot'),
+		.setDescription('Hiển thị thông tin chi tiết về Lunaby bot'),
 
 	async execute(interaction) {
 		await interaction.deferReply();
@@ -24,11 +24,11 @@ module.exports = {
 
 		try {
 			const canvasBuffer = await renderAboutCanvas(interaction, contextData);
-			const attachment = new AttachmentBuilder(canvasBuffer, { name: 'about-luna.png' });
+			const attachment = new AttachmentBuilder(canvasBuffer, { name: 'about-lunaby.png' });
 
 			const aboutEmbed = new EmbedBuilder()
 				.setColor(0x9B59B6)
-				.setImage('attachment://about-luna.png')
+				.setImage('attachment://about-lunaby.png')
 				.setFooter({ text: t(interaction, 'commands.about.embed.footer') });
 
 			const row = buildActionRow(interaction);
