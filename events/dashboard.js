@@ -113,7 +113,7 @@ async function initDashboard(client) {
       },
       saveUninitialized: false,
       resave: false,
-      name: 'luna-dashboard-cookie'
+      name: 'lunaby-dashboard-cookie'
     };
 
     // Use MongoDB for session storage if available
