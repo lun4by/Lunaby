@@ -1,6 +1,6 @@
 const axios = require("axios");
 const logger = require("../utils/logger.js");
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 
 class MyAnimeListAPI {
   constructor() {
