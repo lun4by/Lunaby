@@ -3,15 +3,13 @@ const {
 	Client,
 	GatewayIntentBits,
 	Partials,
-	Events,
 	Collection,
 	} = require("discord.js");
-const { handleMentionMessage } = require("./handlers/messageHandler");
-const { handleCommand, loadCommands } = require("./handlers/commandHandler");
-const { handleConsentInteraction } = require("./handlers/consentHandler");
-const { handleResetdbInteraction } = require("./handlers/resetdbHandler");
+const { loadCommands } = require("./handlers/commandHandler");
 const { startbot } = require("./events/ready");
-const { setupGuildHandlers } = require("./handlers/guildHandler");
+const { setupGuildEvents } = require("./events/guildEvents");
+const { setupInteractionCreateEvent } = require("./events/interactionCreate");
+const { setupMessageCreateEvent } = require("./events/messageCreate");
 const logger = require("./utils/logger.js");
 
 const client = new Client({
