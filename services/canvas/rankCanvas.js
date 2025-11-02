@@ -42,6 +42,10 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
     birthday = 'Not Set'
   } = profileCustomization;
 
+  const displayBio = bio || 'No bio written.';
+  const displayBirthday = birthday || 'Not Set';
+  const displayColor = color || 'rgb(255,182,193)';
+
   let defBackground, defPattern, avatarImg, emblemImg, wreathImg, hatImg;
   
   try {
@@ -136,7 +140,7 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
   ctx.font = '15px sans-serif';
   ctx.fillStyle = 'rgba(0,0,0,0.8)';
   ctx.textAlign = 'center';
-  wrapText(ctx, bio, 555, 368, 490, 20);
+  wrapText(ctx, displayBio, 555, 368, 480, 20);
 
   ctx.beginPath();
   ctx.moveTo(410, 419);
@@ -145,7 +149,7 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
   ctx.arcTo(540, 459, 520, 459, 20);
   ctx.lineTo(330, 459);
   ctx.arcTo(310, 459, 310, 439, 20);
-  ctx.arcTo(310, 419, 320, 419, 20);
+  ctx.arcTo(310, 419, 330, 419, 20);
   ctx.stroke();
 
   ctx.font = 'bold 18px sans-serif';
@@ -155,7 +159,7 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
 
   ctx.font = '15px sans-serif';
   ctx.fillStyle = 'rgba(0,0,0,0.8)';
-  ctx.fillText(birthday, 330, 445, 230);
+  ctx.fillText(displayBirthday, 330, 445, 230);
 
   ctx.beginPath();
   ctx.moveTo(410, 479);
@@ -171,6 +175,7 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
 
   ctx.font = 'bold 18px sans-serif';
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.textAlign = 'left';
   ctx.fillText('BALANCE', 330, 485, 80);
 
   ctx.font = '18px sans-serif';
@@ -183,12 +188,13 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.font = 'bold 25px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('NO', 660, 469, 150);
-    ctx.fillText('EMBLEM', 660, 500, 150);
+    ctx.fillText('NO', 660, 474, 150);
+    ctx.fillText('EMBLEM', 660, 505, 150);
   } else {
     ctx.shadowBlur = 10;
     ctx.shadowOffsetX = 10;
     ctx.shadowOffsetY = 10;
+    ctx.beginPath();
     ctx.drawImage(emblemImg, 580, 400, 160, 160);
   }
 
@@ -197,7 +203,7 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
   ctx.lineTo(575, 10);
   ctx.lineTo(600, 80);
   ctx.lineTo(800, 80);
-  ctx.fillStyle = color;
+  ctx.fillStyle = displayColor;
   ctx.shadowBlur = 30;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 30;
@@ -209,7 +215,7 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
   ctx.fillText('TIP', 610, 50, 50);
 
   ctx.textAlign = 'right';
-  ctx.fillText('0', canvas.width - 30, 50, 120);
+  ctx.fillText('0', canvas.width - 30, 50, 150);
 
   ctx.shadowOffsetY = 0;
 
@@ -249,7 +255,7 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
   ctx.lineTo(300, 585);
   ctx.lineTo(50, 585);
   ctx.arcTo(0, 585, 0, 535, 50);
-  ctx.fillStyle = color;
+  ctx.fillStyle = displayColor;
   ctx.fill();
   ctx.shadowBlur = 0;
 
@@ -276,9 +282,9 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
   ctx.font = 'bold 25px sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
-  ctx.fillText(String(level), 60, 460, 35);
+  ctx.fillText(String(level), 60, 465, 35);
   ctx.font = 'bold 15px sans-serif';
-  ctx.fillText('LEVEL', 60, 480, 35);
+  ctx.fillText('LEVEL', 60, 485, 35);
 
   ctx.beginPath();
   ctx.arc(150, 460, 40, 0, Math.PI * 2);
@@ -287,12 +293,12 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
 
   ctx.beginPath();
   ctx.font = 'bold 30px sans-serif';
-  ctx.fillStyle = color;
+  ctx.fillStyle = displayColor;
   ctx.textAlign = 'center';
   const rankText = rank ? text.ordinalize(rank) : 'N/A';
-  ctx.fillText(rankText, 150, 460, 50);
+  ctx.fillText(rankText, 150, 465, 50);
   ctx.font = 'bold 15px sans-serif';
-  ctx.fillText('SERVER', 150, 480, 50);
+  ctx.fillText('SERVER', 150, 485, 50);
 
   ctx.beginPath();
   ctx.arc(240, 460, 40, 0, Math.PI * 2);
@@ -301,11 +307,11 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
 
   ctx.beginPath();
   ctx.font = 'bold 30px sans-serif';
-  ctx.fillStyle = color;
+  ctx.fillStyle = displayColor;
   ctx.textAlign = 'center';
-  ctx.fillText('N/A', 240, 460, 50);
+  ctx.fillText('N/A', 240, 465, 50);
   ctx.font = 'bold 15px sans-serif';
-  ctx.fillText('GLOBAL', 240, 480, 50);
+  ctx.fillText('GLOBAL', 240, 485, 50);
 
   ctx.beginPath();
   ctx.arc(150, 225, 75, 0, Math.PI * 2);
