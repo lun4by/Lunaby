@@ -35,11 +35,11 @@ class APIProviderManager {
      if (process.env.LUNABY_API_KEY) {
       providers.push({
         name: "Lunaby",
-        baseURL: process.env.LUNABY_BASE_URL || "http://localhost/v1",
+        baseURL: process.env.LUNABY_BASE_URL || "http://47.84.119.102/v1",
         apiKey: process.env.LUNABY_API_KEY,
         models: {
-          default: "lunaby-fast",
-          thinking: "lunaby-pro"
+          default: "lunaby-pro",
+          thinking: "lunaby-reasoning"
         },
         headers: {
           "Content-Type": "application/json"
@@ -50,7 +50,7 @@ class APIProviderManager {
     if (process.env.PERPLEXITY_API_KEY) {
       providers.push({
         name: "Perplexity",
-        baseURL: process.env.PERPLEXITY_BASE_URL || "https://api.perplexity.ai/",
+        baseURL: process.env.PERPLEXITY_BASE_URL || "https://api.perplexity.ai",
         apiKey: process.env.PERPLEXITY_API_KEY,
         models: {
           default: "sonar",
