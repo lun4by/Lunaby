@@ -135,6 +135,8 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
   ctx.font = 'bold 20px sans-serif';
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
   ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
   ctx.fillText('BIO', 330, 345, 50);
 
   ctx.font = '15px sans-serif';
@@ -229,6 +231,8 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
   ctx.arcTo(300, 15, 250, 15, 50);
   ctx.lineTo(50, 15);
   ctx.arcTo(0, 15, 0, 65, 50);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
   ctx.stroke();
   ctx.shadowBlur = 10;
   ctx.shadowOffsetX = 10;

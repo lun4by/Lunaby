@@ -31,6 +31,21 @@ class APIProviderManager {
           isLocal: true
         });
       }
+
+     if (process.env.LUNABY_API_KEY) {
+      providers.push({
+        name: "Lunaby",
+        baseURL: process.env.LUNABY_BASE_URL || "http://localhost/v1",
+        apiKey: process.env.LUNABY_API_KEY,
+        models: {
+          default: "lunaby-fast",
+          thinking: "lunaby-pro"
+        },
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    }
     
     if (process.env.PERPLEXITY_API_KEY) {
       providers.push({
@@ -48,8 +63,6 @@ class APIProviderManager {
         }
       });
     }
-
-
 
     if (process.env.ALIBABA_API_KEY) {
       providers.push({

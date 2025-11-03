@@ -6,9 +6,9 @@
       "EMBED_LINKS"
     ],
     "group": "AIcore",
-    "description": "Vẽ một hình ảnh từ trí tưởng tượng của bạn",
+    "description": "Vẽ một hình ảnh từ ý tưởng của bạn",
     "parameters": [
-      "Hãy mô tả bức tranh bạn muốn tôi vẽ (bắt buộc)"
+      "Mô tả bức tranh bạn muốn mình tạo (bắt buộc)"
     ],
     "examples": [
       "/image",
@@ -120,10 +120,10 @@
       "EMBED_LINKS"
     ],
     "group": "Core",
-    "description": "Xem thống kê lượt nhắn tin đã sử dụng",
+    "description": "Xem thống kê hạn ngạch tin nhắn",
     "parameters": [
-      "Xem thống kê lượt nhắn tin đã sử dụng của một người dùng (tùy chọn)",
-      "Xem thống kê lượt nhắn tin đã sử dụng của toàn hệ thống (Owner/Admin only) (tùy chọn)"
+      "Xem thống kê hạn ngạch tin nhắn của người dùng (tùy chọn)",
+      "Xem thống kê hạn ngạch toàn hệ thống (Owner/Admin) (tùy chọn)"
     ],
     "examples": [
       "/quotas"
@@ -141,11 +141,11 @@
       "EMBED_LINKS"
     ],
     "group": "moderation",
-    "description": "Ban một thành viên khỏi server",
+    "description": "Cấm một người dùng khỏi server",
     "parameters": [
-      "Thành viên cần ban (bắt buộc)",
-      "Lý do ban (tùy chọn)",
-      "Số ngày xóa tin nhắn (0-7) (tùy chọn)"
+      "Người dùng cần cấm (bắt buộc)",
+      "Lý do cấm (tùy chọn)",
+      "Số ngày tin nhắn cần xóa (0-7) (tùy chọn)"
     ],
     "examples": [
       "/ban",
@@ -187,10 +187,10 @@
       "EMBED_LINKS"
     ],
     "group": "moderation",
-    "description": "Kick một thành viên khỏi server",
+    "description": "Đuổi một thành viên khỏi server",
     "parameters": [
-      "Thành viên cần kick (bắt buộc)",
-      "Lý do kick (tùy chọn)"
+      "Thành viên cần đuổi (bắt buộc)",
+      "Lý do đuổi (tùy chọn)"
     ],
     "examples": [
       "/kick",
@@ -377,18 +377,179 @@
     "cooldown": null
   },
   {
+    "name": "inventory",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Xem các items trong inventory của bạn",
+    "parameters": [],
+    "examples": [
+      "/inventory"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "leaderboard",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Hiển thị bảng xếp hạng XP của server",
+    "parameters": [],
+    "examples": [
+      "/leaderboard"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
     "name": "profile",
     "aliases": [],
     "clientPermissions": [
       "EMBED_LINKS"
     ],
     "group": "social",
-    "description": "Hiển thị XP hiện tại, cấp độ, xếp hạng và các thông tin khác của người dùng",
+    "description": "Hiển thị profile card với XP, level, rank và thông tin cá nhân",
     "parameters": [
-      "Người dùng mà bạn muốn xem hồ sơ (tùy chọn)"
+      "Người dùng mà bạn muốn xem profile (tùy chọn)"
     ],
     "examples": [
       "/profile"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "rank",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Hiển thị rank, level và XP của người dùng",
+    "parameters": [
+      "Người dùng cần xem rank (tùy chọn)"
+    ],
+    "examples": [
+      "/rank"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "setbio",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Đặt bio cho profile card của bạn",
+    "parameters": [
+      "Nội dung bio (tối đa 200 ký tự) (bắt buộc)"
+    ],
+    "examples": [
+      "/setbio",
+      "/setbio <bio>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "setbirthday",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Đặt ngày sinh cho profile card",
+    "parameters": [
+      "Ngày sinh theo định dạng DD-MM (ví dụ: 02-12) (bắt buộc)"
+    ],
+    "examples": [
+      "/setbirthday",
+      "/setbirthday <date>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "setcolor",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Đặt màu chủ đạo cho profile card",
+    "parameters": [
+      "Mã màu hex (ví dụ: #FF0000) hoặc \"default\" để reset (bắt buộc)"
+    ],
+    "examples": [
+      "/setcolor",
+      "/setcolor <color>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "unequip",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Gỡ bỏ item đã trang bị khỏi profile card",
+    "parameters": [
+      "Loại item cần gỡ (bắt buộc) - Lựa chọn: Background (Nền), Pattern (Họa tiết), Emblem (Biểu tượng), Hat (Mũ), Wreath (Vòng nguyệt quế)"
+    ],
+    "examples": [
+      "/unequip",
+      "/unequip Background (Nền)"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "use",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Trang bị một item từ inventory vào profile card",
+    "parameters": [
+      "ID của item cần trang bị (bắt buộc)"
+    ],
+    "examples": [
+      "/use",
+      "/use <id>"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
@@ -423,7 +584,7 @@
       "EMBED_LINKS"
     ],
     "group": "system",
-    "description": "Quản lý cài đặt hệ thống ghi log",
+    "description": "Quản lý cài đặt hệ thống ghi log (chỉ dành cho owner)",
     "parameters": [
       "Xem trạng thái hiện tại của hệ thống ghi log (tùy chọn)",
       "Bật hệ thống ghi log (tùy chọn)",
@@ -468,7 +629,7 @@
       "EMBED_LINKS"
     ],
     "group": "system",
-    "description": "Reset lượt nhắn tin cho người dùng (Owner/Admin only)",
+    "description": "Reset lượt nhắn tin cho người dùng (chỉ dành cho owner)",
     "parameters": [
       "Người dùng cần reset lượt nhắn tin đã sử dụng (bắt buộc)",
       "Loại reset (bắt buộc) - Lựa chọn: Hàng ngày, Hàng tuần, Hàng tháng, Tất cả"
@@ -503,36 +664,13 @@
     "cooldown": null
   },
   {
-    "name": "setrole",
-    "aliases": [],
-    "clientPermissions": [
-      "ADMINISTRATOR",
-      "EMBED_LINKS"
-    ],
-    "group": "system",
-    "description": "Đặt vai trò cho người dùng (Owner/Admin only)",
-    "parameters": [
-      "Người dùng cần đặt vai trò (bắt buộc)",
-      "Vai trò mới (bắt buộc) - Lựa chọn: Owner, Admin, Helper, User"
-    ],
-    "examples": [
-      "/setrole",
-      "/setrole <user> Owner"
-    ],
-    "guildOnly": false,
-    "requiresDatabase": false,
-    "rankcommand": false,
-    "nsfw": false,
-    "cooldown": null
-  },
-  {
     "name": "update",
     "aliases": [],
     "clientPermissions": [
       "EMBED_LINKS"
     ],
     "group": "system",
-    "description": "[ADMIN] Kiểm tra và cập nhật bot từ GitHub",
+    "description": "Kiểm tra và cập nhật bot từ GitHub (chỉ dành cho owner)",
     "parameters": [],
     "examples": [
       "/update"
