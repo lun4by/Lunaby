@@ -8,6 +8,8 @@ class APIProviderManager {
       this.currentProviderIndex = 0;
       this.failedProviders = new Set();
       this.quotaResetTimes = new Map();
+      this.axiosInstanceCache = new Map();
+      this.lastRequestTime = new Map();
   }
 
 
@@ -215,6 +217,11 @@ class APIProviderManager {
 
 
   createAxiosInstance(provider) {
+    const cacheKey = `${provider.name}_${provider.baseURL}`;
+    if (this.axiosInstanceCache.has(cacheKey)) {
+      return this.axiosInstanceCache.get(cacheKey);
+    }
+
     const https = require("https");
     
     const options = {
@@ -223,31 +230,46 @@ class APIProviderManager {
         Authorization: `Bearer ${provider.apiKey}`,
         ...provider.headers
       },
-      timeout: 30000,
+      timeout: 25000,
+      maxRedirects: 3,
+      validateStatus: (status) => status < 500,
     };
-
 
     const certPath = process.env.CUSTOM_CA_CERT_PATH;
     const rejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0';
     
+    const agentOptions = {
+      keepAlive: true,
+      keepAliveMsecs: 1000,
+      maxSockets: 50,
+      maxFreeSockets: 10,
+      timeout: 25000,
+      freeSocketTimeout: 30000,
+    };
+    
     if (certPath && fs.existsSync(certPath)) {
       const ca = fs.readFileSync(certPath);
       options.httpsAgent = new https.Agent({ 
+        ...agentOptions,
         ca,
         rejectUnauthorized: true
       });
     } else if (!rejectUnauthorized) {
       options.httpsAgent = new https.Agent({
+        ...agentOptions,
         rejectUnauthorized: false
       });
     } else {
       options.httpsAgent = new https.Agent({
+        ...agentOptions,
         rejectUnauthorized: true
       });
     }
 
-
-    return axios.create(options);
+    const instance = axios.create(options);
+    this.axiosInstanceCache.set(cacheKey, instance);
+    
+    return instance;
   }
 
 
@@ -277,19 +299,26 @@ class APIProviderManager {
     let lastError;
     let attempts = 0;
     const maxAttempts = this.providers.length + 1;
-
+    const startTime = Date.now();
 
     while (attempts < maxAttempts) {
       this.checkAndResetExpiredProviders();
       
       const provider = this.getCurrentProvider();
       
+      // Rate limiting check - tránh spam requests
+      const lastRequest = this.lastRequestTime.get(provider.name) || 0;
+      const timeSinceLastRequest = Date.now() - lastRequest;
+      if (timeSinceLastRequest < 100) { // Tối thiểu 100ms giữa các requests
+        await new Promise(resolve => setTimeout(resolve, 100 - timeSinceLastRequest));
+      }
+      this.lastRequestTime.set(provider.name, Date.now());
+      
       try {
         const model = provider.models[modelType] || provider.models.default;
         
         if (provider.isAWSBedrock) {
           const bedrockEndpoint = `/model/${model}/converse`;
-          logger.info("PROVIDERS", `Sử dụng AWS Bedrock model: ${model}`);
           
           const bedrockRequestBody = {
             messages: requestBody.messages || [],
@@ -301,20 +330,20 @@ class APIProviderManager {
           };
           
           const axiosInstance = this.createAxiosInstance(provider);
-          logger.info("PROVIDERS", `Đang gửi request đến ${provider.baseURL}${bedrockEndpoint}`);
           const response = await axiosInstance.post(bedrockEndpoint, bedrockRequestBody);
           
           const bedrockContent = response.data?.output?.message?.content?.[0]?.text;
           
           if (!this.isValidResponse(bedrockContent)) {
-            logger.warn("PROVIDERS", `Invalid response from ${provider.name}, switching provider`);
+            logger.warn("PROVIDERS", `Invalid response from ${provider.name}, switching`);
             this.markProviderAsFailed(provider.name);
             this.switchToNextProvider();
             attempts++;
             continue;
           }
           
-          logger.info("PROVIDERS", `Successful request using ${provider.name}`);
+          const elapsed = Date.now() - startTime;
+          logger.info("PROVIDERS", `✓ ${provider.name} [${elapsed}ms]`);
           
           return {
             choices: [{
@@ -336,29 +365,31 @@ class APIProviderManager {
           model: model
         };
 
-        logger.info("PROVIDERS", `Sử dụng model: ${model}`);
         const axiosInstance = this.createAxiosInstance(provider);
-        logger.info("PROVIDERS", `Đang gửi request đến ${provider.baseURL}${endpoint}`);
         const response = await axiosInstance.post(endpoint, finalRequestBody);
-        logger.info("PROVIDERS", `Request thành công với ${provider.name}`);
+        
+        const elapsed = Date.now() - startTime;
+        logger.info("PROVIDERS", `✓ ${provider.name} [${elapsed}ms]`);
         
         const content = response.data.choices?.[0]?.message?.content;
         
         if (!this.isValidResponse(content)) {
-          logger.warn("PROVIDERS", `Invalid response from ${provider.name}, switching provider`);
+          logger.warn("PROVIDERS", `Invalid response from ${provider.name}, switching`);
           this.markProviderAsFailed(provider.name);
           this.switchToNextProvider();
           attempts++;
           continue;
         }
 
-        logger.info("PROVIDERS", `Successful request using ${provider.name}`);
         return response.data;
 
 
       } catch (error) {
         lastError = error;
         attempts++;
+        
+        const elapsed = Date.now() - startTime;
+        logger.warn("PROVIDERS", `✗ ${provider.name} [${elapsed}ms]: ${error.message}`);
         if (provider.isFallback) {
           logger.warn("PROVIDERS", "Fallback provider bị lỗi, trả về response mặc định");
           return {

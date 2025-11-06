@@ -54,7 +54,9 @@ async function handleMentionMessage(message, client) {
     const hasEveryoneOrRoleMention = message.mentions.everyone || message.mentions.roles.size > 0;
 
     if (!hasEveryoneOrRoleMention) {
-      logger.info('CHAT', `Xử lý tin nhắn trò chuyện từ ${message.author.tag} (ID: ${message.author.id})`);
+      const typingPromise = message.channel.sendTyping().catch(() => {});
+      
+      logger.info('CHAT', `Xử lý tin nhắn từ ${message.author.tag}`);
       
       const hasConsented = await consentService.hasUserConsented(message.author.id);
       
@@ -71,13 +73,22 @@ async function handleMentionMessage(message, client) {
         }
         return;
       }
-      
-      await message.channel.sendTyping();
 
       try {
         const MessageService = require('../services/TokenService.js');
         const userId = message.author.id;
-        const messageCheck = await MessageService.canUseMessages(userId, 1);
+        
+        const content = message.content.replace(/<@!?\d+>/g, '').trim();
+        
+        if (!content) {
+          await message.reply('Tôi có thể giúp gì cho bạn hôm nay?');
+          return;
+        }
+
+        const [messageCheck] = await Promise.all([
+          MessageService.canUseMessages(userId, 1),
+          typingPromise 
+        ]);
 
         if (!messageCheck.allowed) {
           const roleNames = {
@@ -100,22 +111,16 @@ async function handleMentionMessage(message, client) {
           return;
         }
 
-        const content = message.content
-          .replace(/<@!?\d+>/g, '')
-          .trim();
-
-        if (!content) {
-          await message.reply('Tôi có thể giúp gì cho bạn hôm nay?');
-          return;
-        }
-
-        if (content.toLowerCase().includes('code') ||
-            content.toLowerCase().includes('function') ||
-            content.toLowerCase().includes('write a')) {
+        // Xử lý code request nếu phát hiện keywords
+        const lowerContent = content.toLowerCase();
+        if (lowerContent.includes('code') ||
+            lowerContent.includes('function') ||
+            lowerContent.includes('write a')) {
           await handleCodeRequest(message, content);
           return;
         }
 
+        // Lấy response từ AI
         const response = await ConversationService.getCompletion(content, message);
 
         if (!response) {
@@ -124,6 +129,7 @@ async function handleMentionMessage(message, client) {
           return;
         }
 
+        // Xử lý response dài
         if (response.length > 2000) {
           const chunks = splitMessageRespectWords(response, 2000);
           for (const chunk of chunks) {
@@ -133,31 +139,41 @@ async function handleMentionMessage(message, client) {
           await message.reply(response);
         }
 
-        logger.info('CHAT', `Đã xử lý tin nhắn trò chuyện thành công cho ${message.author.tag}`);
+        logger.info('CHAT', `✓ Xử lý thành công [${message.author.tag}]`);
 
         if (message.guild) {
-          processXp(message, false, true);
+          processXp(message, false, true).catch(err => 
+            logger.error('XP', 'Error processing XP:', err)
+          );
         }
 
       } catch (error) {
-        logger.error('CHAT', `Lỗi khi xử lý tin nhắn trò chuyện từ ${message.author.tag}:`, error);
-        logger.error('CHAT', `Error stack:`, error.stack);
+        logger.error('CHAT', `Lỗi khi xử lý tin nhắn từ ${message.author.tag}:`, error);
 
+        let errorMessage = 'Xin lỗi, tôi gặp lỗi khi xử lý tin nhắn của bạn. Vui lòng thử lại sau.';
+        
         if (error.message.includes('Không có API provider nào được cấu hình')) {
-          await message.reply('Xin lỗi, hệ thống AI hiện tại không khả dụng. Vui lòng thử lại sau.');
+          errorMessage = 'Xin lỗi, hệ thống AI hiện tại không khả dụng. Vui lòng thử lại sau.';
         } else if (error.message.includes('Tất cả providers đã thất bại')) {
-          await message.reply('Xin lỗi, tất cả nhà cung cấp AI đều không khả dụng. Vui lòng thử lại sau.');
+          errorMessage = 'Xin lỗi, tất cả nhà cung cấp AI đều không khả dụng. Vui lòng thử lại sau.';
         } else if (error.code === 'EPROTO' || error.code === 'ECONNREFUSED' || error.message.includes('connect')) {
-          await message.reply('Xin lỗi, tôi đang gặp vấn đề kết nối. Vui lòng thử lại sau hoặc liên hệ quản trị viên để được hỗ trợ.');
-        } else {
-          await message.reply('Xin lỗi, tôi gặp lỗi khi xử lý tin nhắn của bạn. Vui lòng thử lại sau.');
+          errorMessage = 'Xin lỗi, tôi đang gặp vấn đề kết nối. Vui lòng thử lại sau hoặc liên hệ quản trị viên để được hỗ trợ.';
         }
+        
+        await message.reply(errorMessage);
+        
         if (message.guild) {
-          processXp(message, false, false);
+          processXp(message, false, false).catch(err => 
+            logger.error('XP', 'Error processing XP:', err)
+          );
         }
       }
     } else {
-      processXp(message, false, false)
+      if (message.guild) {
+        processXp(message, false, false).catch(err => 
+          logger.error('XP', 'Error processing XP:', err)
+        );
+      }
     }
   }
 }
@@ -208,10 +224,9 @@ async function handleCodeRequest(message, prompt) {
   await message.channel.sendTyping();
 
   try {
-    // Kiểm tra giới hạn token trước khi xử lý
     const TokenService = require('../services/TokenService.js');
     const userId = message.author.id;
-    const tokenCheck = await TokenService.canUseTokens(userId, 4000); // Code requests thường dùng nhiều tokens hơn
+    const tokenCheck = await TokenService.canUseMessages(userId, 1);
 
     if (!tokenCheck.allowed) {
       const roleNames = {
@@ -222,13 +237,13 @@ async function handleCodeRequest(message, prompt) {
       };
       
       await message.reply(
-        `**Giới hạn Token**\n\n` +
-        `Bạn đã sử dụng hết giới hạn token hàng ngày!\n\n` +
+        `**Giới hạn Lượt nhắn tin**\n\n` +
+        `Bạn đã sử dụng hết giới hạn lượt nhắn tin hàng ngày!\n\n` +
         `**Thông tin:**\n` +
         `• Vai trò: ${roleNames[tokenCheck.role] || tokenCheck.role}\n` +
-        `• Đã sử dụng: ${tokenCheck.current.toLocaleString()} tokens\n` +
-        `• Giới hạn: ${tokenCheck.limit.toLocaleString()} tokens/ngày\n` +
-        `• Còn lại: ${tokenCheck.remaining.toLocaleString()} tokens\n\n` +
+        `• Đã sử dụng: ${tokenCheck.current.toLocaleString()} lượt\n` +
+        `• Giới hạn: ${tokenCheck.limit.toLocaleString()} lượt/ngày\n` +
+        `• Còn lại: ${tokenCheck.remaining.toLocaleString()} lượt\n\n` +
         `Giới hạn sẽ được reset vào ngày mai. Vui lòng quay lại sau!`
       );
       return;
@@ -237,16 +252,14 @@ async function handleCodeRequest(message, prompt) {
     const result = await AICore.getCodeCompletion(prompt, message);
     let formattedResponse = result.content || result;
 
-    // Ghi nhận token usage nếu có
     if (result.usage && result.usage.total_tokens) {
-      await MessageService.recordMessageUsage(userId, 1, 'code');
+      TokenService.recordMessageUsage(userId, 1, 'code').catch(() => {});
     }
 
     if (!formattedResponse.includes('```')) {
       formattedResponse = formatCodeResponse(formattedResponse);
     }
 
-    // Chia phản hồi nếu nó quá dài cho Discord
     if (formattedResponse.length > 2000) {
       const chunks = splitMessage(formattedResponse, 2000);
       for (const chunk of chunks) {
@@ -267,7 +280,6 @@ async function handleCodeRequest(message, prompt) {
 function formatCodeResponse(text) {
   let language = 'javascript';
 
-  // Các mẫu ngôn ngữ phổ biến
   const langPatterns = {
     python: /import\s+[\w.]+|def\s+\w+\s*\(|print\s*\(/i,
     javascript: /const|let|var|function|=>|\bif\s*\(|console\.log/i,
@@ -277,7 +289,6 @@ function formatCodeResponse(text) {
     php: /<\?php|\$\w+\s*=/i
   };
 
-  // Phát hiện ngôn ngữ
   for (const [lang, pattern] of Object.entries(langPatterns)) {
     if (pattern.test(text)) {
       language = lang;
@@ -288,9 +299,6 @@ function formatCodeResponse(text) {
   return `\`\`\`${language}\n${text}\n\`\`\``;
 }
 
-/**
- * Chia tin nhắn thành các phần nhỏ hơn
- */
 function splitMessage(text, maxLength = 2000) {
   const chunks = [];
 
@@ -320,10 +328,6 @@ function splitMessage(text, maxLength = 2000) {
   return chunks;
 }
 
-/**
- * Chia tin nhắn thành các phần nhỏ hơn, tôn trọng ranh giới từ
- * để không cắt từ giữa chừng
- */
 function splitMessageRespectWords(text, maxLength = 2000) {
   const chunks = [];
 

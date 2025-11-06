@@ -6,39 +6,28 @@ const logger = require('../utils/logger.js');
  */
 class MessageService {
   constructor() {
-    // Định nghĩa giới hạn lượt nhắn tin theo vai trò (lượt mỗi ngày)
     this.roleLimits = {
-      owner: -1,        // Không giới hạn
-      admin: 1000,      // 1000 lượt/ngày
-      helper: 500,      // 500 lượt/ngày
-      user: 50         // 50 lượt/ngày (mặc định)
+      owner: -1,
+      admin: 1000,
+      helper: 500,
+      user: 100
     };
 
-    // Owner ID từ biến môi trường
     this.ownerId = process.env.OWNER_ID ? process.env.OWNER_ID.trim() : null;
     
-    logger.info('MESSAGE_SERVICE', `Khởi tạo MessageService với owner ID: ${this.ownerId || 'không có'}`);
+    logger.info('TOKEN_SERVICE', `Khởi tạo TokenService với owner ID: ${this.ownerId || 'không có'}`);
   }
 
-  /**
-   * Lấy collection user_messages
-   */
   async getMessageCollection() {
     const db = mongoClient.getDb();
-    return db.collection('user_messages');
+    return db.collection('user_quotas');
   }
 
-  /**
-   * Lấy collection user_profiles
-   */
   async getProfileCollection() {
     const db = mongoClient.getDb();
     return db.collection('user_profiles');
   }
 
-  /**
-   * Khởi tạo dữ liệu message cho người dùng
-   */
   async initializeUserMessageData(userId) {
     try {
       const collection = await this.getMessageCollection();
@@ -50,19 +39,16 @@ class MessageService {
         return existing;
       }
 
-      // Xác định vai trò của người dùng
       let role = 'user';
       if (this.ownerId && userId === this.ownerId) {
         role = 'owner';
       } else {
-        // Kiểm tra role trong profile
         const profile = await profileCollection.findOne({ _id: userId });
         if (profile?.data?.role) {
           role = profile.data.role;
         }
       }
 
-      // Tạo dữ liệu message mới
       const messageData = {
         userId,
         role,
@@ -86,9 +72,8 @@ class MessageService {
       };
 
       await collection.insertOne(messageData);
-      logger.info('MESSAGE_SERVICE', `Khởi tạo dữ liệu message cho user ${userId} với role ${role}`);
+      logger.info('TOKEN_SERVICE', `Khởi tạo quota cho user ${userId} với role ${role}`);
 
-      // Cập nhật role trong profile nếu chưa có
       if (role !== 'user') {
         await profileCollection.updateOne(
           { _id: userId },
@@ -99,14 +84,11 @@ class MessageService {
 
       return messageData;
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', `Lỗi khi khởi tạo dữ liệu message cho ${userId}:`, error);
+      logger.error('TOKEN_SERVICE', `Lỗi khi khởi tạo quota cho ${userId}:`, error);
       throw error;
     }
   }
 
-  /**
-   * Lấy thông tin message của người dùng
-   */
   async getUserMessageData(userId) {
     try {
       const collection = await this.getMessageCollection();
@@ -115,22 +97,17 @@ class MessageService {
       if (!messageData) {
         messageData = await this.initializeUserMessageData(userId);
       } else {
-        // Kiểm tra và reset nếu cần
         await this.checkAndResetLimits(userId);
-        // Lấy lại dữ liệu sau khi reset
         messageData = await collection.findOne({ userId });
       }
 
       return messageData;
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', `Lỗi khi lấy dữ liệu message cho ${userId}:`, error);
+      logger.error('TOKEN_SERVICE', `Lỗi khi lấy quota cho ${userId}:`, error);
       throw error;
     }
   }
 
-  /**
-   * Kiểm tra và reset giới hạn nếu đã qua chu kỳ
-   */
   async checkAndResetLimits(userId) {
     try {
       const collection = await this.getMessageCollection();
@@ -146,22 +123,19 @@ class MessageService {
       const updates = {};
       let needsUpdate = false;
 
-      // Reset daily
       if (now - messageData.lastReset.daily > oneDay) {
         updates['messageUsage.daily'] = 0;
         updates['lastReset.daily'] = now;
         needsUpdate = true;
-        logger.info('MESSAGE_SERVICE', `Reset giới hạn hàng ngày cho user ${userId}`);
+        logger.info('TOKEN_SERVICE', `Reset quota hàng ngày cho user ${userId}`);
       }
 
-      // Reset weekly
       if (now - messageData.lastReset.weekly > oneWeek) {
         updates['messageUsage.weekly'] = 0;
         updates['lastReset.weekly'] = now;
         needsUpdate = true;
       }
 
-      // Reset monthly
       if (now - messageData.lastReset.monthly > oneMonth) {
         updates['messageUsage.monthly'] = 0;
         updates['lastReset.monthly'] = now;
@@ -173,18 +147,14 @@ class MessageService {
         await collection.updateOne({ userId }, { $set: updates });
       }
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', `Lỗi khi reset giới hạn cho ${userId}:`, error);
+      logger.error('TOKEN_SERVICE', `Lỗi khi reset quota cho ${userId}:`, error);
     }
   }
 
-  /**
-   * Kiểm tra xem người dùng có thể sử dụng thêm lượt nhắn tin không
-   */
   async canUseMessages(userId, estimatedMessages = 1) {
     try {
       const messageData = await this.getUserMessageData(userId);
 
-      // Owner không bị giới hạn
       if (messageData.role === 'owner' || messageData.limits.daily === -1) {
         return {
           allowed: true,
@@ -207,28 +177,26 @@ class MessageService {
         estimated: estimatedMessages
       };
     } catch (error) {
-      logger.error('TOKEN_SERVICE', `Lỗi khi kiểm tra giới hạn token cho ${userId}:`, error);
-      // Mặc định cho phép nếu có lỗi để không làm gián đoạn dịch vụ
+      logger.error('TOKEN_SERVICE', `Lỗi khi kiểm tra quota cho ${userId}:`, error);
       return { allowed: true, remaining: 0, role: 'user', error: error.message };
     }
   }
 
-  /**
-   * Ghi nhận việc sử dụng message
-   */
+  async canUseTokens(userId, estimatedTokens = 1) {
+    return this.canUseMessages(userId, 1);
+  }
+
   async recordMessageUsage(userId, messagesUsed = 1, operation = 'chat') {
     try {
       const collection = await this.getMessageCollection();
       const now = Date.now();
 
-      // Tạo bản ghi lịch sử
       const historyEntry = {
         messages: messagesUsed,
         operation,
         timestamp: now
       };
 
-      // Cập nhật số liệu
       await collection.updateOne(
         { userId },
         {
@@ -241,7 +209,7 @@ class MessageService {
           $push: {
             history: {
               $each: [historyEntry],
-              $slice: -100 // Chỉ giữ 100 bản ghi gần nhất
+              $slice: -100
             }
           },
           $set: {
@@ -251,18 +219,19 @@ class MessageService {
         { upsert: true }
       );
 
-      logger.debug('MESSAGE_SERVICE', `Ghi nhận ${messagesUsed} messages cho user ${userId} (${operation})`);
+      logger.debug('TOKEN_SERVICE', `Ghi nhận ${messagesUsed} lượt cho user ${userId} (${operation})`);
 
       return true;
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', `Lỗi khi ghi nhận message usage cho ${userId}:`, error);
+      logger.error('TOKEN_SERVICE', `Lỗi khi ghi nhận usage cho ${userId}:`, error);
       return false;
     }
   }
 
-  /**
-   * Đặt vai trò cho người dùng
-   */
+  async recordTokenUsage(userId, tokensUsed, operation = 'chat') {
+    return this.recordMessageUsage(userId, 1, operation);
+  }
+
   async setUserRole(userId, role) {
     try {
       if (!['owner', 'admin', 'helper', 'user'].includes(role)) {
@@ -273,7 +242,6 @@ class MessageService {
       const profileCollection = await this.getProfileCollection();
       const now = Date.now();
 
-      // Cập nhật role và limits
       await collection.updateOne(
         { userId },
         {
@@ -286,14 +254,13 @@ class MessageService {
         { upsert: true }
       );
 
-      // Cập nhật role trong profile
       await profileCollection.updateOne(
         { _id: userId },
         { $set: { 'data.role': role } },
         { upsert: true }
       );
 
-      logger.info('MESSAGE_SERVICE', `Đặt role ${role} cho user ${userId}`);
+      logger.info('TOKEN_SERVICE', `Đặt role ${role} cho user ${userId}`);
       return true;
     } catch (error) {
       logger.error('MESSAGE_SERVICE', `Lỗi khi đặt role cho ${userId}:`, error);
@@ -301,12 +268,8 @@ class MessageService {
     }
   }
 
-  /**
-   * Lấy vai trò của người dùng
-   */
   async getUserRole(userId) {
     try {
-      // Kiểm tra owner trước
       if (this.ownerId && userId === this.ownerId) {
         return 'owner';
       }
@@ -314,14 +277,11 @@ class MessageService {
       const messageData = await this.getUserMessageData(userId);
       return messageData.role || 'user';
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', `Lỗi khi lấy role của ${userId}:`, error);
+      logger.error('TOKEN_SERVICE', `Lỗi khi lấy role của ${userId}:`, error);
       return 'user';
     }
   }
 
-  /**
-   * Lấy thống kê message của người dùng
-   */
   async getUserMessageStats(userId) {
     try {
       const messageData = await this.getUserMessageData(userId);
@@ -345,14 +305,11 @@ class MessageService {
         recentHistory: messageData.history.slice(-10)
       };
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', `Lỗi khi lấy thống kê message cho ${userId}:`, error);
+      logger.error('TOKEN_SERVICE', `Lỗi khi lấy thống kê cho ${userId}:`, error);
       throw error;
     }
   }
 
-  /**
-   * Reset message usage cho người dùng (admin only)
-   */
   async resetUserMessages(userId, resetType = 'daily') {
     try {
       const collection = await this.getMessageCollection();
@@ -386,7 +343,7 @@ class MessageService {
       }
 
       await collection.updateOne({ userId }, { $set: updates });
-      logger.info('MESSAGE_SERVICE', `Reset ${resetType} messages cho user ${userId}`);
+      logger.info('TOKEN_SERVICE', `Reset ${resetType} quota cho user ${userId}`);
 
       return true;
     } catch (error) {
@@ -395,9 +352,6 @@ class MessageService {
     }
   }
 
-  /**
-   * Lấy thống kê tổng quan của hệ thống
-   */
   async getSystemStats() {
     try {
       const collection = await this.getMessageCollection();
@@ -429,7 +383,6 @@ class MessageService {
         stats.totalMessagesUsed.total += user.messageUsage.total || 0;
       });
 
-      // Top 10 người dùng sử dụng nhiều message nhất
       stats.topUsers = allUsers
         .sort((a, b) => (b.messageUsage.daily || 0) - (a.messageUsage.daily || 0))
         .slice(0, 10)
@@ -442,33 +395,28 @@ class MessageService {
 
       return stats;
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', 'Lỗi khi lấy thống kê hệ thống:', error);
+      logger.error('TOKEN_SERVICE', 'Lỗi khi lấy thống kê hệ thống:', error);
       throw error;
     }
   }
 
-  /**
-   * Khởi tạo collection và indexes
-   */
   async initializeCollection() {
     try {
       const db = mongoClient.getDb();
 
-      // Tạo collection nếu chưa có
-      const collections = await db.listCollections({ name: 'user_messages' }).toArray();
+      const collections = await db.listCollections({ name: 'user_quotas' }).toArray();
       if (collections.length === 0) {
-        await db.createCollection('user_messages');
-        logger.info('MESSAGE_SERVICE', 'Đã tạo collection user_messages');
+        await db.createCollection('user_quotas');
+        logger.info('TOKEN_SERVICE', 'Đã tạo collection user_quotas');
       }
 
-      // Tạo indexes
-      await db.collection('user_messages').createIndex({ userId: 1 }, { unique: true });
-      await db.collection('user_messages').createIndex({ role: 1 });
-      await db.collection('user_messages').createIndex({ 'messageUsage.total': -1 });
+      await db.collection('user_quotas').createIndex({ userId: 1 }, { unique: true });
+      await db.collection('user_quotas').createIndex({ role: 1 });
+      await db.collection('user_quotas').createIndex({ 'messageUsage.total': -1 });
 
-      logger.info('MESSAGE_SERVICE', 'Đã khởi tạo collection và indexes cho MessageService');
+      logger.info('TOKEN_SERVICE', 'Đã khởi tạo collection và indexes cho TokenService');
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', 'Lỗi khi khởi tạo collection:', error);
+      logger.error('TOKEN_SERVICE', 'Lỗi khi khởi tạo collection:', error);
       throw error;
     }
   }

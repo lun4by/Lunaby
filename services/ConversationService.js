@@ -15,9 +15,6 @@ class ConversationService {
     logger.info("CONVERSATION_SERVICE", "Initialized conversation service");
   }
 
-  /**
-   * Trích xuất userId từ message object
-   */
   extractUserId(message, defaultUserId = "anonymous-user") {
     if (!message?.author?.id) {
       return defaultUserId;
@@ -71,9 +68,6 @@ class ConversationService {
     }
   }
 
-  /**
-   * Trích xuất thông tin liên quan từ lịch sử cuộc trò chuyện
-   */
   async extractRelevantMemories(history, currentPrompt) {
     try {
       if (!history || history.length < 3) {
@@ -107,9 +101,6 @@ class ConversationService {
     }
   }
 
-  /**
-   * Phân tích và trả về thông tin từ trí nhớ cuộc trò chuyện
-   */
   async getMemoryAnalysis(userId, request) {
     try {
       logger.info("CONVERSATION_SERVICE", `Analyzing memory for user ${userId}`);
@@ -190,16 +181,10 @@ class ConversationService {
     }
   }
 
-  /**
-   * Xử lý và định dạng nội dung phản hồi
-   */
   async formatResponseContent(content, isNewConversation) {
     return content;
   }
 
-  /**
-   * Xử lý completion chính với tất cả logic cuộc trò chuyện
-   */
   async getCompletion(prompt, message = null) {
     try {
       const userId = this.extractUserId(message);
@@ -245,15 +230,8 @@ class ConversationService {
       }
 
       if (prompts.modelInfo.keywords.test(prompt)) {
-        logger.info("CONVERSATION_SERVICE", "Model info question detected, returning summarized and customized response");
-        const rawResponse = prompts.modelInfo.response;
-        let summarized = { content: rawResponse };
-        try {
-          summarized = await AICore.processChatCompletion([{ role: "user", content: rawResponse }], { max_tokens: 1000 });
-        } catch (e) {
-          logger.warn("CONVERSATION_SERVICE", "AI summarization failed, falling back to default modelInfo.response");
-        }
-        return summarized.content;
+        logger.info("CONVERSATION_SERVICE", "Model info question detected, returning direct response");
+        return prompts.modelInfo.response;
       }
 
       const enhancedPromptWithMemory = await this.enrichPromptWithMemory(prompt, userId);
@@ -275,7 +253,6 @@ class ConversationService {
     try {
       let systemPrompt = additionalConfig.systemPrompt || prompts.system.main;
       
-      // Thêm locale instruction vào system prompt
       const localeInstruction = AI_RESPONSE_LOCALE === 'vi' 
         ? 'Bạn phải trả lời bằng tiếng Việt.' 
         : 'You must respond in English.';
@@ -306,18 +283,8 @@ class ConversationService {
         messages = conversationManager.getHistory(userId);
       }
 
-      const waitTimeout = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('waitForProviders timeout after 10 seconds')), 10000);
-      });
-      
-      try {
-        await Promise.race([AICore.waitForProviders(), waitTimeout]);
-      } catch (error) {
-        logger.error("CONVERSATION_SERVICE", "waitForProviders timeout:", error.message);
-      }
-      
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('AICore timeout after 30 seconds')), 30000);
+        setTimeout(() => reject(new Error('AICore timeout after 25 seconds')), 25000);
       });
       
       const result = await Promise.race([
@@ -332,10 +299,11 @@ class ConversationService {
       const content = result.content;
       const tokenUsage = result.usage;
 
-
       if (tokenUsage && tokenUsage.total_tokens) {
         const MessageService = require('./TokenService.js');
-        await MessageService.recordMessageUsage(userId, 1, 'chat');
+        MessageService.recordMessageUsage(userId, 1, 'chat').catch(err =>
+          logger.error('CONVERSATION_SERVICE', 'Error recording usage:', err)
+        );
       }
 
       await conversationManager.addMessage(userId, "assistant", content);
@@ -344,10 +312,8 @@ class ConversationService {
       return formattedContent;
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error in processChatCompletion:", error.message);
-      logger.error("CONVERSATION_SERVICE", "Error stack:", error.stack);
       
       if (error.message.includes('timeout')) {
-        logger.error("CONVERSATION_SERVICE", "AICore bị timeout, có thể do network hoặc provider issues");
         throw new Error("AI service timeout. Vui lòng thử lại sau.");
       }
       
