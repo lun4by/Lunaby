@@ -37,7 +37,7 @@ class APIProviderManager {
      if (process.env.LUNABY_API_KEY) {
       providers.push({
         name: "Lunaby",
-        baseURL: process.env.LUNABY_BASE_URL || "http://47.84.119.102/v1",
+        baseURL: process.env.LUNABY_BASE_URL || "http://47.84.119.102:11434/v1",
         apiKey: process.env.LUNABY_API_KEY,
         models: {
           default: "lunaby-pro",
