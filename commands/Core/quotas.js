@@ -1,5 +1,5 @@
 ﻿const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const MessageService = require('../../services/TokenService.js');
+const TokenService = require('../../services/TokenService.js');
 const logger = require('../../utils/logger.js');
 const { translate: t } = require('../../utils/i18n');
 
@@ -50,7 +50,7 @@ async function handleUserStats(interaction) {
 	const requesterId = interaction.user.id;
 
 	if (targetUser.id !== requesterId) {
-		const requesterRole = await MessageService.getUserRole(requesterId);
+		const requesterRole = await TokenService.getUserRole(requesterId);
 		if (!['owner', 'admin'].includes(requesterRole)) {
 			await interaction.editReply({
 				content: t(interaction, 'commands.quotas.errors.noPermissionOther'),
@@ -60,7 +60,7 @@ async function handleUserStats(interaction) {
 		}
 	}
 
-	const stats = await MessageService.getUserMessageStats(targetUser.id);
+	const stats = await TokenService.getUserMessageStats(targetUser.id);
 	const roleNames = t(interaction, 'commands.quotas.roles') || {};
 
 	const embed = new EmbedBuilder()
@@ -132,7 +132,7 @@ async function handleUserStats(interaction) {
 }
 
 async function handleSystemStats(interaction) {
-	const requesterRole = await MessageService.getUserRole(interaction.user.id);
+	const requesterRole = await TokenService.getUserRole(interaction.user.id);
 	if (!['owner', 'admin'].includes(requesterRole)) {
 		await interaction.editReply({
 			content: t(interaction, 'commands.quotas.errors.noPermissionSystem'),
@@ -141,7 +141,7 @@ async function handleSystemStats(interaction) {
 		return;
 	}
 
-	const stats = await MessageService.getSystemStats();
+	const stats = await TokenService.getSystemStats();
 	const roleNames = t(interaction, 'commands.quotas.roles') || {};
 
 	const embed = new EmbedBuilder()

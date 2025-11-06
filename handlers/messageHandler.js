@@ -75,7 +75,7 @@ async function handleMentionMessage(message, client) {
       }
 
       try {
-        const MessageService = require('../services/TokenService.js');
+        const TokenService = require('../services/TokenService.js');
         const userId = message.author.id;
         
         const content = message.content.replace(/<@!?\d+>/g, '').trim();
@@ -86,7 +86,7 @@ async function handleMentionMessage(message, client) {
         }
 
         const [messageCheck] = await Promise.all([
-          MessageService.canUseMessages(userId, 1),
+          TokenService.canUseMessages(userId, 1),
           typingPromise 
         ]);
 

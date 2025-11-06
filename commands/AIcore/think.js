@@ -18,10 +18,9 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      // Kiểm tra token limit trước khi xử lý
-      const MessageService = require('../../services/TokenService.js');
+      const TokenService = require('../../services/TokenService.js');
       const userId = interaction.user.id;
-      const messageCheck = await MessageService.canUseMessages(userId, 1);
+      const messageCheck = await TokenService.canUseMessages(userId, 1);
 
       if (!messageCheck.allowed) {
         const roleNames = {
@@ -47,9 +46,8 @@ module.exports = {
       const result = await AICore.getThinkingResponse(prompt);
       let response = result.content;
 
-      // Ghi nhận message usage
       if (result.usage && result.usage.total_tokens) {
-        await MessageService.recordMessageUsage(userId, 1, 'think');
+        TokenService.recordMessageUsage(userId, 1, 'think').catch(() => {});
       }
 
       if (response.length <= 2000) {

@@ -300,8 +300,8 @@ class ConversationService {
       const tokenUsage = result.usage;
 
       if (tokenUsage && tokenUsage.total_tokens) {
-        const MessageService = require('./TokenService.js');
-        MessageService.recordMessageUsage(userId, 1, 'chat').catch(err =>
+        const TokenService = require('./TokenService.js');
+        TokenService.recordMessageUsage(userId, 1, 'chat').catch(err =>
           logger.error('CONVERSATION_SERVICE', 'Error recording usage:', err)
         );
       }

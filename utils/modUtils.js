@@ -47,7 +47,7 @@ async function logModAction(options) {
 
     return { ...logData, _id: result.insertedId };
   } catch (error) {
-    console.error("Lỗi khi lưu hành động moderation:", error);
+    logger.error("MODERATION", "Lỗi khi lưu hành động moderation:", error);
     throw error;
   }
 }
@@ -86,7 +86,7 @@ async function getModLogs(options) {
 
     return logs;
   } catch (error) {
-    console.error("Lỗi khi lấy danh sách hành động moderation:", error);
+    logger.error("MODERATION", "Lỗi khi lấy danh sách hành động moderation:", error);
     throw error;
   }
 }

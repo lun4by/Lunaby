@@ -47,7 +47,7 @@ module.exports = {
       });
 
     } catch (error) {
-      console.error('Lỗi khi equip item:', error);
+      logger.error('INVENTORY', 'Lỗi khi equip item:', error);
       await interaction.editReply({
         content: '❌ Có lỗi xảy ra khi trang bị item!'
       });

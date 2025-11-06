@@ -40,11 +40,11 @@ module.exports = {
       await interaction.deferReply({ ephemeral: true });
 
       const targetUser = interaction.options.getUser('user');
-      const resetType = interaction.options.getString('type');
+      const resetType = interaction.options.getString('type') || 'daily';
 
-      await MessageService.resetUserMessages(targetUser.id, resetType);
+      await TokenService.resetUserMessages(targetUser.id, resetType);
 
-      const stats = await MessageService.getUserMessageStats(targetUser.id);
+      const stats = await TokenService.getUserMessageStats(targetUser.id);
 
       const resetTypeNames = {
         daily: 'hàng ngày',

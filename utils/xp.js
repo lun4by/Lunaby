@@ -132,7 +132,7 @@ async function experience(message, command_executed, execute) {
 
     return xpResult;
   } catch (error) {
-    console.error("Lỗi XP:", error);
+    logger.error("XP", "Lỗi XP:", error);
     return { xpAdded: false, reason: "DB_ERROR", error: error.message };
   }
 }
