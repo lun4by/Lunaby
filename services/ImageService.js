@@ -16,9 +16,10 @@ class ImageService {
    * @param {string} prompt - Prompt tạo hình ảnh
    * @param {Object} message - Message object (optional)
    * @param {Object} progressTracker - Progress tracker (optional)
+   * @param {Object} options - Tùy chọn tạo hình ảnh (aspect_ratio, output_format, etc.)
    * @returns {Promise<Object>} - Kết quả tạo hình ảnh
    */
-  async generateImage(prompt, message = null, progressTracker = null) {
+  async generateImage(prompt, message = null, progressTracker = null, options = {}) {
     progressTracker =
       progressTracker ||
       (message ? this.trackImageGenerationProgress(message, prompt) : null);
@@ -75,10 +76,6 @@ class ImageService {
       // Gửi request tạo hình ảnh thông qua AICore với model lunaby-vision
       const messages = [
         {
-          role: "system",
-          content: "You are an AI image generator. Generate high-quality, detailed images based on user prompts."
-        },
-        {
           role: "user",
           content: finalPrompt
         }
@@ -90,7 +87,9 @@ class ImageService {
 
       const result = await AICore.processChatCompletion(messages, {
         modelType: 'image',
-        max_tokens: 4096
+        max_tokens: 4096,
+        aspect_ratio: options.aspect_ratio || '1:1',
+        output_format: options.output_format || 'png'
       });
 
       if (progressTracker) {
