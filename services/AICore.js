@@ -32,6 +32,18 @@ class AICore {
         total_tokens: 0
       };
 
+      // Xử lý response từ Image Generation API
+      if (config.modelType === 'image' && response.data) {
+        logger.info("AI_CORE", "Processing image generation response");
+        // Response format: { data: [{ b64_json: "...", revised_prompt: "..." }] }
+        return {
+          content: response.data[0].b64_json,
+          revised_prompt: response.data[0].revised_prompt,
+          usage: tokenUsage
+        };
+      }
+
+      // Xử lý response từ Chat Completion API (standard)
       return {
         content: response.choices[0].message.content,
         usage: tokenUsage

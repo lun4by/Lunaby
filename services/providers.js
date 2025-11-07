@@ -372,6 +372,11 @@ class APIProviderManager {
         const elapsed = Date.now() - startTime;
         logger.info("PROVIDERS", `✓ ${provider.name} [${elapsed}ms]`);
         
+        if (modelType === 'image' && response.data.data) {
+          logger.info("PROVIDERS", `Image API response detected from ${provider.name}`);
+          return response.data;
+        }
+        
         const content = response.data.choices?.[0]?.message?.content;
         
         if (!this.isValidResponse(content)) {

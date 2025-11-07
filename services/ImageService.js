@@ -82,28 +82,13 @@ class ImageService {
         await progressTracker.update("Đang hoàn thiện hình ảnh", 85);
       }
 
-      // Xử lý response - AICore đã extract content từ choices[0].message.content
-      // Content sẽ là base64 string trực tiếp từ Lunaby Vision API
-      let imageData = result.content.trim();
-      let imageUrl = null;
-      let base64Image = null;
-
-      logger.info("IMAGE_SERVICE", `Response content type: ${typeof imageData}, length: ${imageData.length}`);
-      logger.info("IMAGE_SERVICE", `Content preview: ${imageData.substring(0, 100)}...`);
-
-      // Kiểm tra các định dạng response có thể
-      if (imageData.startsWith("http://") || imageData.startsWith("https://")) {
-        // Response là URL trực tiếp
-        imageUrl = imageData;
-        logger.info("IMAGE_SERVICE", "Detected HTTP(S) URL in response");
-      } else if (imageData.startsWith("data:image")) {
-        // Response là data URL (data:image/png;base64,...)
-        imageUrl = imageData;
-        logger.info("IMAGE_SERVICE", "Detected data URL in response");
-      } else {
-        // Response là base64 string thuần túy từ Lunaby Vision API
-        base64Image = imageData;
-        logger.info("IMAGE_SERVICE", `Treating response as base64 string, length: ${base64Image.length}`);
+      // AICore đã extract base64 string từ response.data[0].b64_json
+      const base64Image = result.content.trim();
+      const revisedPrompt = result.revised_prompt || prompt;
+      
+      logger.info("IMAGE_SERVICE", `Received base64 image, length: ${base64Image.length} bytes`);
+      if (result.revised_prompt) {
+        logger.info("IMAGE_SERVICE", `Revised prompt: ${revisedPrompt}`);
       }
 
       const uniqueFilename = `generated_image_${Date.now()}.png`;
@@ -113,41 +98,18 @@ class ImageService {
         fs.mkdirSync("./temp", { recursive: true });
       }
 
-      let imageBuffer = null;
-
       if (progressTracker) {
         await progressTracker.update("Đang xử lý kết quả", 90);
       }
 
-      // Xử lý các định dạng response
-      if (base64Image) {
-        // Base64 trực tiếp
-        try {
-          imageBuffer = Buffer.from(base64Image, "base64");
-          fs.writeFileSync(outputPath, imageBuffer);
-          logger.info("IMAGE_SERVICE", `Saved base64 image, size: ${imageBuffer.length} bytes`);
-        } catch (base64Error) {
-          const errorMsg = `Không thể parse base64 image data: ${base64Error.message}`;
-          if (progressTracker) progressTracker.error(errorMsg);
-          throw new Error(errorMsg);
-        }
-      } else if (imageUrl && imageUrl.startsWith("http")) {
-        // URL trực tiếp
-        const imageResponse = await axios.get(imageUrl, {
-          responseType: "arraybuffer",
-          timeout: 60000,
-        });
-        imageBuffer = Buffer.from(imageResponse.data);
+      // Convert base64 to buffer và lưu file
+      let imageBuffer;
+      try {
+        imageBuffer = Buffer.from(base64Image, "base64");
         fs.writeFileSync(outputPath, imageBuffer);
-        logger.info("IMAGE_SERVICE", `Downloaded image from URL, size: ${imageBuffer.length} bytes`);
-      } else if (imageUrl && imageUrl.startsWith("data:image")) {
-        // Base64 data URL
-        const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
-        imageBuffer = Buffer.from(base64Data, "base64");
-        fs.writeFileSync(outputPath, imageBuffer);
-        logger.info("IMAGE_SERVICE", `Saved data URL image, size: ${imageBuffer.length} bytes`);
-      } else {
-        const errorMsg = `Không tìm thấy dữ liệu hình ảnh hợp lệ trong response`;
+        logger.info("IMAGE_SERVICE", `Saved image successfully, size: ${imageBuffer.length} bytes`);
+      } catch (base64Error) {
+        const errorMsg = `Không thể parse base64 image data: ${base64Error.message}`;
         if (progressTracker) progressTracker.error(errorMsg);
         throw new Error(errorMsg);
       }
@@ -164,9 +126,10 @@ class ImageService {
 
       return {
         buffer: imageBuffer,
-        url: base64Image ? "base64_image_data" : (imageUrl || "local_file"),
+        url: "base64_image_data",
         localPath: outputPath,
         source: `Lunaby-Vision`,
+        revisedPrompt: revisedPrompt,
         usage: result.usage
       };
     } catch (error) {
