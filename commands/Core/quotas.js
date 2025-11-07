@@ -6,11 +6,11 @@ const { translate: t } = require('../../utils/i18n');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('quotas')
-		.setDescription('Xem thống kê hạn ngạch tin nhắn')
+		.setDescription('Xem thống kê quotas')
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('user')
-				.setDescription('Xem thống kê hạn ngạch tin nhắn của người dùng')
+				.setDescription('Xem thống kê quotas của người dùng')
 				.addUserOption((option) =>
 					option
 						.setName('target')
@@ -21,7 +21,7 @@ module.exports = {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('system')
-				.setDescription('Xem thống kê hạn ngạch toàn hệ thống (Owner/Admin)'),
+				.setDescription('Xem thống kê hạn quotas toàn hệ thống (Owner/Admin)'),
 		),
 
 	async execute(interaction) {
@@ -47,18 +47,13 @@ module.exports = {
 
 async function handleUserStats(interaction) {
 	const targetUser = interaction.options.getUser('target') || interaction.user;
-	const requesterId = interaction.user.id;
 
-	if (targetUser.id !== requesterId) {
-		const requesterRole = await TokenService.getUserRole(requesterId);
-		if (!['owner', 'admin'].includes(requesterRole)) {
-			await interaction.editReply({
-				content: t(interaction, 'commands.quotas.errors.noPermissionOther'),
-				ephemeral: true,
-			});
-			return;
-		}
-	}
+    if (interaction.user.id !== ownerId) {
+      return interaction.reply({
+        content: 'Bạn không có quyền sử dụng lệnh này!',
+        ephemeral: true,
+      });
+    }
 
 	const stats = await TokenService.getUserMessageStats(targetUser.id);
 	const roleNames = t(interaction, 'commands.quotas.roles') || {};
