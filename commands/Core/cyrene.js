@@ -21,12 +21,12 @@ module.exports = {
       )
       .setImage(thumbnailURL)
       .addFields(
-        { name: '� Game', value: 'Honkai Star Rail', inline: true },
+        { name: '🎮 Game', value: 'Honkai Star Rail', inline: true },
         { name: '🎬 Loại', value: 'Character Video', inline: true },
         { name: '🏢 Nhà phát triển', value: 'HoYoverse', inline: true }
       )
       .setFooter({ 
-        text: 'Honkai Star Rail - HoYoverse �',
+        text: 'Honkai Star Rail - HoYoverse 🌌',
         iconURL: 'https://yt3.googleusercontent.com/ytc/AIdro_mF-X7qVxGxQdVt5aQHxKvJ7ZqJxVQ_0JqXwLqB=s160-c-k-c0x00ffffff-no-rj'
       })
       .setTimestamp();
@@ -38,17 +38,17 @@ module.exports = {
           .setURL(videoURL)
           .setStyle(ButtonStyle.Link),
         new ButtonBuilder()
-          .setLabel('� Honkai Star Rail')
+          .setLabel('🎮 Honkai Star Rail')
           .setURL('https://hsr.hoyoverse.com/')
           .setStyle(ButtonStyle.Link),
         new ButtonBuilder()
-          .setLabel('� Tải game')
+          .setLabel('📱 Tải game')
           .setURL('https://hsr.hoyoverse.com/download')
           .setStyle(ButtonStyle.Link)
       );
 
     await interaction.reply({ 
-      content: `⭐ **${interaction.user}** đang xem thông tin về **Cyrene** trong Honkai Star Rail! �`,
+      content: `⭐ **${interaction.user}** đang xem thông tin về **Cyrene** trong Honkai Star Rail! 🎮`,
       embeds: [embed], 
       components: [row] 
     });
