@@ -82,8 +82,38 @@ class ImageService {
         await progressTracker.update("Đang hoàn thiện hình ảnh", 85);
       }
 
-      // Xử lý response - có thể là URL hoặc base64
-      const imageUrl = result.content.trim();
+      // Xử lý response - parse JSON nếu cần
+      let imageData = result.content.trim();
+      let imageUrl = null;
+      let base64Image = null;
+
+      // Thử parse JSON response từ API
+      try {
+        const parsedResponse = JSON.parse(imageData);
+        logger.info("IMAGE_SERVICE", "Parsed JSON response from API");
+        
+        // Kiểm tra format Stability AI / OpenAI style response
+        if (parsedResponse.data && Array.isArray(parsedResponse.data) && parsedResponse.data[0]) {
+          if (parsedResponse.data[0].b64_json) {
+            base64Image = parsedResponse.data[0].b64_json;
+            logger.info("IMAGE_SERVICE", "Found b64_json in response");
+          } else if (parsedResponse.data[0].url) {
+            imageUrl = parsedResponse.data[0].url;
+            logger.info("IMAGE_SERVICE", "Found URL in response");
+          }
+        }
+      } catch (parseError) {
+        // Không phải JSON, có thể là URL hoặc base64 trực tiếp
+        logger.info("IMAGE_SERVICE", "Response is not JSON, treating as direct content");
+        if (imageData.startsWith("http")) {
+          imageUrl = imageData;
+        } else if (imageData.startsWith("data:image")) {
+          imageUrl = imageData;
+        } else {
+          base64Image = imageData;
+        }
+      }
+
       const uniqueFilename = `generated_image_${Date.now()}.png`;
       const outputPath = `./temp/${uniqueFilename}`;
       
@@ -97,8 +127,19 @@ class ImageService {
         await progressTracker.update("Đang xử lý kết quả", 90);
       }
 
-      // Xử lý các định dạng response khác nhau
-      if (typeof imageUrl === "string" && imageUrl.startsWith("http")) {
+      // Xử lý các định dạng response
+      if (base64Image) {
+        // Base64 trực tiếp
+        try {
+          imageBuffer = Buffer.from(base64Image, "base64");
+          fs.writeFileSync(outputPath, imageBuffer);
+          logger.info("IMAGE_SERVICE", `Saved base64 image, size: ${imageBuffer.length} bytes`);
+        } catch (base64Error) {
+          const errorMsg = `Không thể parse base64 image data: ${base64Error.message}`;
+          if (progressTracker) progressTracker.error(errorMsg);
+          throw new Error(errorMsg);
+        }
+      } else if (imageUrl && imageUrl.startsWith("http")) {
         // URL trực tiếp
         const imageResponse = await axios.get(imageUrl, {
           responseType: "arraybuffer",
@@ -106,22 +147,15 @@ class ImageService {
         });
         imageBuffer = Buffer.from(imageResponse.data);
         fs.writeFileSync(outputPath, imageBuffer);
-      } else if (typeof imageUrl === "string" && imageUrl.startsWith("data:image")) {
+        logger.info("IMAGE_SERVICE", `Downloaded image from URL, size: ${imageBuffer.length} bytes`);
+      } else if (imageUrl && imageUrl.startsWith("data:image")) {
         // Base64 data URL
         const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
         imageBuffer = Buffer.from(base64Data, "base64");
         fs.writeFileSync(outputPath, imageBuffer);
-      } else if (typeof imageUrl === "string" && imageUrl.length > 100) {
-        try {
-          imageBuffer = Buffer.from(imageUrl, "base64");
-          fs.writeFileSync(outputPath, imageBuffer);
-        } catch (base64Error) {
-          const errorMsg = `Không thể parse base64 image data: ${base64Error.message}`;
-          if (progressTracker) progressTracker.error(errorMsg);
-          throw new Error(errorMsg);
-        }
+        logger.info("IMAGE_SERVICE", `Saved data URL image, size: ${imageBuffer.length} bytes`);
       } else {
-        const errorMsg = `Định dạng URL hình ảnh không được hỗ trợ: ${imageUrl}`;
+        const errorMsg = `Không tìm thấy dữ liệu hình ảnh hợp lệ trong response`;
         if (progressTracker) progressTracker.error(errorMsg);
         throw new Error(errorMsg);
       }
@@ -138,7 +172,7 @@ class ImageService {
 
       return {
         buffer: imageBuffer,
-        url: imageUrl.startsWith("data:image") ? "base64_image_data" : imageUrl,
+        url: base64Image ? "base64_image_data" : (imageUrl || "local_file"),
         localPath: outputPath,
         source: `Lunaby-Vision`,
         usage: result.usage
