@@ -23,7 +23,6 @@ module.exports = {
       .setThumbnail('https://yt3.googleusercontent.com/ytc/AIdro_mF-X7qVxGxQdVt5aQHxKvJ7ZqJxVQ_0JqXwLqB=s160-c-k-c0x00ffffff-no-rj')
       .addFields(
         { name: '📺 Kênh YouTube', value: '[Lunaby Hojo](https://www.youtube.com/@LunabyHojo)', inline: true },
-        { name: '🎭 Loại', value: 'VTuber', inline: true },
         { name: '🌸 Đặc điểm', value: 'Dễ thương & Thân thiện', inline: true }
       )
       .setImage('https://yt3.googleusercontent.com/oNdSvqHsFNRiwO5X_wczBznDt7KfWBOkfwrOHlY49T8LmcWNK-RbSPUx2sEDHfRYX2Kks-Bw=w2120-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj')
