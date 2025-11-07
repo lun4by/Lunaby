@@ -87,24 +87,39 @@ class ImageService {
       let imageUrl = null;
       let base64Image = null;
 
+      logger.info("IMAGE_SERVICE", `Response content type: ${typeof imageData}, length: ${imageData.length}`);
+
       // Thử parse JSON response từ API
       try {
         const parsedResponse = JSON.parse(imageData);
-        logger.info("IMAGE_SERVICE", "Parsed JSON response from API");
+        logger.info("IMAGE_SERVICE", `Parsed JSON response from API: ${JSON.stringify(Object.keys(parsedResponse))}`);
         
         // Kiểm tra format Stability AI / OpenAI style response
-        if (parsedResponse.data && Array.isArray(parsedResponse.data) && parsedResponse.data[0]) {
-          if (parsedResponse.data[0].b64_json) {
-            base64Image = parsedResponse.data[0].b64_json;
-            logger.info("IMAGE_SERVICE", "Found b64_json in response");
-          } else if (parsedResponse.data[0].url) {
-            imageUrl = parsedResponse.data[0].url;
-            logger.info("IMAGE_SERVICE", "Found URL in response");
+        if (parsedResponse.data && Array.isArray(parsedResponse.data)) {
+          logger.info("IMAGE_SERVICE", `Found data array with ${parsedResponse.data.length} items`);
+          
+          if (parsedResponse.data.length > 0 && parsedResponse.data[0]) {
+            const firstItem = parsedResponse.data[0];
+            logger.info("IMAGE_SERVICE", `First item keys: ${JSON.stringify(Object.keys(firstItem))}`);
+            
+            if (firstItem.b64_json) {
+              base64Image = firstItem.b64_json;
+              logger.info("IMAGE_SERVICE", `Found b64_json in response, length: ${base64Image.length}`);
+            } else if (firstItem.url) {
+              imageUrl = firstItem.url;
+              logger.info("IMAGE_SERVICE", "Found URL in response");
+            } else {
+              logger.warn("IMAGE_SERVICE", `No b64_json or url found in data[0]: ${JSON.stringify(firstItem).substring(0, 200)}`);
+            }
+          } else {
+            logger.warn("IMAGE_SERVICE", "data array is empty");
           }
+        } else {
+          logger.warn("IMAGE_SERVICE", `Response structure unexpected: ${JSON.stringify(parsedResponse).substring(0, 200)}`);
         }
       } catch (parseError) {
         // Không phải JSON, có thể là URL hoặc base64 trực tiếp
-        logger.info("IMAGE_SERVICE", "Response is not JSON, treating as direct content");
+        logger.info("IMAGE_SERVICE", `Response is not JSON (${parseError.message}), treating as direct content`);
         if (imageData.startsWith("http")) {
           imageUrl = imageData;
         } else if (imageData.startsWith("data:image")) {
