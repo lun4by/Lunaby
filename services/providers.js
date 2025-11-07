@@ -231,7 +231,7 @@ class APIProviderManager {
         Authorization: `Bearer ${provider.apiKey}`,
         ...provider.headers
       },
-      timeout: 25000,
+      timeout: 40000,
       maxRedirects: 3,
       validateStatus: (status) => status < 500,
     };
@@ -244,7 +244,7 @@ class APIProviderManager {
       keepAliveMsecs: 1000,
       maxSockets: 50,
       maxFreeSockets: 10,
-      timeout: 25000,
+      timeout: 40000,
       freeSocketTimeout: 30000,
     };
     
@@ -307,10 +307,9 @@ class APIProviderManager {
       
       const provider = this.getCurrentProvider();
       
-      // Rate limiting check - tránh spam requests
       const lastRequest = this.lastRequestTime.get(provider.name) || 0;
       const timeSinceLastRequest = Date.now() - lastRequest;
-      if (timeSinceLastRequest < 100) { // Tối thiểu 100ms giữa các requests
+      if (timeSinceLastRequest < 100) { 
         await new Promise(resolve => setTimeout(resolve, 100 - timeSinceLastRequest));
       }
       this.lastRequestTime.set(provider.name, Date.now());
