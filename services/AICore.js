@@ -6,7 +6,7 @@ const initSystem = require("./initSystem.js");
 class AICore {
   constructor() {
     this.systemPrompt = prompts.system.main;
-    this.Model = "lunaby-v3";
+    this.Model = "lunaby";
     this.providerManager = new APIProviderManager();
     this.providerManager.initializeProviders();
     logger.info("AI_CORE", "Initialized with multi-provider support");

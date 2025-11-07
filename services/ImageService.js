@@ -8,33 +8,11 @@ const textUtils = require("../utils/textUtils.js");
 
 class ImageService {
   constructor() {
-    this.gradioImageSpace =
-      process.env.GRADIO_IMAGE_SPACE || "stabilityai/stable-diffusion-3-medium";
-    
-    logger.info("IMAGE_SERVICE", `Gradio image space: ${this.gradioImageSpace}`);
-    
-    this.testGradioConnection().then((connected) => {
-      if (!connected) {
-        logger.warn("IMAGE_SERVICE", "Không thể kết nối đến Gradio Space");
-      }
-    });
+    logger.info("IMAGE_SERVICE", `Initialized with Lunaby Vision API`);
   }
 
   /**
-   * Dynamically load the Gradio client (ESM module)
-   * @returns {Promise<Object>} - The Gradio client module
-   */
-  async loadGradioClient() {
-    try {
-      return await import("@gradio/client");
-    } catch (error) {
-      logger.error("IMAGE_SERVICE", `Lỗi khi tải Gradio client:`, error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Tạo hình ảnh từ prompt
+   * Tạo hình ảnh từ prompt sử dụng Lunaby Vision API
    * @param {string} prompt - Prompt tạo hình ảnh
    * @param {Object} message - Message object (optional)
    * @param {Object} progressTracker - Progress tracker (optional)
@@ -78,10 +56,11 @@ class ImageService {
       let finalPrompt = prompt;
       if (prompt.match(/[\u00C0-\u1EF9]/)) {
         try {
-          finalPrompt = await AICore.translatePrompt(prompt);
+          finalPrompt = await this.translatePromptToEnglish(prompt);
           logger.info("IMAGE_SERVICE", `Prompt dịch sang tiếng Anh: "${finalPrompt}"`);
         } catch (translateError) {
           logger.warn("IMAGE_SERVICE", `Không thể dịch prompt: ${translateError.message}`);
+          finalPrompt = prompt;
         }
       }
 
@@ -89,85 +68,37 @@ class ImageService {
         await progressTracker.update("Đang khởi tạo", 20);
       }
 
-      const gradioModule = await this.loadGradioClient();
-      const { Client } = gradioModule;
-
-      const options = {
-        status_callback: (status) => {
-          logger.info("IMAGE_SERVICE", `Trạng thái Gradio Space: ${status.status}`);
-
-          if (progressTracker) {
-            if (status.status === "running") {
-              progressTracker.update("Đang tạo concept", 30);
-            } else if (status.status === "processing") {
-              progressTracker.update("Đang tạo hình ảnh sơ bộ", 40);
-            }
-          }
-
-          if (status.status === "error" && status.detail === "NOT_FOUND") {
-            if (progressTracker)
-              progressTracker.error(`Space ${this.gradioImageSpace} không tồn tại`);
-            throw new Error(`Space ${this.gradioImageSpace} không tồn tại`);
-          }
-        },
-      };
-
       if (progressTracker) {
         await progressTracker.update("Đang tạo concept", 35);
       }
 
-      let app;
-      try {
-        app = await Client.connect(this.gradioImageSpace, options);
-      } catch (connectError) {
-        logger.error("IMAGE_SERVICE", `Không thể kết nối đến Space: ${connectError.message}`);
-        const errorMsg = `Space ${this.gradioImageSpace} không khả dụng`;
-        if (progressTracker) progressTracker.error(errorMsg);
-        throw new Error(errorMsg);
-      }
-
-      const api = await app.view_api();
-      const apiEndpointName = "/generate_image";
-
-      if (!api.named_endpoints || !api.named_endpoints[apiEndpointName]) {
-        const hasUnnamedEndpoint =
-          api.unnamed_endpoints && Object.keys(api.unnamed_endpoints).length > 0;
-        if (!hasUnnamedEndpoint) {
-          const errorMsg = `Space ${this.gradioImageSpace} không có endpoint ${apiEndpointName}`;
-          if (progressTracker) progressTracker.error(errorMsg);
-          throw new Error(errorMsg);
+      // Gửi request tạo hình ảnh thông qua AICore với model lunaby-vision
+      const messages = [
+        {
+          role: "system",
+          content: "You are an AI image generator. Generate high-quality, detailed images based on user prompts."
+        },
+        {
+          role: "user",
+          content: finalPrompt
         }
-      }
+      ];
 
       if (progressTracker) {
         await progressTracker.update("Đang tạo hình ảnh sơ bộ", 50);
       }
 
-      const result = await app.predict(apiEndpointName, [
-        finalPrompt, // prompt
-        "", // negative_prompt
-        0, // seed
-        true, // randomize_seed
-        768, // width
-        768, // height
-        2.0, // guidance_scale
-        1, // num_inference_steps
-      ]);
+      const result = await AICore.processChatCompletion(messages, {
+        modelType: 'image',
+        max_tokens: 4096
+      });
 
       if (progressTracker) {
         await progressTracker.update("Đang tinh chỉnh chi tiết", 75);
       }
 
-      if (!result || !result.data) {
-        const errorMsg = "Không nhận được phản hồi hợp lệ từ Gradio API";
-        if (progressTracker) progressTracker.error(errorMsg);
-        throw new Error(errorMsg);
-      }
-
-      const imageData = result.data[0];
-
-      if (!imageData || typeof imageData !== "object") {
-        const errorMsg = `Dữ liệu hình ảnh không hợp lệ từ API`;
+      if (!result || !result.content) {
+        const errorMsg = "Không nhận được phản hồi hợp lệ từ Lunaby Vision API";
         if (progressTracker) progressTracker.error(errorMsg);
         throw new Error(errorMsg);
       }
@@ -176,7 +107,8 @@ class ImageService {
         await progressTracker.update("Đang hoàn thiện hình ảnh", 85);
       }
 
-      let imageUrl = imageData.url || imageData.path || imageData.image;
+      // Xử lý response - có thể là URL hoặc base64
+      const imageUrl = result.content.trim();
       const uniqueFilename = `generated_image_${Date.now()}.png`;
       const outputPath = `./temp/${uniqueFilename}`;
       
@@ -190,7 +122,9 @@ class ImageService {
         await progressTracker.update("Đang xử lý kết quả", 90);
       }
 
+      // Xử lý các định dạng response khác nhau
       if (typeof imageUrl === "string" && imageUrl.startsWith("http")) {
+        // URL trực tiếp
         const imageResponse = await axios.get(imageUrl, {
           responseType: "arraybuffer",
           timeout: 60000,
@@ -198,17 +132,19 @@ class ImageService {
         imageBuffer = Buffer.from(imageResponse.data);
         fs.writeFileSync(outputPath, imageBuffer);
       } else if (typeof imageUrl === "string" && imageUrl.startsWith("data:image")) {
+        // Base64 data URL
         const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
         imageBuffer = Buffer.from(base64Data, "base64");
         fs.writeFileSync(outputPath, imageBuffer);
-      } else if (imageData.is_file && imageData.name) {
-        imageUrl = `${this.gradioImageSpace.replace(/\/+$/, "")}/file=${imageData.name}`;
-        const imageResponse = await axios.get(imageUrl, {
-          responseType: "arraybuffer",
-          timeout: 60000,
-        });
-        imageBuffer = Buffer.from(imageResponse.data);
-        fs.writeFileSync(outputPath, imageBuffer);
+      } else if (typeof imageUrl === "string" && imageUrl.length > 100) {
+        try {
+          imageBuffer = Buffer.from(imageUrl, "base64");
+          fs.writeFileSync(outputPath, imageBuffer);
+        } catch (base64Error) {
+          const errorMsg = `Không thể parse base64 image data: ${base64Error.message}`;
+          if (progressTracker) progressTracker.error(errorMsg);
+          throw new Error(errorMsg);
+        }
       } else {
         const errorMsg = `Định dạng URL hình ảnh không được hỗ trợ: ${imageUrl}`;
         if (progressTracker) progressTracker.error(errorMsg);
@@ -229,7 +165,8 @@ class ImageService {
         buffer: imageBuffer,
         url: imageUrl.startsWith("data:image") ? "base64_image_data" : imageUrl,
         localPath: outputPath,
-        source: `Lunaby-image`,
+        source: `Lunaby-Vision`,
+        usage: result.usage
       };
     } catch (error) {
       if (!this.generateImage.isBlocked) {
@@ -242,50 +179,30 @@ class ImageService {
     }
   }
 
-  /**
-   * Kiểm tra kết nối đến Gradio Space
-   * @returns {Promise<boolean>} - Kết quả kết nối
-   */
-  async testGradioConnection() {
+  async translatePromptToEnglish(prompt) {
     try {
-      const gradioModule = await this.loadGradioClient();
-      const { Client } = gradioModule;
-
-      const options = {
-        status_callback: (status) => {
-          if (status.status === "error") {
-            logger.error("IMAGE_SERVICE", `Lỗi từ Gradio Space: ${status.message}`);
-          }
+      const messages = [
+        {
+          role: "system",
+          content: "You are a translator. Translate the following Vietnamese image prompt to English. Only return the translated text, nothing else."
         },
-      };
-
-      const app = await Client.connect(this.gradioImageSpace, options);
-      const api = await app.view_api();
-      const apiEndpointName = "/generate_image";
-
-      if (!api.named_endpoints || !api.named_endpoints[apiEndpointName]) {
-        const hasUnnamedEndpoint =
-          api.unnamed_endpoints && Object.keys(api.unnamed_endpoints).length > 0;
-        if (!hasUnnamedEndpoint) {
-          logger.warn("IMAGE_SERVICE", `Space không có endpoint ${apiEndpointName}`);
-          return false;
+        {
+          role: "user",
+          content: prompt
         }
-      }
+      ];
 
-      logger.info("IMAGE_SERVICE", `Kết nối thành công đến Gradio Space`);
-      return true;
+      const result = await AICore.processChatCompletion(messages, {
+        max_tokens: 500
+      });
+
+      return result.content.trim();
     } catch (error) {
-      logger.error("IMAGE_SERVICE", `Lỗi kết nối Gradio Space: ${error.message}`);
-      return false;
+      logger.error("IMAGE_SERVICE", `Translation error: ${error.message}`);
+      throw error;
     }
   }
 
-  /**
-   * Theo dõi tiến trình tạo hình ảnh
-   * @param {Object} messageOrInteraction - Discord message hoặc interaction
-   * @param {string} prompt - Prompt đang được sử dụng
-   * @returns {Object} - Progress tracker object
-   */
   trackImageGenerationProgress(messageOrInteraction, prompt) {
     const stages = [
       "Đang khởi tạo",

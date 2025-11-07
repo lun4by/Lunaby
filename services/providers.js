@@ -41,7 +41,8 @@ class APIProviderManager {
         apiKey: process.env.LUNABY_API_KEY,
         models: {
           default: "lunaby-pro",
-          thinking: "lunaby-reasoning"
+          thinking: "lunaby-reasoning",
+          image: "lunaby-vision"
         },
         headers: {
           "Content-Type": "application/json"
