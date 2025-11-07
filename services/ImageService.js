@@ -28,21 +28,10 @@ class ImageService {
       logger.info("IMAGE_SERVICE", `Đang tạo hình ảnh với prompt: "${prompt}"`);
 
       const blacklistCheck = await storageDB.checkImageBlacklist(prompt);
-      const aiAnalysis = await AICore.analyzeContentWithAI(prompt);
-      const isBlocked = blacklistCheck.isBlocked || aiAnalysis.isInappropriate;
+      const isBlocked = blacklistCheck.isBlocked;
 
       if (isBlocked) {
-        const errorReason = [];
-
-        if (aiAnalysis.isInappropriate) {
-          errorReason.push(
-            `Phân tích AI:`,
-            `- Danh mục: ${aiAnalysis.categories.join(", ")}`,
-            `- Mức độ: ${aiAnalysis.severity}`
-          );
-        }
-
-        const errorMsg = `Prompt chứa nội dung không phù hợp\n${errorReason.join("\n")}`;
+        const errorMsg = `Prompt chứa nội dung không phù hợp`;
 
         if (progressTracker) {
           await progressTracker.error(errorMsg);
@@ -51,23 +40,10 @@ class ImageService {
       }
 
       if (progressTracker) {
-        await progressTracker.update("Đang phân tích prompt", 15);
-      }
-
-      let finalPrompt = prompt;
-      if (prompt.match(/[\u00C0-\u1EF9]/)) {
-        try {
-          finalPrompt = await this.translatePromptToEnglish(prompt);
-          logger.info("IMAGE_SERVICE", `Prompt dịch sang tiếng Anh: "${finalPrompt}"`);
-        } catch (translateError) {
-          logger.warn("IMAGE_SERVICE", `Không thể dịch prompt: ${translateError.message}`);
-          finalPrompt = prompt;
-        }
-      }
-
-      if (progressTracker) {
         await progressTracker.update("Đang khởi tạo", 20);
       }
+
+      const finalPrompt = prompt;
 
       if (progressTracker) {
         await progressTracker.update("Đang tạo concept", 35);
@@ -175,30 +151,6 @@ class ImageService {
       } else {
         throw new Error(`Prompt chứa nội dung không phù hợp`);
       }
-    }
-  }
-
-  async translatePromptToEnglish(prompt) {
-    try {
-      const messages = [
-        {
-          role: "system",
-          content: "You are a translator. Translate the following Vietnamese image prompt to English. Only return the translated text, nothing else."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ];
-
-      const result = await AICore.processChatCompletion(messages, {
-        max_tokens: 500
-      });
-
-      return result.content.trim();
-    } catch (error) {
-      logger.error("IMAGE_SERVICE", `Translation error: ${error.message}`);
-      throw error;
     }
   }
 
