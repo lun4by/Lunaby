@@ -37,7 +37,7 @@ class APIProviderManager {
      if (process.env.LUNABY_API_KEY) {
       providers.push({
         name: "Lunaby",
-        baseURL: process.env.LUNABY_BASE_URL || "http://47.84.119.102:11434/v1",
+        baseURL: process.env.LUNABY_BASE_URL || "https://api.lunaby.tech/v1",
         apiKey: process.env.LUNABY_API_KEY,
         models: {
           default: "lunaby-pro",
@@ -231,7 +231,7 @@ class APIProviderManager {
         Authorization: `Bearer ${provider.apiKey}`,
         ...provider.headers
       },
-      timeout: 40000,
+      timeout: 25000,
       maxRedirects: 3,
       validateStatus: (status) => status < 500,
     };
@@ -244,7 +244,7 @@ class APIProviderManager {
       keepAliveMsecs: 1000,
       maxSockets: 50,
       maxFreeSockets: 10,
-      timeout: 40000,
+      timeout: 25000,
       freeSocketTimeout: 30000,
     };
     
