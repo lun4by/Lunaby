@@ -91,6 +91,54 @@
         "refresh": "Lam moi",
         "detailed": "Chi tiet"
       }
+    },
+    "quotas": {
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "helper": "Helper",
+        "user": "User"
+      },
+      "labels": {
+        "noLimit": "Khong gioi han",
+        "limitPerDay": "{count} tin nhan/ngay",
+        "usageCount": "{count} tin nhan"
+      },
+      "embeds": {
+        "user": {
+          "title": "Thong ke Quota cua {username}",
+          "fields": {
+            "role": "Vai tro",
+            "dailyLimit": "Han muc ngay",
+            "today": "Hom nay",
+            "week": "Tuan nay",
+            "month": "Thang nay",
+            "total": "Tong cong",
+            "remainingToday": "Con lai hom nay"
+          },
+          "footer": "User ID: {id}",
+          "historyTitle": "Lich su gan day",
+          "historyEntry": "{count} - {operation}",
+          "historyEmpty": "Chua co lich su"
+        },
+        "system": {
+          "title": "Thong ke Quota He thong",
+          "fields": {
+            "totalUsers": "Tong nguoi dung",
+            "dailyUsage": "Su dung ngay",
+            "weeklyUsage": "Su dung tuan",
+            "monthlyUsage": "Su dung thang",
+            "totalUsage": "Tong su dung"
+          },
+          "footer": "Yeu cau boi {tag}",
+          "topTitle": "Top nguoi dung (Hom nay)",
+          "topEntry": "{position}. <@{userId}>: {count} - {role}"
+        }
+      },
+      "errors": {
+        "general": "Loi khi lay thong ke: {message}",
+        "noPermissionSystem": "Ban khong co quyen xem thong ke he thong!"
+      }
     }
   },
   "handlers": {},
