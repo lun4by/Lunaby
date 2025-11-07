@@ -3,25 +3,19 @@ const logger = require("../utils/logger.js");
 
 class WebSearchService {
   constructor() {
-    this.perplexityBaseURL = "https://api.perplexity.ai";
-    this.perplexityApiKey = process.env.PERPLEXITY_API_KEY;
+    this.apiBaseURL = "https://api.perplexity.ai";
+    this.apiKey = process.env.WEB_SEARCH_API_KEY || process.env.PERPLEXITY_API_KEY;
 
-    if (!this.perplexityApiKey) {
-      logger.warn("WEB_SEARCH", "PERPLEXITY_API_KEY not configured!");
+    if (!this.apiKey) {
+      logger.warn("WEB_SEARCH", "WEB_SEARCH_API_KEY not configured!");
     } else {
-      logger.info("WEB_SEARCH", "Initialized with Perplexity API");
+      logger.info("WEB_SEARCH", "Initialized with Web Search API");
     }
   }
 
-  /**
-   * Thực hiện tìm kiếm web sử dụng Perplexity API
-   * @param {string} query - Truy vấn tìm kiếm
-   * @param {Object} options - Tùy chọn tìm kiếm
-   * @returns {Promise<Object>} - Kết quả tìm kiếm
-   */
   async search(query, options = {}) {
-    if (!this.perplexityApiKey) {
-      throw new Error("PERPLEXITY_API_KEY not configured!");
+    if (!this.apiKey) {
+      throw new Error("WEB_SEARCH_API_KEY not configured!");
     }
 
     if (!query || typeof query !== "string" || query.trim().length === 0) {
@@ -33,12 +27,19 @@ class WebSearchService {
 
       const model = options.model || "sonar";
       const max_tokens = options.max_tokens || 2048;
+      const systemPrompt = options.systemPrompt || "Bạn là một trợ lý hữu ích. Hãy cung cấp thông tin chi tiết và chính xác.";
+
+      const messages = [{ role: "user", content: query }];
+      
+      if (systemPrompt) {
+        messages.unshift({ role: "system", content: systemPrompt });
+      }
 
       const response = await axios.post(
-        `${this.perplexityBaseURL}/chat/completions`,
+        `${this.apiBaseURL}/chat/completions`,
         {
           model: model,
-          messages: [{ role: "user", content: query }],
+          messages: messages,
           max_tokens: max_tokens,
           temperature: 0.7,
           top_p: 0.9,
@@ -48,7 +49,7 @@ class WebSearchService {
         },
         {
           headers: {
-            "Authorization": `Bearer ${this.perplexityApiKey}`,
+            "Authorization": `Bearer ${this.apiKey}`,
             "Content-Type": "application/json"
           },
           timeout: 60000
@@ -89,7 +90,10 @@ class WebSearchService {
 
     try {
       await progressTracker.update("Đang gửi yêu cầu", 30);
-      const result = await this.search(query, options);
+      const result = await this.search(query, {
+        ...options,
+        systemPrompt: options.systemPrompt
+      });
       await progressTracker.update("Đang xử lý kết quả", 80);
       await progressTracker.complete();
       return result;
@@ -106,15 +110,32 @@ class WebSearchService {
    */
   shouldSearch(text) {
     const searchKeywords = [
+      // Current news & events
       'tin tức', 'news', 'mới', 'latest', 'hiện tại', 'bây giờ',
+      // Entertainment
       'anime', 'phim', 'series', 'tập mới', 'episode',
+      // Tech & products
       'điện thoại', 'laptop', 'sản phẩm', 'release',
+      // Weather & environment
       'bão', 'thời tiết', 'weather',
+      // Music & entertainment
       'nhạc', 'bài hát', 'music', 'artist',
+      // Video & streaming
       'video', 'youtube', 'streamer', 'stream',
+      // Finance & market
       'giá', 'price', 'stock market', 'chứng khoán',
+      // Events & schedules
       'sự kiện', 'event', 'hôm nay', 'today', 'hôm qua',
-      'covid', 'dịch', 'corona', 'virus'
+      // Health & pandemic
+      'covid', 'dịch', 'corona', 'virus',
+      // AI & technology
+      'ai', 'artificial intelligence', 'trí tuệ nhân tạo', 'mô hình ai', 'chatbot',
+      // Streaming & content creators
+      'streamer', 'youtuber', 'tiktoker', 'content creator', 'kênh', 'channel',
+      // Politics & government
+      'chính trị', 'politics', 'chính phủ', 'government', 'tổng thống', 'president', 
+      'người nắm quyền', 'người lãnh đạo', 'leader', 'thủ tướng', 'prime minister',
+      'bầu cử', 'election', 'quốc hội', 'parliament', 'đảng', 'party'
     ];
 
     const lowerText = text.toLowerCase();

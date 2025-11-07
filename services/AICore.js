@@ -201,12 +201,10 @@ class AICore {
         try {
           const searchResult = await WebSearchService.search(userPrompt, { model: 'sonar' });
           
-          // Thêm search result vào last message
           messages[messages.length - 1].content += `\n\n[REAL-TIME SEARCH RESULT]\n${searchResult.content}`;
           logger.info("AI_CORE", "Search context added to prompt");
         } catch (searchError) {
           logger.warn("AI_CORE", "Auto-search failed, using normal mode: " + searchError.message);
-          // Fallback to normal mode - không add search context
         }
       }
 

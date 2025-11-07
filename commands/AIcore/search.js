@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const WebSearchService = require('../../services/WebSearchService');
 const logger = require('../../utils/logger');
+const prompts = require('../../config/prompts');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -28,7 +29,10 @@ module.exports = {
       const result = await WebSearchService.searchWithProgress(
         query,
         interaction,
-        { model: 'sonar' }
+        { 
+          model: 'sonar',
+          systemPrompt: prompts.system.main
+        }
       );
 
       await interaction.editReply({
