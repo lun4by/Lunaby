@@ -120,7 +120,7 @@ async function handleMentionMessage(message, client) {
           return;
         }
 
-        // Lấy response từ AI
+        // Lấy response từ AI (với auto-search nếu cần)
         const response = await ConversationService.getCompletion(content, message);
 
         if (!response) {

@@ -7,7 +7,6 @@ const ownerService = require('../services/ownerService.js');
 const { syncAllGuilds } = require('../handlers/guildHandler');
 const logger = require('../utils/logger.js');
 // const AutoUpdateService = require('../services/AutoUpdateService');
-const APIProviderManager = require('../services/providers.js');
 const CommandsJSONService = require('../services/CommandsJSONService');
 // const dashboardService = require("../services/dashboardService.js");
 
@@ -33,16 +32,6 @@ async function startbot(client, loadCommands) {
     // } catch (error) {
     //   logger.error('SYSTEM', `Lỗi khi auto-update:`, error);
     // }
-
-    try {
-      const providerManager = new APIProviderManager();
-      const providers = providerManager.initializeProviders();
-      logger.info('SYSTEM', `Đã khởi tạo ${providers.length} providers: ${providers.map(p => p.name).join(", ")}`);
-      initSystem.markReady('providers');
-    } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi khởi tạo providers:', error);
-      initSystem.markReady('providers');
-    }
 
     try {
       await mongoClient.connect();

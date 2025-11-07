@@ -5,6 +5,7 @@ const ownerService = require("./ownerService.js");
 const prompts = require("../config/prompts.js");
 const textUtils = require("../utils/textUtils.js");
 const AICore = require("./AICore.js");
+const WebSearchService = require("./WebSearchService.js");
 const { AI_RESPONSE_LOCALE } = require("../utils/i18n.js");
 
 class ConversationService {
@@ -288,7 +289,7 @@ class ConversationService {
       });
       
       const result = await Promise.race([
-        AICore.processChatCompletion(messages, {
+        AICore.processChatCompletionWithAutoSearch(messages, {
           model: additionalConfig.model || AICore.CoreModel,
           max_tokens: additionalConfig.max_tokens || 2048,
           ...additionalConfig,

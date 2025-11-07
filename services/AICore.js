@@ -1,51 +1,72 @@
+const axios = require("axios");
 const logger = require("../utils/logger.js");
 const prompts = require("../config/prompts.js");
-const APIProviderManager = require("./providers.js");
 const initSystem = require("./initSystem.js");
+const WebSearchService = require("./WebSearchService.js");
 
 class AICore {
   constructor() {
     this.systemPrompt = prompts.system.main;
     this.Model = "lunaby";
-    this.providerManager = new APIProviderManager();
-    this.providerManager.initializeProviders();
-    logger.info("AI_CORE", "Initialized with multi-provider support");
+    this.lunabyBaseURL = process.env.LUNABY_BASE_URL || "https://api.lunaby.tech/v1";
+    this.lunabyApiKey = process.env.LUNABY_API_KEY;
+    
+    if (!this.lunabyApiKey) {
+      logger.error("AI_CORE", "LUNABY_API_KEY not configured!");
+    }
+    logger.info("AI_CORE", "Initialized with Lunaby API");
   }
 
   async waitForProviders() {
     await initSystem.waitForReady();
-    return this.providerManager;
+    return this;
   }
 
   async processChatCompletion(messages, config = {}) {
     try {
-      const response = await this.providerManager.makeRequest("/chat/completions", {
-        max_tokens: config.max_tokens || 2048,
-        messages: messages,
-        ...config,
-      }, config.modelType || 'default');
+      const modelMap = {
+        default: "lunaby-pro",
+        thinking: "lunaby-reasoning",
+        image: "lunaby-vision"
+      };
+      
+      const model = modelMap[config.modelType] || modelMap.default;
+      
+      const response = await axios.post(
+        `${this.lunabyBaseURL}/chat/completions`,
+        {
+          model: model,
+          messages: messages,
+          max_tokens: config.max_tokens || 2048,
+          ...config,
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${this.lunabyApiKey}`,
+            "Content-Type": "application/json"
+          },
+          timeout: 60000
+        }
+      );
 
       
-      const tokenUsage = response.usage || {
+      const tokenUsage = response.data.usage || {
         prompt_tokens: 0,
         completion_tokens: 0,
         total_tokens: 0
       };
 
-      // Xử lý response từ Image Generation API
-      if (config.modelType === 'image' && response.data) {
+      if (config.modelType === 'image' && response.data.data) {
         logger.info("AI_CORE", "Processing image generation response");
-        // Response format: { data: [{ b64_json: "...", revised_prompt: "..." }] }
         return {
-          content: response.data[0].b64_json,
-          revised_prompt: response.data[0].revised_prompt,
+          content: response.data.data[0].b64_json,
+          revised_prompt: response.data.data[0].revised_prompt,
           usage: tokenUsage
         };
       }
 
-      // Xử lý response từ Chat Completion API (standard)
       return {
-        content: response.choices[0].message.content,
+        content: response.data.choices[0].message.content,
         usage: tokenUsage
       };
     } catch (error) {
@@ -157,12 +178,44 @@ class AICore {
     return this.Model;
   }
 
-  getProviderStatus() {
-    return this.providerManager.getProviderStatus();
+  isReady() {
+    return !!this.lunabyApiKey;
   }
 
-  isProvidersReady() {
-    return initSystem.getStatus().services.providers;
+  /**
+   * Xử lý chat completion với auto-search
+   * @param {Array} messages - Messages array
+   * @param {Object} options - Options
+   * @returns {Promise<Object>}
+   */
+  async processChatCompletionWithAutoSearch(messages, options = {}) {
+    try {
+      // Lấy user message cuối cùng để kiểm tra cần search
+      const lastMessage = messages[messages.length - 1];
+      const userPrompt = lastMessage?.content || '';
+
+      // Kiểm tra xem có cần search không
+      if (WebSearchService.shouldSearch(userPrompt) && process.env.PERPLEXITY_API_KEY) {
+        logger.info("AI_CORE", "Auto-search triggered for: " + userPrompt.substring(0, 50));
+        
+        try {
+          const searchResult = await WebSearchService.search(userPrompt, { model: 'sonar' });
+          
+          // Thêm search result vào last message
+          messages[messages.length - 1].content += `\n\n[REAL-TIME SEARCH RESULT]\n${searchResult.content}`;
+          logger.info("AI_CORE", "Search context added to prompt");
+        } catch (searchError) {
+          logger.warn("AI_CORE", "Auto-search failed, using normal mode: " + searchError.message);
+          // Fallback to normal mode - không add search context
+        }
+      }
+
+      // Gọi processChatCompletion với messages array
+      return await this.processChatCompletion(messages, options);
+    } catch (error) {
+      logger.error("AI_CORE", "Chat with auto-search error: " + error.message);
+      throw error;
+    }
   }
 }
 

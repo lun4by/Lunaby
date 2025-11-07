@@ -14,6 +14,9 @@ function setupInteractionCreateEvent(client) {
           await handleConsentInteraction(interaction);
         } else if (interaction.customId.startsWith('resetdb_') || interaction.customId.startsWith('resetuser_')) {
           await handleResetdbInteraction(interaction);
+        } else if (interaction.customId.startsWith('search_')) {
+          // Handle search buttons if needed
+          await interaction.reply({ content: 'Tính năng này sắp ra mắt!', ephemeral: true });
         }
       }
     } catch (error) {
