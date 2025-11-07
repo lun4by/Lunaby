@@ -82,51 +82,28 @@ class ImageService {
         await progressTracker.update("Đang hoàn thiện hình ảnh", 85);
       }
 
-      // Xử lý response - parse JSON nếu cần
+      // Xử lý response - AICore đã extract content từ choices[0].message.content
+      // Content sẽ là base64 string trực tiếp từ Lunaby Vision API
       let imageData = result.content.trim();
       let imageUrl = null;
       let base64Image = null;
 
       logger.info("IMAGE_SERVICE", `Response content type: ${typeof imageData}, length: ${imageData.length}`);
+      logger.info("IMAGE_SERVICE", `Content preview: ${imageData.substring(0, 100)}...`);
 
-      // Thử parse JSON response từ API
-      try {
-        const parsedResponse = JSON.parse(imageData);
-        logger.info("IMAGE_SERVICE", `Parsed JSON response from API: ${JSON.stringify(Object.keys(parsedResponse))}`);
-        
-        // Kiểm tra format Stability AI / OpenAI style response
-        if (parsedResponse.data && Array.isArray(parsedResponse.data)) {
-          logger.info("IMAGE_SERVICE", `Found data array with ${parsedResponse.data.length} items`);
-          
-          if (parsedResponse.data.length > 0 && parsedResponse.data[0]) {
-            const firstItem = parsedResponse.data[0];
-            logger.info("IMAGE_SERVICE", `First item keys: ${JSON.stringify(Object.keys(firstItem))}`);
-            
-            if (firstItem.b64_json) {
-              base64Image = firstItem.b64_json;
-              logger.info("IMAGE_SERVICE", `Found b64_json in response, length: ${base64Image.length}`);
-            } else if (firstItem.url) {
-              imageUrl = firstItem.url;
-              logger.info("IMAGE_SERVICE", "Found URL in response");
-            } else {
-              logger.warn("IMAGE_SERVICE", `No b64_json or url found in data[0]: ${JSON.stringify(firstItem).substring(0, 200)}`);
-            }
-          } else {
-            logger.warn("IMAGE_SERVICE", "data array is empty");
-          }
-        } else {
-          logger.warn("IMAGE_SERVICE", `Response structure unexpected: ${JSON.stringify(parsedResponse).substring(0, 200)}`);
-        }
-      } catch (parseError) {
-        // Không phải JSON, có thể là URL hoặc base64 trực tiếp
-        logger.info("IMAGE_SERVICE", `Response is not JSON (${parseError.message}), treating as direct content`);
-        if (imageData.startsWith("http")) {
-          imageUrl = imageData;
-        } else if (imageData.startsWith("data:image")) {
-          imageUrl = imageData;
-        } else {
-          base64Image = imageData;
-        }
+      // Kiểm tra các định dạng response có thể
+      if (imageData.startsWith("http://") || imageData.startsWith("https://")) {
+        // Response là URL trực tiếp
+        imageUrl = imageData;
+        logger.info("IMAGE_SERVICE", "Detected HTTP(S) URL in response");
+      } else if (imageData.startsWith("data:image")) {
+        // Response là data URL (data:image/png;base64,...)
+        imageUrl = imageData;
+        logger.info("IMAGE_SERVICE", "Detected data URL in response");
+      } else {
+        // Response là base64 string thuần túy từ Lunaby Vision API
+        base64Image = imageData;
+        logger.info("IMAGE_SERVICE", `Treating response as base64 string, length: ${base64Image.length}`);
       }
 
       const uniqueFilename = `generated_image_${Date.now()}.png`;
