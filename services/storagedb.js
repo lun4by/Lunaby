@@ -1,19 +1,13 @@
 const mongoClient = require('./mongoClient.js');
 const Profile = require('./profiledb.js');
 const logger = require('../utils/logger.js');
+const MemoryService = require('./MemoryService.js');
+const TokenService = require('./TokenService.js');
 
-/**
- * Class để xử lý tất cả các hoạt động lưu trữ liên quan đến cuộc trò chuyện
- */
 class StorageDB {
   constructor() {
-    // Số lượng tin nhắn tối đa để giữ trong ngữ cảnh
     this.maxConversationLength = 20;
-
-    // Tuổi thọ tối đa của cuộc trò chuyện (tính bằng mili giây) - 3 giờ
-    this.maxConversationAge = 3 * 60 * 60 * 1000;
-
-    // Dọn dẹp cuộc trò chuyện cũ mỗi giờ
+    this.maxConversationAge = 3 * 60 * 60 * 1000; // 3 giờ
     setInterval(() => this.cleanupOldConversations(), 60 * 60 * 1000);
   }
 
@@ -21,7 +15,6 @@ class StorageDB {
     try {
       const db = mongoClient.getDb();
 
-      // Xử lý collection conversations
       try {
         const indexes = await db.collection('conversations').listIndexes().toArray();
         const hasConversationIdIndex = indexes.some(index => index.name === 'conversationId_1');
@@ -47,7 +40,6 @@ class StorageDB {
           }
         }
 
-        // Xóa dữ liệu không hợp lệ
         const deleteResult = await db.collection('conversations').deleteMany({
           $or: [
             { userId: null },
@@ -62,7 +54,6 @@ class StorageDB {
         }
 
       } catch (indexError) {
-        // Xử lý lỗi về index - tạo lại collection nếu cần
         logger.info('DATABASE', 'Thử xóa và tạo lại collection conversations...');
         try {
           await db.collection('conversations').drop();
@@ -72,7 +63,6 @@ class StorageDB {
         }
       }
 
-      // Tạo lại collection nếu cần
       try {
         const collections = await db.listCollections({ name: 'conversations' }).toArray();
         if (collections.length === 0) {
@@ -83,7 +73,6 @@ class StorageDB {
         logger.error('DATABASE', 'Lỗi khi tạo collection conversations:', createError);
       }
 
-      // Tạo index cần thiết
       try {
         await db.collection('conversations').createIndex({ userId: 1, messageIndex: 1 }, { unique: true });
         // logger.info('DATABASE', 'Đã tạo chỉ mục userId_1_messageIndex_1');
@@ -92,10 +81,8 @@ class StorageDB {
         await this.resetConversationsCollection();
       }
 
-      // Tạo các chỉ mục khác
       await db.collection('conversation_meta').createIndex({ userId: 1 }, { unique: true });
 
-      // Tạo các collection cho hệ thống quản lý
       try {
         await db.createCollection('mod_settings');
         await db.createCollection('image_blacklist');
@@ -104,7 +91,6 @@ class StorageDB {
         logger.info('DATABASE', 'Các collection cho hệ thống moderation đã tồn tại hoặc không thể tạo');
       }
 
-      // Tạo các chỉ mục cho hệ thống moderation
       try {
         await db.collection('mod_settings').createIndex({ guildId: 1 }, { unique: true });
         await db.collection('image_blacklist').createIndex({ category: 1 });
@@ -114,9 +100,7 @@ class StorageDB {
         logger.error('DATABASE', 'Lỗi khi tạo chỉ mục cho hệ thống moderation:', error);
       }
 
-      // Khởi tạo hệ thống token limit
       try {
-        const TokenService = require('./TokenService.js');
         await TokenService.initializeCollection();
         logger.info('DATABASE', 'Đã khởi tạo hệ thống token limit');
       } catch (error) {
@@ -740,14 +724,12 @@ class StorageDB {
     try {
       const db = mongoClient.getDb();
 
-      // Tạo collection nếu chưa có
       const collections = await db.listCollections({ name: 'user_profiles' }).toArray();
       if (collections.length === 0) {
         await db.createCollection('user_profiles');
         logger.info('DATABASE', 'Đã tạo collection user_profiles');
       }
 
-      // Xóa index cũ nếu tồn tại
       try {
         const indexes = await db.collection('user_profiles').listIndexes().toArray();
         const hasUserIdIndex = indexes.some(index => index.name === 'userId_1');
@@ -762,9 +744,8 @@ class StorageDB {
 
       logger.info('DATABASE', 'Hệ thống profile người dùng đã sẵn sàng');
 
-      // Khởi tạo AI Memory System V2
       try {
-        const MemoryService = require('./MemoryService.js');
+        
         await MemoryService.initializeMemoryCollection();
         logger.info('DATABASE', 'Đã khởi tạo AI Memory System V2');
       } catch (memoryError) {
@@ -800,7 +781,6 @@ class StorageDB {
           { keyword: "nsfw", category: "adult", description: "Not safe for work content", severity: "high" },
           { keyword: "pornographic", category: "adult", description: "Pornographic content", severity: "high" },
           { keyword: "khiêu dâm", category: "adult", description: "Nội dung khiêu dâm", severity: "high" },
-
           // Bạo lực
           { keyword: "blood", category: "violence", description: "Blood content", severity: "high" },
           { keyword: "gore", category: "violence", description: "Gore content", severity: "high" },
@@ -810,7 +790,6 @@ class StorageDB {
           { keyword: "đánh đập", category: "violence", description: "Hành vi bạo lực", severity: "high" },
           { keyword: "tử vong", category: "violence", description: "Cảnh tử vong", severity: "high" },
           { keyword: "tai nạn", category: "violence", description: "Cảnh tai nạn", severity: "medium" },
-
           // Chính trị nhạy cảm
           { keyword: "chính trị", category: "politics", description: "Nội dung chính trị nhạy cảm", severity: "medium" },
           { keyword: "đảng phái", category: "politics", description: "Nội dung về đảng phái", severity: "medium" },
@@ -818,21 +797,18 @@ class StorageDB {
           { keyword: "bạo động", category: "politics", description: "Cảnh bạo động chính trị", severity: "high" },
           { keyword: "cách mạng", category: "politics", description: "Nội dung về cách mạng", severity: "medium" },
           { keyword: "chống đối", category: "politics", description: "Nội dung chống đối", severity: "high" },
-
           // Phân biệt chủng tộc
           { keyword: "phân biệt", category: "discrimination", description: "Phân biệt đối xử", severity: "high" },
           { keyword: "racist", category: "discrimination", description: "Racist content", severity: "high" },
           { keyword: "kỳ thị", category: "discrimination", description: "Kỳ thị chủng tộc", severity: "high" },
           { keyword: "phân biệt chủng tộc", category: "discrimination", description: "Phân biệt chủng tộc", severity: "high" },
           { keyword: "phân biệt màu da", category: "discrimination", description: "Phân biệt màu da", severity: "high" },
-
           // Tôn giáo nhạy cảm
           { keyword: "tôn giáo", category: "religion", description: "Nội dung tôn giáo nhạy cảm", severity: "medium" },
           { keyword: "blasphemy", category: "religion", description: "Blasphemous content", severity: "high" },
           { keyword: "xúc phạm tôn giáo", category: "religion", description: "Xúc phạm tôn giáo", severity: "high" },
           { keyword: "phỉ báng", category: "religion", description: "Phỉ báng tôn giáo", severity: "high" },
           { keyword: "báng bổ", category: "religion", description: "Báng bổ tôn giáo", severity: "high" },
-
           // Ma túy và chất cấm
           { keyword: "ma túy", category: "drugs", description: "Nội dung về ma túy", severity: "high" },
           { keyword: "drugs", category: "drugs", description: "Drug content", severity: "high" },
@@ -840,7 +816,6 @@ class StorageDB {
           { keyword: "heroin", category: "drugs", description: "Heroin reference", severity: "high" },
           { keyword: "cần sa", category: "drugs", description: "Nội dung về cần sa", severity: "high" },
           { keyword: "chất gây nghiện", category: "drugs", description: "Chất gây nghiện", severity: "high" },
-
           // Vũ khí nguy hiểm
           { keyword: "vũ khí", category: "weapons", description: "Nội dung về vũ khí", severity: "medium" },
           { keyword: "súng", category: "weapons", description: "Hình ảnh súng đạn", severity: "medium" },
@@ -848,21 +823,18 @@ class StorageDB {
           { keyword: "bom", category: "weapons", description: "Chất nổ", severity: "high" },
           { keyword: "mìn", category: "weapons", description: "Mìn nổ", severity: "high" },
           { keyword: "weapons", category: "weapons", description: "Weapon content", severity: "medium" },
-
           // Nội dung lừa đảo
           { keyword: "lừa đảo", category: "scam", description: "Nội dung lừa đảo", severity: "high" },
           { keyword: "scam", category: "scam", description: "Scam content", severity: "high" },
           { keyword: "hack", category: "scam", description: "Hack content", severity: "medium" },
           { keyword: "cheat", category: "scam", description: "Cheat content", severity: "medium" },
           { keyword: "gian lận", category: "scam", description: "Nội dung gian lận", severity: "high" },
-
           // Nội dung quấy rối
           { keyword: "quấy rối", category: "harassment", description: "Nội dung quấy rối", severity: "high" },
           { keyword: "harassment", category: "harassment", description: "Harassment content", severity: "high" },
           { keyword: "bắt nạt", category: "harassment", description: "Nội dung bắt nạt", severity: "high" },
           { keyword: "bullying", category: "harassment", description: "Bullying content", severity: "high" },
           { keyword: "stalking", category: "harassment", description: "Stalking content", severity: "high" },
-
           // Nội dung xúc phạm
           { keyword: "xúc phạm", category: "offensive", description: "Nội dung xúc phạm", severity: "medium" },
           { keyword: "offensive", category: "offensive", description: "Offensive content", severity: "medium" },
@@ -871,7 +843,6 @@ class StorageDB {
           { keyword: "nhạy cảm", category: "offensive", description: "Nội dung nhạy cảm", severity: "medium" }
         ];
 
-        // Thêm vào database
         await db.collection('image_blacklist').insertMany(defaultBlacklist);
         logger.info('DATABASE', `Đã thêm ${defaultBlacklist.length} từ khóa vào blacklist`);
       }
@@ -896,7 +867,6 @@ class StorageDB {
       const matchedKeywords = [];
       const categories = new Set();
 
-      // Kiểm tra từng từ khóa trong blacklist
       for (const item of blacklist) {
         if (lowerText.includes(item.keyword.toLowerCase())) {
           matchedKeywords.push(item.keyword);
@@ -931,13 +901,11 @@ class StorageDB {
     try {
       const db = mongoClient.getDb();
 
-      // Kiểm tra xem từ khóa đã tồn tại chưa
       const existing = await db.collection('image_blacklist').findOne({ keyword });
       if (existing) {
         return false;
       }
 
-      // Thêm từ khóa mới
       await db.collection('image_blacklist').insertOne({
         keyword,
         category,
