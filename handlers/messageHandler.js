@@ -88,9 +88,6 @@ async function handleMentionMessage(message, client) {
       }
 
       try {
-        const TokenService = require('../services/TokenService.js');
-        const userId = message.author.id;
-        
         const content = message.content.replace(/<@!?\d+>/g, '').trim();
         
         if (!content) {
@@ -98,43 +95,7 @@ async function handleMentionMessage(message, client) {
           return;
         }
 
-        const [messageCheck] = await Promise.all([
-          TokenService.canUseMessages(userId, 1),
-          typingPromise 
-        ]);
-
-        logger.debug('QUOTA_CHECK', `Kiểm tra quota cho ${message.author.tag}:`, JSON.stringify(messageCheck));
-
-        if (!messageCheck.allowed) {
-          const roleNames = {
-            user: 'Người dùng',
-            helper: 'Helper',
-            admin: 'Admin',
-            owner: 'Owner'
-          };
-          
-          const current = messageCheck.current || 0;
-          const limit = messageCheck.limit || 600;
-          const remaining = Math.max(0, messageCheck.remaining || 0);
-          
-          const now = Date.now();
-          const messageData = await TokenService.getUserMessageData(userId);
-          const periodStart = messageData.periodStart || messageData.createdAt;
-          const periodMs = 30 * 24 * 60 * 60 * 1000;
-          const daysRemaining = Math.ceil((periodStart + periodMs - now) / (24 * 60 * 60 * 1000));
-          
-          await message.reply(
-            `**Giới hạn Lượt nhắn tin**\n\n` +
-            `Bạn đã sử dụng hết giới hạn lượt nhắn tin!\n\n` +
-            `**Thông tin:**\n` +
-            `• Vai trò: ${roleNames[messageCheck.role] || messageCheck.role}\n` +
-            `• Đã sử dụng: ${current.toLocaleString()} lượt\n` +
-            `• Giới hạn: ${limit.toLocaleString()} lượt/30 ngày\n` +
-            `• Còn lại: ${remaining.toLocaleString()} lượt\n\n` +
-            `Giới hạn sẽ được reset sau ${daysRemaining} ngày. Vui lòng quay lại sau!`
-          );
-          return;
-        }
+        await typingPromise;
 
         const lowerContent = content.toLowerCase();
         if (lowerContent.includes('code') ||
@@ -247,47 +208,8 @@ async function handleCodeRequest(message, prompt) {
   await message.channel.sendTyping();
 
   try {
-    const TokenService = require('../services/TokenService.js');
-    const userId = message.author.id;
-    const tokenCheck = await TokenService.canUseMessages(userId, 1);
-
-    if (!tokenCheck.allowed) {
-      const roleNames = {
-        user: 'Người dùng',
-        helper: 'Helper',
-        admin: 'Admin',
-        owner: 'Owner'
-      };
-      
-      const current = tokenCheck.current || 0;
-      const limit = tokenCheck.limit || 600;
-      const remaining = Math.max(0, tokenCheck.remaining || 0);
-      
-      const now = Date.now();
-      const messageData = await TokenService.getUserMessageData(userId);
-      const periodStart = messageData.periodStart || messageData.createdAt;
-      const periodMs = 30 * 24 * 60 * 60 * 1000;
-      const daysRemaining = Math.ceil((periodStart + periodMs - now) / (24 * 60 * 60 * 1000));
-      
-      await message.reply(
-        `**Giới hạn Lượt nhắn tin**\n\n` +
-        `Bạn đã sử dụng hết giới hạn lượt nhắn tin!\n\n` +
-        `**Thông tin:**\n` +
-        `• Vai trò: ${roleNames[tokenCheck.role] || tokenCheck.role}\n` +
-        `• Đã sử dụng: ${current.toLocaleString()} lượt\n` +
-        `• Giới hạn: ${limit.toLocaleString()} lượt/30 ngày\n` +
-        `• Còn lại: ${remaining.toLocaleString()} lượt\n\n` +
-        `Giới hạn sẽ được reset sau ${daysRemaining} ngày. Vui lòng quay lại sau!`
-      );
-      return;
-    }
-
     const result = await AICore.getCodeCompletion(prompt, message);
     let formattedResponse = result.content || result;
-
-    if (result.usage && result.usage.total_tokens) {
-      TokenService.recordMessageUsage(userId, 1, 'code').catch(() => {});
-    }
 
     if (!formattedResponse.includes('```')) {
       formattedResponse = formatCodeResponse(formattedResponse);
