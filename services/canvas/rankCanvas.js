@@ -26,9 +26,6 @@ const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLev
         card.setBackground(background);
     }
 
-    if (color) {
-        card.setOverlayColor(color);
-    }
 
     const image = await card.build({ format: 'png' });
 
