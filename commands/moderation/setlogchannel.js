@@ -69,8 +69,8 @@ module.exports = {
 						inline: true,
 					},
 					{
-						name: '🛡️ Log hành động moderation',
-						value: modActionLogs ? '✅ Bật' : '❌ Tắt',
+						name: '🛡️ Log moderation',
+						value: modActionLogs ? 'Bật' : 'Tắt',
 						inline: true,
 					},
 					{
