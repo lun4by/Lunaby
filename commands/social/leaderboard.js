@@ -10,12 +10,13 @@ function commatize(num) {
 }
 
 module.exports = {
-  disabled: true,
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Hiển thị bảng xếp hạng XP của server'),
 
   async execute(interaction) {
+    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
+
     await interaction.deferReply();
 
     try {

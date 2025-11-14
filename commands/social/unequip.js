@@ -2,7 +2,6 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const ProfileDB = require('../../services/profiledb');
 
 module.exports = {
-  disabled: true,
   data: new SlashCommandBuilder()
     .setName('unequip')
     .setDescription('Gỡ bỏ item đã trang bị khỏi profile card')
@@ -19,6 +18,8 @@ module.exports = {
         )),
 
   async execute(interaction) {
+    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
+
     await interaction.deferReply({ ephemeral: true });
 
     try {

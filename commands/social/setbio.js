@@ -2,7 +2,6 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const ProfileDB = require('../../services/profiledb');
 
 module.exports = {
-  disabled: true,
   data: new SlashCommandBuilder()
     .setName('setbio')
     .setDescription('Đặt bio cho profile card của bạn')
@@ -13,6 +12,8 @@ module.exports = {
         .setMaxLength(200)),
 
   async execute(interaction) {
+    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
+
     await interaction.deferReply({ ephemeral: true });
 
     try {

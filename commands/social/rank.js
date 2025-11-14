@@ -5,7 +5,6 @@ const generateRankCard = require('./../../services/canvas/rankCanvas.js');
 const { ordinalize } = require('./../../utils/string.js');
 
 module.exports = {
-  disabled: true,
   data: new SlashCommandBuilder()
     .setName('rank')
     .setDescription('Hiển thị rank, level và XP của người dùng')
@@ -17,6 +16,8 @@ module.exports = {
     ),
 
   async execute(interaction) {
+    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
+
     await interaction.deferReply();
 
     const targetUser = interaction.options.getUser('user') || interaction.user;

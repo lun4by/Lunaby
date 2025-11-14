@@ -3,7 +3,6 @@ const ProfileDB = require('../../services/profiledb');
 const market = require('../../assets/json/market.json');
 
 module.exports = {
-  disabled: true,
   data: new SlashCommandBuilder()
     .setName('use')
     .setDescription('Trang bị một item từ inventory vào profile card')
@@ -13,6 +12,8 @@ module.exports = {
         .setRequired(true)),
 
   async execute(interaction) {
+    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
+
     await interaction.deferReply({ ephemeral: true });
 
     try {

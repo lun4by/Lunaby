@@ -3,12 +3,13 @@ const ProfileDB = require('../../services/profiledb');
 const market = require('../../assets/json/market.json');
 
 module.exports = {
-  disabled: true,
   data: new SlashCommandBuilder()
     .setName('inventory')
     .setDescription('Xem các items trong inventory của bạn'),
 
   async execute(interaction) {
+    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
+
     await interaction.deferReply();
 
     try {
