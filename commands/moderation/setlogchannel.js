@@ -19,9 +19,6 @@ module.exports = {
 				.setRequired(true),
 		)
 		.addBooleanOption((option) =>
-			option.setName('monitor').setDescription('Áp dụng cho log giám sát chat').setRequired(false),
-		)
-		.addBooleanOption((option) =>
 			option
 				.setName('modactions')
 				.setDescription('Áp dụng cho log hành động moderation (mute/ban/kick)')
@@ -32,13 +29,12 @@ module.exports = {
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
 			return interaction.reply({
-				content: t(interaction, 'commands.setlogchannel.errors.noPermission'),
+				content: 'Bạn cần quyền **Administrator** để sử dụng lệnh này!',
 				ephemeral: true,
 			});
 		}
 
 		const logChannel = interaction.options.getChannel('channel');
-		const monitorLogs = interaction.options.getBoolean('monitor') ?? true;
 		const modActionLogs = interaction.options.getBoolean('modactions') ?? true;
 
 		await interaction.deferReply();
@@ -53,7 +49,6 @@ module.exports = {
 			const logSettings = {
 				guildId: interaction.guild.id,
 				logChannelId: logChannel.id,
-				monitorLogs: monitorLogs,
 				modActionLogs: modActionLogs,
 				updatedAt: new Date(),
 				updatedBy: interaction.user.id,
@@ -65,76 +60,59 @@ module.exports = {
 
 			const settingsEmbed = new EmbedBuilder()
 				.setColor(0x00ff00)
-				.setTitle(t(interaction, 'commands.setlogchannel.embeds.success.title'))
-				.setDescription(
-					t(interaction, 'commands.setlogchannel.embeds.success.description', {
-						channel: logChannel,
-					}),
-				)
+				.setTitle('✅ Đã thiết lập kênh log')
+				.setDescription(`Kênh log đã được thiết lập thành công tại ${logChannel}`)
 				.addFields(
 					{
-						name: t(interaction, 'commands.setlogchannel.embeds.success.fields.logChannel'),
+						name: '📝 Kênh log',
 						value: `<#${logChannel.id}>`,
 						inline: true,
 					},
 					{
-						name: t(interaction, 'commands.setlogchannel.embeds.success.fields.monitorLogs'),
-						value: monitorLogs
-							? t(interaction, 'common.enabled')
-							: t(interaction, 'common.disabled'),
+						name: '🛡️ Log hành động moderation',
+						value: modActionLogs ? '✅ Bật' : '❌ Tắt',
 						inline: true,
 					},
 					{
-						name: t(interaction, 'commands.setlogchannel.embeds.success.fields.modActionLogs'),
-						value: modActionLogs
-							? t(interaction, 'common.enabled')
-							: t(interaction, 'common.disabled'),
-						inline: true,
-					},
-					{
-						name: t(interaction, 'commands.setlogchannel.embeds.success.fields.setBy'),
+						name: '👤 Được thiết lập bởi',
 						value: `<@${interaction.user.id}>`,
 						inline: true,
 					},
 					{
-						name: t(interaction, 'commands.setlogchannel.embeds.success.fields.time'),
+						name: '⏰ Thời gian',
 						value: `<t:${Math.floor(Date.now() / 1000)}:F>`,
 						inline: true,
 					},
 				)
-				.setFooter({
-					text: t(interaction, 'common.footer.server', { server: interaction.guild.name }),
-				})
+				.setFooter({ text: `Server: ${interaction.guild.name}` })
 				.setTimestamp();
 
 			await interaction.editReply({ embeds: [settingsEmbed] });
 
 			const testEmbed = new EmbedBuilder()
 				.setColor(0x3498db)
-				.setTitle(t(interaction, 'commands.setlogchannel.embeds.test.title'))
-				.setDescription(t(interaction, 'commands.setlogchannel.embeds.test.description'))
+				.setTitle('🧪 Test Log Channel')
+				.setDescription('Đây là tin nhắn test để xác nhận kênh log đã được thiết lập thành công!')
 				.addFields(
 					{
-						name: t(interaction, 'commands.setlogchannel.embeds.test.fields.status'),
-						value: t(interaction, 'common.active'),
+						name: '📊 Trạng thái',
+						value: '🟢 Hoạt động',
 						inline: true,
 					},
 					{
-						name: t(interaction, 'commands.setlogchannel.embeds.test.fields.setBy'),
+						name: '👤 Được thiết lập bởi',
 						value: `<@${interaction.user.id}>`,
 						inline: true,
 					},
 				)
-				.setFooter({
-					text: t(interaction, 'common.footer.server', { server: interaction.guild.name }),
-				})
+				.setFooter({ text: `Server: ${interaction.guild.name}` })
 				.setTimestamp();
 
 			await logChannel.send({ embeds: [testEmbed] });
 		} catch (error) {
 			logger.error('MODERATION', 'Lỗi khi thiết lập kênh log:', error);
 			await interaction.editReply({
-				content: t(interaction, 'commands.setlogchannel.errors.general', { error: error.message }),
+				content: `Đã xảy ra lỗi khi thiết lập kênh log: ${error.message}`,
 				ephemeral: true,
 			});
 		}
