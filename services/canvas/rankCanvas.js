@@ -4,8 +4,8 @@ const { RankCardBuilder, Font } = require('canvacord');
 Font.loadDefault();
 
 const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLevel, curXPThisLevel, percentage, rank, wreathUrl, profileCustomization = {}) => {
-    const canvas = Canvas.createCanvas(800, 600);
-    const ctx = canvas.getContext('2d');
+    // const canvas = Canvas.createCanvas(800, 600);
+    // const ctx = canvas.getContext('2d');
 
     const {
         background = null,
