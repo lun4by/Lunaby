@@ -118,9 +118,6 @@ module.exports = {
   }
 };
 
-/**
- * Build settings UI
- */
 function buildSettingsUI(settings, guild, disabled = false) {
   const embed = new EmbedBuilder()
     .setTitle('⚙️ Cài Đặt Bot')
