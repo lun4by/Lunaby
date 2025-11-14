@@ -18,9 +18,6 @@ class OwnerService {
     this.loadOwnerInfo();
   }
 
-  /**
-   * Tải thông tin owner từ Discord API
-   */
   async loadOwnerInfo() {
     if (!this.ownerId || !this.client) {
       logger.warn(
@@ -58,10 +55,6 @@ class OwnerService {
     return userId === this.ownerId;
   }
 
-  /**
-   * Lấy thông tin owner
-   * @returns {Object|null}
-   */
   getOwnerInfo() {
     return this.ownerInfo;
   }
@@ -75,7 +68,6 @@ class OwnerService {
   isOwnerMentioned(content, message = null) {
     if (!this.ownerInfo) return false;
 
-    // Kiểm tra mention trực tiếp qua Discord
     if (
       message &&
       message.mentions &&
@@ -84,19 +76,16 @@ class OwnerService {
       return true;
     }
 
-    // Kiểm tra mention bằng ID trong text
     const idMentionRegex = new RegExp(`<@!?${this.ownerId}>`, "i");
     if (idMentionRegex.test(content)) {
       return true;
     }
 
-    // Kiểm tra nhắc đến username (không phân biệt hoa thường)
     const usernameRegex = new RegExp(`\\b${this.ownerInfo.username}\\b`, "i");
     if (usernameRegex.test(content)) {
       return true;
     }
 
-    // Kiểm tra các từ khóa liên quan đến owner
     const ownerKeywords = [
       "owner",
       "chủ sở hữu",
@@ -138,7 +127,6 @@ class OwnerService {
         "Lỗi khi tạo phản hồi động cho owner mention:",
         error
       );
-      // Fallback response với personality mới
       return `Aww, bạn đang nói về ${this.ownerInfo.displayName} à? 💖 Mình rất yêu quý creator của mình lắm! ✨`;
     }
   }
@@ -166,8 +154,7 @@ class OwnerService {
       return response;
     } catch (error) {
       logger.error("OWNER", "Lỗi khi tạo lời chào động cho owner:", error);
-      
-      // Fallback: Sử dụng AI với prompt đơn giản hơn
+
       try {
         const fallbackPrompt = `Tạo lời chào thân thiện cho ${this.ownerInfo.displayName} - creator của mình. Ngắn gọn, dễ thương, sử dụng emoji.`;
         const fallbackResponse = await AICore.getCompletion(fallbackPrompt);
@@ -175,7 +162,6 @@ class OwnerService {
       } catch (fallbackError) {
         logger.error("OWNER", "Fallback AI greeting cũng lỗi:", fallbackError);
         
-        // Final fallback: greetings có sẵn
         const greetings = [
           `${this.ownerInfo.displayName}! 💖 Mình nhớ bạn quá~ ✨`,
           `Creator ${this.ownerInfo.displayName}! 🌸 Rất vui khi gặp lại bạn! 💫`,
@@ -188,9 +174,6 @@ class OwnerService {
     }
   }
 
-  /**
-   * Refresh thông tin owner (gọi lại API Discord)
-   */
   async refreshOwnerInfo() {
     await this.loadOwnerInfo();
   }
@@ -240,8 +223,7 @@ class OwnerService {
       return response;
     } catch (error) {
       logger.error("OWNER", `Lỗi khi tạo AI response cho owner (${type}):`, error);
-      
-      // Fallback responses
+
       const fallbacks = {
         greeting: `${this.ownerInfo.displayName}! 💖 Mình nhớ bạn quá~ ✨`,
         mention: `Aww, bạn đang nói về ${this.ownerInfo.displayName} à? 💖 Mình rất yêu quý creator của mình lắm! ✨`,
@@ -318,5 +300,4 @@ class OwnerService {
   }
 }
 
-// Export singleton instance
 module.exports = new OwnerService();
