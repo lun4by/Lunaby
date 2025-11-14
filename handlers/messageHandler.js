@@ -7,34 +7,28 @@ const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const logger = require('../utils/logger.js');
 const guildProfileDB = require('../services/guildprofiledb');
-const guildProfile = await guildProfileDB.getGuildProfile(message.guild.id);
 
-
-/**
- * Xử lý hệ thống XP cho người dùng
- * @param {Object} message - Đối tượng tin nhắn từ Discord.js
- * @param {Boolean} commandExecuted - Có lệnh nào được thực thi không
- * @param {Boolean} execute - Có nên tiếp tục thực thi không
- */
 async function processXp(message, commandExecuted, execute) {
   try {
     const response = await experience(message, commandExecuted, execute);
 
     if (!response.xpAdded && ![
-      'DISABLED',             // XP bị tắt, cần EXPERIENCE_POINTS trong client#features
-      'COMMAND_EXECUTED',     // Lệnh đã được thực thi thành công
-      'COMMAND_TERMINATED',   // Lệnh đã được tìm nhưng đã bị chấm dứt
-      'DM_CHANNEL',           // Tin nhắn được gửi trong DM
-      'GUILD_SETTINGS_NOT_FOUND', // Không tìm thấy cài đặt của guild
-      'DISABLED_ON_GUILD',    // XP bị tắt trên server này
-      'DISABLED_ON_CHANNEL',  // Tin nhắn được gửi trong kênh bị chặn XP
-      'RECENTLY_TALKED'       // Người gửi vừa nói gần đây
+      'DISABLED',
+      'COMMAND_EXECUTED',
+      'COMMAND_TERMINATED',
+      'DM_CHANNEL',
+      'GUILD_SETTINGS_NOT_FOUND',
+      'DISABLED_ON_GUILD',
+      'DISABLED_ON_CHANNEL',
+      'RECENTLY_TALKED'
     ].includes(response.reason)) {
       logger.error('XP', `Lỗi XP: ${response.reason} tại ${message.guild.id}<${message.guild.name}> bởi ${message.author.tag}<${message.author.id}> lúc ${new Date()}`);
     }
 
     if (response.xpAdded && response.level && response.previousLevel && response.level > response.previousLevel) {
       logger.info('XP', `${message.author.tag} đã lên cấp ${response.level} trong server ${message.guild.name}`);
+      
+      const guildProfile = await guildProfileDB.getGuildProfile(message.guild.id);
       
       if (guildProfile?.settings?.levelUpNotifications) {
         const settings = guildProfile.settings;
