@@ -8,7 +8,7 @@ class AICore {
   constructor() {
     this.systemPrompt = prompts.system.main;
     this.Model = "lunaby";
-    this.lunabyBaseURL = process.env.LUNABY_BASE_URL || "https://api.lunaby.tech/v1";
+    this.lunabyBaseURL = process.env.LUNABY_BASE_URL || "https://api.lunie.dev/v1";
     this.lunabyApiKey = process.env.LUNABY_API_KEY;
     
     if (!this.lunabyApiKey) {
