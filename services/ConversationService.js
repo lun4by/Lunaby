@@ -6,19 +6,41 @@ const prompts = require("../config/prompts.js");
 const textUtils = require("../utils/textUtils.js");
 const AICore = require("./AICore.js");
 const WebSearchService = require("./WebSearchService.js");
+const TokenService = require("./TokenService.js");
 const { AI_RESPONSE_LOCALE } = require("../utils/i18n.js");
+
+const DEFAULT_USER_ID = "anonymous-user";
+const MAX_CONVERSATION_LENGTH = 30;
+const MAX_CONVERSATION_AGE_MS = 3 * 60 * 60 * 1000; // 3 giờ
+const AI_TIMEOUT_MS = 25000; // 25 giây
+const RECENT_MEMORY_MESSAGES_COUNT = 10;
+const RELEVANT_MEMORY_COUNT = 3;
+const DETAILED_MEMORY_DISPLAY_COUNT = 15;
+const DEFAULT_MEMORY_DISPLAY_COUNT = 3;
+const SUMMARY_MESSAGE_TRUNCATE_LENGTH = 150;
+
+const IMAGE_COMMAND_REGEX = /^(vẽ|tạo hình|vẽ hình|hình|tạo ảnh ai|tạo ảnh)\s+(.+)$/i;
+const MEMORY_COMMAND_REGEX = /^(nhớ lại|trí nhớ|lịch sử|conversation history|memory|như nãy|vừa gửi|vừa đề cập)\s*(.*)$/i;
+
+const MEMORY_ANALYSIS_SUMMARY_KEYWORDS = ["ngắn gọn", "tóm tắt"];
+const MEMORY_ANALYSIS_DETAILED_KEYWORDS = ["đầy đủ", "chi tiết"];
 
 class ConversationService {
   constructor() {
-    storageDB.setMaxConversationLength(30);
-    storageDB.setMaxConversationAge(3 * 60 * 60 * 1000);
-    
+    storageDB.setMaxConversationLength(MAX_CONVERSATION_LENGTH);
+    storageDB.setMaxConversationAge(MAX_CONVERSATION_AGE_MS);
+
     logger.info("CONVERSATION_SERVICE", "Initialized conversation service");
   }
 
-  extractUserId(message, defaultUserId = "anonymous-user") {
+  /**
+   * Trích xuất (hoặc tạo) một User ID duy nhất dựa trên ngữ cảnh tin nhắn.
+   * @param {object} message - Đối tượng tin nhắn (ví dụ: từ Discord.js).
+   * @returns {string} Một User ID duy nhất.
+   */
+  extractUserId(message) {
     if (!message?.author?.id) {
-      return defaultUserId;
+      return DEFAULT_USER_ID;
     }
 
     let userId = message.author.id;
@@ -31,6 +53,13 @@ class ConversationService {
 
     return userId;
   }
+
+  /**
+   * Làm giàu prompt của người dùng với các ký ức có liên quan từ lịch sử.
+   * @param {string} originalPrompt - Prompt gốc của người dùng.
+   * @param {string} userId - User ID.
+   * @returns {string} Prompt đã được thêm thông tin ngữ cảnh (nếu có).
+   */
   async enrichPromptWithMemory(originalPrompt, userId) {
     try {
       const fullHistory = await storageDB.getConversationHistory(
@@ -52,56 +81,63 @@ class ConversationService {
         return originalPrompt;
       }
 
-      let enhancedPrompt = originalPrompt;
+      const memoryContext = prompts.memory.memoryContext.replace(
+        "${relevantMessagesText}",
+        relevantMessages.join(". ")
+      );
+      
+      return memoryContext + originalPrompt;
 
-      if (relevantMessages.length > 0) {
-        const memoryContext = prompts.memory.memoryContext.replace(
-          "${relevantMessagesText}",
-          relevantMessages.join(". ")
-        );
-        enhancedPrompt = memoryContext + enhancedPrompt;
-      }
-
-      return enhancedPrompt;
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error enriching prompt with memory:", error);
       return originalPrompt;
     }
   }
 
+  /**
+   * Trích xuất các bản tóm tắt ký ức có liên quan từ lịch sử trò chuyện.
+   * @param {Array<object>} history - Toàn bộ lịch sử trò chuyện.
+   * @param {string} currentPrompt - Prompt hiện tại của người dùng.
+   * @returns {Array<string>} Một mảng các bản tóm tắt ký ức.
+   */
   async extractRelevantMemories(history, currentPrompt) {
     try {
       if (!history || history.length < 3) {
         return [];
       }
 
-      const conversationSummary = [];
-      const recentMessages = history.slice(-10);
+      const recentMessages = history.slice(-RECENT_MEMORY_MESSAGES_COUNT);
+      const conversationSummary = recentMessages
+        .filter(msg => msg.role === "user" || msg.role === "assistant")
+        .map(msg => textUtils.createMessageSummary(msg.content, msg.role))
+        .filter(summaryText => summaryText); 
 
-      for (let i = 0; i < recentMessages.length; i++) {
-        const msg = recentMessages[i];
-        if (msg.role === "user" || msg.role === "assistant") {
-          const summaryText = textUtils.createMessageSummary(msg.content, msg.role);
-          if (summaryText) {
-            conversationSummary.push(summaryText);
-          }
-        }
+      if (conversationSummary.length === 0) {
+        return [];
       }
 
+      const keywords = textUtils.extractKeywords(currentPrompt);
       const relevantMemories = conversationSummary.filter((summary) => {
-        const keywords = textUtils.extractKeywords(currentPrompt);
+        const lowerCaseSummary = summary.toLowerCase();
         return keywords.some((keyword) =>
-          summary.toLowerCase().includes(keyword.toLowerCase())
+          lowerCaseSummary.includes(keyword.toLowerCase())
         );
       });
 
-      return relevantMemories.slice(-3);
+      return relevantMemories.slice(-RELEVANT_MEMORY_COUNT);
+
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error extracting relevant memories:", error);
       return [];
     }
   }
 
+  /**
+   * Xử lý yêu cầu phân tích trí nhớ/lịch sử trò chuyện từ người dùng.
+   * @param {string} userId - User ID.
+   * @param {string} request - Yêu cầu cụ thể (ví dụ: "ngắn gọn", "chi tiết").
+   * @returns {string} Một chuỗi phân tích đã được định dạng.
+   */
   async getMemoryAnalysis(userId, request) {
     try {
       logger.info("CONVERSATION_SERVICE", `Analyzing memory for user ${userId}`);
@@ -116,28 +152,28 @@ class ConversationService {
         return "Mình chưa có bất kỳ trí nhớ nào về cuộc trò chuyện của chúng ta. Hãy bắt đầu trò chuyện nào! 😊";
       }
 
-      const conversationSummary = [];
-      let messageCount = 0;
+      const userOrAssistantMessages = fullHistory.filter(
+        (msg) => msg.role === "user" || msg.role === "assistant"
+      );
+      const messageCount = userOrAssistantMessages.length;
 
-      for (const msg of fullHistory) {
-        if (msg.role === "user" || msg.role === "assistant") {
-          messageCount++;
-
-          let roleName = msg.role === "user" ? "Bạn" : "Lunaby";
-          let content = msg.content;
-
-          if (content.length > 150) {
-            content = content.substring(0, 150) + "...";
-          }
-
-          conversationSummary.push(`${roleName}: ${content}`);
-        }
+      if (messageCount === 0) {
+        return "Chúng ta chưa có tin nhắn nào. Hãy bắt đầu trò chuyện nào! 😊";
       }
 
       let analysis = "";
+      const requestLower = request.toLowerCase();
+      
+      const formatMessage = (msg) => {
+          let roleName = msg.role === "user" ? "Bạn" : "Lunaby";
+          let content = msg.content;
+          if (content.length > SUMMARY_MESSAGE_TRUNCATE_LENGTH) {
+            content = content.substring(0, SUMMARY_MESSAGE_TRUNCATE_LENGTH) + "...";
+          }
+          return `${roleName}: ${content}`;
+      };
 
-      if (request.toLowerCase().includes("ngắn gọn") || 
-          request.toLowerCase().includes("tóm tắt")) {
+      if (MEMORY_ANALYSIS_SUMMARY_KEYWORDS.some(k => requestLower.includes(k))) {
         analysis = `**Tóm tắt cuộc trò chuyện của chúng ta**\n\n`;
         analysis += `- Chúng ta đã trao đổi ${messageCount} tin nhắn\n`;
         analysis += `- Cuộc trò chuyện bắt đầu cách đây ${textUtils.formatTimeAgo(
@@ -149,57 +185,66 @@ class ConversationService {
         keyMessages.forEach((msg, index) => {
           analysis += `${index + 1}. ${msg}\n`;
         });
-      } else if (request.toLowerCase().includes("đầy đủ") || 
-                 request.toLowerCase().includes("chi tiết")) {
+
+      } else if (MEMORY_ANALYSIS_DETAILED_KEYWORDS.some(k => requestLower.includes(k))) {
         analysis = `**Lịch sử đầy đủ cuộc trò chuyện của chúng ta**\n\n`;
 
-        const maxDisplayMessages = Math.min(conversationSummary.length, 15);
-        for (let i = conversationSummary.length - maxDisplayMessages; i < conversationSummary.length; i++) {
-          analysis += conversationSummary[i] + "\n\n";
+        const messagesToDisplay = userOrAssistantMessages.slice(-DETAILED_MEMORY_DISPLAY_COUNT);
+
+        if (messageCount > DETAILED_MEMORY_DISPLAY_COUNT) {
+          analysis = `*[${messageCount - DETAILED_MEMORY_DISPLAY_COUNT} tin nhắn trước đó không được hiển thị]*\n\n` + analysis;
         }
 
-        if (conversationSummary.length > maxDisplayMessages) {
-          analysis = `*[${conversationSummary.length - maxDisplayMessages} tin nhắn trước đó không được hiển thị]*\n\n` + analysis;
-        }
+        const conversationSummary = messagesToDisplay.map(formatMessage);
+        analysis += conversationSummary.join("\n\n");
+
       } else {
         analysis = `**Tóm tắt trí nhớ của cuộc trò chuyện**\n\n`;
         analysis += `- Chúng ta đã trao đổi ${messageCount} tin nhắn\n`;
         analysis += `- Các chủ đề chính: ${textUtils.identifyMainTopics(fullHistory).join(", ")}\n\n`;
-
         analysis += `**Tin nhắn gần nhất:**\n`;
-        const recentMessages = conversationSummary.slice(-3);
-        recentMessages.forEach((msg) => {
-          analysis += msg + "\n\n";
-        });
+
+        const recentMessages = userOrAssistantMessages.slice(-DEFAULT_MEMORY_DISPLAY_COUNT);
+        const recentSummary = recentMessages.map(formatMessage);
+        analysis += recentSummary.join("\n\n");
       }
 
-      analysis += "\n*Lưu ý: Mình vẫn nhớ toàn bộ cuộc trò chuyện của chúng ta và có thể trả lời dựa trên ngữ cảnh đó.*";
-
+      analysis += "\n\n*Lưu ý: Mình vẫn nhớ toàn bộ cuộc trò chuyện của chúng ta và có thể trả lời dựa trên ngữ cảnh đó.*";
       return analysis;
+
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error analyzing memory:", error);
       return "Xin lỗi, mình gặp lỗi khi truy cập trí nhớ của cuộc trò chuyện. Lỗi: " + error.message;
     }
   }
 
+  /**
+   * (Placeholder) Định dạng nội dung phản hồi trước khi gửi đi.
+   * @param {string} content - Nội dung thô từ AI.
+   * @param {boolean} isNewConversation - Cờ báo hiệu đây có phải là cuộc trò chuyện mới không.
+   * @returns {string} Nội dung đã định dạng.
+   */
   async formatResponseContent(content, isNewConversation) {
     return content;
   }
 
+  /**
+   * Phương thức chính xử lý một prompt mới và trả về phản hồi của AI.
+   * @param {string} prompt - Prompt của người dùng.
+   * @param {object} message - Đối tượng tin nhắn gốc.
+   * @returns {string} Phản hồi của AI.
+   */
   async getCompletion(prompt, message = null) {
     try {
       const userId = this.extractUserId(message);
-      if (userId === "anonymous-user") {
+      if (userId === DEFAULT_USER_ID) {
         logger.warn("CONVERSATION_SERVICE", "Cannot determine userId, using default");
       }
 
-      let isOwnerInteraction = false;
-      let ownerMentioned = false;
       let ownerSpecialResponse = "";
-
       if (message?.author?.id) {
-        isOwnerInteraction = ownerService.isOwner(message.author.id);
-        ownerMentioned = ownerService.isOwnerMentioned(prompt, message);
+        const isOwnerInteraction = ownerService.isOwner(message.author.id);
+        const ownerMentioned = ownerService.isOwnerMentioned(prompt, message);
 
         if (ownerMentioned) {
           logger.info("CONVERSATION_SERVICE", "Owner mentioned in message");
@@ -207,9 +252,7 @@ class ConversationService {
         }
       }
 
-      const imageCommandRegex = /^(vẽ|tạo hình|vẽ hình|hình|tạo ảnh ai|tạo ảnh)\s+(.+)$/i;
-      const imageMatch = prompt.match(imageCommandRegex);
-
+      const imageMatch = prompt.match(IMAGE_COMMAND_REGEX);
       if (imageMatch) {
         const imagePrompt = imageMatch[2];
         const commandUsed = imageMatch[1];
@@ -217,24 +260,12 @@ class ConversationService {
         return `Để tạo hình ảnh, vui lòng sử dụng lệnh /image với nội dung bạn muốn tạo. Ví dụ:\n/image ${imagePrompt}`;
       }
 
-      const memoryAnalysisRegex = /^(nhớ lại|trí nhớ|lịch sử|conversation history|memory|như nãy|vừa gửi|vừa đề cập)\s*(.*)$/i;
-      const memoryMatch = prompt.match(memoryAnalysisRegex);
-
+      const memoryMatch = prompt.match(MEMORY_COMMAND_REGEX);
       if (memoryMatch) {
         const memoryRequest = memoryMatch[2].trim() || "toàn bộ cuộc trò chuyện";
         return await this.getMemoryAnalysis(userId, memoryRequest);
       }
-
-      if (prompts.trainingData.keywords.test(prompt)) {
-        logger.info("CONVERSATION_SERVICE", "Training data question detected, returning direct response");
-        return prompts.trainingData.response;
-      }
-
-      if (prompts.modelInfo.keywords.test(prompt)) {
-        logger.info("CONVERSATION_SERVICE", "Model info question detected, returning direct response");
-        return prompts.modelInfo.response;
-      }
-
+      
       const enhancedPromptWithMemory = await this.enrichPromptWithMemory(prompt, userId);
 
       let content = await this.processChatCompletion(enhancedPromptWithMemory, userId);
@@ -244,12 +275,20 @@ class ConversationService {
       }
 
       return content;
+
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error in getCompletion:", error.message);
       return `Xin lỗi, hệ thống xảy ra lỗi khi xử lý cuộc trò chuyện. Vui lòng thử lại sau.`;
     }
   }
 
+  /**
+   * Gọi AICore, quản lý lịch sử, và xử lý logic AI chính.
+   * @param {string} prompt - Prompt đã được xử lý (có thể đã bao gồm ký ức).
+   * @param {string} userId - User ID.
+   * @param {object} additionalConfig - Cấu hình bổ sung cho AICore.
+   * @returns {string} Phản hồi thô từ AI.
+   */
   async processChatCompletion(prompt, userId, additionalConfig = {}) {
     try {
       let systemPrompt = additionalConfig.systemPrompt || prompts.system.main;
@@ -260,32 +299,28 @@ class ConversationService {
       systemPrompt += `\n\nIMPORTANT: ${localeInstruction}`;
 
       await conversationManager.loadConversationHistory(userId, systemPrompt, AICore.getModelName());
-
       const conversationHistory = conversationManager.getHistory(userId);
       const isNewConversation = !conversationHistory || conversationHistory.length <= 2;
 
-      let enhancedPrompt = prompts.chat.responseStyle;
-
-      if (!isNewConversation) {
-        enhancedPrompt += prompts.chat.ongoingConversation;
-      } else {
-        enhancedPrompt += prompts.chat.newConversation;
-      }
-
-      enhancedPrompt += prompts.chat.generalInstructions + ` ${prompt}`;
+      const enhancedPrompt = `
+        ${prompts.chat.responseStyle}
+        ${isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
+        ${prompts.chat.generalInstructions}
+        ${prompt}
+      `;
 
       await conversationManager.addMessage(userId, "user", enhancedPrompt);
 
       let messages = conversationManager.getHistory(userId);
       if (!messages || messages.length === 0) {
-        logger.error("CONVERSATION_SERVICE", `Empty conversation history for userId: ${userId}, reinitializing`);
+        logger.error("CONVERSATION_SERVICE", `Empty history for ${userId}, reinitializing`);
         await conversationManager.resetConversation(userId, systemPrompt, AICore.getModelName());
         await conversationManager.addMessage(userId, "user", enhancedPrompt);
         messages = conversationManager.getHistory(userId);
       }
 
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('AICore timeout after 25 seconds')), 25000);
+        setTimeout(() => reject(new Error('AICore timeout after 25 seconds')), AI_TIMEOUT_MS);
       });
       
       const result = await Promise.race([
@@ -301,7 +336,6 @@ class ConversationService {
       const tokenUsage = result.usage;
 
       if (tokenUsage && tokenUsage.total_tokens) {
-        const TokenService = require('./TokenService.js');
         TokenService.recordMessageUsage(userId, 1, 'chat').catch(err =>
           logger.error('CONVERSATION_SERVICE', 'Error recording usage:', err)
         );
@@ -311,6 +345,7 @@ class ConversationService {
       const formattedContent = await this.formatResponseContent(content, isNewConversation);
 
       return formattedContent;
+
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error in processChatCompletion:", error.message);
       
@@ -323,4 +358,4 @@ class ConversationService {
   }
 }
 
-module.exports = new ConversationService(); 
+module.exports = new ConversationService();

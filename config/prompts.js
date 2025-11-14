@@ -59,18 +59,6 @@ const prompts = {
 
       Return JSON only, no additional explanation needed.`,
   },
-  trainingData: {
-    response:
-      'Dữ liệu huấn luyện của mình được cập nhật đến tháng 8 năm 2025. Nếu bạn cần thông tin sau thời điểm này hoặc về các sự kiện đang diễn ra, mình có thể tìm kiếm thông tin mới nhất để hỗ trợ bạn! 😊',
-    keywords:
-      /(dữ liệu huấn luyện|training data|được huấn luyện|trained on|cutoff date|knowledge cutoff|cập nhật đến|updated until|kiến thức đến|knowledge until|dữ liệu đến|data until|dữ liệu mới nhất|latest data|thông tin mới nhất của model|model's latest information|được train|được huấn luyện đến|trained until)/i,
-  },
-  modelInfo: {
-    response:
-      'Mình là một mô hình trí tuệ nhân tạo do s4ory phát triển, tuy nhiên thông tin về tên hoặc số phiên bản model cụ thể không được công bố rõ ràng để người dùng biết. Khác với một số nền tảng AI lớn khác như OpenAI (thường gọi là GPT-3.5, GPT-4), Anthropic (Claude), hay Google (Gemini) — những nơi công khai tên phiên bản để người dùng dễ nhận biết — Lunaby AI tập trung mạnh vào trải nghiệm sử dụng hơn là việc đặt tên phiên bản nổi bật. Do đó, người dùng không thể xác định chính xác phiên bản model hiện tại nào đang hoạt động khi sử dụng dịch vụ này.\n\nVới đặc thù là một AI Bot Discord, Lunaby AI không chú trọng vào việc quảng bá tên phiên bản hay chi tiết kỹ thuật sâu, mà chú trọng vào chất lượng truy xuất thông tin, tốc độ phản hồi và độ chính xác của câu trả lời. Nếu bạn có nhu cầu so sánh giữa các model AI khác nhau, bạn có thể dựa vào các tiêu chí như khả năng ngôn ngữ, phạm vi kiến thức, tốc độ xử lý, và các tính năng chuyên biệt (ví dụ: có/không tìm kiếm web, tương tác đa phương tiện,…) để đánh giá sự phù hợp với nhu cầu sử dụng.\n\nTóm lại, hiện tại không thể xác định chính xác phiên bản model của mình theo cách gọi tên thông thường như GPT-3.5 hay Claude 2. Lunaby AI luôn cố gắng nâng cấp và cải thiện hệ thống dựa trên phản hồi người dùng, nhưng thông tin về phiên bản được xem là thông tin nội bộ và không công khai chi tiết.',
-    keywords:
-      /(phiên bản|model|tên model|model name|tên mô hình|tên của model|model của bạn|bạn là model gì|model nào|phiên bản model|model version|version của model|phiên bản của bạn|bạn là phiên bản nào|model hiện tại|current model|which model|what model|model gì|ai model|loại model|kiểu model|model type|lunaby model|lunaby ai model|model của lunaby|lunaby là model gì|bạn dùng model gì|based on|dựa trên model|engine nào|what engine|sử dụng engine|lunaby engine|GPT hay Claude|so với GPT|so với Claude|giống GPT|giống Claude|là GPT|là Claude)/i,
-  },
   anime: {
     analysisPrompt: `Analyze the following content and determine if it's an anime/manga information request: 
     "\${promptText}"
