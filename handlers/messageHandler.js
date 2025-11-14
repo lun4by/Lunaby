@@ -111,15 +111,19 @@ async function handleMentionMessage(message, client) {
             owner: 'Owner'
           };
           
+          const current = messageCheck.current || 0;
+          const limit = messageCheck.limit || 600;
+          const remaining = messageCheck.remaining || 0;
+          
           await message.reply(
             `**Giới hạn Lượt nhắn tin**\n\n` +
-            `Bạn đã sử dụng hết giới hạn lượt nhắn tin hàng ngày!\n\n` +
+            `Bạn đã sử dụng hết giới hạn lượt nhắn tin!\n\n` +
             `**Thông tin:**\n` +
             `• Vai trò: ${roleNames[messageCheck.role] || messageCheck.role}\n` +
-            `• Đã sử dụng: ${messageCheck.current.toLocaleString()} lượt\n` +
-            `• Giới hạn: ${messageCheck.limit.toLocaleString()} lượt/ngày\n` +
-            `• Còn lại: ${messageCheck.remaining.toLocaleString()} lượt\n\n` +
-            `Giới hạn sẽ được reset vào ngày mai. Vui lòng quay lại sau!`
+            `• Đã sử dụng: ${current.toLocaleString()} lượt\n` +
+            `• Giới hạn: ${limit.toLocaleString()} lượt/30 ngày\n` +
+            `• Còn lại: ${remaining.toLocaleString()} lượt\n\n` +
+            `Giới hạn sẽ được reset sau ${messageCheck.daysUntilReset || 0} ngày. Vui lòng quay lại sau!`
           );
           return;
         }
