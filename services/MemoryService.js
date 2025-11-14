@@ -5,8 +5,8 @@ const prompts = require('../config/prompts.js');
 
 class MemoryService {
   constructor() {
-    this.memoryCache = new Map(); // Cache để tối ưu performance
-    this.cacheExpiry = 30 * 60 * 1000; // Cache expires after 30 minutes
+    this.memoryCache = new Map(); 
+    this.cacheExpiry = 30 * 60 * 1000;
     
     logger.info('MEMORY_SERVICE', 'Initialized AI Memory System V2');
   }
@@ -23,8 +23,6 @@ class MemoryService {
   async initializeMemoryCollection() {
     try {
       const db = mongoClient.getDb();
-      
-      // Create collection if not exists
       const collections = await db.listCollections({ name: 'user_memories' }).toArray();
       if (collections.length === 0) {
         await db.createCollection('user_memories');
@@ -67,7 +65,6 @@ class MemoryService {
         language: 'vi'
       },
 
-      // User preferences
       preferences: {
         topics: [], // Chủ đề yêu thích: ["anime", "music", "coding"]
         hobbies: [], // Sở thích
@@ -79,7 +76,6 @@ class MemoryService {
         communicationStyle: 'friendly' // friendly, formal, casual
       },
 
-      // Important memories from conversations
       memories: [
         // {
         //   id: "unique-id",
@@ -92,7 +88,6 @@ class MemoryService {
         // }
       ],
 
-      // Relationships and social context
       relationships: {
         friends: [], 
         familyMembers: [], 
@@ -113,7 +108,6 @@ class MemoryService {
         }
       },
 
-      // Goals and ongoing contexts
       currentContext: {
         activeGoals: [], // Things user is working on
         ongoingProjects: [], // Projects user mentioned
@@ -121,7 +115,6 @@ class MemoryService {
         recentTopics: [] // Last few topics discussed
       },
 
-      // Privacy and consent
       privacy: {
         allowMemoryStorage: true,
         allowPersonalInfoExtraction: true,
@@ -138,24 +131,20 @@ class MemoryService {
    */
   async getUserMemory(userId) {
     try {
-      // Check cache first
       const cached = this.memoryCache.get(userId);
       if (cached && (Date.now() - cached.timestamp < this.cacheExpiry)) {
         return cached.data;
       }
 
-      // Fetch from database
       const collection = await this.getMemoryCollection();
       let memory = await collection.findOne({ userId: userId });
 
       if (!memory) {
-        // Create new memory profile
         memory = this.getDefaultMemoryStructure(userId);
         await collection.insertOne(memory);
         logger.info('MEMORY_SERVICE', `Created new memory profile for user ${userId}`);
       }
 
-      // Update cache
       this.memoryCache.set(userId, {
         data: memory,
         timestamp: Date.now()
@@ -191,7 +180,6 @@ class MemoryService {
         { upsert: true }
       );
 
-      // Invalidate cache
       this.memoryCache.delete(userId);
 
       logger.info('MEMORY_SERVICE', `Updated memory for user ${userId}`);
@@ -236,7 +224,6 @@ class MemoryService {
         }
       );
 
-      // Invalidate cache
       this.memoryCache.delete(userId);
 
       logger.info('MEMORY_SERVICE', `Added memory for user ${userId}: ${memoryData.content.substring(0, 50)}...`);
@@ -263,32 +250,9 @@ class MemoryService {
       }
 
       // Use AI to extract important information
-      const extractionPrompt = `Analyze the following conversation and extract any important information that should be remembered about the user.
-
-User message: "${userMessage}"
-AI response: "${aiResponse}"
-
-Extract information in these categories:
-1. Personal information (name, age, location, occupation, etc.)
-2. Preferences (likes, dislikes, hobbies, interests)
-3. Important facts or events
-4. Goals or projects
-5. Relationships (friends, family, pets)
-
-Return ONLY a JSON object with extracted information. If nothing important to remember, return {"extracted": false}.
-
-Format:
-{
-  "extracted": true,
-  "personalInfo": {"field": "value"},
-  "preferences": {"type": ["items"]},
-  "memory": {
-    "content": "short description",
-    "category": "preference|fact|event|achievement",
-    "importance": 1-10,
-    "tags": ["tag1", "tag2"]
-  }
-}`;
+      const extractionPrompt = prompts.memory.memoryExtraction
+        .replace('${userMessage}', userMessage)
+        .replace('${aiResponse}', aiResponse);
 
       const messages = [
         { role: 'system', content: prompts.system.main },
@@ -300,7 +264,6 @@ Format:
         temperature: 0.3
       });
 
-      // Parse AI response
       let extracted;
       try {
         const jsonMatch = result.content.match(/\{[\s\S]*\}/);
@@ -318,7 +281,6 @@ Format:
         return null;
       }
 
-      // Update user memory with extracted information
       const updates = {};
 
       if (extracted.personalInfo) {
@@ -341,7 +303,6 @@ Format:
         await this.updateUserMemory(userId, updates);
       }
 
-      // Add memory if present
       if (extracted.memory && extracted.memory.content) {
         await this.addMemory(userId, {
           ...extracted.memory,
@@ -371,14 +332,12 @@ Format:
         return [];
       }
 
-      // Simple relevance scoring based on keywords and importance
       const messageLower = currentMessage.toLowerCase();
       const keywords = messageLower.split(/\s+/).filter(w => w.length > 3);
 
       const scoredMemories = memory.memories.map(mem => {
         let score = mem.importance || 5;
-        
-        // Boost score if tags match keywords
+
         if (mem.tags && mem.tags.length > 0) {
           const matchingTags = mem.tags.filter(tag => 
             keywords.some(kw => tag.toLowerCase().includes(kw) || kw.includes(tag.toLowerCase()))
@@ -386,12 +345,10 @@ Format:
           score += matchingTags.length * 3;
         }
 
-        // Boost score if content matches keywords
         const contentLower = mem.content.toLowerCase();
         const matchingKeywords = keywords.filter(kw => contentLower.includes(kw));
         score += matchingKeywords.length * 2;
 
-        // Recent memories get slight boost
         const daysSince = (Date.now() - new Date(mem.timestamp).getTime()) / (1000 * 60 * 60 * 24);
         if (daysSince < 7) score += 2;
         else if (daysSince < 30) score += 1;
@@ -399,7 +356,6 @@ Format:
         return { ...mem, score };
       });
 
-      // Sort by score and return top memories
       scoredMemories.sort((a, b) => b.score - a.score);
       return scoredMemories.slice(0, limit);
     } catch (error) {
@@ -421,13 +377,11 @@ Format:
 
       let context = '';
 
-      // Add personal info if available
       if (memory.personalInfo.name || memory.personalInfo.nickname) {
         const name = memory.personalInfo.nickname || memory.personalInfo.name;
         context += `[User's name: ${name}]\n`;
       }
 
-      // Add preferences summary
       const preferences = [];
       if (memory.preferences.likes.length > 0) {
         preferences.push(`Likes: ${memory.preferences.likes.join(', ')}`);
@@ -443,7 +397,6 @@ Format:
         context += `[User preferences: ${preferences.join(' | ')}]\n`;
       }
 
-      // Add relevant memories
       if (relevantMemories.length > 0) {
         context += `[Important memories about user:\n`;
         relevantMemories.forEach((mem, idx) => {
@@ -452,7 +405,6 @@ Format:
         context += `]\n`;
       }
 
-      // Add current goals/projects if any
       if (memory.currentContext.activeGoals.length > 0) {
         context += `[User's current goals: ${memory.currentContext.activeGoals.join(', ')}]\n`;
       }

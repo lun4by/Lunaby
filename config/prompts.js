@@ -136,6 +136,32 @@ const prompts = {
   },
   memory: {
     memoryContext: `[Information from previous conversation: \${relevantMessagesText}] `,
+    memoryExtraction: `Analyze the following conversation and extract any important information that should be remembered about the user.
+
+User message: "\${userMessage}"
+AI response: "\${aiResponse}"
+
+Extract information in these categories:
+1. Personal information (name, age, location, occupation, etc.)
+2. Preferences (likes, dislikes, hobbies, interests)
+3. Important facts or events
+4. Goals or projects
+5. Relationships (friends, family, pets)
+
+Return ONLY a JSON object with extracted information. If nothing important to remember, return {"extracted": false}.
+
+Format:
+{
+  "extracted": true,
+  "personalInfo": {"field": "value"},
+  "preferences": {"type": ["items"]},
+  "memory": {
+    "content": "short description",
+    "category": "preference|fact|event|achievement",
+    "importance": 1-10,
+    "tags": ["tag1", "tag2"]
+  }
+}`,
   },
   translation: {
     vietnameseToEnglish: `Translate the following text from Vietnamese to English, preserving the meaning and technical terms.
