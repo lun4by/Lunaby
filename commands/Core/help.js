@@ -201,10 +201,10 @@ function formatCommandDetails(commandModule) {
 function getCategoryMetadata(category) {
 	const categoryMap = {
 		'AIcore': { label: 'AI Core', description: 'Các lệnh AI nâng cao', emoji: '🤖' },
-		'Core': { label: 'Lõi', description: 'Các lệnh cơ bản của bot', emoji: '⚙️' },
-		'moderation': { label: 'Quản lý', description: 'Các lệnh quản lý server', emoji: '🛡️' },
-		'social': { label: 'Xã hội', description: 'Các lệnh tương tác xã hội', emoji: '👥' },
-		'system': { label: 'Hệ thống', description: 'Các lệnh quản lý hệ thống', emoji: '🔧' },
+		'Core': { label: 'Core', description: 'Các lệnh cơ bản của bot', emoji: '⚙️' },
+		'moderation': { label: 'Moderation', description: 'Các lệnh quản lý server', emoji: '🛡️' },
+		'social': { label: 'Social', description: 'Các lệnh tương tác xã hội', emoji: '👥' },
+		'system': { label: 'System', description: 'Các lệnh quản lý hệ thống', emoji: '🔧' },
 	};
 
 	return categoryMap[category] || {
