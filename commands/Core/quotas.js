@@ -30,8 +30,14 @@ module.exports = {
 			const userToCheck = targetUser || interaction.user;
 			const stats = await TokenService.getUserMessageStats(userToCheck.id);
 
-			const isUnlimited = stats.limits.period === -1;
-			const percentUsed = isUnlimited ? 0 : Math.round((stats.usage.current / stats.limits.period) * 100);
+			const isUnlimited = stats.limits?.period === -1;
+			const currentUsage = stats.usage?.current || 0;
+			const periodLimit = stats.limits?.period || 600;
+			const totalUsage = stats.usage?.total || 0;
+			const remainingMessages = stats.remaining?.messages || 0;
+			const remainingDays = stats.remaining?.days || 0;
+			
+			const percentUsed = isUnlimited ? 0 : Math.round((currentUsage / periodLimit) * 100);
 			const progressBar = createProgressBar(percentUsed);
 
 			const embed = new EmbedBuilder()
@@ -42,7 +48,7 @@ module.exports = {
 				.addFields(
 					{
 						name: '💬 Đã sử dụng',
-						value: `**${stats.usage.current.toLocaleString()}** / ${isUnlimited ? '∞' : stats.limits.period.toLocaleString()} tin nhắn`,
+						value: `**${currentUsage.toLocaleString()}** / ${isUnlimited ? '∞' : periodLimit.toLocaleString()} tin nhắn`,
 						inline: false,
 					},
 					{
@@ -52,12 +58,12 @@ module.exports = {
 					},
 					{
 						name: '✨ Còn lại',
-						value: isUnlimited ? '∞ Không giới hạn' : `**${stats.remaining.messages.toLocaleString()}** tin nhắn`,
+						value: isUnlimited ? '∞ Không giới hạn' : `**${remainingMessages.toLocaleString()}** tin nhắn`,
 						inline: true,
 					},
 					{
 						name: '⏰ Reset sau',
-						value: isUnlimited ? 'Không cần' : `**${stats.remaining.days}** ngày`,
+						value: isUnlimited ? 'Không cần' : `**${remainingDays}** ngày`,
 						inline: true,
 					},
 					{
@@ -67,7 +73,7 @@ module.exports = {
 					},
 					{
 						name: '📊 Tổng đã dùng',
-						value: `**${stats.usage.total.toLocaleString()}** tin nhắn`,
+						value: `**${totalUsage.toLocaleString()}** tin nhắn`,
 						inline: true,
 					}
 				)
