@@ -60,6 +60,34 @@
     "cooldown": null
   },
   {
+    "name": "memory",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "AIcore",
+    "description": "Quản lý trí nhớ AI của bạn - xem, thêm, và cập nhật thông tin cá nhân",
+    "parameters": [
+      "view - Xem tóm tắt trí nhớ",
+      "add - Thêm trí nhớ mới",
+      "update - Cập nhật thông tin cá nhân",
+      "privacy - Cài đặt quyền riêng tư",
+      "clear - Xóa toàn bộ trí nhớ"
+    ],
+    "examples": [
+      "/memory view",
+      "/memory add content:\"Tôi thích anime\" category:preference importance:8",
+      "/memory update name:\"John\" age:25",
+      "/memory privacy allow_memory:true",
+      "/memory clear"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": true,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
     "name": "about",
     "aliases": [],
     "clientPermissions": [

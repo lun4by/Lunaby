@@ -17,9 +17,6 @@ class StorageDB {
     setInterval(() => this.cleanupOldConversations(), 60 * 60 * 1000);
   }
 
-  /**
-   * Thiết lập các collections và indexes MongoDB
-   */
   async setupCollections() {
     try {
       const db = mongoClient.getDb();
@@ -764,6 +761,15 @@ class StorageDB {
       }
 
       logger.info('DATABASE', 'Hệ thống profile người dùng đã sẵn sàng');
+
+      // Khởi tạo AI Memory System V2
+      try {
+        const MemoryService = require('./MemoryService.js');
+        await MemoryService.initializeMemoryCollection();
+        logger.info('DATABASE', 'Đã khởi tạo AI Memory System V2');
+      } catch (memoryError) {
+        logger.error('DATABASE', 'Lỗi khi khởi tạo Memory System:', memoryError);
+      }
     } catch (error) {
       logger.error('DATABASE', 'Lỗi khi khởi tạo hệ thống profile:', error);
     }
@@ -773,21 +779,17 @@ class StorageDB {
     try {
       const db = mongoClient.getDb();
 
-      // Tạo collection nếu chưa có
       const collections = await db.listCollections({ name: 'image_blacklist' }).toArray();
       if (collections.length === 0) {
         await db.createCollection('image_blacklist');
         logger.info('DATABASE', 'Đã tạo collection image_blacklist');
       }
 
-      // Tạo indexes
       await db.collection('image_blacklist').createIndex({ category: 1 });
       await db.collection('image_blacklist').createIndex({ keyword: 1 });
 
-      // Kiểm tra xem đã có dữ liệu chưa
       const count = await db.collection('image_blacklist').countDocuments();
       if (count === 0) {
-        // Khởi tạo blacklist mặc định
         const defaultBlacklist = [
           // Nội dung người lớn
           { keyword: "khỏa thân", category: "adult", description: "Hình ảnh khỏa thân", severity: "high" },
@@ -890,11 +892,7 @@ class StorageDB {
     try {
       const db = mongoClient.getDb();
       const blacklist = await db.collection('image_blacklist').find({}, { projection: { keyword: 1, category: 1, _id: 0 } }).toArray();
-
-      // Chuyển text về chữ thường để so sánh
       const lowerText = text.toLowerCase();
-
-      // Lưu các từ khóa và danh mục vi phạm
       const matchedKeywords = [];
       const categories = new Set();
 
@@ -984,6 +982,7 @@ class StorageDB {
       return [];
     }
   }
+
 }
 
 module.exports = new StorageDB();

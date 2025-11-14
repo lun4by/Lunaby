@@ -7,6 +7,7 @@ const textUtils = require("../utils/textUtils.js");
 const AICore = require("./AICore.js");
 const WebSearchService = require("./WebSearchService.js");
 const TokenService = require("./TokenService.js");
+const MemoryService = require("./MemoryService.js");
 
 const DEFAULT_USER_ID = "anonymous-user";
 const MAX_CONVERSATION_LENGTH = 30;
@@ -61,31 +62,33 @@ class ConversationService {
    */
   async enrichPromptWithMemory(originalPrompt, userId) {
     try {
+      // V2: Use MemoryService for long-term memory context
+      const memoryContext = await MemoryService.buildMemoryContext(userId, originalPrompt);
+      
+      // V1: Also get conversation history context
       const fullHistory = await storageDB.getConversationHistory(
         userId,
         prompts.system.main,
         AICore.getModelName()
       );
 
-      if (!fullHistory || fullHistory.length < 3) {
-        return originalPrompt;
+      let conversationContext = '';
+      if (fullHistory && fullHistory.length >= 3) {
+        const relevantMessages = await this.extractRelevantMemories(
+          fullHistory,
+          originalPrompt
+        );
+
+        if (relevantMessages && relevantMessages.length > 0) {
+          conversationContext = prompts.memory.memoryContext.replace(
+            "${relevantMessagesText}",
+            relevantMessages.join(". ")
+          );
+        }
       }
-
-      const relevantMessages = await this.extractRelevantMemories(
-        fullHistory,
-        originalPrompt
-      );
-
-      if (!relevantMessages || relevantMessages.length === 0) {
-        return originalPrompt;
-      }
-
-      const memoryContext = prompts.memory.memoryContext.replace(
-        "${relevantMessagesText}",
-        relevantMessages.join(". ")
-      );
       
-      return memoryContext + originalPrompt;
+      // Combine both memory systems
+      return memoryContext + conversationContext + originalPrompt;
 
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error enriching prompt with memory:", error);
@@ -336,6 +339,17 @@ class ConversationService {
       }
 
       await conversationManager.addMessage(userId, "assistant", content);
+      
+      // V2: Extract and store important information from conversation
+      MemoryService.extractMemoryFromConversation(userId, prompt, content).catch(err =>
+        logger.error('CONVERSATION_SERVICE', 'Error extracting memory:', err)
+      );
+      
+      // V2: Update interaction stats
+      MemoryService.updateInteractionStats(userId).catch(err =>
+        logger.error('CONVERSATION_SERVICE', 'Error updating interaction stats:', err)
+      );
+      
       const formattedContent = await this.formatResponseContent(content, isNewConversation);
 
       return formattedContent;

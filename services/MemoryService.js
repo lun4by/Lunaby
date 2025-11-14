@@ -1,0 +1,595 @@
+const mongoClient = require('./mongoClient.js');
+const logger = require('../utils/logger.js');
+const AICore = require('./AICore.js');
+const prompts = require('../config/prompts.js');
+
+class MemoryService {
+  constructor() {
+    this.memoryCache = new Map(); // Cache để tối ưu performance
+    this.cacheExpiry = 30 * 60 * 1000; // Cache expires after 30 minutes
+    
+    logger.info('MEMORY_SERVICE', 'Initialized AI Memory System V2');
+  }
+
+  /**
+   * Get the memory collection from MongoDB
+   * @returns {Promise<Collection>} MongoDB collection for memories
+   */
+  async getMemoryCollection() {
+    const db = mongoClient.getDb();
+    return db.collection('user_memories');
+  }
+
+  async initializeMemoryCollection() {
+    try {
+      const db = mongoClient.getDb();
+      
+      // Create collection if not exists
+      const collections = await db.listCollections({ name: 'user_memories' }).toArray();
+      if (collections.length === 0) {
+        await db.createCollection('user_memories');
+        logger.info('MEMORY_SERVICE', 'Created user_memories collection');
+      }
+
+      // Create indexes for efficient querying
+      const collection = await this.getMemoryCollection();
+      await collection.createIndex({ userId: 1 }, { unique: true });
+      await collection.createIndex({ 'lastUpdated': 1 });
+      await collection.createIndex({ 'memories.category': 1 });
+      
+      logger.info('MEMORY_SERVICE', 'Memory collection initialized with indexes');
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', 'Error initializing memory collection:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get default memory structure for a new user
+   * @param {string} userId - User ID
+   * @returns {object} Default memory structure
+   */
+  getDefaultMemoryStructure(userId) {
+    return {
+      userId: userId,
+      createdAt: new Date(),
+      lastUpdated: new Date(),
+      
+      // Personal information
+      personalInfo: {
+        name: null,
+        nickname: null,
+        age: null,
+        location: null,
+        occupation: null,
+        birthday: null,
+        timezone: null,
+        language: 'vi'
+      },
+
+      // User preferences
+      preferences: {
+        topics: [], // Chủ đề yêu thích: ["anime", "music", "coding"]
+        hobbies: [], // Sở thích
+        likes: [], // Điều người dùng thích
+        dislikes: [], // Điều người dùng không thích
+        favoriteAnime: [],
+        favoriteGames: [],
+        favoriteMusic: [],
+        communicationStyle: 'friendly' // friendly, formal, casual
+      },
+
+      // Important memories from conversations
+      memories: [
+        // {
+        //   id: "unique-id",
+        //   content: "User told me they love coffee",
+        //   category: "preference", // preference, fact, event, achievement
+        //   importance: 5, // 1-10 scale
+        //   timestamp: Date,
+        //   source: "conversation", // conversation, command, auto-extracted
+        //   tags: ["coffee", "drinks", "preference"]
+        // }
+      ],
+
+      // Relationships and social context
+      relationships: {
+        friends: [], 
+        familyMembers: [], 
+        pets: [] 
+      },
+
+      interactionStats: {
+        totalConversations: 0,
+        totalMessages: 0,
+        firstInteraction: new Date(),
+        lastInteraction: new Date(),
+        favoriteTopics: {}, // { "anime": 45, "coding": 32 }
+        conversationTimes: [], // Preferred times of day
+        responsePreferences: {
+          detailLevel: 'medium', // short, medium, detailed
+          useEmojis: true,
+          formalityLevel: 'casual' // casual, neutral, formal
+        }
+      },
+
+      // Goals and ongoing contexts
+      currentContext: {
+        activeGoals: [], // Things user is working on
+        ongoingProjects: [], // Projects user mentioned
+        currentMood: null, // Detected mood if relevant
+        recentTopics: [] // Last few topics discussed
+      },
+
+      // Privacy and consent
+      privacy: {
+        allowMemoryStorage: true,
+        allowPersonalInfoExtraction: true,
+        allowPreferenceTracking: true,
+        sensitiveTopics: [] // Topics user asked not to discuss
+      }
+    };
+  }
+
+  /**
+   * Get user's memory profile (from cache or database)
+   * @param {string} userId - User ID
+   * @returns {Promise<object>} User's memory profile
+   */
+  async getUserMemory(userId) {
+    try {
+      // Check cache first
+      const cached = this.memoryCache.get(userId);
+      if (cached && (Date.now() - cached.timestamp < this.cacheExpiry)) {
+        return cached.data;
+      }
+
+      // Fetch from database
+      const collection = await this.getMemoryCollection();
+      let memory = await collection.findOne({ userId: userId });
+
+      if (!memory) {
+        // Create new memory profile
+        memory = this.getDefaultMemoryStructure(userId);
+        await collection.insertOne(memory);
+        logger.info('MEMORY_SERVICE', `Created new memory profile for user ${userId}`);
+      }
+
+      // Update cache
+      this.memoryCache.set(userId, {
+        data: memory,
+        timestamp: Date.now()
+      });
+
+      return memory;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error getting user memory for ${userId}:`, error);
+      return this.getDefaultMemoryStructure(userId);
+    }
+  }
+
+  /**
+   * Update user's memory profile
+   * @param {string} userId - User ID
+   * @param {object} updates - Updates to apply
+   * @returns {Promise<boolean>} Success status
+   */
+  async updateUserMemory(userId, updates) {
+    try {
+      const collection = await this.getMemoryCollection();
+      
+      const updateDoc = {
+        $set: {
+          ...updates,
+          lastUpdated: new Date()
+        }
+      };
+
+      await collection.updateOne(
+        { userId: userId },
+        updateDoc,
+        { upsert: true }
+      );
+
+      // Invalidate cache
+      this.memoryCache.delete(userId);
+
+      logger.info('MEMORY_SERVICE', `Updated memory for user ${userId}`);
+      return true;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error updating user memory for ${userId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Add a new memory to user's memory profile
+   * @param {string} userId - User ID
+   * @param {object} memoryData - Memory data to add
+   * @returns {Promise<boolean>} Success status
+   */
+  async addMemory(userId, memoryData) {
+    try {
+      const memory = await this.getUserMemory(userId);
+      
+      if (!memory.privacy.allowMemoryStorage) {
+        logger.info('MEMORY_SERVICE', `Memory storage disabled for user ${userId}`);
+        return false;
+      }
+
+      const newMemory = {
+        id: `mem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        content: memoryData.content,
+        category: memoryData.category || 'fact',
+        importance: memoryData.importance || 5,
+        timestamp: new Date(),
+        source: memoryData.source || 'manual',
+        tags: memoryData.tags || []
+      };
+
+      const collection = await this.getMemoryCollection();
+      await collection.updateOne(
+        { userId: userId },
+        {
+          $push: { memories: newMemory },
+          $set: { lastUpdated: new Date() }
+        }
+      );
+
+      // Invalidate cache
+      this.memoryCache.delete(userId);
+
+      logger.info('MEMORY_SERVICE', `Added memory for user ${userId}: ${memoryData.content.substring(0, 50)}...`);
+      return true;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error adding memory for ${userId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Extract important information from conversation using AI
+   * @param {string} userId - User ID
+   * @param {string} userMessage - User's message
+   * @param {string} aiResponse - AI's response
+   * @returns {Promise<object|null>} Extracted information or null
+   */
+  async extractMemoryFromConversation(userId, userMessage, aiResponse) {
+    try {
+      const memory = await this.getUserMemory(userId);
+      
+      if (!memory.privacy.allowPersonalInfoExtraction) {
+        return null;
+      }
+
+      // Use AI to extract important information
+      const extractionPrompt = `Analyze the following conversation and extract any important information that should be remembered about the user.
+
+User message: "${userMessage}"
+AI response: "${aiResponse}"
+
+Extract information in these categories:
+1. Personal information (name, age, location, occupation, etc.)
+2. Preferences (likes, dislikes, hobbies, interests)
+3. Important facts or events
+4. Goals or projects
+5. Relationships (friends, family, pets)
+
+Return ONLY a JSON object with extracted information. If nothing important to remember, return {"extracted": false}.
+
+Format:
+{
+  "extracted": true,
+  "personalInfo": {"field": "value"},
+  "preferences": {"type": ["items"]},
+  "memory": {
+    "content": "short description",
+    "category": "preference|fact|event|achievement",
+    "importance": 1-10,
+    "tags": ["tag1", "tag2"]
+  }
+}`;
+
+      const messages = [
+        { role: 'system', content: prompts.system.main },
+        { role: 'user', content: extractionPrompt }
+      ];
+
+      const result = await AICore.processChatCompletion(messages, {
+        max_tokens: 500,
+        temperature: 0.3
+      });
+
+      // Parse AI response
+      let extracted;
+      try {
+        const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          extracted = JSON.parse(jsonMatch[0]);
+        } else {
+          return null;
+        }
+      } catch (parseError) {
+        logger.error('MEMORY_SERVICE', 'Error parsing extraction result:', parseError);
+        return null;
+      }
+
+      if (!extracted.extracted) {
+        return null;
+      }
+
+      // Update user memory with extracted information
+      const updates = {};
+
+      if (extracted.personalInfo) {
+        for (const [key, value] of Object.entries(extracted.personalInfo)) {
+          if (value && value.trim()) {
+            updates[`personalInfo.${key}`] = value;
+          }
+        }
+      }
+
+      if (extracted.preferences) {
+        for (const [type, items] of Object.entries(extracted.preferences)) {
+          if (Array.isArray(items) && items.length > 0) {
+            updates[`preferences.${type}`] = items;
+          }
+        }
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await this.updateUserMemory(userId, updates);
+      }
+
+      // Add memory if present
+      if (extracted.memory && extracted.memory.content) {
+        await this.addMemory(userId, {
+          ...extracted.memory,
+          source: 'auto-extracted'
+        });
+      }
+
+      return extracted;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error extracting memory from conversation for ${userId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get relevant memories for current conversation context
+   * @param {string} userId - User ID
+   * @param {string} currentMessage - Current user message
+   * @param {number} limit - Max number of memories to return
+   * @returns {Promise<Array>} Relevant memories
+   */
+  async getRelevantMemories(userId, currentMessage, limit = 5) {
+    try {
+      const memory = await this.getUserMemory(userId);
+      
+      if (!memory.memories || memory.memories.length === 0) {
+        return [];
+      }
+
+      // Simple relevance scoring based on keywords and importance
+      const messageLower = currentMessage.toLowerCase();
+      const keywords = messageLower.split(/\s+/).filter(w => w.length > 3);
+
+      const scoredMemories = memory.memories.map(mem => {
+        let score = mem.importance || 5;
+        
+        // Boost score if tags match keywords
+        if (mem.tags && mem.tags.length > 0) {
+          const matchingTags = mem.tags.filter(tag => 
+            keywords.some(kw => tag.toLowerCase().includes(kw) || kw.includes(tag.toLowerCase()))
+          );
+          score += matchingTags.length * 3;
+        }
+
+        // Boost score if content matches keywords
+        const contentLower = mem.content.toLowerCase();
+        const matchingKeywords = keywords.filter(kw => contentLower.includes(kw));
+        score += matchingKeywords.length * 2;
+
+        // Recent memories get slight boost
+        const daysSince = (Date.now() - new Date(mem.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSince < 7) score += 2;
+        else if (daysSince < 30) score += 1;
+
+        return { ...mem, score };
+      });
+
+      // Sort by score and return top memories
+      scoredMemories.sort((a, b) => b.score - a.score);
+      return scoredMemories.slice(0, limit);
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error getting relevant memories for ${userId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Build context string from user's memory to enhance AI responses
+   * @param {string} userId - User ID
+   * @param {string} currentMessage - Current message
+   * @returns {Promise<string>} Context string to prepend to conversation
+   */
+  async buildMemoryContext(userId, currentMessage) {
+    try {
+      const memory = await this.getUserMemory(userId);
+      const relevantMemories = await this.getRelevantMemories(userId, currentMessage);
+
+      let context = '';
+
+      // Add personal info if available
+      if (memory.personalInfo.name || memory.personalInfo.nickname) {
+        const name = memory.personalInfo.nickname || memory.personalInfo.name;
+        context += `[User's name: ${name}]\n`;
+      }
+
+      // Add preferences summary
+      const preferences = [];
+      if (memory.preferences.likes.length > 0) {
+        preferences.push(`Likes: ${memory.preferences.likes.join(', ')}`);
+      }
+      if (memory.preferences.dislikes.length > 0) {
+        preferences.push(`Dislikes: ${memory.preferences.dislikes.join(', ')}`);
+      }
+      if (memory.preferences.hobbies.length > 0) {
+        preferences.push(`Hobbies: ${memory.preferences.hobbies.join(', ')}`);
+      }
+
+      if (preferences.length > 0) {
+        context += `[User preferences: ${preferences.join(' | ')}]\n`;
+      }
+
+      // Add relevant memories
+      if (relevantMemories.length > 0) {
+        context += `[Important memories about user:\n`;
+        relevantMemories.forEach((mem, idx) => {
+          context += `${idx + 1}. ${mem.content}\n`;
+        });
+        context += `]\n`;
+      }
+
+      // Add current goals/projects if any
+      if (memory.currentContext.activeGoals.length > 0) {
+        context += `[User's current goals: ${memory.currentContext.activeGoals.join(', ')}]\n`;
+      }
+
+      if (context) {
+        context = `\n===== USER MEMORY CONTEXT =====\n${context}===== END MEMORY CONTEXT =====\n\n`;
+      }
+
+      return context;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error building memory context for ${userId}:`, error);
+      return '';
+    }
+  }
+
+  /**
+   * Update interaction statistics
+   * @param {string} userId - User ID
+   * @param {string} topic - Current conversation topic (optional)
+   */
+  async updateInteractionStats(userId, topic = null) {
+    try {
+      const updates = {
+        'interactionStats.totalMessages': { $inc: 1 },
+        'interactionStats.lastInteraction': new Date()
+      };
+
+      if (topic) {
+        updates[`interactionStats.favoriteTopics.${topic}`] = { $inc: 1 };
+      }
+
+      const collection = await this.getMemoryCollection();
+      await collection.updateOne(
+        { userId: userId },
+        updates
+      );
+
+      this.memoryCache.delete(userId);
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error updating interaction stats for ${userId}:`, error);
+    }
+  }
+
+  /**
+   * Get memory summary for display
+   * @param {string} userId - User ID
+   * @returns {Promise<object>} Memory summary
+   */
+  async getMemorySummary(userId) {
+    try {
+      const memory = await this.getUserMemory(userId);
+
+      return {
+        personalInfo: memory.personalInfo,
+        preferences: memory.preferences,
+        totalMemories: memory.memories.length,
+        importantMemories: memory.memories
+          .filter(m => m.importance >= 7)
+          .sort((a, b) => b.importance - a.importance)
+          .slice(0, 10),
+        interactionStats: memory.interactionStats,
+        currentContext: memory.currentContext
+      };
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error getting memory summary for ${userId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Delete a specific memory
+   * @param {string} userId - User ID
+   * @param {string} memoryId - Memory ID to delete
+   * @returns {Promise<boolean>} Success status
+   */
+  async deleteMemory(userId, memoryId) {
+    try {
+      const collection = await this.getMemoryCollection();
+      
+      await collection.updateOne(
+        { userId: userId },
+        {
+          $pull: { memories: { id: memoryId } },
+          $set: { lastUpdated: new Date() }
+        }
+      );
+
+      this.memoryCache.delete(userId);
+      logger.info('MEMORY_SERVICE', `Deleted memory ${memoryId} for user ${userId}`);
+      return true;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error deleting memory for ${userId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Clear all memories for a user
+   * @param {string} userId - User ID
+   * @returns {Promise<boolean>} Success status
+   */
+  async clearUserMemories(userId) {
+    try {
+      const collection = await this.getMemoryCollection();
+      
+      await collection.deleteOne({ userId: userId });
+      this.memoryCache.delete(userId);
+      
+      logger.info('MEMORY_SERVICE', `Cleared all memories for user ${userId}`);
+      return true;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error clearing memories for ${userId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Update privacy settings
+   * @param {string} userId - User ID
+   * @param {object} privacySettings - Privacy settings to update
+   * @returns {Promise<boolean>} Success status
+   */
+  async updatePrivacySettings(userId, privacySettings) {
+    try {
+      const updates = {};
+      for (const [key, value] of Object.entries(privacySettings)) {
+        updates[`privacy.${key}`] = value;
+      }
+
+      await this.updateUserMemory(userId, updates);
+      logger.info('MEMORY_SERVICE', `Updated privacy settings for user ${userId}`);
+      return true;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error updating privacy settings for ${userId}:`, error);
+      return false;
+    }
+  }
+}
+
+module.exports = new MemoryService();

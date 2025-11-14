@@ -60,6 +60,11 @@ const createProfileStructure = (userId) => ({
     vote: {
       notification: true,
     },
+    memory: {
+      allowMemoryStorage: true,
+      allowPersonalInfoExtraction: true,
+      lastMemorySync: null,
+    },
   },
 });
 

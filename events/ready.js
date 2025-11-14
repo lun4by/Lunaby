@@ -21,18 +21,6 @@ async function startbot(client, loadCommands) {
     ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═════╝    ╚═╝   
     `);
 
-    // try {
-    //   const autoUpdateService = new AutoUpdateService();
-    //   const currentVersion = autoUpdateService.getCurrentVersion();
-    //   logger.info('SYSTEM', `Version hiện tại: v${currentVersion}`);
-    //   const hasUpdate = await autoUpdateService.checkAndUpdate();
-    //   if (hasUpdate) {
-    //     return;
-    //   }
-    // } catch (error) {
-    //   logger.error('SYSTEM', `Lỗi khi auto-update:`, error);
-    // }
-
     try {
       await mongoClient.connect();
       await storageDB.setupCollections();
