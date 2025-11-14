@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const ProfileDB = require('../../services/profiledb');
 
 module.exports = {
+  disabled: true,
   data: new SlashCommandBuilder()
     .setName('unequip')
     .setDescription('Gỡ bỏ item đã trang bị khỏi profile card')

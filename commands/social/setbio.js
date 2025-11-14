@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const ProfileDB = require('../../services/profiledb');
 
 module.exports = {
+  disabled: true,
   data: new SlashCommandBuilder()
     .setName('setbio')
     .setDescription('Đặt bio cho profile card của bạn')

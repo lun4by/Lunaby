@@ -4,6 +4,7 @@ const XPService = require('../../services/XPService');
 const generateRankCard = require('../../services/canvas/rankCanvas');
 
 module.exports = {
+  disabled: true,
   data: new SlashCommandBuilder()
     .setName('profile')
     .setDescription('Hiển thị profile card với XP, level, rank và thông tin cá nhân')

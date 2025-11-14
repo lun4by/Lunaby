@@ -10,6 +10,7 @@ function commatize(num) {
 }
 
 module.exports = {
+  disabled: true,
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Hiển thị bảng xếp hạng XP của server'),

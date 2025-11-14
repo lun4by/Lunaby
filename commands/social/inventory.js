@@ -3,6 +3,7 @@ const ProfileDB = require('../../services/profiledb');
 const market = require('../../assets/json/market.json');
 
 module.exports = {
+  disabled: true,
   data: new SlashCommandBuilder()
     .setName('inventory')
     .setDescription('Xem các items trong inventory của bạn'),

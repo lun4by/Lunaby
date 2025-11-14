@@ -5,6 +5,7 @@ const generateRankCard = require('./../../services/canvas/rankCanvas.js');
 const { ordinalize } = require('./../../utils/string.js');
 
 module.exports = {
+  disabled: true,
   data: new SlashCommandBuilder()
     .setName('rank')
     .setDescription('Hiển thị rank, level và XP của người dùng')

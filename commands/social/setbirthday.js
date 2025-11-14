@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const ProfileDB = require('../../services/profiledb');
 
 module.exports = {
+  disabled: true,
   data: new SlashCommandBuilder()
     .setName('setbirthday')
     .setDescription('Đặt ngày sinh cho profile card')
