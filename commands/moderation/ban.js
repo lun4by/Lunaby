@@ -113,7 +113,6 @@ module.exports = {
 				}
 			}
 
-			// Create mod log embed using i18n
 			const logEmbed = createModActionEmbed({
 				title: '🔨 Cấm thành công',
 				description: `Đã cấm ${targetUser.tag} khỏi server.`,
