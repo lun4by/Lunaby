@@ -4,10 +4,10 @@ const path = require("path");
 const loggerConfig = require("../config/loggerConfig.js");
 
 const LOG_LEVELS = {
-  debug: { priority: 0, color: "\x1b[36m" }, // Cyan
-  info: { priority: 1, color: "\x1b[32m" }, // Green
-  warn: { priority: 2, color: "\x1b[33m" }, // Yellow
-  error: { priority: 3, color: "\x1b[31m" }, // Red
+  debug: { priority: 0, color: "\x1b[36m" },
+  info: { priority: 1, color: "\x1b[32m" },
+  warn: { priority: 2, color: "\x1b[33m" },
+  error: { priority: 3, color: "\x1b[31m" },
 };
 
 const RESET_COLOR = "\x1b[0m";
@@ -20,7 +20,6 @@ async function initializeFileLogging() {
     const config = loggerConfig.getConfig();
     if (!config.fileLogging.enabled) return;
 
-    // Tạo thư mục logs nếu chưa tồn tại
     const logDir = path.join(process.cwd(), config.fileLogging.directory);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
