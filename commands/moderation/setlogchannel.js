@@ -4,7 +4,6 @@ const {
 	EmbedBuilder,
 	ChannelType,
 } = require('discord.js');
-const { translate: t } = require('../../utils/i18n.js');
 const mongoClient = require('../../services/mongoClient.js');
 const logger = require('../../utils/logger.js');
 

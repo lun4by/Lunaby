@@ -8,7 +8,6 @@
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const { translate: t } = require('../../utils/i18n');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -30,16 +29,16 @@ module.exports = {
 
 		const select = new StringSelectMenuBuilder()
 			.setCustomId('category-select')
-			.setPlaceholder(t(interaction, 'commands.help.select.placeholder'))
-			.addOptions(buildSelectOptions(interaction, visibleCategories));
+			.setPlaceholder('Chọn một danh mục')
+			.addOptions(buildSelectOptions(visibleCategories));
 
 		const row = new ActionRowBuilder().addComponents(select);
 
 		const welcomeEmbed = new EmbedBuilder()
 			.setColor(0x9B59B6)
-			.setTitle(t(interaction, 'commands.help.embeds.welcomeTitle'))
-			.setDescription(t(interaction, 'commands.help.embeds.welcomeDescription'))
-			.setFooter({ text: t(interaction, 'common.footer.credit') })
+			.setTitle('📚 Trợ Giúp - Lunaby')
+			.setDescription('Chào mừng bạn đến với hệ thống trợ giúp!\n\nChọn một danh mục từ menu bên dưới để xem chi tiết các lệnh.')
+			.setFooter({ text: 'Made with ❤️ by Lunaby Team' })
 			.setTimestamp();
 
 		await interaction.reply({
@@ -57,7 +56,7 @@ module.exports = {
 		collector.on('collect', async (i) => {
 			if (i.user.id !== interaction.user.id) {
 				return i.reply({
-					content: t(i, 'commands.help.errors.notInvoker'),
+					content: '❌ Chỉ người dùng gọi lệnh mới có thể sử dụng menu này!',
 					ephemeral: true,
 				});
 			}
@@ -66,12 +65,12 @@ module.exports = {
 
 			if (category === 'setting' && !isOwner) {
 				return i.reply({
-					content: t(i, 'commands.help.errors.noPermission'),
+					content: '❌ Bạn không có quyền xem danh mục này!',
 					ephemeral: true,
 				});
 			}
 
-			const helpEmbed = buildHelpEmbed(i, category, visibleCategories, commandsPath);
+			const helpEmbed = buildHelpEmbed(category, visibleCategories, commandsPath);
 
 			await i.update({
 				embeds: [helpEmbed],
@@ -87,7 +86,7 @@ module.exports = {
 
 				if (collected.size === 0) {
 					await interaction.editReply({
-						content: t(interaction, 'commands.help.messages.menuExpired'),
+						content: '⏱️ Menu trợ giúp đã hết hạn!',
 						components: [disabledRow],
 					});
 				} else {
@@ -102,17 +101,17 @@ module.exports = {
 	},
 };
 
-function buildSelectOptions(context, categories) {
+function buildSelectOptions(categories) {
 	const options = [
 		new StringSelectMenuOptionBuilder()
-			.setLabel(t(context, 'commands.help.select.all.label'))
-			.setDescription(t(context, 'commands.help.select.all.description'))
+			.setLabel('Tất cả lệnh')
+			.setDescription('Xem tất cả các lệnh có sẵn')
 			.setValue('all')
-			.setEmoji(t(context, 'commands.help.select.all.emoji')),
+			.setEmoji('📋'),
 	];
 
 	for (const folder of categories) {
-		const metadata = getCategoryMetadata(context, folder);
+		const metadata = getCategoryMetadata(folder);
 		options.push(
 			new StringSelectMenuOptionBuilder()
 				.setLabel(metadata.label)
@@ -125,71 +124,66 @@ function buildSelectOptions(context, categories) {
 	return options;
 }
 
-function buildHelpEmbed(context, category, visibleCategories, commandsPath) {
+function buildHelpEmbed(category, visibleCategories, commandsPath) {
 	const embed = new EmbedBuilder()
 		.setColor(0x9B59B6)
-		.setFooter({ text: t(context, 'common.footer.credit') })
+		.setFooter({ text: 'Made with ❤️ by Lunaby Team' })
 		.setTimestamp();
 
 	if (category === 'all') {
 		embed
-			.setTitle(t(context, 'commands.help.embeds.allTitle'))
-			.setDescription(t(context, 'commands.help.messages.allCategoriesDescription'));
+			.setTitle('📋 Tất cả lệnh')
+			.setDescription('Danh sách tất cả các lệnh có sẵn theo danh mục:');
 
 		for (const folder of visibleCategories) {
 			const folderPath = path.join(commandsPath, folder);
 			const commandFiles = fs.readdirSync(folderPath).filter((file) => file.endsWith('.js'));
-			const metadata = getCategoryMetadata(context, folder);
+			const metadata = getCategoryMetadata(folder);
 
 			const commandList = commandFiles.map((file) => {
 				const command = require(path.join(folderPath, file));
-				return formatCommandSummary(context, command);
+				return formatCommandSummary(command);
 			}).join('\n');
 
 			embed.addFields({
 				name: `${metadata.emoji} ${metadata.label}`,
-				value: commandList || t(context, 'commands.help.messages.emptyCategory'),
+				value: commandList || 'Không có lệnh nào',
 			});
 		}
 
 		return embed;
 	}
 
-	const metadata = getCategoryMetadata(context, category);
+	const metadata = getCategoryMetadata(category);
 
 	embed
-		.setTitle(t(context, 'commands.help.embeds.categoryTitle', { category: metadata.label }))
-		.setDescription(t(context, 'commands.help.messages.categoryDetails', { category: metadata.label }));
+		.setTitle(`${metadata.emoji} ${metadata.label}`)
+		.setDescription(`Chi tiết các lệnh trong danh mục **${metadata.label}**:`);
 
 	const folderPath = path.join(commandsPath, category);
 	const commandFiles = fs.readdirSync(folderPath).filter((file) => file.endsWith('.js'));
 
 	for (const file of commandFiles) {
 		const command = require(path.join(folderPath, file));
-		embed.addFields(formatCommandDetails(context, command));
+		embed.addFields(formatCommandDetails(command));
 	}
 
 	return embed;
 }
 
-function formatCommandSummary(context, commandModule) {
-	const commandKey = `commands.${commandModule.data.name}`;
-	const description = t(context, `${commandKey}.description`);
+function formatCommandSummary(commandModule) {
+	const description = commandModule.data.description || 'Không có mô tả';
 	return `\`/${commandModule.data.name}\` - ${description}`;
 }
 
-function formatCommandDetails(context, commandModule) {
-	const commandKey = `commands.${commandModule.data.name}`;
-	const description = t(context, `${commandKey}.description`);
+function formatCommandDetails(commandModule) {
+	const description = commandModule.data.description || 'Không có mô tả';
 
 	let optionsInfo = '';
 	if (commandModule.data.options && commandModule.data.options.length > 0) {
 		optionsInfo = commandModule.data.options.map((option) => {
-			const optionKey = `${commandKey}.options.${option.name}`;
-			const optionDescription = t(context, `${optionKey}.description`);
-			const requiredLabel = option.required
-				? t(context, 'commands.help.messages.optionRequired')
-				: t(context, 'commands.help.messages.optionOptional');
+			const optionDescription = option.description || 'Không có mô tả';
+			const requiredLabel = option.required ? '(Bắt buộc)' : '(Tùy chọn)';
 
 			return `- \`${option.name}\`: ${optionDescription} ${requiredLabel}`;
 		}).join('\n');
@@ -199,27 +193,24 @@ function formatCommandDetails(context, commandModule) {
 		name: `/${commandModule.data.name}`,
 		value: [
 			description,
-			optionsInfo || t(context, 'commands.help.messages.noOptions'),
+			optionsInfo || 'Không có tùy chọn',
 		].join('\n'),
 	};
 }
 
-function getCategoryMetadata(context, category) {
-	const metadata = t(context, `commands.help.categories.${category}`);
+function getCategoryMetadata(category) {
+	const categoryMap = {
+		'AIcore': { label: 'AI Core', description: 'Các lệnh AI nâng cao', emoji: '🤖' },
+		'Core': { label: 'Lõi', description: 'Các lệnh cơ bản của bot', emoji: '⚙️' },
+		'moderation': { label: 'Quản lý', description: 'Các lệnh quản lý server', emoji: '🛡️' },
+		'social': { label: 'Xã hội', description: 'Các lệnh tương tác xã hội', emoji: '👥' },
+		'system': { label: 'Hệ thống', description: 'Các lệnh quản lý hệ thống', emoji: '🔧' },
+	};
 
-	if (metadata && typeof metadata === 'object') {
-		return {
-			label: metadata.label,
-			description: metadata.description,
-			emoji: metadata.emoji,
-		};
-	}
-
-	const fallbackLabel = capitalizeFirstLetter(category);
-	return {
-		label: fallbackLabel,
-		description: t(context, 'commands.help.select.categoryDescription', { category: fallbackLabel }),
-		emoji: t(context, 'commands.help.select.defaultEmoji'),
+	return categoryMap[category] || {
+		label: capitalizeFirstLetter(category),
+		description: `Danh mục ${capitalizeFirstLetter(category)}`,
+		emoji: '📁',
 	};
 }
 

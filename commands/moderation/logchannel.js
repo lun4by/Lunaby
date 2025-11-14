@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const { translate: t } = require('../../utils/i18n.js');
 const mongoClient = require('../../services/mongoClient.js');
 const { getModLogChannel } = require('../../utils/modLogUtils.js');
 const logger = require('../../utils/logger.js');
