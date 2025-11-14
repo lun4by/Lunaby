@@ -6,8 +6,7 @@ require('dotenv').config();
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('generatecommands')
-    .setDescription('Tạo file JSON chứa thông tin tất cả lệnh của bot (chỉ dành cho owner)')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDescription('Tạo file JSON chứa thông tin tất cả lệnh của bot (chỉ dành cho owner)'),
 
   async execute(interaction) {
     const ownerId = process.env.OWNER_ID;

@@ -6,7 +6,6 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('logger')
     .setDescription('Quản lý cài đặt hệ thống ghi log (chỉ dành cho owner)')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand(subcommand =>
       subcommand
         .setName('status')

@@ -6,8 +6,7 @@ require('dotenv').config();
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('resetdb')
-    .setDescription('Xóa và tạo lại cơ sở dữ liệu (chỉ dành cho owner)')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDescription('Xóa và tạo lại cơ sở dữ liệu (chỉ dành cho owner)'),
 
   async execute(interaction) {
     const ownerId = process.env.OWNER_ID;

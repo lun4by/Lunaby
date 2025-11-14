@@ -9,8 +9,7 @@ const {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('resetuserdb')
-    .setDescription('Xóa tất cả user profiles (chỉ dành cho owner)')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDescription('Xóa tất cả user profiles (chỉ dành cho owner)'),
 
   async execute(interaction) {
     const ownerId = process.env.OWNER_ID;
