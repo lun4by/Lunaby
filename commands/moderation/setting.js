@@ -22,6 +22,7 @@ module.exports = {
     .setDescription('Quản lý cài đặt bot (Server Manager)'),
 
   async execute(interaction) {
+    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
     // Permission check
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
       return interaction.reply({ 
