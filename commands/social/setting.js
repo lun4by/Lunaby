@@ -126,12 +126,12 @@ function buildSettingsUI(settings, guild, disabled = false) {
     .addFields(
       { 
         name: '🔔 Thông báo Level-up', 
-        value: settings.levelUpNotifications ? '✅ Đang bật' : '❌ Đã tắt', 
+        value: `[${settings.levelUpNotifications ? 'on' : 'off'}]`, 
         inline: true 
       },
       { 
         name: '📋 Sử dụng Embed', 
-        value: settings.useEmbeds ? '✅ Đang bật' : '❌ Đã tắt', 
+        value: `[${settings.useEmbeds ? 'on' : 'off'}]`, 
         inline: true 
       },
       { 
@@ -146,12 +146,12 @@ function buildSettingsUI(settings, guild, disabled = false) {
   const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('set_toggle_level')
-      .setLabel(settings.levelUpNotifications ? '🔕 Tắt Level' : '🔔 Bật Level')
+      .setLabel(settings.levelUpNotifications ? 'Tắt Level' : 'Bật Level')
       .setStyle(ButtonStyle.Primary)
       .setDisabled(disabled),
     new ButtonBuilder()
       .setCustomId('set_toggle_embed')
-      .setLabel(settings.useEmbeds ? '📄 Tắt Embed' : '� Bật Embed')
+      .setLabel(settings.useEmbeds ? 'Tắt Embed' : 'Bật Embed')
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(disabled)
   );
