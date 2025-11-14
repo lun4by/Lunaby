@@ -1,9 +1,6 @@
 const mongoClient = require('./mongoClient.js');
 const logger = require('../utils/logger.js');
 
-/**
- * Service quản lý giới hạn lượt nhắn tin và vai trò người dùng
- */
 class QuotaService {
   constructor() {
     this.roleLimits = {
