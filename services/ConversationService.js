@@ -324,7 +324,7 @@ class ConversationService {
       });
       
       const result = await Promise.race([
-        AICore.processChatCompletionWithAutoSearch(messages, {
+        AICore.processChatCompletion(messages, {
           model: additionalConfig.model || AICore.CoreModel,
           max_tokens: additionalConfig.max_tokens || 2048,
           ...additionalConfig,

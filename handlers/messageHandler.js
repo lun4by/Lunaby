@@ -124,7 +124,6 @@ async function handleMentionMessage(message, client) {
           return;
         }
 
-        // Xử lý code request nếu phát hiện keywords
         const lowerContent = content.toLowerCase();
         if (lowerContent.includes('code') ||
             lowerContent.includes('function') ||
@@ -133,7 +132,6 @@ async function handleMentionMessage(message, client) {
           return;
         }
 
-        // Lấy response từ AI (với auto-search nếu cần)
         const response = await ConversationService.getCompletion(content, message);
 
         if (!response) {

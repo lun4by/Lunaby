@@ -181,40 +181,6 @@ class AICore {
   isReady() {
     return !!this.lunabyApiKey;
   }
-
-  /**
-   * Xử lý chat completion với auto-search
-   * @param {Array} messages - Messages array
-   * @param {Object} options - Options
-   * @returns {Promise<Object>}
-   */
-  async processChatCompletionWithAutoSearch(messages, options = {}) {
-    try {
-      // Lấy user message cuối cùng để kiểm tra cần search
-      const lastMessage = messages[messages.length - 1];
-      const userPrompt = lastMessage?.content || '';
-
-      // Kiểm tra xem có cần search không
-      if (WebSearchService.shouldSearch(userPrompt) && process.env.PERPLEXITY_API_KEY) {
-        logger.info("AI_CORE", "Auto-search triggered for: " + userPrompt.substring(0, 50));
-        
-        try {
-          const searchResult = await WebSearchService.search(userPrompt, { model: 'sonar' });
-          
-          messages[messages.length - 1].content += `\n\n[REAL-TIME SEARCH RESULT]\n${searchResult.content}`;
-          logger.info("AI_CORE", "Search context added to prompt");
-        } catch (searchError) {
-          logger.warn("AI_CORE", "Auto-search failed, using normal mode: " + searchError.message);
-        }
-      }
-
-      // Gọi processChatCompletion với messages array
-      return await this.processChatCompletion(messages, options);
-    } catch (error) {
-      logger.error("AI_CORE", "Chat with auto-search error: " + error.message);
-      throw error;
-    }
-  }
 }
 
 module.exports = new AICore();
