@@ -103,6 +103,8 @@ async function handleMentionMessage(message, client) {
           typingPromise 
         ]);
 
+        logger.debug('QUOTA_CHECK', `Kiểm tra quota cho ${message.author.tag}:`, JSON.stringify(messageCheck));
+
         if (!messageCheck.allowed) {
           const roleNames = {
             user: 'Người dùng',
@@ -113,7 +115,13 @@ async function handleMentionMessage(message, client) {
           
           const current = messageCheck.current || 0;
           const limit = messageCheck.limit || 600;
-          const remaining = messageCheck.remaining || 0;
+          const remaining = Math.max(0, messageCheck.remaining || 0);
+          
+          const now = Date.now();
+          const messageData = await TokenService.getUserMessageData(userId);
+          const periodStart = messageData.periodStart || messageData.createdAt;
+          const periodMs = 30 * 24 * 60 * 60 * 1000;
+          const daysRemaining = Math.ceil((periodStart + periodMs - now) / (24 * 60 * 60 * 1000));
           
           await message.reply(
             `**Giới hạn Lượt nhắn tin**\n\n` +
@@ -123,7 +131,7 @@ async function handleMentionMessage(message, client) {
             `• Đã sử dụng: ${current.toLocaleString()} lượt\n` +
             `• Giới hạn: ${limit.toLocaleString()} lượt/30 ngày\n` +
             `• Còn lại: ${remaining.toLocaleString()} lượt\n\n` +
-            `Giới hạn sẽ được reset sau ${messageCheck.daysUntilReset || 0} ngày. Vui lòng quay lại sau!`
+            `Giới hạn sẽ được reset sau ${daysRemaining} ngày. Vui lòng quay lại sau!`
           );
           return;
         }
@@ -251,15 +259,25 @@ async function handleCodeRequest(message, prompt) {
         owner: 'Owner'
       };
       
+      const current = tokenCheck.current || 0;
+      const limit = tokenCheck.limit || 600;
+      const remaining = Math.max(0, tokenCheck.remaining || 0);
+      
+      const now = Date.now();
+      const messageData = await TokenService.getUserMessageData(userId);
+      const periodStart = messageData.periodStart || messageData.createdAt;
+      const periodMs = 30 * 24 * 60 * 60 * 1000;
+      const daysRemaining = Math.ceil((periodStart + periodMs - now) / (24 * 60 * 60 * 1000));
+      
       await message.reply(
         `**Giới hạn Lượt nhắn tin**\n\n` +
-        `Bạn đã sử dụng hết giới hạn lượt nhắn tin hàng ngày!\n\n` +
+        `Bạn đã sử dụng hết giới hạn lượt nhắn tin!\n\n` +
         `**Thông tin:**\n` +
         `• Vai trò: ${roleNames[tokenCheck.role] || tokenCheck.role}\n` +
-        `• Đã sử dụng: ${tokenCheck.current.toLocaleString()} lượt\n` +
-        `• Giới hạn: ${tokenCheck.limit.toLocaleString()} lượt/ngày\n` +
-        `• Còn lại: ${tokenCheck.remaining.toLocaleString()} lượt\n\n` +
-        `Giới hạn sẽ được reset vào ngày mai. Vui lòng quay lại sau!`
+        `• Đã sử dụng: ${current.toLocaleString()} lượt\n` +
+        `• Giới hạn: ${limit.toLocaleString()} lượt/30 ngày\n` +
+        `• Còn lại: ${remaining.toLocaleString()} lượt\n\n` +
+        `Giới hạn sẽ được reset sau ${daysRemaining} ngày. Vui lòng quay lại sau!`
       );
       return;
     }
