@@ -1,7 +1,6 @@
 ﻿const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const ImageService = require('../../services/ImageService.js');
 const logger = require('../../utils/logger.js');
-const { translate: t } = require('../../utils/i18n');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -38,7 +37,7 @@ module.exports = {
 
 		try {
 			progressTracker = ImageService.trackImageGenerationProgress(interaction, prompt);
-			await progressTracker.update(t(interaction, 'commands.image.progress.initializing'), 5);
+			await progressTracker.update('Đang khởi tạo...', 5);
 
 			const imageResult = await ImageService.generateImage(prompt, interaction, progressTracker, {
 				aspect_ratio: aspectRatio,
@@ -50,14 +49,14 @@ module.exports = {
 				await interaction.followUp({ files: [attachment] });
 			} else {
 				await interaction.followUp({
-					content: t(interaction, 'commands.image.errors.noResult'),
+					content: 'Không thể tạo ảnh. Vui lòng thử lại sau.',
 				});
 				logger.warn('IMAGE', 'Image generation returned no result buffer');
 			}
 		} catch (error) {
 			logger.error('COMMAND', 'Error while generating image:', error);
 			await interaction.followUp({
-				content: t(interaction, 'commands.image.errors.general'),
+				content: 'Đã xảy ra lỗi khi tạo ảnh. Vui lòng thử lại sau.',
 			});
 		}
 	},

@@ -1,7 +1,6 @@
 ﻿const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const packageJson = require('../../package.json');
 const stringUtils = require('../../utils/string');
-const { translate: t } = require('../../utils/i18n');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -40,7 +39,7 @@ module.exports = {
 		collector.on('collect', async (i) => {
 			if (i.user.id !== interaction.user.id) {
 				return i.reply({
-					content: t(i, 'commands.ping.errors.notInvoker'),
+					content: 'Chỉ người đã gọi lệnh mới được sử dụng các nút này.',
 					ephemeral: true,
 				});
 			}
@@ -87,17 +86,17 @@ function createDetailedEmbed(context) {
 
 	return new EmbedBuilder()
 		.setColor(0x9B59B6)
-		.setTitle(t(context, 'commands.ping.embeds.detailed.title'))
+		.setTitle('Thông tin chi tiết')
 		.addFields(
-			{ name: t(context, 'commands.ping.embeds.detailed.fields.botVersion'), value: `\`${packageJson.version}\``, inline: true },
-			{ name: t(context, 'commands.ping.embeds.detailed.fields.discordVersion'), value: `\`${packageJson.dependencies['discord.js'].replace('^', '')}\``, inline: true },
-			{ name: t(context, 'commands.ping.embeds.detailed.fields.nodeVersion'), value: `\`${process.version}\``, inline: true },
-			{ name: t(context, 'commands.ping.embeds.detailed.fields.uptime'), value: `\`${stringUtils.formatUptime(process.uptime())}\``, inline: false },
-			{ name: t(context, 'commands.ping.embeds.detailed.fields.memory'), value: `\`${memoryUsage} MB\``, inline: true },
-			{ name: t(context, 'commands.ping.embeds.detailed.fields.platform'), value: `\`${process.platform} ${process.arch}\``, inline: true },
-			{ name: t(context, 'commands.ping.embeds.detailed.fields.shards'), value: `\`${shardCount}\``, inline: true },
+			{ name: 'Phiên bản Bot', value: `\`${packageJson.version}\``, inline: true },
+			{ name: 'Phiên bản discord.js', value: `\`${packageJson.dependencies['discord.js'].replace('^', '')}\``, inline: true },
+			{ name: 'Phiên bản Node.js', value: `\`${process.version}\``, inline: true },
+			{ name: 'Thời gian hoạt động', value: `\`${stringUtils.formatUptime(process.uptime())}\``, inline: false },
+			{ name: 'Bộ nhớ sử dụng', value: `\`${memoryUsage} MB\``, inline: true },
+			{ name: 'Nền tảng', value: `\`${process.platform} ${process.arch}\``, inline: true },
+			{ name: 'Số lượng shard', value: `\`${shardCount}\``, inline: true },
 		)
-		.setFooter({ text: t(context, 'common.footer.credit') })
+		.setFooter({ text: 'Lunaby AI - Phát triển bởi s4ory' })
 		.setTimestamp();
 }
 
@@ -108,8 +107,8 @@ function createStatusEmbed(context, { ping, ws }) {
 	else statusColor = 0xED4245;
 
 	const latencyLines = [
-		`> **${t(context, 'commands.ping.embeds.status.botLabel')}**: \`${ping}ms\``,
-		`> **${t(context, 'commands.ping.embeds.status.wsLabel')}**: \`${ws}ms\``,
+		`> **Bot**: \`${ping}ms\``,
+		`> **WebSocket**: \`${ws}ms\``,
 	].join('\n');
 
 	return new EmbedBuilder()
@@ -118,17 +117,14 @@ function createStatusEmbed(context, { ping, ws }) {
 			name: 'Lunaby AI',
 			iconURL: 'https://raw.githubusercontent.com/Lun4by/Lunaby/refs/heads/main/assets/lunaby-avatar.png',
 		})
-		.setTitle(t(context, 'commands.ping.embeds.status.title'))
+		.setTitle('Trạng thái hệ thống')
 		.addFields({
-			name: t(context, 'commands.ping.embeds.status.latencyField'),
+			name: 'Độ trễ',
 			value: latencyLines,
 			inline: false,
 		})
 		.setFooter({
-			text: t(context, 'common.footer.versionUptime', {
-				version: packageJson.version,
-				uptime: stringUtils.formatUptime(process.uptime()),
-			}),
+			text: `Lunaby v${packageJson.version} - ${stringUtils.formatUptime(process.uptime())}`,
 		})
 		.setTimestamp();
 }
@@ -137,14 +133,14 @@ function createActionRow(context, enabled = true) {
 	return new ActionRowBuilder().addComponents(
 		new ButtonBuilder()
 			.setCustomId('refresh_status')
-			.setLabel(t(context, 'commands.ping.buttons.refresh'))
-			.setEmoji('ðŸ”„')
+			.setLabel('Làm mới')
+			.setEmoji('🔄')
 			.setStyle(ButtonStyle.Primary)
 			.setDisabled(!enabled),
 		new ButtonBuilder()
 			.setCustomId('detailed_info')
-			.setLabel(t(context, 'commands.ping.buttons.detailed'))
-			.setEmoji('â„¹ï¸')
+			.setLabel('Chi tiết')
+			.setEmoji('ℹ️')
 			.setStyle(ButtonStyle.Secondary)
 			.setDisabled(!enabled),
 	);

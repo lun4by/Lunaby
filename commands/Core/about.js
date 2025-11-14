@@ -10,7 +10,6 @@ const { createCanvas, loadImage } = require('canvas');
 const AICore = require('../../services/AICore');
 const { formatUptime } = require('../../utils/string');
 const packageJson = require('../../package.json');
-const { translate: t } = require('../../utils/i18n');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -29,7 +28,7 @@ module.exports = {
 			const aboutEmbed = new EmbedBuilder()
 				.setColor(0x9B59B6)
 				.setImage('attachment://about-lunaby.png')
-				.setFooter({ text: t(interaction, 'commands.about.embed.footer') });
+				.setFooter({ text: 'Lunaby AI - Phát triển bởi s4ory' });
 
 			const row = buildActionRow(interaction);
 
@@ -98,29 +97,26 @@ async function renderAboutCanvas(context, data) {
 
 	ctx.font = '20px Sans';
 	ctx.fillStyle = '#AE86FD';
-	ctx.fillText(t(context, 'commands.about.canvas.tagline'), 140, 110);
+	ctx.fillText('Trợ lý AI thông minh cho cộng đồng Discord', 140, 110);
 
-	drawSimpleInfoBox(ctx, 50, 150, 380, 200, t(context, 'commands.about.canvas.technicalTitle'), [
-		{ icon: '>', label: t(context, 'commands.about.canvas.technicalItems.model'), value: data.modelName },
-		{ icon: '>', label: t(context, 'commands.about.canvas.technicalItems.uptime'), value: data.uptime },
-		{ icon: '>', label: t(context, 'commands.about.canvas.technicalItems.node'), value: data.nodeVersion },
-		{ icon: '>', label: t(context, 'commands.about.canvas.technicalItems.memory'), value: `${data.memoryUsage} MB` },
-		{ icon: '>', label: t(context, 'commands.about.canvas.technicalItems.servers'), value: data.serverCount.toString() },
+	drawSimpleInfoBox(ctx, 50, 150, 380, 200, 'Thông tin kỹ thuật', [
+		{ icon: '>', label: 'Mô hình AI', value: data.modelName },
+		{ icon: '>', label: 'Thời gian hoạt động', value: data.uptime },
+		{ icon: '>', label: 'Phiên bản Node', value: data.nodeVersion },
+		{ icon: '>', label: 'Bộ nhớ', value: `${data.memoryUsage} MB` },
+		{ icon: '>', label: 'Số server', value: data.serverCount.toString() },
 	]);
 
-	drawSimpleInfoBox(ctx, 450, 150, 400, 200, t(context, 'commands.about.canvas.featuresTitle'), [
-		{ icon: '>', label: t(context, 'commands.about.canvas.featuresItems.chat.label'), value: t(context, 'commands.about.canvas.featuresItems.chat.value') },
-		{ icon: '>', label: t(context, 'commands.about.canvas.featuresItems.image.label'), value: t(context, 'commands.about.canvas.featuresItems.image.value') },
-		{ icon: '>', label: t(context, 'commands.about.canvas.featuresItems.code.label'), value: t(context, 'commands.about.canvas.featuresItems.code.value') },
-		{ icon: '>', label: t(context, 'commands.about.canvas.featuresItems.moderation.label'), value: t(context, 'commands.about.canvas.featuresItems.moderation.value') },
+	drawSimpleInfoBox(ctx, 450, 150, 400, 200, 'Tính năng', [
+		{ icon: '>', label: 'Trò chuyện', value: 'AI thông minh' },
+		{ icon: '>', label: 'Tạo ảnh', value: 'Stable Diffusion' },
+		{ icon: '>', label: 'Lập trình', value: 'Hỗ trợ code' },
+		{ icon: '>', label: 'Quản lý', value: 'Moderation' },
 	]);
 
 	ctx.font = '16px Sans';
 	ctx.fillStyle = '#94A1B2';
-	const footerText = t(context, 'commands.about.canvas.footer', {
-		version: data.version,
-		date: data.currentDate,
-	});
+	const footerText = `v${data.version} • ${data.currentDate}`;
 	const footerWidth = ctx.measureText(footerText).width;
 	ctx.fillText(footerText, 450 - footerWidth / 2, 470);
 
@@ -130,19 +126,19 @@ async function renderAboutCanvas(context, data) {
 function buildActionRow(context) {
 	return new ActionRowBuilder().addComponents(
 		new ButtonBuilder()
-			.setLabel(t(context, 'commands.about.buttons.invite'))
+			.setLabel('Mời Bot')
 			.setURL(`https://discord.com/api/oauth2/authorize?client_id=${context.client.user.id}&permissions=0&scope=bot%20applications.commands`)
 			.setStyle(ButtonStyle.Link),
 		new ButtonBuilder()
-			.setLabel(t(context, 'commands.about.buttons.docs'))
+			.setLabel('Tài liệu')
 			.setURL('https://github.com/Lun4by/Lunaby')
 			.setStyle(ButtonStyle.Link),
 		new ButtonBuilder()
-			.setLabel(t(context, 'commands.about.buttons.support'))
+			.setLabel('Hỗ trợ')
 			.setURL('https://discord.gg/52hSMAt')
 			.setStyle(ButtonStyle.Link),
 		new ButtonBuilder()
-			.setLabel(t(context, 'commands.about.buttons.website'))
+			.setLabel('Website')
 			.setURL('https://lunaby.io.vn')
 			.setStyle(ButtonStyle.Link),
 	);
@@ -151,18 +147,18 @@ function buildActionRow(context) {
 async function sendFallbackEmbed(interaction, data) {
 	const fallbackEmbed = new EmbedBuilder()
 		.setColor(0x9B59B6)
-		.setTitle(t(interaction, 'commands.about.fallback.title'))
+		.setTitle('Về Lunaby AI')
 		.setThumbnail(interaction.client.user.displayAvatarURL({ dynamic: true, size: 512 }))
-		.setDescription(t(interaction, 'commands.about.fallback.description'))
+		.setDescription('Trợ lý AI thông minh cho cộng đồng Discord của bạn')
 		.addFields(
-			{ name: t(interaction, 'commands.about.fallback.fields.model'), value: data.modelName, inline: true },
-			{ name: t(interaction, 'commands.about.fallback.fields.runtime'), value: data.runtime, inline: true },
-			{ name: t(interaction, 'commands.about.fallback.fields.servers'), value: data.serverCount.toString(), inline: true },
-			{ name: t(interaction, 'commands.about.fallback.fields.memory'), value: `${data.memoryUsage} MB`, inline: true },
-			{ name: t(interaction, 'commands.about.fallback.fields.node'), value: data.nodeVersion, inline: true },
+			{ name: 'Mô hình AI', value: data.modelName, inline: true },
+			{ name: 'Thời gian chạy', value: data.runtime, inline: true },
+			{ name: 'Số server', value: data.serverCount.toString(), inline: true },
+			{ name: 'Bộ nhớ', value: `${data.memoryUsage} MB`, inline: true },
+			{ name: 'Phiên bản Node', value: data.nodeVersion, inline: true },
 		)
 		.setFooter({
-			text: t(interaction, 'commands.about.fallback.footer', { version: data.version }),
+			text: `Lunaby v${data.version}`,
 		})
 		.setTimestamp();
 

@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const { translate } = require('../../utils/i18n.js');
 const ConversationService = require('../../services/ConversationService.js');
 const { logModAction } = require('../../utils/modUtils.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
@@ -27,12 +26,9 @@ module.exports = {
 		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
 
 	async execute(interaction) {
-		const { DEFAULT_LOCALE } = require('../../utils/i18n.js');
-		const userLocale = interaction.locale || interaction.guildLocale || DEFAULT_LOCALE;
-
 		if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
 			return interaction.reply({
-				content: translate(userLocale, 'commands.ban.errors.noPermission'),
+				content: 'Bạn không có quyền sử dụng lệnh này!',
 				ephemeral: true,
 			});
 		}
@@ -41,12 +37,12 @@ module.exports = {
 		const targetMember = interaction.options.getMember('user');
 		const reason =
 			interaction.options.getString('reason') ||
-			translate(userLocale, 'commands.ban.defaultReason');
+			'Không có lý do cụ thể';
 		const deleteMessageDays = interaction.options.getInteger('days') || 1;
 
 		if (targetMember && !targetMember.bannable) {
 			return interaction.reply({
-				content: translate(userLocale, 'commands.ban.errors.cannotBan'),
+				content: 'Không thể cấm người dùng này!',
 				ephemeral: true,
 			});
 		}
@@ -61,44 +57,36 @@ module.exports = {
 
 			const aiResponse = await ConversationService.getCompletion(prompt);
 
-			// Create success embed using i18n
 			const banEmbed = new EmbedBuilder()
 				.setColor(0xff0000)
-				.setTitle(translate(userLocale, 'commands.ban.embeds.success.title'))
+				.setTitle('🔨 Cấm thành công')
 				.setDescription(aiResponse)
 				.addFields(
 					{
-						name: translate(userLocale, 'commands.ban.embeds.success.fields.reason'),
+						name: 'Lý do',
 						value: reason,
 						inline: true,
 					},
 					{
-						name: translate(userLocale, 'commands.ban.embeds.success.fields.deleteMessages'),
-						value: `${deleteMessageDays} ${translate(
-							userLocale,
-							'commands.ban.embeds.success.fields.days',
-						)}`,
+						name: 'Xóa tin nhắn',
+						value: `${deleteMessageDays} ngày`,
 						inline: true,
 					},
 					{
-						name: translate(userLocale, 'commands.ban.embeds.success.fields.moderator'),
+						name: 'Moderator',
 						value: interaction.user.tag,
 						inline: true,
 					},
 				)
 				.setFooter({
-					text: translate(userLocale, 'commands.ban.embeds.success.footer', {
-						moderator: interaction.user.tag,
-					}),
+					text: `Được thực hiện bởi ${interaction.user.tag}`,
 				})
 				.setTimestamp();
 
 			// Ban the user
 			await interaction.guild.members.ban(targetUser, {
 				deleteMessageDays: deleteMessageDays,
-				reason: `${reason} - ${translate(userLocale, 'commands.ban.banReason', {
-					moderator: interaction.user.tag,
-				})}`,
+				reason: `${reason} - Bởi ${interaction.user.tag}`,
 			});
 
 			// Log the action
@@ -127,49 +115,42 @@ module.exports = {
 
 			// Create mod log embed using i18n
 			const logEmbed = createModActionEmbed({
-				title: translate(userLocale, 'commands.ban.embeds.success.title'),
-				description: translate(userLocale, 'commands.ban.embeds.success.description', {
-					user: targetUser.tag,
-				}),
+				title: '🔨 Cấm thành công',
+				description: `Đã cấm ${targetUser.tag} khỏi server.`,
 				color: 0xff0000,
 				fields: [
 					{
-						name: translate(userLocale, 'commands.ban.embeds.success.fields.user'),
+						name: 'Người dùng',
 						value: `${targetUser.tag}`,
 						inline: true,
 					},
 					{
-						name: translate(userLocale, 'commands.ban.embeds.success.fields.userId'),
+						name: 'ID người dùng',
 						value: targetUser.id,
 						inline: true,
 					},
 					{
-						name: translate(userLocale, 'commands.ban.embeds.success.fields.moderator'),
+						name: 'Moderator',
 						value: `${interaction.user.tag} (<@${interaction.user.id}>)`,
 						inline: true,
 					},
 					{
-						name: translate(userLocale, 'commands.ban.embeds.success.fields.reason'),
+						name: 'Lý do',
 						value: reason,
 						inline: false,
 					},
 					{
-						name: translate(userLocale, 'commands.ban.embeds.success.fields.deleteMessages'),
-						value: `${deleteMessageDays} ${translate(
-							userLocale,
-							'commands.ban.embeds.success.fields.days',
-						)}`,
+						name: 'Xóa tin nhắn',
+						value: `${deleteMessageDays} ngày`,
 						inline: true,
 					},
 					{
-						name: translate(userLocale, 'commands.ban.embeds.success.fields.date'),
+						name: 'Ngày',
 						value: `<t:${Math.floor(Date.now() / 1000)}:F>`,
 						inline: false,
 					},
 				],
-				footer: translate(userLocale, 'commands.ban.embeds.success.footerServer', {
-					server: interaction.guild.name,
-				}),
+				footer: `Server: ${interaction.guild.name}`,
 			});
 
 			await sendModLog(interaction.guild, logEmbed, true);
@@ -178,17 +159,13 @@ module.exports = {
 				const dmEmbed = new EmbedBuilder()
 					.setColor(0xff0000)
 					.setTitle(
-						translate(userLocale, 'commands.ban.dm.title', {
-							server: interaction.guild.name,
-						}),
+						`Bạn đã bị cấm tại ${interaction.guild.name}`,
 					)
 					.setDescription(
-						translate(userLocale, 'commands.ban.dm.description', {
-							reason: reason,
-						}),
+						`Lý do: ${reason}`,
 					)
 					.setFooter({
-						text: translate(userLocale, 'commands.ban.dm.footer'),
+						text: 'Nếu bạn cho rằng đây là sai lầm, hãy liên hệ ban quản trị server.',
 					})
 					.setTimestamp();
 
@@ -196,24 +173,16 @@ module.exports = {
 			} catch (error) {
 				logger.error(
 					'MODERATION',
-					translate(userLocale, 'commands.ban.dm.error', {
-						user: targetUser.tag,
-					}),
+					`Không thể gửi DM cho ${targetUser.tag}`,
 				);
 			}
 		} catch (error) {
 			logger.error(
 				'MODERATION',
-				translate(userLocale, 'commands.ban.errors.general', {
-					user: targetUser.tag,
-					error: error.message,
-				}),
+				`Lỗi khi cấm ${targetUser.tag}: ${error.message}`,
 			);
 			await interaction.editReply({
-				content: translate(userLocale, 'commands.ban.errors.general', {
-					user: targetUser.tag,
-					error: error.message,
-				}),
+				content: `Đã xảy ra lỗi khi cấm ${targetUser.tag}: ${error.message}`,
 				ephemeral: true,
 			});
 		}

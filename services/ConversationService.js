@@ -7,7 +7,6 @@ const textUtils = require("../utils/textUtils.js");
 const AICore = require("./AICore.js");
 const WebSearchService = require("./WebSearchService.js");
 const TokenService = require("./TokenService.js");
-const { AI_RESPONSE_LOCALE } = require("../utils/i18n.js");
 
 const DEFAULT_USER_ID = "anonymous-user";
 const MAX_CONVERSATION_LENGTH = 30;
@@ -292,11 +291,6 @@ class ConversationService {
   async processChatCompletion(prompt, userId, additionalConfig = {}) {
     try {
       let systemPrompt = additionalConfig.systemPrompt || prompts.system.main;
-      
-      const localeInstruction = AI_RESPONSE_LOCALE === 'vi' 
-        ? 'Bạn phải trả lời bằng tiếng Việt.' 
-        : 'You must respond in English.';
-      systemPrompt += `\n\nIMPORTANT: ${localeInstruction}`;
 
       await conversationManager.loadConversationHistory(userId, systemPrompt, AICore.getModelName());
       const conversationHistory = conversationManager.getHistory(userId);
