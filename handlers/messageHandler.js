@@ -6,6 +6,8 @@ const experience = require('../utils/xp');
 const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const logger = require('../utils/logger.js');
+const guildProfileDB = require('../services/guildprofiledb');
+const guildProfile = await guildProfileDB.getGuildProfile(message.guild.id);
 
 
 /**
@@ -33,9 +35,23 @@ async function processXp(message, commandExecuted, execute) {
 
     if (response.xpAdded && response.level && response.previousLevel && response.level > response.previousLevel) {
       logger.info('XP', `${message.author.tag} đã lên cấp ${response.level} trong server ${message.guild.name}`);
-
-      // Tùy chọn: Gửi thông báo lên cấp trong kênh
-      // await message.channel.send(`🎉 Chúc mừng ${message.author}! Bạn đã đạt cấp độ ${response.level}!`);
+      
+      if (guildProfile?.settings?.levelUpNotifications) {
+        const settings = guildProfile.settings;
+        
+        if (settings.useEmbeds) {
+          const embed = new EmbedBuilder()
+            .setTitle('🎉 Chúc mừng Level-up!')
+            .setDescription(`${message.author} đã đạt cấp độ **${response.level}**!`)
+            .setColor(0x00FF00)
+            .setThumbnail(message.author.displayAvatarURL())
+            .setTimestamp();
+          
+          await message.channel.send({ embeds: [embed] }).catch(() => {});
+        } else {
+          await message.channel.send(`🎉 Chúc mừng ${message.author}! Bạn đã đạt cấp độ ${response.level}!`).catch(() => {});
+        }
+      }
     }
   } catch (error) {
     logger.error('XP', 'Lỗi khi xử lý XP:', error);
