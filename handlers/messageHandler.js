@@ -7,6 +7,9 @@ const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const logger = require('../utils/logger.js');
 const guildProfileDB = require('../services/guildprofiledb');
+const MemoryService = require('../services/MemoryService');
+const AnalyticsService = require('../services/AnalyticsService');
+const VisionService = require('../services/VisionService');
 
 async function processXp(message, commandExecuted, execute) {
   try {
@@ -97,6 +100,30 @@ async function handleMentionMessage(message, client) {
 
         await typingPromise;
 
+        // Check for image attachments and use vision AI
+        const imageAttachment = message.attachments.find(att => att.contentType?.startsWith('image/'));
+        if (imageAttachment) {
+          try {
+            const visionResult = await VisionService.analyzeImage(imageAttachment.url, content || "What's in this image?");
+            if (visionResult.success) {
+              await message.reply(visionResult.analysis);
+              
+              // Store conversation with vision context
+              await MemoryService.storeConversation(
+                message.author.id,
+                message.guild?.id,
+                `[Image analysis request] ${content || "What's in this image?"}`,
+                visionResult.analysis,
+                { topics: ['image', 'vision'] }
+              ).catch(err => logger.error('MEMORY', 'Error storing vision conversation:', err));
+              
+              return;
+            }
+          } catch (visionError) {
+            logger.error('VISION', 'Error analyzing image:', visionError);
+          }
+        }
+
         const lowerContent = content.toLowerCase();
         if (lowerContent.includes('code') ||
             lowerContent.includes('function') ||
@@ -111,6 +138,33 @@ async function handleMentionMessage(message, client) {
           logger.error('CHAT', 'ConversationService trả về null/undefined');
           await message.reply('Xin lỗi, tôi không thể xử lý tin nhắn của bạn lúc này.');
           return;
+        }
+
+        // Store conversation in memory
+        MemoryService.storeConversation(
+          message.author.id,
+          message.guild?.id,
+          content,
+          response
+        ).catch(err => logger.error('MEMORY', 'Error storing conversation:', err));
+
+        // Extract and store facts from conversation
+        MemoryService.extractAndStoreFacts(message.author.id, content, response)
+          .catch(err => logger.error('MEMORY', 'Error extracting facts:', err));
+
+        // Track analytics for guild messages
+        if (message.guild) {
+          AnalyticsService.trackMessage(
+            message.guild.id,
+            message.author.id,
+            message.channel.id,
+            content,
+            {
+              hasAttachment: message.attachments.size > 0,
+              hasEmbed: message.embeds.length > 0,
+              mentionCount: message.mentions.users.size,
+            }
+          ).catch(err => logger.error('ANALYTICS', 'Error tracking message:', err));
         }
 
         // Xử lý response dài

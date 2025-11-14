@@ -7,6 +7,7 @@ const textUtils = require("../utils/textUtils.js");
 const AICore = require("./AICore.js");
 const WebSearchService = require("./WebSearchService.js");
 const TokenService = require("./TokenService.js");
+const MemoryService = require("./MemoryService.js");
 
 const DEFAULT_USER_ID = "anonymous-user";
 const MAX_CONVERSATION_LENGTH = 30;
@@ -238,6 +239,17 @@ class ConversationService {
       const userId = this.extractUserId(message);
       if (userId === DEFAULT_USER_ID) {
         logger.warn("CONVERSATION_SERVICE", "Cannot determine userId, using default");
+      }
+
+      // Get contextual system prompt with user memory
+      let systemPrompt = prompts.system.main;
+      if (message?.author?.id) {
+        try {
+          systemPrompt = await MemoryService.getContextualPrompt(message.author.id, prompts.system.main);
+          logger.debug("CONVERSATION_SERVICE", "Using contextual prompt with user memory");
+        } catch (memoryError) {
+          logger.error("CONVERSATION_SERVICE", "Error loading memory context:", memoryError);
+        }
       }
 
       let ownerSpecialResponse = "";

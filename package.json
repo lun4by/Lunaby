@@ -20,7 +20,11 @@
     "canvas": "^3.1.0",
     "discord.js": "^14.19.2",
     "dotenv": "^16.3.1",
-    "mongodb": "^6.16.0"
+    "mongodb": "^6.16.0",
+    "vm2": "^3.9.19",
+    "node-schedule": "^2.1.1",
+    "pdfkit": "^0.14.0",
+    "docx": "^8.5.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
