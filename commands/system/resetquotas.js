@@ -1,29 +1,17 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const MessageService = require('../../services/TokenService.js');
+const QuotaService = require('../../services/TokenService.js');
 const logger = require('../../utils/logger.js');
 require('dotenv').config();
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('resetquotas')
-    .setDescription('Reset lượt nhắn tin cho người dùng (chỉ dành cho owner)')
+    .setName('resetquota')
+    .setDescription('Reset quota tin nhắn cho người dùng (Owner only)')
     .addUserOption(option =>
       option
         .setName('user')
-        .setDescription('Người dùng cần reset lượt nhắn tin đã sử dụng')
+        .setDescription('Người dùng cần reset quota')
         .setRequired(true)
-    )
-    .addStringOption(option =>
-      option
-        .setName('type')
-        .setDescription('Loại reset')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Hàng ngày', value: 'daily' },
-          { name: 'Hàng tuần', value: 'weekly' },
-          { name: 'Hàng tháng', value: 'monthly' },
-          { name: 'Tất cả', value: 'all' }
-        )
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
@@ -40,40 +28,33 @@ module.exports = {
       await interaction.deferReply({ ephemeral: true });
 
       const targetUser = interaction.options.getUser('user');
-      const resetType = interaction.options.getString('type') || 'daily';
 
-      await TokenService.resetUserMessages(targetUser.id, resetType);
+      await QuotaService.resetUserQuota(targetUser.id);
 
-      const stats = await TokenService.getUserMessageStats(targetUser.id);
-
-      const resetTypeNames = {
-        daily: 'hàng ngày',
-        weekly: 'hàng tuần',
-        monthly: 'hàng tháng',
-        all: 'tất cả'
-      };
+      const stats = await QuotaService.getUserMessageStats(targetUser.id);
 
       const embed = new EmbedBuilder()
-        .setTitle('Reset lượt nhắn tin đã sử dụng thành công')
+        .setTitle('✅ Reset Quota Thành Công')
         .setColor('#00ff00')
+        .setDescription(`Đã reset quota cho ${targetUser}`)
         .addFields(
-          { name: 'Người dùng', value: `${targetUser.tag}`, inline: true },
-          { name: 'Loại reset', value: resetTypeNames[resetType], inline: true },
+          { name: '👤 Người dùng', value: targetUser.tag, inline: true },
+          { name: '🔄 Trạng thái', value: 'Đã reset về 0', inline: true },
           { name: '\u200b', value: '\u200b', inline: true },
-          { name: 'Lượt hôm nay', value: `${stats.usage.daily.toLocaleString()} lượt`, inline: true },
-          { name: 'Lượt tuần này', value: `${stats.usage.weekly.toLocaleString()} lượt`, inline: true },
-          { name: 'Lượt tháng này', value: `${stats.usage.monthly.toLocaleString()} lượt`, inline: true }
+          { name: '💬 Đang sử dụng', value: `${stats.usage.current.toLocaleString()} / ${stats.limits.period.toLocaleString()}`, inline: true },
+          { name: '📊 Tổng đã dùng', value: `${stats.usage.total.toLocaleString()} tin nhắn`, inline: true },
+          { name: '⏰ Reset sau', value: `${stats.remaining.days} ngày`, inline: true }
         )
-        .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
+        .setFooter({ text: `Thực hiện bởi ${interaction.user.tag}` })
         .setTimestamp();
 
       await interaction.editReply({ embeds: [embed] });
 
-      logger.info('ADMIN', `${interaction.user.tag} reset ${resetType} lượt nhắn tin đã sử dụng cho ${targetUser.tag}`);
+      logger.info('ADMIN', `${interaction.user.tag} đã reset quota cho ${targetUser.tag}`);
     } catch (error) {
-      logger.error('ADMIN', 'Lỗi khi reset lượt nhắn tin đã sử dụng:', error);
+      logger.error('ADMIN', 'Lỗi khi reset quota:', error);
       await interaction.editReply({
-        content: `Lỗi khi reset lượt nhắn tin đã sử dụng: ${error.message}`,
+        content: `❌ Lỗi khi reset quota: ${error.message}`,
         ephemeral: true
       });
     }

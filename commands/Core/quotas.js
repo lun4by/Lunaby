@@ -4,127 +4,91 @@ const logger = require('../../utils/logger.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('quotas')
-		.setDescription('Xem thống kê quotas')
-		.addSubcommand((subcommand) =>
-			subcommand
+		.setName('quota')
+		.setDescription('Xem giới hạn tin nhắn của bạn')
+		.addUserOption((option) =>
+			option
 				.setName('user')
-				.setDescription('Xem thống kê quotas của người dùng')
-				.addUserOption((option) =>
-					option
-						.setName('target')
-						.setDescription('Người dùng cần xem (để trống để xem của bạn)')
-						.setRequired(false),
-			),
-		)
-		.addSubcommand((subcommand) =>
-			subcommand
-				.setName('system')
-				.setDescription('Xem thống kê hạn quotas toàn hệ thống (Owner/Admin)'),
+				.setDescription('Xem quota của người dùng khác (chỉ Owner)')
+				.setRequired(false),
 		),
 
 	async execute(interaction) {
 		try {
 			await interaction.deferReply({ ephemeral: true });
 
-			const subcommand = interaction.options.getSubcommand();
+			const targetUser = interaction.options.getUser('user');
+			const ownerId = process.env.OWNER_ID;
 
-			if (subcommand === 'user') {
-				await handleUserStats(interaction);
-			} else {
-				await handleSystemStats(interaction);
+			if (targetUser && interaction.user.id !== ownerId) {
+				return interaction.editReply({
+					content: '❌ Chỉ Owner mới có thể xem quota của người khác!',
+					ephemeral: true,
+				});
 			}
+
+			const userToCheck = targetUser || interaction.user;
+			const stats = await TokenService.getUserMessageStats(userToCheck.id);
+
+			const isUnlimited = stats.limits.period === -1;
+			const percentUsed = isUnlimited ? 0 : Math.round((stats.usage.current / stats.limits.period) * 100);
+			const progressBar = createProgressBar(percentUsed);
+
+			const embed = new EmbedBuilder()
+				.setTitle(`📊 Giới hạn Tin nhắn`)
+				.setDescription(userToCheck.id === interaction.user.id ? 'Thông tin quota của bạn' : `Thông tin quota của ${userToCheck.username}`)
+				.setColor(percentUsed > 80 ? '#ff0000' : percentUsed > 50 ? '#ff9900' : '#00ff00')
+				.setThumbnail(userToCheck.displayAvatarURL())
+				.addFields(
+					{
+						name: '💬 Đã sử dụng',
+						value: `**${stats.usage.current.toLocaleString()}** / ${isUnlimited ? '∞' : stats.limits.period.toLocaleString()} tin nhắn`,
+						inline: false,
+					},
+					{
+						name: '📈 Tiến độ',
+						value: isUnlimited ? '∞ Không giới hạn' : `${progressBar} ${percentUsed}%`,
+						inline: false,
+					},
+					{
+						name: '✨ Còn lại',
+						value: isUnlimited ? '∞ Không giới hạn' : `**${stats.remaining.messages.toLocaleString()}** tin nhắn`,
+						inline: true,
+					},
+					{
+						name: '⏰ Reset sau',
+						value: isUnlimited ? 'Không cần' : `**${stats.remaining.days}** ngày`,
+						inline: true,
+					},
+					{
+						name: '📅 Chu kỳ',
+						value: '30 ngày',
+						inline: true,
+					},
+					{
+						name: '📊 Tổng đã dùng',
+						value: `**${stats.usage.total.toLocaleString()}** tin nhắn`,
+						inline: true,
+					}
+				)
+				.setFooter({ text: `User ID: ${userToCheck.id}` })
+				.setTimestamp();
+
+			await interaction.editReply({ embeds: [embed] });
 		} catch (error) {
-			logger.error('ADMIN', 'Error while retrieving quota statistics:', error);
+			logger.error('QUOTA', 'Lỗi khi lấy thống kê quota:', error);
 			await interaction.editReply({
-				content: `Lỗi khi lấy thống kê: ${error.message}`,
+				content: `❌ Lỗi khi lấy thống kê: ${error.message}`,
 				ephemeral: true,
 			});
 		}
 	},
 };
 
-async function handleUserStats(interaction) {
-	const targetUser = interaction.options.getUser('target') || interaction.user;
-
-    if (interaction.user.id !== ownerId) {
-      return interaction.reply({
-        content: 'Bạn không có quyền sử dụng lệnh này!',
-        ephemeral: true,
-      });
-    }
-
-	const stats = await TokenService.getUserMessageStats(targetUser.id);
-	const roleNames = {
-		owner: 'Owner',
-		admin: 'Admin',
-		helper: 'Helper',
-		user: 'User'
-	};
-
-	const embed = new EmbedBuilder()
-		.setTitle(`Thống kê Quota của ${targetUser.username}`)
-		.setColor('#0099ff')
-		.setThumbnail(targetUser.displayAvatarURL())
-		.addFields(
-			{
-				name: 'Vai trò',
-				value: roleNames[stats.role] || stats.role,
-				inline: true,
-			},
-			{
-				name: 'Hạn mức ngày',
-				value: formatLimit(stats.limits.daily),
-				inline: true,
-			},
-			{ name: '\u200b', value: '\u200b', inline: true },
-			{
-				name: 'Hôm nay',
-				value: formatUses(stats.usage.daily),
-				inline: true,
-			},
-			{
-				name: 'Tuần này',
-				value: formatUses(stats.usage.weekly),
-				inline: true,
-			},
-			{
-				name: 'Tháng này',
-				value: formatUses(stats.usage.monthly),
-				inline: true,
-			},
-			{
-				name: 'Tổng cộng',
-				value: formatUses(stats.usage.total),
-				inline: true,
-			},
-			{
-				name: 'Còn lại hôm nay',
-				value: formatLimit(stats.remaining.daily),
-				inline: true,
-			},
-			{ name: '\u200b', value: '\u200b', inline: true },
-		)
-		.setFooter({ text: `User ID: ${targetUser.id}` })
-		.setTimestamp();
-
-	if (stats.recentHistory && stats.recentHistory.length > 0) {
-		const historyLines = stats.recentHistory
-			.slice(-5)
-			.reverse()
-			.map((entry) =>
-				`${entry.messages.toLocaleString()} - ${entry.operation}`,
-			)
-			.join('\n');
-
-		embed.addFields({
-			name: 'Lịch sử gần đây',
-			value: historyLines || 'Chưa có lịch sử',
-			inline: false,
-		});
-	}
-
-	await interaction.editReply({ embeds: [embed] });
+function createProgressBar(percent) {
+	const filled = Math.round(percent / 10);
+	const empty = 10 - filled;
+	return '█'.repeat(filled) + '░'.repeat(empty);
 }
 
 async function handleSystemStats(interaction) {
@@ -217,17 +181,6 @@ async function handleSystemStats(interaction) {
 	}
 
 	await interaction.editReply({ embeds: [embed] });
-}
-
-function formatLimit(value) {
-	if (value === -1) {
-		return 'Không giới hạn';
-	}
-	return `${value.toLocaleString()} tin nhắn/ngày`;
-}
-
-function formatUses(value) {
-	return `${value.toLocaleString()} tin nhắn`;
 }
 
 

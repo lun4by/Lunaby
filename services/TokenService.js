@@ -4,18 +4,17 @@ const logger = require('../utils/logger.js');
 /**
  * Service quản lý giới hạn lượt nhắn tin và vai trò người dùng
  */
-class MessageService {
+class QuotaService {
   constructor() {
     this.roleLimits = {
       owner: -1,
-      admin: 1000,
-      helper: 500,
-      user: 100
+      user: 600
     };
 
+    this.quotaPeriodDays = 30;
     this.ownerId = process.env.OWNER_ID ? process.env.OWNER_ID.trim() : null;
     
-    logger.info('TOKEN_SERVICE', `Khởi tạo TokenService với owner ID: ${this.ownerId || 'không có'}`);
+    logger.info('QUOTA_SERVICE', `Khởi tạo QuotaService với owner ID: ${this.ownerId || 'không có'}`);
   }
 
   async getMessageCollection() {
@@ -53,26 +52,19 @@ class MessageService {
         userId,
         role,
         messageUsage: {
-          daily: 0,
-          weekly: 0,
-          monthly: 0,
+          current: 0,
           total: 0
         },
         limits: {
-          daily: this.roleLimits[role]
+          period: this.roleLimits[role]
         },
-        lastReset: {
-          daily: Date.now(),
-          weekly: Date.now(),
-          monthly: Date.now()
-        },
-        history: [],
+        periodStart: Date.now(),
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
 
       await collection.insertOne(messageData);
-      logger.info('TOKEN_SERVICE', `Khởi tạo quota cho user ${userId} với role ${role}`);
+      logger.info('QUOTA_SERVICE', `Khởi tạo quota cho user ${userId} với role ${role}`);
 
       if (role !== 'user') {
         await profileCollection.updateOne(
@@ -116,38 +108,24 @@ class MessageService {
       if (!messageData) return;
 
       const now = Date.now();
-      const oneDay = 24 * 60 * 60 * 1000;
-      const oneWeek = 7 * oneDay;
-      const oneMonth = 30 * oneDay;
+      const periodMs = this.quotaPeriodDays * 24 * 60 * 60 * 1000;
+      const periodStart = messageData.periodStart || messageData.createdAt;
 
-      const updates = {};
-      let needsUpdate = false;
-
-      if (now - messageData.lastReset.daily > oneDay) {
-        updates['messageUsage.daily'] = 0;
-        updates['lastReset.daily'] = now;
-        needsUpdate = true;
-        logger.info('TOKEN_SERVICE', `Reset quota hàng ngày cho user ${userId}`);
-      }
-
-      if (now - messageData.lastReset.weekly > oneWeek) {
-        updates['messageUsage.weekly'] = 0;
-        updates['lastReset.weekly'] = now;
-        needsUpdate = true;
-      }
-
-      if (now - messageData.lastReset.monthly > oneMonth) {
-        updates['messageUsage.monthly'] = 0;
-        updates['lastReset.monthly'] = now;
-        needsUpdate = true;
-      }
-
-      if (needsUpdate) {
-        updates.updatedAt = now;
-        await collection.updateOne({ userId }, { $set: updates });
+      if (now - periodStart > periodMs) {
+        await collection.updateOne(
+          { userId },
+          {
+            $set: {
+              'messageUsage.current': 0,
+              periodStart: now,
+              updatedAt: now
+            }
+          }
+        );
+        logger.info('QUOTA_SERVICE', `Reset quota 30 ngày cho user ${userId}`);
       }
     } catch (error) {
-      logger.error('TOKEN_SERVICE', `Lỗi khi reset quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi reset quota cho ${userId}:`, error);
     }
   }
 
@@ -155,29 +133,29 @@ class MessageService {
     try {
       const messageData = await this.getUserMessageData(userId);
 
-      if (messageData.role === 'owner' || messageData.limits.daily === -1) {
+      if (messageData.role === 'owner' || messageData.limits.period === -1) {
         return {
           allowed: true,
           remaining: -1,
           role: messageData.role,
-          current: messageData.messageUsage.daily,
+          current: messageData.messageUsage.current,
           limit: -1
         };
       }
 
-      const remaining = messageData.limits.daily - messageData.messageUsage.daily;
+      const remaining = messageData.limits.period - messageData.messageUsage.current;
       const allowed = remaining >= estimatedMessages;
 
       return {
         allowed,
         remaining,
         role: messageData.role,
-        current: messageData.messageUsage.daily,
-        limit: messageData.limits.daily,
+        current: messageData.messageUsage.current,
+        limit: messageData.limits.period,
         estimated: estimatedMessages
       };
     } catch (error) {
-      logger.error('TOKEN_SERVICE', `Lỗi khi kiểm tra quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi kiểm tra quota cho ${userId}:`, error);
       return { allowed: true, remaining: 0, role: 'user', error: error.message };
     }
   }
@@ -191,26 +169,12 @@ class MessageService {
       const collection = await this.getMessageCollection();
       const now = Date.now();
 
-      const historyEntry = {
-        messages: messagesUsed,
-        operation,
-        timestamp: now
-      };
-
       await collection.updateOne(
         { userId },
         {
           $inc: {
-            'messageUsage.daily': messagesUsed,
-            'messageUsage.weekly': messagesUsed,
-            'messageUsage.monthly': messagesUsed,
+            'messageUsage.current': messagesUsed,
             'messageUsage.total': messagesUsed
-          },
-          $push: {
-            history: {
-              $each: [historyEntry],
-              $slice: -100
-            }
           },
           $set: {
             updatedAt: now
@@ -219,11 +183,11 @@ class MessageService {
         { upsert: true }
       );
 
-      logger.debug('TOKEN_SERVICE', `Ghi nhận ${messagesUsed} lượt cho user ${userId} (${operation})`);
+      logger.debug('QUOTA_SERVICE', `Ghi nhận ${messagesUsed} lượt cho user ${userId} (${operation})`);
 
       return true;
     } catch (error) {
-      logger.error('TOKEN_SERVICE', `Lỗi khi ghi nhận usage cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi ghi nhận usage cho ${userId}:`, error);
       return false;
     }
   }
@@ -247,7 +211,7 @@ class MessageService {
         {
           $set: {
             role,
-            'limits.daily': this.roleLimits[role],
+            'limits.period': this.roleLimits[role],
             updatedAt: now
           }
         },
@@ -260,10 +224,10 @@ class MessageService {
         { upsert: true }
       );
 
-      logger.info('TOKEN_SERVICE', `Đặt role ${role} cho user ${userId}`);
+      logger.info('QUOTA_SERVICE', `Đặt role ${role} cho user ${userId}`);
       return true;
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', `Lỗi khi đặt role cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi đặt role cho ${userId}:`, error);
       throw error;
     }
   }
@@ -277,7 +241,7 @@ class MessageService {
       const messageData = await this.getUserMessageData(userId);
       return messageData.role || 'user';
     } catch (error) {
-      logger.error('TOKEN_SERVICE', `Lỗi khi lấy role của ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi lấy role của ${userId}:`, error);
       return 'user';
     }
   }
@@ -285,69 +249,55 @@ class MessageService {
   async getUserMessageStats(userId) {
     try {
       const messageData = await this.getUserMessageData(userId);
+      const now = Date.now();
+      const periodMs = this.quotaPeriodDays * 24 * 60 * 60 * 1000;
+      const periodStart = messageData.periodStart || messageData.createdAt;
+      const timeRemaining = periodMs - (now - periodStart);
+      const daysRemaining = Math.ceil(timeRemaining / (24 * 60 * 60 * 1000));
 
       return {
         userId,
         role: messageData.role,
         usage: {
-          daily: messageData.messageUsage.daily,
-          weekly: messageData.messageUsage.weekly,
-          monthly: messageData.messageUsage.monthly,
+          current: messageData.messageUsage.current,
           total: messageData.messageUsage.total
         },
         limits: {
-          daily: messageData.limits.daily
+          period: messageData.limits.period
         },
         remaining: {
-          daily: messageData.limits.daily === -1 ? -1 : messageData.limits.daily - messageData.messageUsage.daily
+          messages: messageData.limits.period === -1 ? -1 : messageData.limits.period - messageData.messageUsage.current,
+          days: daysRemaining > 0 ? daysRemaining : 0
         },
-        lastReset: messageData.lastReset,
-        recentHistory: messageData.history.slice(-10)
+        periodStart: messageData.periodStart,
+        nextReset: periodStart + periodMs
       };
     } catch (error) {
-      logger.error('TOKEN_SERVICE', `Lỗi khi lấy thống kê cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi lấy thống kê cho ${userId}:`, error);
       throw error;
     }
   }
 
-  async resetUserMessages(userId, resetType = 'daily') {
+  async resetUserQuota(userId) {
     try {
       const collection = await this.getMessageCollection();
       const now = Date.now();
 
-      const updates = {
-        updatedAt: now
-      };
-
-      switch (resetType) {
-        case 'daily':
-          updates['messageUsage.daily'] = 0;
-          updates['lastReset.daily'] = now;
-          break;
-        case 'weekly':
-          updates['messageUsage.weekly'] = 0;
-          updates['lastReset.weekly'] = now;
-          break;
-        case 'monthly':
-          updates['messageUsage.monthly'] = 0;
-          updates['lastReset.monthly'] = now;
-          break;
-        case 'all':
-          updates['messageUsage.daily'] = 0;
-          updates['messageUsage.weekly'] = 0;
-          updates['messageUsage.monthly'] = 0;
-          updates['lastReset.daily'] = now;
-          updates['lastReset.weekly'] = now;
-          updates['lastReset.monthly'] = now;
-          break;
-      }
-
-      await collection.updateOne({ userId }, { $set: updates });
-      logger.info('TOKEN_SERVICE', `Reset ${resetType} quota cho user ${userId}`);
-
+      await collection.updateOne(
+        { userId },
+        {
+          $set: {
+            'messageUsage.current': 0,
+            periodStart: now,
+            updatedAt: now
+          }
+        }
+      );
+      
+      logger.info('QUOTA_SERVICE', `Reset quota cho user ${userId}`);
       return true;
     } catch (error) {
-      logger.error('MESSAGE_SERVICE', `Lỗi khi reset messages cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi reset quota cho ${userId}:`, error);
       throw error;
     }
   }
@@ -377,25 +327,27 @@ class MessageService {
 
       allUsers.forEach(user => {
         stats.byRole[user.role] = (stats.byRole[user.role] || 0) + 1;
-        stats.totalMessagesUsed.daily += user.messageUsage.daily || 0;
-        stats.totalMessagesUsed.weekly += user.messageUsage.weekly || 0;
-        stats.totalMessagesUsed.monthly += user.messageUsage.monthly || 0;
-        stats.totalMessagesUsed.total += user.messageUsage.total || 0;
+        stats.totalMessagesUsed.current += user.messageUsage?.current || 0;
+        stats.totalMessagesUsed.total += user.messageUsage?.total || 0;
       });
+      
+      delete stats.totalMessagesUsed.daily;
+      delete stats.totalMessagesUsed.weekly;
+      delete stats.totalMessagesUsed.monthly;
 
       stats.topUsers = allUsers
-        .sort((a, b) => (b.messageUsage.daily || 0) - (a.messageUsage.daily || 0))
+        .sort((a, b) => (b.messageUsage?.current || 0) - (a.messageUsage?.current || 0))
         .slice(0, 10)
         .map(u => ({
           userId: u.userId,
           role: u.role,
-          daily: u.messageUsage.daily,
-          total: u.messageUsage.total
+          current: u.messageUsage?.current || 0,
+          total: u.messageUsage?.total || 0
         }));
 
       return stats;
     } catch (error) {
-      logger.error('TOKEN_SERVICE', 'Lỗi khi lấy thống kê hệ thống:', error);
+      logger.error('QUOTA_SERVICE', 'Lỗi khi lấy thống kê hệ thống:', error);
       throw error;
     }
   }
@@ -414,13 +366,13 @@ class MessageService {
       await db.collection('user_quotas').createIndex({ role: 1 });
       await db.collection('user_quotas').createIndex({ 'messageUsage.total': -1 });
 
-      logger.info('TOKEN_SERVICE', 'Đã khởi tạo collection và indexes cho TokenService');
+      logger.info('QUOTA_SERVICE', 'Đã khởi tạo collection và indexes cho QuotaService');
     } catch (error) {
-      logger.error('TOKEN_SERVICE', 'Lỗi khi khởi tạo collection:', error);
+      logger.error('QUOTA_SERVICE', 'Lỗi khi khởi tạo collection:', error);
       throw error;
     }
   }
 }
 
-module.exports = new MessageService();
+module.exports = new QuotaService();
 
