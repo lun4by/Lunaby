@@ -60,7 +60,10 @@ async function processXp(message, commandExecuted, execute) {
 async function handleMentionMessage(message, client) {
   if (message.author.bot) return;
 
-  if (message.mentions.has(client.user)) {
+  const isDM = !message.guild;
+  const shouldRespond = isDM || message.mentions.has(client.user);
+
+  if (shouldRespond) {
     const hasEveryoneOrRoleMention = message.mentions.everyone || message.mentions.roles.size > 0;
 
     if (!hasEveryoneOrRoleMention) {
