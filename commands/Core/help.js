@@ -37,8 +37,8 @@ module.exports = {
 		const welcomeEmbed = new EmbedBuilder()
 			.setColor(0x9B59B6)
 			.setTitle('📚 Trợ Giúp - Lunaby')
-			.setDescription('Chào mừng bạn đến với hệ thống trợ giúp!\n\nChọn một danh mục từ menu bên dưới để xem chi tiết các lệnh.')
-			.setFooter({ text: 'Made with ❤️ by Lunaby Team' })
+			.setDescription('Chào mừng bạn đến với hệ thống trợ giúp!\n\n> Chọn một danh mục từ menu bên dưới để xem chi tiết các lệnh.')
+			.setFooter({ text: 'Made with ❤️ by s4ory' })
 			.setTimestamp();
 
 		await interaction.reply({
