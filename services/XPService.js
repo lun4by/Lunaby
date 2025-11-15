@@ -1,19 +1,12 @@
 const ProfileDB = require('./profiledb');
 const logger = require('../utils/logger');
 
-/**
- * Service quản lý hệ thống XP theo phong cách MaiSakurajima
- * Tích hợp với profiledb.js có sẵn
- */
 class XPService {
   constructor() {
     this.cooldowns = new Map();
     this.cooldownTime = 60000; // 60 giây
   }
 
-  /**
-   * Kiểm tra cooldown của user
-   */
   isOnCooldown(userId) {
     return this.cooldowns.has(userId);
   }
@@ -65,15 +58,12 @@ class XPService {
         profile.data.xp.push(serverXP);
       }
 
-      // Tính XP ngẫu nhiên (15-25)
       const xpAdd = Math.floor(Math.random() * 10) + 15;
       const currentXP = serverXP.xp;
       const currentLevel = serverXP.level;
-      
-      // Cập nhật XP
+
       serverXP.xp = currentXP + xpAdd;
 
-      // Kiểm tra level up
       const nextLevelXP = this.calculateTotalXPForLevel(currentLevel + 1);
       
       let leveledUp = false;
@@ -82,14 +72,12 @@ class XPService {
         leveledUp = true;
       }
 
-      // Lưu vào DB
       const collection = await ProfileDB.getProfileCollection();
       await collection.updateOne(
         { _id: message.author.id },
         { $set: { 'data.xp': profile.data.xp } }
       );
-      
-      // Thêm cooldown
+
       this.addCooldown(message.author.id);
 
       logger.debug('XP', `${message.author.tag} +${xpAdd} XP (Level ${serverXP.level})`);
@@ -108,9 +96,6 @@ class XPService {
     }
   }
 
-  /**
-   * Lấy thông tin XP của user
-   */
   async getUserXP(guildId, userId) {
     try {
       const profile = await ProfileDB.getProfile(userId);
@@ -141,9 +126,6 @@ class XPService {
     }
   }
 
-  /**
-   * Lấy leaderboard của guild
-   */
   async getLeaderboard(guildId, limit = 10) {
     try {
       const collection = await ProfileDB.getProfileCollection();
@@ -151,7 +133,6 @@ class XPService {
         'data.xp': { $elemMatch: { id: guildId } }
       }).toArray();
 
-      // Extract và sort XP data
       const leaderboard = profiles
         .map(profile => {
           const serverXP = profile.data.xp.find(x => x.id === guildId);
@@ -171,9 +152,6 @@ class XPService {
     }
   }
 
-  /**
-   * Lấy rank của user trong guild
-   */
   async getUserRank(guildId, userId) {
     try {
       const collection = await ProfileDB.getProfileCollection();
