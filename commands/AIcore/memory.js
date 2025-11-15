@@ -92,6 +92,11 @@ module.exports = {
             .setDescription('Vị trí')
             .setRequired(false)
         )
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('reset')
+        .setDescription('Xóa lịch sử trò chuyện của chúng ta')
     ),
 
   async execute(interaction) {
@@ -116,6 +121,9 @@ module.exports = {
           break;
         case 'update':
           await this.handleUpdate(interaction, userId);
+          break;
+        case 'reset':
+          await this.handleReset(interaction, userId);
           break;
         default:
           await interaction.reply({
@@ -404,6 +412,34 @@ module.exports = {
       await interaction.editReply({ embeds: [embed] });
     } else {
       await interaction.editReply('Không thể cập nhật thông tin. Vui lòng thử lại sau.');
+    }
+  },
+
+  async handleReset(interaction, userId) {
+    await interaction.deferReply({ ephemeral: true });
+
+    try {
+      const storageDB = require('../../services/storagedb.js');
+      const ConversationService = require('../../services/ConversationService.js');
+      const prompts = require('../../config/prompts.js');
+
+      await storageDB.clearConversationHistory(
+        interaction.user.id,
+        prompts.system.main,
+        'lunaby'
+      );
+
+      const embed = new EmbedBuilder()
+        .setColor('#FFA500')
+        .setTitle('🔄 Đã xóa lịch sử trò chuyện')
+        .setDescription('Tôi đã quên hết những cuộc trò chuyện trước đây của chúng ta rồi.\n\nChúng ta có thể bắt đầu lại từ đầu! 💫')
+        .setTimestamp();
+
+      await interaction.editReply({ embeds: [embed] });
+      logger.info('MEMORY_COMMAND', `User ${interaction.user.tag} reset conversation history`);
+    } catch (error) {
+      logger.error('MEMORY_COMMAND', 'Error resetting conversation:', error);
+      await interaction.editReply('Không thể xóa lịch sử trò chuyện. Vui lòng thử lại sau.');
     }
   }
 };
