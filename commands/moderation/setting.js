@@ -12,9 +12,8 @@ const {
 const guildProfileDB = require('../../services/guildprofiledb');
 const logger = require('../../utils/logger');
 
-// Cache để tránh fetch profile nhiều lần
 const profileCache = new Map();
-const CACHE_TTL = 30000; // 30 seconds
+const CACHE_TTL = 30000; 
 
 module.exports = {
   data: new SlashCommandBuilder()
