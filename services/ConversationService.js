@@ -260,14 +260,6 @@ class ConversationService {
       }
       
       const enhancedPromptWithMemory = await this.enrichPromptWithMemory(prompt, userId);
-      if (webSearchResult && webSearchResult.content) {
-        const promptWithSearch = `${enhancedPromptWithMemory}\n\n${webSearchResult.content}`;
-        let content = await this.processChatCompletion(promptWithSearch, userId);
-        if (ownerSpecialResponse) {
-          content = `${ownerSpecialResponse}\n\n${content}`;
-        }
-        return content;
-      }
 
       let content = await this.processChatCompletion(enhancedPromptWithMemory, userId);
 
