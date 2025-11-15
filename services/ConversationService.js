@@ -259,17 +259,6 @@ class ConversationService {
         return await this.getMemoryAnalysis(userId, memoryRequest);
       }
       
-
-      let webSearchResult = null;
-      if (await WebSearchService.shouldSearch(prompt)) {
-        logger.info("CONVERSATION_SERVICE", "WebSearchService: Đang tra cứu internet với model 'sonar' của Perplexity");
-        try {
-          webSearchResult = await WebSearchService.search(prompt, { model: "sonar", systemPrompt: prompts.system.main });
-        } catch (err) {
-          logger.error("CONVERSATION_SERVICE", "WebSearchService error:", err);
-        }
-      }
-
       const enhancedPromptWithMemory = await this.enrichPromptWithMemory(prompt, userId);
       if (webSearchResult && webSearchResult.content) {
         const promptWithSearch = `${enhancedPromptWithMemory}\n\n${webSearchResult.content}`;
