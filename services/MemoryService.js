@@ -100,26 +100,26 @@ class MemoryService {
         firstInteraction: new Date(),
         lastInteraction: new Date(),
         favoriteTopics: {}, // { "anime": 45, "coding": 32 }
-        conversationTimes: [], // Preferred times of day
+        conversationTimes: [], 
         responsePreferences: {
-          detailLevel: 'medium', // short, medium, detailed
+          detailLevel: 'medium',
           useEmojis: true,
-          formalityLevel: 'casual' // casual, neutral, formal
+          formalityLevel: 'casual'
         }
       },
 
       currentContext: {
-        activeGoals: [], // Things user is working on
-        ongoingProjects: [], // Projects user mentioned
-        currentMood: null, // Detected mood if relevant
-        recentTopics: [] // Last few topics discussed
+        activeGoals: [], 
+        ongoingProjects: [], 
+        currentMood: null, 
+        recentTopics: [] 
       },
 
       privacy: {
         allowMemoryStorage: true,
         allowPersonalInfoExtraction: true,
         allowPreferenceTracking: true,
-        sensitiveTopics: [] // Topics user asked not to discuss
+        sensitiveTopics: []
       }
     };
   }
