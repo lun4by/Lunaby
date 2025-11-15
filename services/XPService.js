@@ -18,9 +18,6 @@ class XPService {
     return this.cooldowns.has(userId);
   }
 
-  /**
-   * Thêm user vào cooldown
-   */
   addCooldown(userId) {
     this.cooldowns.set(userId, Date.now());
     setTimeout(() => {
@@ -28,17 +25,10 @@ class XPService {
     }, this.cooldownTime);
   }
 
-  /**
-   * Tính XP cần thiết cho level tiếp theo
-   * Formula: lvlcap = 150 * (level * 2)
-   */
   calculateLevelCap(level) {
     return 150 * (level * 2);
   }
 
-  /**
-   * Tính tổng XP cần để đạt level
-   */
   calculateTotalXPForLevel(level) {
     let total = 0;
     for (let i = 1; i < level; i++) {
@@ -47,35 +37,23 @@ class XPService {
     return total;
   }
 
-  /**
-   * Tính XP hiện tại trong level
-   */
   calculateCurrentLevelXP(totalXP, level) {
     const previousLevelXP = this.calculateTotalXPForLevel(level);
     return totalXP - previousLevelXP;
   }
 
-  /**
-   * Tính XP tối đa trong level hiện tại
-   */
   calculateMaxLevelXP(level) {
     return this.calculateLevelCap(level);
   }
 
-  /**
-   * Thêm XP cho user (dùng profiledb có sẵn)
-   */
   async addXP(message) {
     try {
-      // Kiểm tra điều kiện
       if (message.author.bot) return null;
       if (message.content.startsWith('!') || message.content.startsWith('/')) return null;
       if (this.isOnCooldown(message.author.id)) return null;
 
-      // Lấy profile từ profiledb
       const profile = await ProfileDB.getProfile(message.author.id);
-      
-      // Tìm hoặc tạo XP data cho guild này
+
       let serverXP = profile.data.xp.find(x => x.id === message.guild.id);
       
       if (!serverXP) {
