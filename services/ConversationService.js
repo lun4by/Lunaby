@@ -62,10 +62,8 @@ class ConversationService {
    */
   async enrichPromptWithMemory(originalPrompt, userId) {
     try {
-      // V2: Use MemoryService for long-term memory context
       const memoryContext = await MemoryService.buildMemoryContext(userId, originalPrompt);
-      
-      // V1: Also get conversation history context
+
       const fullHistory = await storageDB.getConversationHistory(
         userId,
         prompts.system.main,
@@ -86,8 +84,7 @@ class ConversationService {
           );
         }
       }
-      
-      // Combine both memory systems
+
       return memoryContext + conversationContext + originalPrompt;
 
     } catch (error) {
@@ -96,12 +93,6 @@ class ConversationService {
     }
   }
 
-  /**
-   * Trích xuất các bản tóm tắt ký ức có liên quan từ lịch sử trò chuyện.
-   * @param {Array<object>} history - Toàn bộ lịch sử trò chuyện.
-   * @param {string} currentPrompt - Prompt hiện tại của người dùng.
-   * @returns {Array<string>} Một mảng các bản tóm tắt ký ức.
-   */
   async extractRelevantMemories(history, currentPrompt) {
     try {
       if (!history || history.length < 3) {
@@ -268,9 +259,24 @@ class ConversationService {
         return await this.getMemoryAnalysis(userId, memoryRequest);
       }
       
+      let webSearchResult = null;
+      if (await WebSearchService.shouldSearch(prompt)) {
+        logger.info("CONVERSATION_SERVICE", "WebSearchService: Đang tra cứu internet với model 'sonar' của Perplexity");
+        try {
+          webSearchResult = await WebSearchService.search(prompt, { model: "sonar" });
+        } catch (err) {
+          logger.error("CONVERSATION_SERVICE", "WebSearchService error:", err);
+        }
+      }
+
       const enhancedPromptWithMemory = await this.enrichPromptWithMemory(prompt, userId);
 
-      let content = await this.processChatCompletion(enhancedPromptWithMemory, userId);
+      let finalPrompt;
+      if (webSearchResult && webSearchResult.result) {
+        finalPrompt = `${enhancedPromptWithMemory}\n\n${webSearchResult.result}`;
+      }
+
+      let content = await this.processChatCompletion(finalPrompt, userId);
 
       if (ownerSpecialResponse) {
         content = `${ownerSpecialResponse}\n\n${content}`;
