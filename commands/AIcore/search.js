@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const WebSearchService = require('../../services/WebSearchService');
 const logger = require('../../utils/logger');
 const prompts = require('../../config/prompts');
+const { splitMessageRespectWords } = require('../../handlers/messageHandler');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -35,9 +36,11 @@ module.exports = {
         }
       );
 
-      await interaction.editReply({
-        content: `🔍 **${query}**\n\n${result.content}`
-      });
+      const chunks = splitMessageRespectWords(`🔍 **${query}**\n\n${result.content}`, 2000);
+      await interaction.editReply({ content: chunks[0] });
+      for (let i = 1; i < chunks.length; i++) {
+        await interaction.followUp({ content: chunks[i] });
+      }
       logger.info('SEARCH_COMMAND', `Search completed: "${query}"`);
 
     } catch (error) {
