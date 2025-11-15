@@ -17,10 +17,10 @@ async function handleResetdbInteraction(interaction) {
   }
 
   try {
-    if (customId === 'resetdb_confirm') {
+    if (customId === 'reset_database_confirm') {
       await interaction.deferReply({ ephemeral: true });
 
-      logger.info('RESETDB', `Owner ${user.tag} đã xác nhận reset database`);
+      logger.info('RESET', `Owner ${user.tag} đã xác nhận reset database`);
 
       const success = await storageDB.resetDatabase();
 
@@ -35,7 +35,7 @@ async function handleResetdbInteraction(interaction) {
           components: [],
         });
 
-        logger.info('RESETDB', 'Database đã được reset thành công');
+        logger.info('RESET', 'Database đã được reset thành công');
       } else {
         await interaction.editReply({
           content:
@@ -46,9 +46,9 @@ async function handleResetdbInteraction(interaction) {
           components: [],
         });
 
-        logger.error('RESETDB', 'Lỗi khi reset database');
+        logger.error('RESET', 'Lỗi khi reset database');
       }
-    } else if (customId === 'resetdb_cancel') {
+    } else if (customId === 'reset_database_cancel') {
       await interaction.update({
         content:
           '❌ **Đã hủy reset database!**\n\n' +
@@ -59,14 +59,11 @@ async function handleResetdbInteraction(interaction) {
         components: [],
       });
 
-      logger.info('RESETDB', `Owner ${user.tag} đã hủy reset database`);
-    } else if (customId === 'resetuser_confirm') {
+      logger.info('RESET', `Owner ${user.tag} đã hủy reset database`);
+    } else if (customId === 'reset_users_confirm') {
       await interaction.deferReply({ ephemeral: true });
 
-      logger.info(
-        'RESETUSER',
-        `Owner ${user.tag} đã xác nhận reset user database`,
-      );
+      logger.info('RESET', `Owner ${user.tag} đã xác nhận reset user profiles`);
 
       try {
         const profileCollection = await ProfileDB.getProfileCollection();
@@ -74,32 +71,32 @@ async function handleResetdbInteraction(interaction) {
 
         await interaction.editReply({
           content:
-            '✅ **Đã reset user database thành công!**\n\n' +
+            '✅ **Đã reset user profiles thành công!**\n\n' +
             `> Đã xóa ${result.deletedCount} user profiles\n` +
             '> Tất cả XP, level, achievements đã bị xóa\n' +
             '> Users sẽ phải đồng ý consent lại\n' +
             '> Hệ thống đã sẵn sàng cho users mới\n\n' +
-            '**User database đã được reset hoàn toàn!**',
+            '**User profiles đã được reset hoàn toàn!**',
           components: [],
         });
 
-        logger.info('RESETUSER', `Đã xóa ${result.deletedCount} user profiles`);
+        logger.info('RESET', `Đã xóa ${result.deletedCount} user profiles`);
       } catch (error) {
         await interaction.editReply({
           content:
-            '❌ **Lỗi khi reset user database!**\n\n' +
+            '❌ **Lỗi khi reset user profiles!**\n\n' +
             '> Có lỗi xảy ra trong quá trình reset\n' +
             '> Vui lòng kiểm tra logs để biết thêm chi tiết\n' +
             '> Liên hệ admin nếu vấn đề tiếp tục',
           components: [],
         });
 
-        logger.error('RESETUSER', 'Lỗi khi reset user database:', error);
+        logger.error('RESET', 'Lỗi khi reset user profiles:', error);
       }
-    } else if (customId === 'resetuser_cancel') {
+    } else if (customId === 'reset_users_cancel') {
       await interaction.update({
         content:
-          '❌ **Đã hủy reset user database!**\n\n' +
+          '❌ **Đã hủy reset user profiles!**\n\n' +
           '> Không có thay đổi nào được thực hiện\n' +
           '> User profiles vẫn giữ nguyên\n' +
           '> Tất cả dữ liệu users được bảo toàn\n\n' +
@@ -107,10 +104,10 @@ async function handleResetdbInteraction(interaction) {
         components: [],
       });
 
-      logger.info('RESETUSER', `Owner ${user.tag} đã hủy reset user database`);
+      logger.info('RESET', `Owner ${user.tag} đã hủy reset user profiles`);
     }
   } catch (error) {
-    logger.error('RESETDB', `Lỗi khi xử lý resetdb interaction:`, error);
+    logger.error('RESET', `Lỗi khi xử lý reset interaction:`, error);
 
     try {
       await interaction.followUp({
@@ -118,7 +115,7 @@ async function handleResetdbInteraction(interaction) {
         ephemeral: true,
       });
     } catch (followUpError) {
-      logger.error('RESETDB', 'Lỗi khi gửi follow-up message:', followUpError);
+      logger.error('RESET', 'Lỗi khi gửi follow-up message:', followUpError);
     }
   }
 }
