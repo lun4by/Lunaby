@@ -339,13 +339,11 @@ class ConversationService {
       }
 
       await conversationManager.addMessage(userId, "assistant", content);
-      
-      // V2: Extract and store important information from conversation
+
       MemoryService.extractMemoryFromConversation(userId, prompt, content).catch(err =>
         logger.error('CONVERSATION_SERVICE', 'Error extracting memory:', err)
       );
-      
-      // V2: Update interaction stats
+
       MemoryService.updateInteractionStats(userId).catch(err =>
         logger.error('CONVERSATION_SERVICE', 'Error updating interaction stats:', err)
       );
