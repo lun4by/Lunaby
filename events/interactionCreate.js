@@ -12,7 +12,7 @@ function setupInteractionCreateEvent(client) {
       } else if (interaction.isButton()) {
         if (interaction.customId.startsWith('consent_')) {
           await handleConsentInteraction(interaction);
-        } else if (interaction.customId.startsWith('resetdb_') || interaction.customId.startsWith('resetuser_')) {
+        } else if (interaction.customId.startsWith('reset_')) {
           await handleResetdbInteraction(interaction);
         }
       }
