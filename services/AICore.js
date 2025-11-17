@@ -80,34 +80,19 @@ class AICore {
         logger.error("AI_CORE", `API error response status: ${status}`);
         logger.error("AI_CORE", `API error response data:`, data);
 
-        if (status === 500) {
-          if (data && data.error) {
-            const apiError = data.error;
-            if (typeof apiError === 'string') {
-              if (apiError.toLowerCase().includes('content') || 
-                  apiError.toLowerCase().includes('policy') ||
-                  apiError.toLowerCase().includes('safety') ||
-                  apiError.toLowerCase().includes('moderation')) {
-                errorMessage = "Nội dung vi phạm chính sách an toàn của AI";
-                errorDetails = "Yêu cầu của bạn chứa nội dung không được phép theo chính sách sử dụng";
-              } else if (apiError.toLowerCase().includes('internal')) {
-                errorMessage = "Lỗi hệ thống API";
-                errorDetails = "API đang gặp sự cố tạm thời, vui lòng thử lại sau";
-              } else {
-                errorMessage = apiError;
-                errorDetails = apiError;
-              }
-            } else if (apiError.message) {
-              errorMessage = apiError.message;
-              errorDetails = apiError.message;
-            }
-          } else {
-            errorMessage = "Lỗi hệ thống API";
-            errorDetails = "Server đang gặp sự cố, vui lòng thử lại sau";
+        if (data && data.error) {
+          errorMessage = data.error;
+          errorDetails = data.message || data.error;
+          
+          if (data.details && data.details.categories) {
+            logger.error("AI_CORE", `Blocked categories:`, data.details.categories);
           }
+        } else if (status === 500) {
+          errorMessage = "Lỗi hệ thống API";
+          errorDetails = "Server đang gặp sự cố, vui lòng thử lại sau";
         } else if (status === 400) {
           errorMessage = "Yêu cầu không hợp lệ";
-          errorDetails = data?.error?.message || "Dữ liệu gửi đi không đúng định dạng";
+          errorDetails = data?.message || "Dữ liệu gửi đi không đúng định dạng";
         } else if (status === 401 || status === 403) {
           errorMessage = "Lỗi xác thực API";
           errorDetails = "API key không hợp lệ hoặc hết hạn";
