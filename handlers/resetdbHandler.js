@@ -18,7 +18,10 @@ async function handleResetdbInteraction(interaction) {
 
   try {
     if (customId === 'reset_database_confirm') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.update({
+        content: '⏳ **Đang reset database...**',
+        components: [],
+      });
 
       logger.info('RESET', `Owner ${user.tag} đã xác nhận reset database`);
 
@@ -32,7 +35,6 @@ async function handleResetdbInteraction(interaction) {
             '> Database đã được tạo lại\n' +
             '> Bot sẽ không còn nhớ cuộc trò chuyện trước đây\n\n' +
             '**Hệ thống đã sẵn sàng sử dụng!**',
-          components: [],
         });
 
         logger.info('RESET', 'Database đã được reset thành công');
@@ -43,7 +45,6 @@ async function handleResetdbInteraction(interaction) {
             '> Có lỗi xảy ra trong quá trình reset\n' +
             '> Vui lòng kiểm tra logs để biết thêm chi tiết\n' +
             '> Liên hệ admin nếu vấn đề tiếp tục',
-          components: [],
         });
 
         logger.error('RESET', 'Lỗi khi reset database');
@@ -61,7 +62,10 @@ async function handleResetdbInteraction(interaction) {
 
       logger.info('RESET', `Owner ${user.tag} đã hủy reset database`);
     } else if (customId === 'reset_users_confirm') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.update({
+        content: '⏳ **Đang reset user profiles...**',
+        components: [],
+      });
 
       logger.info('RESET', `Owner ${user.tag} đã xác nhận reset user profiles`);
 
@@ -77,7 +81,6 @@ async function handleResetdbInteraction(interaction) {
             '> Users sẽ phải đồng ý consent lại\n' +
             '> Hệ thống đã sẵn sàng cho users mới\n\n' +
             '**User profiles đã được reset hoàn toàn!**',
-          components: [],
         });
 
         logger.info('RESET', `Đã xóa ${result.deletedCount} user profiles`);
@@ -88,7 +91,6 @@ async function handleResetdbInteraction(interaction) {
             '> Có lỗi xảy ra trong quá trình reset\n' +
             '> Vui lòng kiểm tra logs để biết thêm chi tiết\n' +
             '> Liên hệ admin nếu vấn đề tiếp tục',
-          components: [],
         });
 
         logger.error('RESET', 'Lỗi khi reset user profiles:', error);
