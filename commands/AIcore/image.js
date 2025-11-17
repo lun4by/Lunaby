@@ -55,9 +55,26 @@ module.exports = {
 			}
 		} catch (error) {
 			logger.error('COMMAND', 'Error while generating image:', error);
-			await interaction.followUp({
-				content: 'Đã xảy ra lỗi khi tạo ảnh. Vui lòng thử lại sau.',
-			});
+			
+			let errorMessage = 'Đã xảy ra lỗi khi tạo ảnh.';
+			
+			if (error.message) {
+				if (error.message.includes('vi phạm') || error.message.includes('không phù hợp')) {
+					errorMessage = '❌ ' + error.message;
+				} else if (error.message.includes('bận') || error.message.includes('thử lại')) {
+					errorMessage = '⏳ ' + error.message;
+				} else {
+					errorMessage = error.message;
+				}
+			}
+
+			try {
+				await interaction.followUp({
+					content: errorMessage,
+				});
+			} catch (followUpError) {
+				logger.error('COMMAND', 'Failed to send error message:', followUpError);
+			}
 		}
 	},
 };

@@ -70,8 +70,64 @@ class AICore {
         usage: tokenUsage
       };
     } catch (error) {
-      logger.error("AI_CORE", "Chat completion error:", error.message);
-      throw new Error(`AI API Error: ${error.message}`);
+      let errorMessage = "Đã xảy ra lỗi khi xử lý yêu cầu";
+      let errorDetails = error.message;
+
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        logger.error("AI_CORE", `API error response status: ${status}`);
+        logger.error("AI_CORE", `API error response data:`, data);
+
+        if (status === 500) {
+          if (data && data.error) {
+            const apiError = data.error;
+            if (typeof apiError === 'string') {
+              if (apiError.toLowerCase().includes('content') || 
+                  apiError.toLowerCase().includes('policy') ||
+                  apiError.toLowerCase().includes('safety') ||
+                  apiError.toLowerCase().includes('moderation')) {
+                errorMessage = "Nội dung vi phạm chính sách an toàn của AI";
+                errorDetails = "Yêu cầu của bạn chứa nội dung không được phép theo chính sách sử dụng";
+              } else if (apiError.toLowerCase().includes('internal')) {
+                errorMessage = "Lỗi hệ thống API";
+                errorDetails = "API đang gặp sự cố tạm thời, vui lòng thử lại sau";
+              } else {
+                errorMessage = apiError;
+                errorDetails = apiError;
+              }
+            } else if (apiError.message) {
+              errorMessage = apiError.message;
+              errorDetails = apiError.message;
+            }
+          } else {
+            errorMessage = "Lỗi hệ thống API";
+            errorDetails = "Server đang gặp sự cố, vui lòng thử lại sau";
+          }
+        } else if (status === 400) {
+          errorMessage = "Yêu cầu không hợp lệ";
+          errorDetails = data?.error?.message || "Dữ liệu gửi đi không đúng định dạng";
+        } else if (status === 401 || status === 403) {
+          errorMessage = "Lỗi xác thực API";
+          errorDetails = "API key không hợp lệ hoặc hết hạn";
+        } else if (status === 429) {
+          errorMessage = "Vượt quá giới hạn sử dụng";
+          errorDetails = "Đã gửi quá nhiều yêu cầu, vui lòng thử lại sau";
+        }
+      } else if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+        errorMessage = "Hết thời gian chờ";
+        errorDetails = "Yêu cầu mất quá nhiều thời gian, vui lòng thử lại";
+      } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+        errorMessage = "Không thể kết nối API";
+        errorDetails = "Không thể kết nối đến server AI";
+      }
+
+      logger.error("AI_CORE", `Chat completion error: ${errorMessage} - ${errorDetails}`);
+      
+      const finalError = new Error(errorMessage);
+      finalError.details = errorDetails;
+      throw finalError;
     }
   }
 

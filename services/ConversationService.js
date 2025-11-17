@@ -346,11 +346,23 @@ class ConversationService {
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error in processChatCompletion:", error.message);
       
-      if (error.message.includes('timeout')) {
-        throw new Error("AI service timeout. Vui lòng thử lại sau.");
+      let userFriendlyMessage = "Không thể xử lý tin nhắn";
+      
+      if (error.message.includes('timeout') || error.message.includes('Hết thời gian')) {
+        userFriendlyMessage = "Yêu cầu mất quá nhiều thời gian. Vui lòng thử lại với tin nhắn ngắn gọn hơn.";
+      } else if (error.message.includes('vi phạm') || error.message.includes('không được phép')) {
+        userFriendlyMessage = "Nội dung vi phạm chính sách an toàn. Vui lòng thử lại với nội dung khác.";
+      } else if (error.message.includes('hệ thống') || error.message.includes('Internal')) {
+        userFriendlyMessage = "Hệ thống AI tạm thời bận. Vui lòng thử lại sau vài giây.";
+      } else if (error.message.includes('kết nối')) {
+        userFriendlyMessage = "Không thể kết nối đến server AI. Vui lòng thử lại sau.";
+      } else if (error.details) {
+        userFriendlyMessage = error.details;
       }
       
-      throw error;
+      const friendlyError = new Error(userFriendlyMessage);
+      friendlyError.originalError = error;
+      throw friendlyError;
     }
   }
 }

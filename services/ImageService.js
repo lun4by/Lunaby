@@ -133,13 +133,28 @@ class ImageService {
         usage: result.usage
       };
     } catch (error) {
-      if (!this.generateImage.isBlocked) {
-        logger.error("IMAGE_SERVICE", `Lỗi khi tạo hình ảnh: ${error.message}`);
-        if (progressTracker) progressTracker.error(error.message);
-        throw new Error(`Không thể tạo hình ảnh: ${error.message}`);
-      } else {
-        throw new Error(`Prompt chứa nội dung không phù hợp`);
+      let userMessage = error.message;
+      
+      if (error.details) {
+        userMessage = error.details;
       }
+
+      if (userMessage.includes("vi phạm chính sách") || 
+          userMessage.includes("không được phép") ||
+          userMessage.includes("content") ||
+          userMessage.includes("policy") ||
+          userMessage.includes("safety")) {
+        userMessage = "Nội dung yêu cầu vi phạm chính sách an toàn: Hình ảnh không được tạo do chứa nội dung không phù hợp";
+      } else if (userMessage.includes("hệ thống API") || userMessage.includes("Internal")) {
+        userMessage = "Hệ thống AI đang bận: Vui lòng thử lại sau vài phút";
+      }
+
+      logger.error("IMAGE_SERVICE", `Lỗi khi tạo hình ảnh: ${error.message}`);
+      if (progressTracker) {
+        await progressTracker.error(userMessage);
+      }
+      
+      throw new Error(userMessage);
     }
   }
 

@@ -73,8 +73,64 @@ class WebSearchService {
         usage: usage
       };
     } catch (error) {
-      logger.error("WEB_SEARCH", `Error: ${error.message}`);
-      throw error;
+      let errorMessage = "Đã xảy ra lỗi khi tìm kiếm";
+      let errorDetails = error.message;
+
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        logger.error("WEB_SEARCH", `API error response status: ${status}`);
+        logger.error("WEB_SEARCH", `API error response data:`, data);
+
+        if (status === 500) {
+          if (data && data.error) {
+            const apiError = data.error;
+            if (typeof apiError === 'string') {
+              if (apiError.toLowerCase().includes('content') || 
+                  apiError.toLowerCase().includes('policy') ||
+                  apiError.toLowerCase().includes('safety') ||
+                  apiError.toLowerCase().includes('moderation')) {
+                errorMessage = "Nội dung vi phạm chính sách an toàn";
+                errorDetails = "Từ khóa tìm kiếm chứa nội dung không được phép theo chính sách";
+              } else if (apiError.toLowerCase().includes('internal')) {
+                errorMessage = "Lỗi hệ thống tìm kiếm";
+                errorDetails = "Dịch vụ tìm kiếm đang gặp sự cố tạm thời, vui lòng thử lại sau";
+              } else {
+                errorMessage = apiError;
+                errorDetails = apiError;
+              }
+            } else if (apiError.message) {
+              errorMessage = apiError.message;
+              errorDetails = apiError.message;
+            }
+          } else {
+            errorMessage = "Lỗi hệ thống tìm kiếm";
+            errorDetails = "Server đang gặp sự cố, vui lòng thử lại sau";
+          }
+        } else if (status === 400) {
+          errorMessage = "Yêu cầu không hợp lệ";
+          errorDetails = data?.error?.message || "Từ khóa tìm kiếm không đúng định dạng";
+        } else if (status === 401 || status === 403) {
+          errorMessage = "Lỗi xác thực API";
+          errorDetails = "API key không hợp lệ hoặc hết hạn";
+        } else if (status === 429) {
+          errorMessage = "Vượt quá giới hạn sử dụng";
+          errorDetails = "Đã gửi quá nhiều yêu cầu tìm kiếm, vui lòng thử lại sau";
+        }
+      } else if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+        errorMessage = "Hết thời gian chờ";
+        errorDetails = "Yêu cầu tìm kiếm mất quá nhiều thời gian, vui lòng thử lại";
+      } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+        errorMessage = "Không thể kết nối";
+        errorDetails = "Không thể kết nối đến dịch vụ tìm kiếm";
+      }
+
+      logger.error("WEB_SEARCH", `Search error: ${errorMessage} - ${errorDetails}`);
+      
+      const finalError = new Error(errorMessage);
+      finalError.details = errorDetails;
+      throw finalError;
     }
   }
 
@@ -98,7 +154,8 @@ class WebSearchService {
       await progressTracker.complete();
       return result;
     } catch (error) {
-      await progressTracker.error(error.message);
+      const errorMsg = error.details || error.message;
+      await progressTracker.error(errorMsg);
       throw error;
     }
   }
@@ -256,11 +313,25 @@ class WebSearchService {
 
         try {
           const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
-          const errorContent =
-            `### ❌ Lỗi Tìm Kiếm\n` +
-            `> "${queryPreview}"\n\n` +
-            `**Lỗi:** ${errorMessage}\n` +
-            `**Thời gian:** ${elapsedTime}s`;
+          let errorContent = `### ❌ Không Thể Tìm Kiếm\n> "${queryPreview}"\n\n`;
+
+          if (errorMessage.includes('vi phạm') || errorMessage.includes('không được phép')) {
+            errorContent += `**Lý do:** Nội dung vi phạm chính sách an toàn\n`;
+            errorContent += `> Từ khóa tìm kiếm chứa nội dung không phù hợp\n`;
+          } else if (errorMessage.includes('hệ thống') || errorMessage.includes('Internal')) {
+            errorContent += `**Lý do:** Hệ thống tìm kiếm đang bận\n`;
+            errorContent += `> Vui lòng thử lại sau vài phút\n`;
+          } else if (errorMessage.includes('Hết thời gian') || errorMessage.includes('timeout')) {
+            errorContent += `**Lý do:** Yêu cầu quá lâu\n`;
+            errorContent += `> Vui lòng thử lại với từ khóa đơn giản hơn\n`;
+          } else if (errorMessage.includes('kết nối')) {
+            errorContent += `**Lý do:** Không thể kết nối dịch vụ\n`;
+            errorContent += `> Kiểm tra kết nối mạng hoặc thử lại sau\n`;
+          } else {
+            errorContent += `**Lỗi:** ${errorMessage}\n`;
+          }
+          
+          errorContent += `**Thời gian:** ${elapsedTime}s`;
 
           if (isInteraction) {
             if (interaction.deferred || interaction.replied) {

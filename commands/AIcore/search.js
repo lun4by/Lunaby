@@ -46,10 +46,28 @@ module.exports = {
     } catch (error) {
       logger.error('SEARCH_COMMAND', `Error: ${error.message}`);
 
+      let errorMessage = '❌ **Không thể tìm kiếm**\n\n';
+      
+      if (error.message.includes('vi phạm') || error.message.includes('không được phép')) {
+        errorMessage += '**Lý do:** Nội dung vi phạm chính sách an toàn\n';
+        errorMessage += '> Từ khóa tìm kiếm chứa nội dung không phù hợp';
+      } else if (error.message.includes('hệ thống') || error.message.includes('Internal')) {
+        errorMessage += '**Lý do:** Hệ thống tìm kiếm đang bận\n';
+        errorMessage += '> Vui lòng thử lại sau vài phút';
+      } else if (error.message.includes('timeout') || error.message.includes('Hết thời gian')) {
+        errorMessage += '**Lý do:** Yêu cầu quá lâu\n';
+        errorMessage += '> Vui lòng thử lại với từ khóa đơn giản hơn';
+      } else if (error.message.includes('kết nối')) {
+        errorMessage += '**Lý do:** Không thể kết nối dịch vụ tìm kiếm\n';
+        errorMessage += '> Kiểm tra kết nối mạng hoặc thử lại sau';
+      } else if (error.details) {
+        errorMessage += `**Lý do:** ${error.details}`;
+      } else {
+        errorMessage += `**Lý do:** ${error.message}`;
+      }
+
       try {
-        await interaction.editReply({
-          content: `❌ **Lỗi Tìm Kiếm:** ${error.message}`
-        });
+        await interaction.editReply({ content: errorMessage });
       } catch (err) {
         logger.error('SEARCH_COMMAND', `Reply error: ${err.message}`);
       }
