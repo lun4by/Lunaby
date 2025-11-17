@@ -46,11 +46,6 @@ class OwnerService {
     }
   }
 
-  /**
-   * Kiểm tra xem user ID có phải là owner không
-   * @param {string} userId - ID của user cần kiểm tra
-   * @returns {boolean}
-   */
   isOwner(userId) {
     return userId === this.ownerId;
   }
@@ -59,12 +54,6 @@ class OwnerService {
     return this.ownerInfo;
   }
 
-  /**
-   * Kiểm tra xem tin nhắn có nhắc đến owner không (bằng ID hoặc username)
-   * @param {string} content - Nội dung tin nhắn
-   * @param {Object} message - Đối tượng tin nhắn Discord (để kiểm tra mentions)
-   * @returns {boolean}
-   */
   isOwnerMentioned(content, message = null) {
     if (!this.ownerInfo) return false;
 
