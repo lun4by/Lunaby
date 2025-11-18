@@ -7,8 +7,6 @@ const DISCORD_MAX_LENGTH = 2000;
 
 async function sendStreamingMessage(channel, messages, config = {}) {
     const isDM = channel.type === 1;
-    logger.debug('STREAM', `Starting stream in ${isDM ? 'DM' : 'guild channel'}`);
-    logger.debug('STREAM', `Request messages: ${JSON.stringify(messages.slice(-2))}`); // Log last 2 messages for context
     
     const apiUrl = process.env.LUNABY_BASE_URL || 'https://api.lunie.dev/v1';
     const apiKey = process.env.LUNABY_API_KEY;
@@ -65,15 +63,8 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                         const parsed = JSON.parse(data);
                         const content = parsed.choices?.[0]?.delta?.content;
                         
-                        // Log if there's an error in the response
                         if (parsed.error) {
-                            logger.warn('STREAM', `API error: ${JSON.stringify(parsed.error)}`);
-                        }
-                        
-                        // Log safety-related responses
-                        if (content && (content.includes("can't help") || content.includes("sorry"))) {
-                            logger.warn('STREAM', `Safety filter detected. Content: "${content}"`);
-                            logger.warn('STREAM', `User messages (last 3): ${JSON.stringify(messages.slice(-3))}`);
+                            logger.error('STREAM', `API error: ${JSON.stringify(parsed.error)}`);
                         }
 
                         if (content) {
@@ -98,7 +89,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                                     }
                                     lastUpdate = now;
                                 } catch (editError) {
-                                    logger.warn('STREAMING', `Failed to update message: ${editError.message}`);
+                                    // Silent fail 
                                 } finally {
                                     isUpdating = false;
                                 }
@@ -118,57 +109,35 @@ async function sendStreamingMessage(channel, messages, config = {}) {
             }
 
             logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
-            logger.debug('STREAM', `Finalizing message. Has sentMessage: ${!!sentMessage}`);
             const trimmedContent = fullContent.trim();
             
             if (trimmedContent === "I'm sorry, but I can't help with that." ||
                 trimmedContent === "I'm sorry, but I can't help with that" ||
                 trimmedContent.match(/^I'?m sorry,? but I can'?t help with that\.?$/i)) {
                 
-                logger.warn('STREAM', `=== GENERIC REFUSAL DETECTED ===`);
-                logger.warn('STREAM', `Original response: "${fullContent}"`);
-                logger.warn('STREAM', `Request messages: ${JSON.stringify(messages)}`);
-
                 fullContent = "Yêu cầu này liên quan đến nội dung vi phạm chính sách, mình hiểu bạn muốn biết nhưng mình không thể giúp với lý do an toàn. 💖";
-                
-                logger.warn('STREAM', `Replaced with: "${fullContent}"`);
-                logger.warn('STREAM', `===== END REFUSAL LOG =====`);
-            }
-
-            if (fullContent.includes("can't help") || fullContent.includes("I'm sorry")) {
-                logger.warn('STREAM', `=== SAFETY FILTER TRIGGERED ===`);
-                logger.warn('STREAM', `Full response: "${fullContent}"`);
-                logger.warn('STREAM', `All user messages in conversation: ${JSON.stringify(messages)}`);
-                logger.warn('STREAM', `===== END SAFETY FILTER LOG =====`);
             }
 
             try {
                 if (fullContent.length <= DISCORD_MAX_LENGTH) {
                     if (sentMessage) {
                         await sentMessage.edit(fullContent);
-                        logger.debug('STREAM', `Final edit completed for message ${sentMessage.id}`);
                     } else {
-                        logger.warn('STREAM', 'No message sent during stream, sending now');
-                        const finalMsg = await channel.send(fullContent);
-                        logger.debug('STREAM', `Final message sent, ID: ${finalMsg.id}`);
+                        await channel.send(fullContent);
                     }
                     resolve(fullContent);
                 } else {
-                    logger.debug('STREAM', `Message exceeds ${DISCORD_MAX_LENGTH} chars, splitting into chunks`);
                     if (sentMessage) {
                         await sentMessage.edit(fullContent.substring(0, DISCORD_MAX_LENGTH));
                     } else {
                         sentMessage = await channel.send(fullContent.substring(0, DISCORD_MAX_LENGTH));
-                        logger.debug('STREAM', `First chunk sent, ID: ${sentMessage.id}`);
                     }
 
                     const remaining = fullContent.substring(DISCORD_MAX_LENGTH);
                     const chunks = splitByLength(remaining, DISCORD_MAX_LENGTH);
                     
-                    logger.debug('STREAM', `Sending ${chunks.length} additional chunk(s)`);
                     for (let i = 0; i < chunks.length; i++) {
-                        const chunkMsg = await channel.send(chunks[i]);
-                        logger.debug('STREAM', `Chunk ${i + 1}/${chunks.length} sent, ID: ${chunkMsg.id}`);
+                        await channel.send(chunks[i]);
                     }
 
                     resolve(fullContent);
