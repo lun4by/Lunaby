@@ -8,6 +8,7 @@ const DISCORD_MAX_LENGTH = 2000;
 async function sendStreamingMessage(channel, messages, config = {}) {
     const isDM = channel.type === 1;
     logger.debug('STREAM', `Starting stream in ${isDM ? 'DM' : 'guild channel'}`);
+    logger.debug('STREAM', `Request messages: ${JSON.stringify(messages.slice(-2))}`); // Log last 2 messages for context
     
     const apiUrl = process.env.LUNABY_BASE_URL || 'https://api.lunie.dev/v1';
     const apiKey = process.env.LUNABY_API_KEY;
@@ -68,6 +69,12 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                         if (parsed.error) {
                             logger.warn('STREAM', `API error: ${JSON.stringify(parsed.error)}`);
                         }
+                        
+                        // Log safety-related responses
+                        if (content && content.includes("can't help") || content.includes("sorry")) {
+                            logger.warn('STREAM', `Safety filter detected. Content: "${content}"`);
+                            logger.warn('STREAM', `User messages (last 3): ${JSON.stringify(messages.slice(-3))}`);
+                        }
 
                         if (content) {
                             fullContent += content;
@@ -112,6 +119,14 @@ async function sendStreamingMessage(channel, messages, config = {}) {
 
             logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
             logger.debug('STREAM', `Finalizing message. Has sentMessage: ${!!sentMessage}`);
+            
+            // Log full content if it contains safety-related messages
+            if (fullContent.includes("can't help") || fullContent.includes("I'm sorry")) {
+                logger.warn('STREAM', `=== SAFETY FILTER TRIGGERED ===`);
+                logger.warn('STREAM', `Full response: "${fullContent}"`);
+                logger.warn('STREAM', `All user messages in conversation: ${JSON.stringify(messages)}`);
+                logger.warn('STREAM', `===== END SAFETY FILTER LOG =====`);
+            }
 
             try {
                 if (fullContent.length <= DISCORD_MAX_LENGTH) {
