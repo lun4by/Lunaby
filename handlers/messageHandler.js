@@ -1,8 +1,10 @@
 const { EmbedBuilder } = require('discord.js');
+const ConversationService = require('../services/ConversationService');
+const AICore = require('../services/AICore');
 const experience = require('../utils/xp');
 const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
-const logger = require('../utils/logger.js');
+const guildProfileDB = require('../services/guildprofiledb');
 const { sendStreamingMessage } = require('./streamingHandler');
 
 async function processXp(message, commandExecuted, execute) {
@@ -52,8 +54,6 @@ async function processXp(message, commandExecuted, execute) {
 async function handleMentionMessage(message, client) {
   if (message.author.bot) return;
 
-  const ConversationService = require('../services/ConversationService');
-  const AICore = require('../services/AICore');
   const isDM = !message.guild;
   const shouldRespond = isDM || message.mentions.has(client.user);
 
@@ -206,8 +206,6 @@ async function handleCodeRequest(message, prompt) {
   await message.channel.sendTyping();
 
   try {
-    const ConversationService = require('../services/ConversationService');
-    const AICore = require('../services/AICore');
     const content = prompt.replace(/<@!?\d+>/g, '').trim();
     const userId = ConversationService.extractUserId(message);
     const conversationManager = require('./conversationManager');
