@@ -42,24 +42,21 @@ const prompts = {
       'You are a professional content analysis system. Your task is to analyze and detect inappropriate content. Always return results in the requested JSON format.',
   },
   chat: {
-    thinking: `Bạn là Lunaby, một AI assistant thông minh. Hãy phân tích câu hỏi một cách chi tiết và thể hiện quá trình suy nghĩ của bạn.
+    thinking: `You are Lunaby, an intelligent AI assistant. Think through the question carefully and provide a thorough answer.
 
-    **Yêu cầu định dạng phản hồi:**
+    **Response Format:**
     
-    **🧠 QUÁ TRÌNH SUY NGHĨ:**
-    - Phân tích câu hỏi và xác định vấn đề chính
-    - Liệt kê các khía cạnh cần xem xét
-    - Đưa ra các phương pháp tiếp cận khác nhau
-    - So sánh ưu nhược điểm của từng phương án
-    - Chọn phương án tốt nhất và giải thích lý do
+    **🧠 THINKING:**
+    - What is the core question?
+    - What approaches could work?
+    - Which is best and why?
     
-    **💡 CÂU TRẢ LỜI:**
-    - Đưa ra câu trả lời rõ ràng, chi tiết và dễ hiểu
-    - Sử dụng ví dụ cụ thể khi cần thiết
-    - Đảm bảo thông tin chính xác và hữu ích
-    - Kết thúc bằng lời khuyên hoặc gợi ý thêm nếu phù hợp
+    **💡 ANSWER:**
+    - Clear, concise explanation
+    - Relevant examples if helpful
+    - Practical advice when appropriate
     
-    **Câu hỏi:** \${promptText}`,
+    **Question:** \${promptText}`,
     responseStyle: `Reply like a smart, sweet, and charming young woman named Lunaby. Use gentle, friendly language — nothing too stiff or robotic. Vary your expressions and avoid repetitive phrases. If the user's message is primarily a greeting or introduction, respond with a warm, natural greeting that matches their tone and energy level.`,
     ongoingConversation: ` IMPORTANT: This is an ongoing conversation. DO NOT repeat previous introductions or greetings unless the user specifically greets you again. Build naturally on the conversation context. Vary your language and avoid using the same phrases repeatedly.`,
     newConversation: ` If the user sends a greeting or this seems like a first interaction, feel free to introduce yourself warmly as Lunaby and show readiness to help. Keep it fresh and natural, avoiding formulaic responses.`,
@@ -74,41 +71,33 @@ const prompts = {
   },
   memory: {
     memoryContext: `[Information from previous conversation: \${relevantMessagesText}] `,
-    memoryExtraction: `Analyze the following conversation and extract any important information that should be remembered about the user.
+    memoryExtraction: `Extract important information from this conversation that should be remembered about the user.
 
-User message: "\${userMessage}"
-AI response: "\${aiResponse}"
+    User message: "\${userMessage}"
+    AI response: "\${aiResponse}"
 
-Extract information in these categories:
-1. Personal information (name, age, location, occupation, etc.)
-2. Preferences (likes, dislikes, hobbies, interests)
-3. Important facts or events
-4. Goals or projects
-5. Relationships (friends, family, pets)
+    Categories: Personal info | Preferences | Facts/Events | Goals | Relationships
 
-Return ONLY a JSON object with extracted information. If nothing important to remember, return {"extracted": false}.
-
-Format:
-{
-  "extracted": true,
-  "personalInfo": {"field": "value"},
-  "preferences": {"type": ["items"]},
-  "memory": {
-    "content": "short description",
-    "category": "preference|fact|event|achievement",
-    "importance": 1-10,
-    "tags": ["tag1", "tag2"]
-  }
-}`,
+    Return JSON:
+    {
+      "extracted": true/false,
+      "personalInfo": {"field": "value"},
+      "preferences": ["items"],
+      "memory": {
+        "content": "description",
+        "category": "preference|fact|event|achievement",
+        "importance": 1-10
+      }
+    }`,
   },
   moderation: {
-    warning: `Tạo một thông báo cảnh cáo nghiêm túc nhưng không quá gay gắt cho thành viên \${username} với lý do: "\${reason}". Đây là lần cảnh cáo thứ \${warningCount} của họ. Thông báo nên có giọng điệu của một mod nghiêm túc nhưng công bằng, không quá 3 câu.`,
-    unmute: `Tạo một thông báo ngắn gọn, tích cực về việc unmute (bỏ timeout) thành viên \${username} với lý do: "\${reason}". Thông báo nên có giọng điệu của một mod thân thiện, không quá 2 câu.`,
-    ban: `Tạo một thông báo nghiêm túc nhưng có chút hài hước về việc ban thành viên \${username} khỏi server với lý do: "\${reason}". Thông báo nên có giọng điệu của một admin công bằng nhưng cứng rắn, không quá 3 câu.`,
-    clearwarnings: `Tạo một thông báo ngắn gọn, tích cực về việc xóa \${type} của thành viên \${username} với lý do: "\${reason}". Đã xóa \${deletedCount} cảnh cáo. Thông báo nên có giọng điệu của một mod công bằng và khoan dung, không quá 2 câu.`,
-    kick: `Tạo một thông báo ngắn gọn, chuyên nghiệp nhưng hơi hài hước về việc kick thành viên \${username} khỏi server với lý do: "\${reason}". Thông báo nên có giọng điệu của một admin nghiêm túc nhưng thân thiện, không quá 3 câu.`,
-    mute: `Tạo một thông báo ngắn gọn, chuyên nghiệp nhưng hơi hài hước về việc mute (timeout) thành viên \${username} trong \${duration} với lý do: "\${reason}". Thông báo nên có giọng điệu của một mod nghiêm túc nhưng thân thiện, không quá 3 câu.`,
-    unban: `Tạo một thông báo ngắn gọn, tích cực về việc unban người dùng \${username} với lý do: "\${reason}". Thông báo nên có giọng điệu của một admin công bằng và khoan dung, không quá 2 câu.`,
+    warning: `Create a serious but not overly harsh warning message for member \${username} with reason: "\${reason}". This is their \${warningCount} warning. The message should have the tone of a fair but serious moderator, no more than 3 sentences.`,
+    unmute: `Create a brief, positive message about unmuting member \${username} with reason: "\${reason}". The message should have a friendly moderator tone, no more than 2 sentences.`,
+    ban: `Create a serious but slightly humorous message about banning member \${username} from the server with reason: "\${reason}". The message should have the tone of a fair but firm admin, no more than 3 sentences.`,
+    clearwarnings: `Create a brief, positive message about clearing \${type} for member \${username} with reason: "\${reason}". Cleared \${deletedCount} warnings. The message should have a fair and lenient moderator tone, no more than 2 sentences.`,
+    kick: `Create a brief, professional but slightly humorous message about kicking member \${username} from the server with reason: "\${reason}". The message should have a serious but friendly admin tone, no more than 3 sentences.`,
+    mute: `Create a brief, professional but slightly humorous message about muting member \${username} for \${duration} with reason: "\${reason}". The message should have a serious but friendly moderator tone, no more than 3 sentences.`,
+    unban: `Create a brief, positive message about unbanning user \${username} with reason: "\${reason}". The message should have a fair and lenient admin tone, no more than 2 sentences.`,
   },
 };
 
