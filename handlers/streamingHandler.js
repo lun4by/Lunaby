@@ -6,6 +6,9 @@ const MIN_CHUNK_SIZE = 30;
 const DISCORD_MAX_LENGTH = 2000;
 
 async function sendStreamingMessage(channel, messages, config = {}) {
+    const isDM = channel.type === 1;
+    logger.debug('STREAM', `Starting stream in ${isDM ? 'DM' : 'guild channel'}`);
+    
     const apiUrl = process.env.LUNABY_BASE_URL || 'https://api.lunie.dev/v1';
     const apiKey = process.env.LUNABY_API_KEY;
 
@@ -73,7 +76,9 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                                 isUpdating = true;
                                 try {
                                     if (!sentMessage) {
+                                        logger.debug('STREAM', `Sending initial message (length: ${fullContent.length})`);
                                         sentMessage = await channel.send(fullContent.length > DISCORD_MAX_LENGTH ? fullContent.substring(0, DISCORD_MAX_LENGTH) : fullContent);
+                                        logger.debug('STREAM', `Initial message sent, ID: ${sentMessage.id}`);
                                         updateCount++;
                                     } else if (fullContent.length <= DISCORD_MAX_LENGTH) {
                                         await sentMessage.edit(fullContent);
@@ -101,27 +106,35 @@ async function sendStreamingMessage(channel, messages, config = {}) {
             }
 
             logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
+            logger.debug('STREAM', `Finalizing message. Has sentMessage: ${!!sentMessage}`);
 
             try {
                 if (fullContent.length <= DISCORD_MAX_LENGTH) {
                     if (sentMessage) {
                         await sentMessage.edit(fullContent);
+                        logger.debug('STREAM', `Final edit completed for message ${sentMessage.id}`);
                     } else {
-                        await channel.send(fullContent);
+                        logger.warn('STREAM', 'No message sent during stream, sending now');
+                        const finalMsg = await channel.send(fullContent);
+                        logger.debug('STREAM', `Final message sent, ID: ${finalMsg.id}`);
                     }
                     resolve(fullContent);
                 } else {
+                    logger.debug('STREAM', `Message exceeds ${DISCORD_MAX_LENGTH} chars, splitting into chunks`);
                     if (sentMessage) {
                         await sentMessage.edit(fullContent.substring(0, DISCORD_MAX_LENGTH));
                     } else {
                         sentMessage = await channel.send(fullContent.substring(0, DISCORD_MAX_LENGTH));
+                        logger.debug('STREAM', `First chunk sent, ID: ${sentMessage.id}`);
                     }
 
                     const remaining = fullContent.substring(DISCORD_MAX_LENGTH);
                     const chunks = splitByLength(remaining, DISCORD_MAX_LENGTH);
-
-                    for (const chunk of chunks) {
-                        await channel.send(chunk);
+                    
+                    logger.debug('STREAM', `Sending ${chunks.length} additional chunk(s)`);
+                    for (let i = 0; i < chunks.length; i++) {
+                        const chunkMsg = await channel.send(chunks[i]);
+                        logger.debug('STREAM', `Chunk ${i + 1}/${chunks.length} sent, ID: ${chunkMsg.id}`);
                     }
 
                     resolve(fullContent);
