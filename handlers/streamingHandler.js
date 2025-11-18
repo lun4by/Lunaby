@@ -119,8 +119,22 @@ async function sendStreamingMessage(channel, messages, config = {}) {
 
             logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
             logger.debug('STREAM', `Finalizing message. Has sentMessage: ${!!sentMessage}`);
+            const trimmedContent = fullContent.trim();
             
-            // Log full content if it contains safety-related messages
+            if (trimmedContent === "I'm sorry, but I can't help with that." ||
+                trimmedContent === "I'm sorry, but I can't help with that" ||
+                trimmedContent.match(/^I'?m sorry,? but I can'?t help with that\.?$/i)) {
+                
+                logger.warn('STREAM', `=== GENERIC REFUSAL DETECTED ===`);
+                logger.warn('STREAM', `Original response: "${fullContent}"`);
+                logger.warn('STREAM', `Request messages: ${JSON.stringify(messages)}`);
+
+                fullContent = "Yêu cầu này liên quan đến nội dung vi phạm chính sách, mình hiểu bạn muốn biết nhưng mình không thể giúp với lý do an toàn. 💖";
+                
+                logger.warn('STREAM', `Replaced with: "${fullContent}"`);
+                logger.warn('STREAM', `===== END REFUSAL LOG =====`);
+            }
+
             if (fullContent.includes("can't help") || fullContent.includes("I'm sorry")) {
                 logger.warn('STREAM', `=== SAFETY FILTER TRIGGERED ===`);
                 logger.warn('STREAM', `Full response: "${fullContent}"`);
