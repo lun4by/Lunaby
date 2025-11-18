@@ -1,16 +1,15 @@
 // events/ready.js
-const mongoClient = require('../services/mongoClient.js');
-const storageDB = require('../services/storagedb.js');
-const initSystem = require('../services/initSystem.js');
-const GuildProfileDB = require('../services/guildprofiledb.js');
-const { syncAllGuilds } = require('../handlers/guildHandler');
 const logger = require('../utils/logger.js');
-// const AutoUpdateService = require('../services/AutoUpdateService');
-const CommandsJSONService = require('../services/CommandsJSONService');
-// const dashboardService = require("../services/dashboardService.js");
 
 async function startbot(client, loadCommands) {
   client.once('ready', async () => {
+    const mongoClient = require('../services/mongoClient.js');
+    const storageDB = require('../services/storagedb.js');
+    const initSystem = require('../services/initSystem.js');
+    const GuildProfileDB = require('../services/guildprofiledb.js');
+    const { syncAllGuilds } = require('../handlers/guildHandler');
+    const CommandsJSONService = require('../services/CommandsJSONService');
+
     console.log(`
     ██╗     ██╗   ██╗███╗   ██╗ █████╗ ██████╗ ██╗   ██╗
     ██║     ██║   ██║████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝
