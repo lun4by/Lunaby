@@ -6,9 +6,7 @@ logger.info("SYSTEM", "GuildProfileDB module đã được tải vào hệ thố
 
 const profileCache = new Set();
 
-/**
- * Cấu trúc mặc định cho hồ sơ guild
- */
+
 const guildProfileStructure = {
   _id: String, // Guild ID
   prefix: null,
@@ -40,10 +38,7 @@ const guildProfileStructure = {
   },
 };
 
-/**
- * Lấy collection hồ sơ guild từ MongoDB
- * @returns {Promise<Collection>} MongoDB collection
- */
+
 const getGuildProfileCollection = async () => {
   try {
     const db = mongoClient.getDb();
@@ -59,11 +54,7 @@ const getGuildProfileCollection = async () => {
   }
 };
 
-/**
- * Tạo profile mới cho guild với các giá trị mặc định
- * @param {String} guildId - ID của guild
- * @returns {Object} Guild profile object
- */
+
 const createDefaultGuildProfile = (guildId) => {
   // Chỉ in thông báo khi thực sự tạo mới, không phải khi hàm được gọi
   if (!profileCache.has(guildId)) {
@@ -77,10 +68,7 @@ const createDefaultGuildProfile = (guildId) => {
   };
 };
 
-/**
- * Lấy tất cả hồ sơ guild
- * @returns {Promise<Array>} Mảng tất cả hồ sơ guild
- */
+
 const getAllGuildProfiles = async () => {
   try {
     const collection = await getGuildProfileCollection();
@@ -91,11 +79,7 @@ const getAllGuildProfiles = async () => {
   }
 };
 
-/**
- * Lấy hồ sơ của một guild cụ thể
- * @param {String} guildId - ID của guild
- * @returns {Promise<Object|null>} Hồ sơ guild hoặc null nếu không tìm thấy
- */
+
 const getGuildProfile = async (guildId) => {
   try {
     const collection = await getGuildProfileCollection();
@@ -119,12 +103,7 @@ const getGuildProfile = async (guildId) => {
   }
 };
 
-/**
- * Cập nhật hồ sơ của một guild
- * @param {String} guildId - ID của guild
- * @param {Object} updateData - Dữ liệu cần cập nhật
- * @returns {Promise<Boolean>} Kết quả cập nhật
- */
+
 const updateGuildProfile = async (guildId, updateData) => {
   try {
     const collection = await getGuildProfileCollection();
@@ -143,13 +122,7 @@ const updateGuildProfile = async (guildId, updateData) => {
   }
 };
 
-/**
- * Thiết lập kênh ngoại lệ XP
- * @param {String} guildId - ID của guild
- * @param {String} channelId - ID của kênh
- * @param {Boolean} isException - true để thêm vào ngoại lệ, false để loại bỏ
- * @returns {Promise<Boolean>} Kết quả cập nhật
- */
+
 const setXpChannelException = async (guildId, channelId, isException) => {
   try {
     const profile = await getGuildProfile(guildId);
@@ -183,12 +156,7 @@ const setXpChannelException = async (guildId, channelId, isException) => {
   }
 };
 
-/**
- * Bật/tắt hệ thống XP cho guild
- * @param {String} guildId - ID của guild
- * @param {Boolean} isActive - true để bật, false để tắt
- * @returns {Promise<Boolean>} Kết quả cập nhật
- */
+
 const toggleXpSystem = async (guildId, isActive) => {
   try {
     const profile = await getGuildProfile(guildId);
@@ -210,9 +178,7 @@ const toggleXpSystem = async (guildId, isActive) => {
   }
 };
 
-/**
- * Tạo và thiết lập indexes cho collection guild_profiles
- */
+
 const setupGuildProfileIndexes = async () => {
   try {
     const db = mongoClient.getDb();

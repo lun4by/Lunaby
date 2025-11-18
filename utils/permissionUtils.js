@@ -1,13 +1,6 @@
 const logger = require('./logger.js');
 
-/**
- * Xử lý lỗi khi bot thiếu quyền và trả về tin nhắn text thay vì embed
- * @param {Object} interaction - Discord interaction object hoặc message object
- * @param {string} permission - Tên quyền bị thiếu (ví dụ: 'embedLinks', 'sendMessages')
- * @param {string} username - Tên user để hiển thị trong tin nhắn
- * @param {string} action - Hành động đang thực hiện (reply, editReply, followUp)
- * @returns {Promise<void>}
- */
+
 async function handlePermissionError(interaction, permission, username, action = 'reply') {
   try {
     const errorMessage = `🚫 | ${username}, bot không có quyền \`${permission}\`! Vui lòng thêm quyền này cho bot hoặc liên hệ quản trị viên máy chủ để được hỗ trợ.`;
@@ -63,15 +56,7 @@ async function handlePermissionError(interaction, permission, username, action =
   }
 }
 
-/**
- * Wrapper function để gửi embed với fallback khi thiếu quyền
- * @param {Object} interaction - Discord interaction object hoặc message object
- * @param {Object} embedData - Dữ liệu embed cần gửi
- * @param {string} username - Tên user
- * @param {string} permission - Quyền cần kiểm tra (mặc định: 'embedLinks')
- * @param {string} action - Hành động đang thực hiện (reply, editReply, followUp)
- * @returns {Promise<boolean>} - true nếu gửi thành công, false nếu thiếu quyền
- */
+
 async function sendEmbedWithFallback(interaction, embedData, username, permission = 'embedLinks', action = 'reply') {
   try {
     // Thử gửi embed
@@ -133,12 +118,7 @@ async function sendEmbedWithFallback(interaction, embedData, username, permissio
   }
 }
 
-/**
- * Kiểm tra quyền của bot trong guild
- * @param {Object} interaction - Discord interaction object hoặc message object
- * @param {string} permission - Quyền cần kiểm tra
- * @returns {boolean} - true nếu có quyền, false nếu không
- */
+
 function hasPermission(interaction, permission) {
   if (!interaction.guild) return true; // DM không cần kiểm tra quyền
   

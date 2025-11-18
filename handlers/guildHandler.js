@@ -4,10 +4,7 @@ const initSystem = require('../services/initSystem.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
 const logger = require('../utils/logger.js');
 
-/**
- * Lưu thông tin guild vào MongoDB
- * @param {Discord.Guild} guild - Guild cần lưu thông tin
- */
+
 async function storeGuildInDB(guild) {
   try {
     const db = await mongoClient.getDbSafe();
@@ -49,10 +46,7 @@ async function storeGuildInDB(guild) {
   }
 }
 
-/**
- * Xóa thông tin guild khỏi MongoDB
- * @param {string} guildId - ID của guild cần xóa
- */
+
 async function removeGuildFromDB(guildId) {
   try {
     const db = await mongoClient.getDbSafe();
@@ -64,10 +58,7 @@ async function removeGuildFromDB(guildId) {
   }
 }
 
-/**
- * Lấy thông tin guild từ MongoDB
- * @param {string} guildId - ID của guild cần lấy thông tin
- */
+
 async function getGuildFromDB(guildId) {
   try {
     const db = await mongoClient.getDbSafe();
@@ -81,11 +72,7 @@ async function getGuildFromDB(guildId) {
   }
 }
 
-/**
- * Cập nhật cài đặt guild trong MongoDB
- * @param {string} guildId - ID của guild cần cập nhật
- * @param {Object} settings - Đối tượng chứa cài đặt cần cập nhật
- */
+
 async function updateGuildSettings(guildId, settings) {
   try {
     const db = await mongoClient.getDbSafe();
@@ -103,11 +90,7 @@ async function updateGuildSettings(guildId, settings) {
   }
 }
 
-/**
- * Tìm kênh mặc định để gửi thông báo chào
- * @param {Discord.Guild} guild - Guild cần tìm kênh
- * @returns {Discord.TextChannel|null} - Kênh phù hợp hoặc null
- */
+
 function findDefaultChannel(guild) {
   try {
     const generalChannel = guild.channels.cache.find(
@@ -135,10 +118,7 @@ function findDefaultChannel(guild) {
   }
 }
 
-/**
- * Xử lý sự kiện khi bot rời khỏi một guild
- * @param {Discord.Guild} guild - Guild mà bot vừa rời khỏi
- */
+
 async function handleGuildLeave(guild) {
   logger.info('GUILD', `Bot đã rời khỏi server: ${guild.name} (id: ${guild.id})`);
   try {
@@ -220,10 +200,7 @@ async function deployCommandsToGuild(guildId, existingCommands = null, client = 
   }
 }
 
-/**
-* Xử lý sự kiện khi bot tham gia một guild mới
-* @param {Discord.Guild} guild - Guild mới mà bot vừa tham gia
-*/
+
 async function handleGuildJoin(guild, commands) {
   logger.info('GUILD', `BOT THAM GIA GUILD MỚI`);
   logger.info('GUILD', `Guild Name: ${guild.name}`);
@@ -265,11 +242,7 @@ async function handleGuildJoin(guild, commands) {
   }
 }
 
-/**
-* Đồng bộ tất cả guilds với database và deploy commands
-* @param {Discord.Client} client - Discord client cần đồng bộ
-* @param {Array} commands - Mảng các lệnh đã tải (tùy chọn)
-*/
+
 async function syncAllGuilds(client, commands = null) {
   logger.info('GUILD', 'ĐỒNG BỘ TẤT CẢ GUILDS');
 

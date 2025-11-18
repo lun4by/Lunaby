@@ -1,10 +1,5 @@
 module.exports = {
-  /**
-   * Tạo tóm tắt ngắn gọn từ nội dung tin nhắn
-   * @param {string} content - Nội dung tin nhắn
-   * @param {string} role - Vai trò (user/assistant)
-   * @returns {string} - Tóm tắt tin nhắn
-   */
+  
   createMessageSummary(content, role) {
     if (!content || content.length < 5) return null;
 
@@ -14,11 +9,7 @@ module.exports = {
     return summary.length > 100 ? summary.substring(0, 100) + "..." : summary;
   },
 
-  /**
-   * Trích xuất từ khóa từ prompt
-   * @param {string} prompt - Prompt cần trích xuất từ khóa
-   * @returns {Array} - Danh sách các từ khóa
-   */
+  
   extractKeywords(prompt) {
     if (!prompt?.length || prompt.length < 3) return [];
 
@@ -36,11 +27,7 @@ module.exports = {
     )].slice(0, 5);
   },
 
-  /**
-   * Trích xuất các tin nhắn quan trọng từ lịch sử cuộc trò chuyện
-   * @param {Array} history - Lịch sử cuộc trò chuyện
-   * @returns {Array} - Danh sách các tin nhắn quan trọng
-   */
+  
   extractKeyMessages(history) {
     if (!history?.length) return [];
 
@@ -58,11 +45,7 @@ module.exports = {
     );
   },
 
-  /**
-   * Xác định các chủ đề chính từ lịch sử cuộc trò chuyện
-   * @param {Array} history - Lịch sử cuộc trò chuyện
-   * @returns {Array} - Danh sách các chủ đề chính
-   */
+  
   identifyMainTopics(history) {
     if (!history?.length) return ["Chưa có đủ dữ liệu"];
 
@@ -81,11 +64,7 @@ module.exports = {
       .map(entry => entry[0]);
   },
 
-  /**
-   * Format thời gian trước đây
-   * @param {number} timestamp - Thời gian cần định dạng
-   * @returns {string} - Chuỗi thời gian đã định dạng
-   */
+  
   formatTimeAgo(timestamp) {
     const secondsAgo = Math.floor((Date.now() - timestamp) / 1000);
     
@@ -100,21 +79,13 @@ module.exports = {
     return `${Math.floor(hoursAgo / 24)} ngày`;
   },
 
-  /**
-   * Tạo animation loading
-   * @param {number} step - Bước hiện tại
-   * @returns {string} - Loading icon
-   */
+  
   getLoadingAnimation(step) {
     const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
     return frames[step % frames.length];
   },
 
-  /**
-   * Tạo progress bar
-   * @param {number} percent - Phần trăm hoàn thành
-   * @returns {string} - Progress bar string
-   */
+  
   getProgressBar(percent) {
     const TOTAL_LENGTH = 25;
     const completed = Math.floor((percent / 100) * TOTAL_LENGTH);

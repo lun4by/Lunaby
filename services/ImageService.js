@@ -11,14 +11,7 @@ class ImageService {
     logger.info("IMAGE_SERVICE", `Initialized with Lunaby Vision API`);
   }
 
-  /**
-   * Tạo hình ảnh từ prompt sử dụng Lunaby Vision API
-   * @param {string} prompt - Prompt tạo hình ảnh
-   * @param {Object} message - Message object (optional)
-   * @param {Object} progressTracker - Progress tracker (optional)
-   * @param {Object} options - Tùy chọn tạo hình ảnh (aspect_ratio, output_format, etc.)
-   * @returns {Promise<Object>} - Kết quả tạo hình ảnh
-   */
+  
   async generateImage(prompt, message = null, progressTracker = null, options = {}) {
     progressTracker =
       progressTracker ||

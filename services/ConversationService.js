@@ -206,12 +206,7 @@ class ConversationService {
     }
   }
 
-  /**
-   * Phương thức chính xử lý một prompt mới và trả về phản hồi của AI.
-   * @param {string} prompt - Prompt của người dùng.
-   * @param {object} message - Đối tượng tin nhắn gốc.
-   * @returns {string} Phản hồi của AI.
-   */
+  
   async getCompletion(prompt, message = null) {
     try {
       const userId = this.extractUserId(message);
@@ -231,13 +226,7 @@ class ConversationService {
     }
   }
 
-  /**
-   * Gọi AICore, quản lý lịch sử, và xử lý logic AI chính.
-   * @param {string} prompt - Prompt đã được xử lý (có thể đã bao gồm ký ức).
-   * @param {string} userId - User ID.
-   * @param {object} additionalConfig - Cấu hình bổ sung cho AICore.
-   * @returns {string} Phản hồi thô từ AI.
-   */
+  
   async processChatCompletion(prompt, userId, additionalConfig = {}) {
     try {
       let systemPrompt = additionalConfig.systemPrompt || prompts.system.main;

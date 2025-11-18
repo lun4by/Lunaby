@@ -2,9 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const XPService = require('./../../services/XPService');
 const { ordinalize } = require('./../../utils/string.js');
 
-/**
- * Format số với dấu phẩy
- */
+
 function commatize(num) {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }

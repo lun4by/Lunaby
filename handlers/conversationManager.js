@@ -6,12 +6,6 @@ const conversationManager = (() => {
   const userConversations = new Map();
   const userLastActivity = new Map();
 
-  /**
-   * Xác thực và chuẩn hóa userId
-   * @param {string} userId - Định danh người dùng cần kiểm tra
-   * @returns {string} - Định danh người dùng đã chuẩn hóa
-   * @throws {Error} - Nếu userId không hợp lệ
-   */
   const validateUserId = (userId) => {
     if (!userId || typeof userId !== 'string') {
       throw new Error('UserId không hợp lệ: userId phải là một chuỗi không rỗng');
@@ -25,11 +19,6 @@ const conversationManager = (() => {
     return trimmedId;
   };
 
-  /**
-   * Lấy lịch sử cuộc trò chuyện cục bộ của người dùng
-   * @param {string} userId - Định danh người dùng
-   * @returns {Array} - Lịch sử cuộc trò chuyện của người dùng
-   */
   const getUserHistory = (userId) => {
     try {
       const validUserId = validateUserId(userId);
@@ -64,13 +53,6 @@ const conversationManager = (() => {
   }, 10 * 60 * 1000);
 
   return {
-    /**
-     * Tải lịch sử cuộc trò chuyện từ bộ nhớ
-     * @param {string} userId - Định danh người dùng
-     * @param {string} systemPrompt - System prompt để sử dụng
-     * @param {string} modelName - Tên mô hình đang được sử dụng
-     * @returns {Promise<Array>} - Lịch sử cuộc trò chuyện
-     */
     async loadConversationHistory(userId, systemPrompt, modelName) {
       try {
         const validUserId = validateUserId(userId);
@@ -93,22 +75,13 @@ const conversationManager = (() => {
       }
     },
 
-    /**
-     * Thêm tin nhắn vào lịch sử cuộc trò chuyện
-     * @param {string} userId - Định danh người dùng
-     * @param {string} role - Vai trò tin nhắn (user/assistant/system)
-     * @param {string} content - Nội dung tin nhắn
-     * @returns {Promise<boolean>} - Kết quả của thao tác với cơ sở dữ liệu
-     */
     async addMessage(userId, role, content) {
       try {
         const validUserId = validateUserId(userId);
 
-        // Thêm vào cache cục bộ
         const userHistory = getUserHistory(validUserId);
         userHistory.push({ role, content });
 
-        // Lưu vào cơ sở dữ liệu
         await storageDB.addMessageToConversation(validUserId, role, content);
         logger.debug('CONVERSATION', `Đã thêm tin nhắn (${role}) cho userId: ${validUserId}`);
         return true;
@@ -118,11 +91,6 @@ const conversationManager = (() => {
       }
     },
 
-    /**
-     * Lấy lịch sử cuộc trò chuyện hiện tại của người dùng
-     * @param {string} userId - Định danh người dùng
-     * @returns {Array} - Bản sao của lịch sử cuộc trò chuyện
-     */
     getHistory(userId) {
       try {
         const validUserId = validateUserId(userId);
@@ -135,22 +103,15 @@ const conversationManager = (() => {
       }
     },
 
-    /**
-     * Xóa lịch sử cuộc trò chuyện cục bộ của người dùng
-     * @param {string} userId - Định danh người dùng
-     * @returns {boolean} - Kết quả xóa
-     */
     clearLocalHistory(userId) {
       try {
         if (userId) {
           const validUserId = validateUserId(userId);
-          // Xóa lịch sử của người dùng cụ thể
           if (userConversations.has(validUserId)) {
             userConversations.get(validUserId).length = 0;
             logger.debug('CONVERSATION', `Đã xóa lịch sử cục bộ cho userId: ${validUserId}`);
           }
         } else {
-          // Xóa tất cả lịch sử nếu không cung cấp userId
           userConversations.clear();
           userLastActivity.clear();
           logger.debug('CONVERSATION', 'Đã xóa tất cả lịch sử cuộc trò chuyện cục bộ');
@@ -162,13 +123,6 @@ const conversationManager = (() => {
       }
     },
 
-    /**
-     * Xóa hoàn toàn lịch sử cuộc trò chuyện (cả cục bộ và cơ sở dữ liệu)
-     * @param {string} userId - Định danh người dùng
-     * @param {string} systemPrompt - System prompt mới
-     * @param {string} modelName - Tên mô hình
-     * @returns {Promise<boolean>} - Kết quả xóa
-     */
     async resetConversation(userId, systemPrompt, modelName) {
       try {
         const validUserId = validateUserId(userId);

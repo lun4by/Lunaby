@@ -17,11 +17,7 @@ module.exports = {
     return number + "th";
   },
 
-  /**
-   * Chuẩn hóa text về dạng không có font đặc biệt
-* @param {string} text - Text cần chuẩn hóa
-   * @returns {string} - Text đã được chuẩn hóa
-   */
+  
   normalizeText: function(text) {
     if (!text) return text;
 
@@ -82,12 +78,7 @@ module.exports = {
     return text.split('').map(char => specialFontMap[char] || char).join('');
   },
 
-  /**
-   * Chuyển đổi thời gian hoạt động (giây) thành định dạng dễ đọc
-   * @param {number} uptime - Thời gian hoạt động tính bằng giây
-   * @param {boolean} includePrefix - Có thêm tiền tố "Uptime:" hay không (mặc định là false)
-   * @returns {string} - Chuỗi thời gian định dạng dễ đọc
-   */
+  
   formatUptime: function(uptime, includePrefix = false) {
     const days = Math.floor(uptime / 86400);
     const hours = Math.floor((uptime % 86400) / 3600);

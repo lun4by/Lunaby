@@ -9,9 +9,7 @@ class SystemService {
     logger.info("SYSTEM_SERVICE", "Initialized system service");
   }
 
-  /**
-   * Khởi tạo hệ thống logging khi bot khởi động
-   */
+  
   async initializeLogging() {
     try {
       await logger.initializeFileLogging();
@@ -21,9 +19,7 @@ class SystemService {
     }
   }
 
-  /**
-   * Kiểm tra cài đặt bảo mật TLS
-   */
+  
   checkTLSSecurity() {
     if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0") {
       logger.warn("SYSTEM_SERVICE", "SECURITY WARNING: NODE_TLS_REJECT_UNAUTHORIZED=0");
@@ -34,9 +30,7 @@ class SystemService {
     }
   }
 
-  /**
-   * Kiểm tra và tạo thư mục temp nếu chưa tồn tại
-   */
+  
   ensureTempDirectory() {
     const tempDir = "./temp";
     if (!fs.existsSync(tempDir)) {
@@ -45,10 +39,7 @@ class SystemService {
     }
   }
 
-  /**
-   * Dọn dẹp file tạm thời cũ
-   * @param {number} maxAge - Tuổi tối đa của file (milliseconds)
-   */
+  
   cleanupTempFiles(maxAge = 24 * 60 * 60 * 1000) { // 24 hours default
     try {
       const tempDir = "./temp";
@@ -78,9 +69,7 @@ class SystemService {
     }
   }
 
-  /**
-   * Lấy thông tin hệ thống
-   */
+  
   getSystemInfo() {
     const memUsage = process.memoryUsage();
     const uptime = process.uptime();
@@ -100,9 +89,7 @@ class SystemService {
     };
   }
 
-  /**
-   * Định dạng thông tin hệ thống cho hiển thị
-   */
+  
   formatSystemInfo() {
     const info = this.getSystemInfo();
     const uptimeHours = Math.floor(info.uptime / 3600);
@@ -118,9 +105,7 @@ class SystemService {
 • Process ID: ${info.pid}`;
   }
 
-  /**
-   * Kiểm tra trạng thái sức khỏe hệ thống
-   */
+  
   getHealthStatus() {
     const info = this.getSystemInfo();
     const memoryUsagePercent = (info.memory.heapUsed / info.memory.heapTotal) * 100;
@@ -148,9 +133,7 @@ class SystemService {
     };
   }
 
-  /**
-   * Khởi động các tác vụ định kỳ
-   */
+  
   startPeriodicTasks() {
     // Dọn dẹp file tạm mỗi 6 giờ
     setInterval(() => {
@@ -170,9 +153,7 @@ class SystemService {
     logger.info("SYSTEM_SERVICE", "Started periodic maintenance tasks");
   }
 
-  /**
-   * Xử lý graceful shutdown
-   */
+  
   setupGracefulShutdown() {
     const shutdown = (signal) => {
       logger.info("SYSTEM_SERVICE", `Received ${signal}, starting graceful shutdown...`);
@@ -204,9 +185,7 @@ class SystemService {
     logger.info("SYSTEM_SERVICE", "Graceful shutdown handlers registered");
   }
 
-  /**
-   * Validate environment variables
-   */
+  
   validateEnvironment() {
     const required = ["API_KEY"];
     const optional = ["GRADIO_IMAGE_SPACE", "CUSTOM_CA_CERT_PATH", "NODE_TLS_REJECT_UNAUTHORIZED"];

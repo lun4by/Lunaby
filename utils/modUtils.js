@@ -1,17 +1,6 @@
 const mongoClient = require("../services/mongoClient.js");
 
-/**
- * Lưu hành động moderation vào cơ sở dữ liệu
- * @param {Object} options - Các tùy chọn
- * @param {string} options.guildId - ID của server
- * @param {string} options.targetId - ID của thành viên bị xử lý
- * @param {string} options.moderatorId - ID của người thực hiện hành động
- * @param {string} options.action - Loại hành động (ban, kick, mute, warn, ...)
- * @param {string} options.reason - Lý do thực hiện hành động
- * @param {number} options.duration - Thời gian (cho mute, tính bằng phút)
- * @param {number} options.count - Số lượng (cho clearwarnings)
- * @returns {Promise<Object>} - Dữ liệu đã lưu
- */
+
 async function logModAction(options) {
   try {
     const db = mongoClient.getDb();
@@ -52,15 +41,7 @@ async function logModAction(options) {
   }
 }
 
-/**
- * Lấy danh sách hành động moderation
- * @param {Object} options - Các tùy chọn
- * @param {string} options.guildId - ID của server
- * @param {string} options.targetId - ID của thành viên (tùy chọn)
- * @param {string} options.action - Loại hành động (tùy chọn)
- * @param {number} options.limit - Số lượng kết quả tối đa
- * @returns {Promise<Array>} - Danh sách hành động
- */
+
 async function getModLogs(options) {
   try {
     const db = mongoClient.getDb();
@@ -91,11 +72,7 @@ async function getModLogs(options) {
   }
 }
 
-/**
- * Định dạng thời gian từ phút sang chuỗi dễ đọc
- * @param {number} minutes - Số phút
- * @returns {string} - Chuỗi thời gian đã định dạng
- */
+
 function formatDuration(minutes) {
   if (minutes < 60) {
     return `${minutes} phút`;

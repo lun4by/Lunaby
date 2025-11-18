@@ -61,11 +61,7 @@ async function initializeFileLogging() {
   }
 }
 
-/**
- * Ghi log vào file
- * @param {string} level - Mức độ log
- * @param {string} message - Nội dung log
- */
+
 function writeToFile(level, message) {
   if (!logStream) return;
 
@@ -75,13 +71,7 @@ function writeToFile(level, message) {
   logStream.write(logEntry);
 }
 
-/**
- * Ghi log với định dạng và màu sắc
- * @param {string} category - Danh mục log (MONITOR, NEURAL, COMMAND, ...)
- * @param {string} level - Mức độ log (debug, info, warn, error)
- * @param {string} message - Nội dung log
- * @param {...any} args - Các tham số bổ sung
- */
+
 function log(category, level, message, ...args) {
   const config = loggerConfig.getConfig();
 
@@ -126,59 +116,33 @@ function log(category, level, message, ...args) {
   }
 }
 
-/**
- * Ghi log debug
- * @param {string} category - Danh mục log
- * @param {string} message - Nội dung log
- * @param {...any} args - Các tham số bổ sung
- */
+
 function debug(category, message, ...args) {
   log(category, "debug", message, ...args);
 }
 
-/**
- * Ghi log info
- * @param {string} category - Danh mục log
- * @param {string} message - Nội dung log
- * @param {...any} args - Các tham số bổ sung
- */
+
 function info(category, message, ...args) {
   log(category, "info", message, ...args);
 }
 
-/**
- * Ghi log warning
- * @param {string} category - Danh mục log
- * @param {string} message - Nội dung log
- * @param {...any} args - Các tham số bổ sung
- */
+
 function warn(category, message, ...args) {
   log(category, "warn", message, ...args);
 }
 
-/**
- * Ghi log error
- * @param {string} category - Danh mục log
- * @param {string} message - Nội dung log
- * @param {...any} args - Các tham số bổ sung
- */
+
 function error(category, message, ...args) {
   log(category, "error", message, ...args);
 }
 
-/**
- * Bật/tắt log
- * @param {boolean} enabled - Trạng thái bật/tắt
- */
+
 function setEnabled(enabled) {
   loggerConfig.setEnabled(enabled);
   info("SYSTEM", `Logging ${enabled ? "enabled" : "disabled"}`);
 }
 
-/**
- * Đặt mức độ log
- * @param {string} level - Mức độ log (debug, info, warn, error)
- */
+
 function setLevel(level) {
   if (LOG_LEVELS[level]) {
     loggerConfig.setLevel(level);
@@ -188,11 +152,7 @@ function setLevel(level) {
   }
 }
 
-/**
- * Bật/tắt log cho một danh mục
- * @param {string} category - Danh mục log
- * @param {boolean} enabled - Trạng thái bật/tắt
- */
+
 function setCategoryEnabled(category, enabled) {
   const result = loggerConfig.setCategoryEnabled(category, enabled);
   if (result.categories[category] === enabled) {
@@ -205,10 +165,7 @@ function setCategoryEnabled(category, enabled) {
   }
 }
 
-/**
- * Lấy cấu hình hiện tại
- * @returns {Object} - Cấu hình hiện tại
- */
+
 function getConfig() {
   return loggerConfig.getConfig();
 }

@@ -23,10 +23,7 @@ class AchievementCanvas {
     }
   }
 
-  /**
-   * Lấy bảng màu cho achievements
-   * @returns {Object} Color palette
-   */
+  
   getColorPalette() {
     return {
       primary: '#8B5CF6',
@@ -49,11 +46,7 @@ class AchievementCanvas {
     };
   }
 
-  /**
-   * Tải hình ảnh với cache
-   * @param {string} imagePath - Đường dẫn hình ảnh
-   * @returns {Promise<Image>} Hình ảnh đã tải
-   */
+  
   async loadImageWithCache(imagePath) {
     if (this.imageCache.has(imagePath)) {
       return this.imageCache.get(imagePath);
@@ -75,15 +68,7 @@ class AchievementCanvas {
     }
   }
 
-  /**
-   * Vẽ hình chữ nhật bo góc
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {number} x - Tọa độ x
-   * @param {number} y - Tọa độ y
-   * @param {number} width - Chiều rộng
-   * @param {number} height - Chiều cao
-   * @param {number} radius - Bán kính bo góc
-   */
+  
   drawRoundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -94,12 +79,7 @@ class AchievementCanvas {
     ctx.closePath();
   }
 
-  /**
-   * Áp dụng hiệu ứng đổ bóng
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {Function} drawFunction - Hàm vẽ
-   * @param {Object} shadowConfig - Cấu hình đổ bóng
-   */
+  
   applyShadow(ctx, drawFunction, shadowConfig = {}) {
     const {
       color = 'rgba(0, 0, 0, 0.5)',
@@ -117,17 +97,7 @@ class AchievementCanvas {
     ctx.restore();
   }
 
-  /**
-   * Tạo gradient
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {number} x - Tọa độ x
-   * @param {number} y - Tọa độ y
-   * @param {number} width - Chiều rộng
-   * @param {number} height - Chiều cao
-   * @param {string} color1 - Màu bắt đầu
-   * @param {string} color2 - Màu kết thúc
-   * @returns {CanvasGradient} Gradient object
-   */
+  
   createGradient(ctx, x, y, width, height, color1, color2) {
     const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
     gradient.addColorStop(0, color1);
@@ -135,23 +105,12 @@ class AchievementCanvas {
     return gradient;
   }
 
-  /**
-   * Thiết lập font
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {string} weight - Font weight
-   * @param {number} size - Font size
-   * @param {string} style - Font style
-   */
+  
   setFont(ctx, weight = 'Regular', size = 16, style = 'normal') {
     ctx.font = fontManager.getFontString(weight, size, style);
   }
 
-  /**
-   * Vẽ nền achievement
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {number} width - Chiều rộng canvas
-   * @param {number} height - Chiều cao canvas
-   */
+  
   renderBackground(ctx, width, height) {
     // Gradient nền chính
     const bgGradient = this.createGradient(
@@ -187,14 +146,7 @@ class AchievementCanvas {
     ctx.restore();
   }
 
-  /**
-   * Vẽ card chính
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {number} cardX - Tọa độ x card
-   * @param {number} cardY - Tọa độ y card
-   * @param {number} cardW - Chiều rộng card
-   * @param {number} cardH - Chiều cao card
-   */
+  
   renderMainCard(ctx, cardX, cardY, cardW, cardH) {
     // Vẽ card với hiệu ứng trong suốt
     ctx.save();
@@ -221,13 +173,7 @@ class AchievementCanvas {
     ctx.stroke();
   }
 
-  /**
-   * Vẽ icon achievement
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {number} iconX - Tọa độ x icon
-   * @param {number} iconY - Tọa độ y icon
-   * @param {number} iconSize - Kích thước icon
-   */
+  
   async renderIcon(ctx, iconX, iconY, iconSize) {
     try {
       // Tìm icon phù hợp
@@ -277,13 +223,7 @@ class AchievementCanvas {
     }
   }
 
-  /**
-   * Vẽ nội dung text
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {Object} data - Dữ liệu achievement
-   * @param {number} contentX - Tọa độ x nội dung
-   * @param {number} contentY - Tọa độ y nội dung
-   */
+  
   renderContent(ctx, data, contentX, contentY) {
     let currentY = contentY;
 
@@ -312,13 +252,7 @@ class AchievementCanvas {
     this.renderInfoBoxes(ctx, data, contentX, currentY);
   }
 
-  /**
-   * Vẽ các khung thông tin (level và XP)
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {Object} data - Dữ liệu achievement
-   * @param {number} contentX - Tọa độ x
-   * @param {number} y - Tọa độ y
-   */
+  
   renderInfoBoxes(ctx, data, contentX, y) {
     // Khung cấp độ
     this.applyShadow(ctx, () => {
@@ -353,11 +287,7 @@ class AchievementCanvas {
     ctx.fillText(`+${data.points} XP`, contentX + 210, y);
   }
 
-  /**
-   * Tạo achievement canvas chính
-   * @param {Object} data - Dữ liệu achievement
-   * @returns {Promise<Buffer>} Buffer hình ảnh
-   */
+  
   async createAchievementCanvas(data) {
     try {
       // Cấu hình canvas
@@ -397,17 +327,12 @@ class AchievementCanvas {
     }
   }
 
-  /**
-   * Dọn dẹp cache
-   */
+  
   clearCache() {
     this.imageCache.clear();
   }
 
-  /**
-   * Lấy thống kê cache
-   * @returns {Object} Thống kê cache
-   */
+  
   getCacheStats() {
     return {
       images: this.imageCache.size,
@@ -419,11 +344,7 @@ class AchievementCanvas {
 // Tạo instance singleton
 const achievementCanvas = new AchievementCanvas();
 
-/**
- * Kiểm tra thành tựu cho người dùng
- * @param {Object} message - Discord message object
- * @param {Object} xpResult - Kết quả XP
- */
+
 async function checkAchievements(message, xpResult) {
   try {
     if (!xpResult.xpAdded) return;

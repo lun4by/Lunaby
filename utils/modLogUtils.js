@@ -2,13 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const mongoClient = require("../services/mongoClient.js");
 const logger = require("./logger.js");
 
-/**
- * Gửi log moderation đến kênh log đã cấu hình
- * @param {Discord.Guild} guild - Guild nơi hành động diễn ra
- * @param {EmbedBuilder} embed - Embed chứa thông tin log
- * @param {boolean} isModAction - Có phải là hành động moderation không (mute/ban/kick)
- * @returns {Promise<Discord.Message|null>} - Tin nhắn đã gửi hoặc null nếu không thể gửi
- */
+
 async function sendModLog(guild, embed, isModAction = true) {
   try {
     const db = mongoClient.getDb();
@@ -58,15 +52,7 @@ async function sendModLog(guild, embed, isModAction = true) {
   }
 }
 
-/**
- * @param {Object} options - Các tùy chọn
- * @param {string} options.title - Tiêu đề của embed
- * @param {string} options.description - Mô tả của embed
- * @param {number} options.color - Màu của embed
- * @param {Array} options.fields - Các trường thông tin
- * @param {string} options.footer - Chân trang
- * @returns {EmbedBuilder} - Embed đã tạo
- */
+
 function createModActionEmbed(options) {
   const embed = new EmbedBuilder()
     .setColor(options.color || 0x3498db)
@@ -87,12 +73,7 @@ function createModActionEmbed(options) {
   return embed;
 }
 
-/**
- * Lấy kênh log moderation đã cấu hình
- * @param {Discord.Guild} guild - Guild cần lấy kênh log
- * @param {boolean} isModAction - Có phải là hành động moderation không
- * @returns {Promise<Discord.TextChannel|null>} - Kênh log hoặc null nếu không tìm thấy
- */
+
 async function getModLogChannel(guild, isModAction = true) {
   try {
     const db = mongoClient.getDb();

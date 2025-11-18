@@ -9,10 +9,7 @@ class CommandsJSONService {
     this.outputPath = path.join(this.outputDir, 'commands.json');
   }
 
-  /**
-   * Tạo file JSON chứa thông tin tất cả lệnh
-   * @returns {Promise<boolean>} true nếu thành công, false nếu thất bại
-   */
+  
   async generateCommandsJSON() {
     try {
       const commandsData = await this.scanCommands();
@@ -30,10 +27,7 @@ class CommandsJSONService {
     }
   }
 
-  /**
-   * Quét tất cả lệnh trong thư mục commands
-   * @returns {Promise<Array>} Mảng chứa thông tin các lệnh
-   */
+  
   async scanCommands() {
     const commands = [];
     const commandsDir = path.join(__dirname, '../commands');
@@ -91,11 +85,7 @@ class CommandsJSONService {
     }
   }
 
-  /**
-   * Lấy danh sách quyền client cần thiết
-   * @param {Object} commandData - Dữ liệu lệnh
-   * @returns {Array} Mảng quyền
-   */
+  
   getClientPermissions(commandData) {
     const permissions = [];
     
@@ -130,11 +120,7 @@ class CommandsJSONService {
     return permissions;
   }
 
-  /**
-   * Lấy danh sách tham số từ command data
-   * @param {Object} commandData - Dữ liệu lệnh
-   * @returns {Array} Mảng tham số
-   */
+  
   getParameters(commandData) {
     const parameters = [];
     
@@ -187,10 +173,7 @@ class CommandsJSONService {
     return examples;
   }
 
-  /**
-   * Kiểm tra xem file JSON có tồn tại không
-   * @returns {Promise<boolean>}
-   */
+  
   async fileExists() {
     try {
       await fs.access(this.outputPath);
@@ -200,10 +183,7 @@ class CommandsJSONService {
     }
   }
 
-  /**
-   * Lấy thông tin file JSON
-   * @returns {Promise<Object|null>}
-   */
+  
   async getFileInfo() {
     try {
       const stats = await fs.stat(this.outputPath);

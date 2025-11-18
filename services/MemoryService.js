@@ -11,10 +11,7 @@ class MemoryService {
     logger.info('MEMORY_SERVICE', 'Initialized AI Memory System V2');
   }
 
-  /**
-   * Get the memory collection from MongoDB
-   * @returns {Promise<Collection>} MongoDB collection for memories
-   */
+  
   async getMemoryCollection() {
     const db = mongoClient.getDb();
     return db.collection('user_memories');
@@ -42,11 +39,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Get default memory structure for a new user
-   * @param {string} userId - User ID
-   * @returns {object} Default memory structure
-   */
+  
   getDefaultMemoryStructure(userId) {
     return {
       userId: userId,
@@ -124,11 +117,7 @@ class MemoryService {
     };
   }
 
-  /**
-   * Get user's memory profile (from cache or database)
-   * @param {string} userId - User ID
-   * @returns {Promise<object>} User's memory profile
-   */
+  
   async getUserMemory(userId) {
     try {
       const cached = this.memoryCache.get(userId);
@@ -157,12 +146,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Update user's memory profile
-   * @param {string} userId - User ID
-   * @param {object} updates - Updates to apply
-   * @returns {Promise<boolean>} Success status
-   */
+  
   async updateUserMemory(userId, updates) {
     try {
       const collection = await this.getMemoryCollection();
@@ -190,12 +174,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Add a new memory to user's memory profile
-   * @param {string} userId - User ID
-   * @param {object} memoryData - Memory data to add
-   * @returns {Promise<boolean>} Success status
-   */
+  
   async addMemory(userId, memoryData) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -234,13 +213,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Extract important information from conversation using AI
-   * @param {string} userId - User ID
-   * @param {string} userMessage - User's message
-   * @param {string} aiResponse - AI's response
-   * @returns {Promise<object|null>} Extracted information or null
-   */
+  
   async extractMemoryFromConversation(userId, userMessage, aiResponse) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -317,13 +290,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Get relevant memories for current conversation context
-   * @param {string} userId - User ID
-   * @param {string} currentMessage - Current user message
-   * @param {number} limit - Max number of memories to return
-   * @returns {Promise<Array>} Relevant memories
-   */
+  
   async getRelevantMemories(userId, currentMessage, limit = 5) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -364,12 +331,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Build context string from user's memory to enhance AI responses
-   * @param {string} userId - User ID
-   * @param {string} currentMessage - Current message
-   * @returns {Promise<string>} Context string to prepend to conversation
-   */
+  
   async buildMemoryContext(userId, currentMessage) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -420,11 +382,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Update interaction statistics
-   * @param {string} userId - User ID
-   * @param {string} topic - Current conversation topic (optional)
-   */
+  
   async updateInteractionStats(userId, topic = null) {
     try {
       const updates = {
@@ -448,11 +406,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Get memory summary for display
-   * @param {string} userId - User ID
-   * @returns {Promise<object>} Memory summary
-   */
+  
   async getMemorySummary(userId) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -474,12 +428,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Delete a specific memory
-   * @param {string} userId - User ID
-   * @param {string} memoryId - Memory ID to delete
-   * @returns {Promise<boolean>} Success status
-   */
+  
   async deleteMemory(userId, memoryId) {
     try {
       const collection = await this.getMemoryCollection();
@@ -501,11 +450,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Clear all memories for a user
-   * @param {string} userId - User ID
-   * @returns {Promise<boolean>} Success status
-   */
+  
   async clearUserMemories(userId) {
     try {
       const collection = await this.getMemoryCollection();
@@ -521,12 +466,7 @@ class MemoryService {
     }
   }
 
-  /**
-   * Update privacy settings
-   * @param {string} userId - User ID
-   * @param {object} privacySettings - Privacy settings to update
-   * @returns {Promise<boolean>} Success status
-   */
+  
   async updatePrivacySettings(userId, privacySettings) {
     try {
       const updates = {};

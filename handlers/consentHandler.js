@@ -1,10 +1,7 @@
 const consentService = require('../services/consentService');
 const logger = require('../utils/logger.js');
 
-/**
- * Xử lý consent button interactions
- * @param {Object} interaction - Discord interaction
- */
+
 async function handleConsentInteraction(interaction) {
   if (!interaction.isButton()) return;
 

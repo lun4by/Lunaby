@@ -168,11 +168,7 @@ class WebSearchService {
     return searchKeywords.some(keyword => lowerText.includes(keyword));
   }
 
-  /**
-   * Trích xuất citations từ content
-   * @param {string} content
-   * @returns {Array<string>}
-   */
+  
   extractCitations(content) {
     const citationRegex = /\[(\d+)\]/g;
     const citations = [];

@@ -23,12 +23,7 @@ class MyAnimeListAPI {
     });
   }
 
-  /**
-   * Tìm kiếm anime dựa trên từ khóa
-   * @param {string} query - Từ khóa tìm kiếm
-   * @param {number} limit - Giới hạn kết quả (tối đa 100)
-   * @returns {Promise<Array>} - Danh sách anime
-   */
+  
   async searchAnime(query, limit = 10) {
     try {
       logger.info("MAL API", `Đang tìm kiếm anime với từ khóa: "${query}"`);
@@ -53,11 +48,7 @@ class MyAnimeListAPI {
     }
   }
 
-  /**
-   * Lấy thông tin chi tiết về anime
-   * @param {number} animeId - ID của anime
-   * @returns {Promise<Object>} - Chi tiết anime
-   */
+  
   async getAnimeDetails(animeId) {
     try {
       logger.info(
@@ -87,12 +78,7 @@ class MyAnimeListAPI {
     }
   }
 
-  /**
-   * Lấy bảng xếp hạng anime
-   * @param {string} rankingType - Loại bảng xếp hạng (all, airing, upcoming, tv, ova, movie, special, bypopularity, favorite)
-   * @param {number} limit - Giới hạn kết quả (tối đa 500)
-   * @returns {Promise<Array>} - Danh sách anime trong bảng xếp hạng
-   */
+  
   async getAnimeRanking(rankingType = "all", limit = 10) {
     try {
       logger.info(
@@ -124,13 +110,7 @@ class MyAnimeListAPI {
     }
   }
 
-  /**
-   * Lấy anime theo mùa
-   * @param {number} year - Năm
-   * @param {string} season - Mùa (winter, spring, summer, fall)
-   * @param {number} limit - Giới hạn kết quả (tối đa 500)
-   * @returns {Promise<Array>} - Danh sách anime theo mùa
-   */
+  
   async getSeasonalAnime(year, season, limit = 10) {
     try {
       logger.info("MAL API", `Đang lấy anime mùa ${season} năm ${year}`);
@@ -161,12 +141,7 @@ class MyAnimeListAPI {
     }
   }
 
-  /**
-   * Tìm kiếm manga dựa trên từ khóa
-   * @param {string} query - Từ khóa tìm kiếm
-   * @param {number} limit - Giới hạn kết quả (tối đa 100)
-   * @returns {Promise<Array>} - Danh sách manga
-   */
+  
   async searchManga(query, limit = 10) {
     try {
       logger.info("MAL API", `Đang tìm kiếm manga với từ khóa: "${query}"`);
@@ -191,11 +166,7 @@ class MyAnimeListAPI {
     }
   }
 
-  /**
-   * Lấy thông tin chi tiết về manga
-   * @param {number} mangaId - ID của manga
-   * @returns {Promise<Object>} - Chi tiết manga
-   */
+  
   async getMangaDetails(mangaId) {
     try {
       logger.info(
@@ -225,12 +196,7 @@ class MyAnimeListAPI {
     }
   }
 
-  /**
-   * Lấy bảng xếp hạng manga
-   * @param {string} rankingType - Loại bảng xếp hạng (all, manga, novels, oneshots, doujin, manhwa, manhua, bypopularity, favorite)
-   * @param {number} limit - Giới hạn kết quả (tối đa 500)
-   * @returns {Promise<Array>} - Danh sách manga trong bảng xếp hạng
-   */
+  
   async getMangaRanking(rankingType = "all", limit = 10) {
     try {
       logger.info(
@@ -262,12 +228,7 @@ class MyAnimeListAPI {
     }
   }
 
-  /**
-   * Tạo Discord Embed cho kết quả tìm kiếm anime
-   * @param {Array} animeList - Danh sách anime
-   * @param {string} query - Từ khóa tìm kiếm
-   * @returns {MessageEmbed} - Discord embed
-   */
+  
   createAnimeSearchEmbed(animeList, query) {
     const embed = {
       color: 0x2e51a2, // Màu xanh của MyAnimeList
@@ -338,11 +299,7 @@ class MyAnimeListAPI {
     return embed;
   }
 
-  /**
-   * Tạo Discord Embed cho chi tiết anime
-   * @param {Object} anime - Chi tiết anime
-   * @returns {MessageEmbed} - Discord embed
-   */
+  
   createAnimeDetailEmbed(anime) {
     if (!anime)
       return {
@@ -451,12 +408,7 @@ class MyAnimeListAPI {
     return embed;
   }
 
-  /**
-   * Tạo Discord Embed cho bảng xếp hạng anime
-   * @param {Array} rankingList - Danh sách anime trong bảng xếp hạng
-   * @param {string} rankingType - Loại bảng xếp hạng
-   * @returns {MessageEmbed} - Discord embed
-   */
+  
   createAnimeRankingEmbed(rankingList, rankingType) {
     const rankingTitles = {
       all: "Top Anime",
@@ -535,12 +487,7 @@ class MyAnimeListAPI {
     return embed;
   }
 
-  /**
-   * Tạo Discord Embed cho kết quả tìm kiếm manga
-   * @param {Array} mangaList - Danh sách manga
-   * @param {string} query - Từ khóa tìm kiếm
-   * @returns {MessageEmbed} - Discord embed
-   */
+  
   createMangaSearchEmbed(mangaList, query) {
     const embed = {
       color: 0x2e51a2,
@@ -613,11 +560,7 @@ class MyAnimeListAPI {
     return embed;
   }
 
-  /**
-   * Tạo Discord Embed cho chi tiết manga
-   * @param {Object} manga - Chi tiết manga
-   * @returns {MessageEmbed} - Discord embed
-   */
+  
   createMangaDetailEmbed(manga) {
     if (!manga)
       return {

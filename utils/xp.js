@@ -5,13 +5,7 @@ const ProfileDB = require("../services/profiledb");
 const GuildProfileDB = require("../services/guildprofiledb");
 // const { checkAchievements } = require("../services/canvas/achievements");
 
-/**
- * Xử lý điểm kinh nghiệm cho người dùng dựa trên hoạt động nhắn tin của họ
- * @param {Object} message - Đối tượng tin nhắn từ Discord.js
- * @param {Boolean} command_executed - Cho biết lệnh có được thực thi trong tin nhắn không
- * @param {Boolean} execute - Cho biết hàm có nên tiếp tục thực thi không
- * @returns {Promise<Object>} - Kết quả của hoạt động XP
- */
+
 async function experience(message, command_executed, execute) {
   if (!message.client.features?.includes("EXPERIENCE_POINTS")) {
     return Promise.resolve({ xpAdded: false, reason: "DISABLED" });

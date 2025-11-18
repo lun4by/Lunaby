@@ -114,10 +114,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Xóa hoàn toàn cơ sở dữ liệu và tạo lại từ đầu
-   * @returns {Promise<boolean>} - Trả về true nếu thành công
-   */
+  
   async resetDatabase() {
     try {
       const db = mongoClient.getDb();
@@ -160,9 +157,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Khởi tạo kết nối MongoDB
-   */
+  
   async initDatabase() {
     try {
       await mongoClient.connect();
@@ -190,13 +185,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Lấy lịch sử cuộc trò chuyện của người dùng từ MongoDB
-   * @param {string} userId - Định danh người dùng
-   * @param {string} systemPrompt - Lời nhắc hệ thống cho cuộc trò chuyện mới
-   * @param {string} modelName - Tên mô hình AI
-   * @returns {Promise<Array>} - Mảng các tin nhắn trò chuyện
-   */
+  
   async getConversationHistory(userId, systemPrompt, modelName) {
     try {
       // Xác thực userId
@@ -269,13 +258,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Thêm tin nhắn vào lịch sử cuộc trò chuyện trong MongoDB
-   * @param {string} userId - Định danh người dùng
-   * @param {string} role - Vai trò của tin nhắn ('user', 'assistant', hoặc 'system')
-   * @param {string} content - Nội dung tin nhắn
-   * @returns {Promise<boolean>} - Kết quả thao tác
-   */
+  
   async addMessageToConversation(userId, role, content) {
     try {
       // Xác thực tính hợp lệ của dữ liệu đầu vào
@@ -361,11 +344,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Giới hạn độ dài của cuộc trò chuyện theo maxConversationLength
-   * @param {string} userId - Định danh người dùng
-   * @private
-   */
+  
   async trimConversation(userId) {
     try {
       const db = mongoClient.getDb();
@@ -410,13 +389,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Xóa lịch sử cuộc trò chuyện của người dùng
-   * @param {string} userId - Định danh người dùng
-   * @param {string} systemPrompt - Lời nhắc hệ thống mới
-   * @param {string} modelName - Tên mô hình
-   * @returns {Promise<boolean>} - Kết quả xóa
-   */
+  
   async clearConversationHistory(userId, systemPrompt, modelName) {
     try {
       // Xác thực userId
@@ -460,10 +433,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Xóa các cuộc trò chuyện cũ để giải phóng bộ nhớ
-   * @returns {Promise<number>} - Số lượng cuộc trò chuyện đã xóa
-   */
+  
   async cleanupOldConversations() {
     try {
       const db = mongoClient.getDb();
@@ -506,28 +476,19 @@ class StorageDB {
     }
   }
 
-  /**
-   * Đặt giá trị cho maxConversationLength
-   * @param {number} value - Số lượng tin nhắn tối đa
-   */
+  
   setMaxConversationLength(value) {
     this.maxConversationLength = value;
   }
 
-  /**
-   * Đặt giá trị cho maxConversationAge
-   * @param {number} value - Tuổi thọ tối đa (mili giây)
-   */
+  
   setMaxConversationAge(value) {
     this.maxConversationAge = value;
   }
 
 
 
-  /**
-   * Xóa và tạo lại collection conversations
-   * @returns {Promise<boolean>} - Kết quả thực hiện
-   */
+  
   async resetConversationsCollection() {
     try {
       const db = mongoClient.getDb();
@@ -570,10 +531,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Khởi tạo lịch sử cuộc trò chuyện
-   * @returns {Promise<void>}
-   */
+  
   async initializeConversationHistory() {
     try {
       const db = mongoClient.getDb();
@@ -633,11 +591,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Lấy thông tin profile của người dùng
-   * @param {string} userId - Định danh người dùng
-   * @returns {Promise<Object>} - Thông tin profile
-   */
+  
   async getUserProfile(userId) {
     try {
       const db = mongoClient.getDb();
@@ -658,12 +612,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Cập nhật thông tin profile của người dùng
-   * @param {string} userId - Định danh người dùng
-   * @param {Object} updateData - Dữ liệu cần cập nhật
-   * @returns {Promise<boolean>} - Kết quả cập nhật
-   */
+  
   async updateUserProfile(userId, updateData) {
     try {
       const db = mongoClient.getDb();
@@ -682,13 +631,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Cập nhật tài nguyên trong ví của người dùng
-   * @param {string} userId - Định danh người dùng
-   * @param {string} resourceType - Loại tài nguyên (bank, wallet, shard)
-   * @param {number} amount - Số lượng cần thay đổi
-   * @returns {Promise<Object>} - Dữ liệu sau khi cập nhật
-   */
+  
   async updateUserEconomy(userId, resourceType, amount) {
     try {
       const db = mongoClient.getDb();
@@ -716,10 +659,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Khởi tạo hệ thống profile người dùng
-   * @returns {Promise<void>}
-   */
+  
   async initializeProfiles() {
     try {
       const db = mongoClient.getDb();
@@ -854,11 +794,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Kiểm tra từ khóa có trong blacklist không
-   * @param {string} text - Văn bản cần kiểm tra
-   * @returns {Promise<Object>} - Kết quả kiểm tra blacklist
-   */
+  
   async checkImageBlacklist(text) {
     try {
       const db = mongoClient.getDb();
@@ -889,14 +825,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Thêm từ khóa mới vào blacklist
-   * @param {string} keyword - Từ khóa cần thêm
-   * @param {string} category - Danh mục (adult, violence, politics, racism, religion)
-   * @param {string} description - Mô tả
-   * @param {string} severity - Mức độ nghiêm trọng (low, medium, high)
-   * @returns {Promise<boolean>} - Kết quả thêm mới
-   */
+  
   async addToImageBlacklist(keyword, category, description, severity = 'medium') {
     try {
       const db = mongoClient.getDb();
@@ -921,11 +850,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Xóa từ khóa khỏi blacklist
-   * @param {string} keyword - Từ khóa cần xóa
-   * @returns {Promise<boolean>} - Kết quả xóa
-   */
+  
   async removeFromImageBlacklist(keyword) {
     try {
       const db = mongoClient.getDb();
@@ -937,10 +862,7 @@ class StorageDB {
     }
   }
 
-  /**
-   * Lấy toàn bộ blacklist
-   * @returns {Promise<Array>} - Danh sách các từ khóa trong blacklist
-   */
+  
   async getImageBlacklist() {
     try {
       const db = mongoClient.getDb();

@@ -7,11 +7,7 @@ class ConsentService {
   constructor() {
   }
 
-  /**
-   * Kiểm tra xem user đã đồng ý sử dụng dịch vụ chưa
-   * @param {string} userId - ID của user
-   * @returns {Promise<boolean>}
-   */
+  
   async hasUserConsented(userId) {
     try {
       const profile = await ProfileDB.getProfile(userId);
@@ -25,11 +21,7 @@ class ConsentService {
     }
   }
 
-  /**
-   * Tạo embed consent cho user mới
-   * @param {Object} user - Discord user object
-   * @returns {Object} - Embed và components
-   */
+  
   createConsentEmbed(user) {
     const embed = new EmbedBuilder()
       .setTitle('🎉 Chào mừng bạn đến với Lunaby AI!')
@@ -69,23 +61,13 @@ class ConsentService {
     return { embeds: [embed], components: [row] };
   }
 
-  /**
-   * Gửi embed consent với fallback khi thiếu quyền
-   * @param {Object} interaction - Discord interaction object
-   * @param {Object} user - Discord user object
-   * @returns {Promise<boolean>} - true nếu gửi thành công, false nếu thiếu quyền
-   */
+  
   async sendConsentEmbed(interaction, user) {
     const embedData = this.createConsentEmbed(user);
     return await sendEmbedWithFallback(interaction, embedData, user.username, 'embedLinks', 'reply');
   }
 
-  /**
-   * Xử lý khi user chấp thuận
-   * @param {Object} interaction - Discord interaction
-   * @param {string} userId - ID của user
-   * @returns {Promise<void>}
-   */
+  
   async handleConsentAccept(interaction, userId) {
     try {
       await this.updateUserConsent(userId, true);
@@ -119,12 +101,7 @@ class ConsentService {
     }
   }
 
-  /**
-   * Xử lý khi user từ chối
-   * @param {Object} interaction - Discord interaction
-   * @param {string} userId - ID của user
-   * @returns {Promise<void>}
-   */
+  
   async handleConsentDecline(interaction, userId) {
     try {
       await this.updateUserConsent(userId, false);
@@ -159,12 +136,7 @@ class ConsentService {
     }
   }
 
-  /**
-   * Cập nhật consent của user trong database
-   * @param {string} userId - ID của user
-   * @param {boolean} consented - Trạng thái consent
-   * @returns {Promise<void>}
-   */
+  
   async updateUserConsent(userId, consented) {
     try {
       const profileCollection = await ProfileDB.getProfileCollection();

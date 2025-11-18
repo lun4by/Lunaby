@@ -1,7 +1,4 @@
-/**
- * Cấu hình hệ thống ghi log
- * File này cho phép điều chỉnh cài đặt logger từ một nơi tập trung
- */
+
 
 // Cấu hình mặc định cho logger
 const defaultConfig = {
@@ -36,19 +33,12 @@ const defaultConfig = {
 // Cấu hình hiện tại (có thể được thay đổi trong quá trình chạy)
 let currentConfig = { ...defaultConfig };
 
-/**
- * Lấy cấu hình hiện tại
- * @returns {Object} - Cấu hình hiện tại
- */
+
 function getConfig() {
   return { ...currentConfig };
 }
 
-/**
- * Cập nhật cấu hình
- * @param {Object} newConfig - Cấu hình mới
- * @returns {Object} - Cấu hình sau khi cập nhật
- */
+
 function updateConfig(newConfig) {
   currentConfig = { ...currentConfig, ...newConfig };
 
@@ -63,11 +53,7 @@ function updateConfig(newConfig) {
   return getConfig();
 }
 
-/**
- * Cập nhật cấu hình ghi log vào file
- * @param {Object} fileConfig - Cấu hình ghi file mới
- * @returns {Object} - Cấu hình sau khi cập nhật
- */
+
 function updateFileLogging(fileConfig) {
   if (fileConfig) {
     currentConfig.fileLogging = { ...currentConfig.fileLogging, ...fileConfig };
@@ -75,20 +61,12 @@ function updateFileLogging(fileConfig) {
   return getConfig();
 }
 
-/**
- * Bật/tắt log
- * @param {boolean} enabled - Trạng thái bật/tắt
- * @returns {Object} - Cấu hình sau khi cập nhật
- */
+
 function setEnabled(enabled) {
   return updateConfig({ enabled: !!enabled });
 }
 
-/**
- * Đặt mức độ log
- * @param {string} level - Mức độ log (debug, info, warn, error)
- * @returns {Object} - Cấu hình sau khi cập nhật
- */
+
 function setLevel(level) {
   if (["debug", "info", "warn", "error"].includes(level)) {
     return updateConfig({ level });
@@ -96,12 +74,7 @@ function setLevel(level) {
   return getConfig();
 }
 
-/**
- * Bật/tắt log cho một danh mục
- * @param {string} category - Danh mục log
- * @param {boolean} enabled - Trạng thái bật/tắt
- * @returns {Object} - Cấu hình sau khi cập nhật
- */
+
 function setCategoryEnabled(category, enabled) {
   if (currentConfig.categories.hasOwnProperty(category)) {
     const categories = { ...currentConfig.categories };
@@ -111,10 +84,7 @@ function setCategoryEnabled(category, enabled) {
   return getConfig();
 }
 
-/**
- * Khôi phục cấu hình mặc định
- * @returns {Object} - Cấu hình mặc định
- */
+
 function resetToDefault() {
   currentConfig = { ...defaultConfig };
   return getConfig();

@@ -172,9 +172,7 @@ function buildSettingsUI(settings, guild, disabled = false) {
   return { embed, components: [row1, row2] };
 }
 
-/**
- * Handle button/select interactions
- */
+
 async function handleInteraction(i, guildId, settings, guild) {
   const { customId } = i;
 
@@ -264,9 +262,7 @@ async function handleInteraction(i, guildId, settings, guild) {
   }
 }
 
-/**
- * Format channel list for display
- */
+
 function getChannelListText(channels) {
   if (!channels || channels.length === 0) {
     return '🌐 Tất cả kênh';

@@ -11,10 +11,7 @@ class FontManager {
     this.fallbackFonts = this.getFallbackFonts();
   }
 
-  /**
-   * Lấy danh sách fonts dự phòng theo hệ điều hành
-   * @returns {Array} Danh sách fonts dự phòng
-   */
+  
   getFallbackFonts() {
     const platform = os.platform();
     
@@ -30,11 +27,7 @@ class FontManager {
     }
   }
 
-  /**
-   * Kiểm tra file font có tồn tại không
-   * @param {string} fontPath - Đường dẫn tới file font
-   * @returns {boolean}
-   */
+  
   fontExists(fontPath) {
     try {
       return fs.existsSync(fontPath) && fs.statSync(fontPath).isFile();
@@ -43,12 +36,7 @@ class FontManager {
     }
   }
 
-  /**
-   * Đăng ký một font với xử lý lỗi
-   * @param {string} fontPath - Đường dẫn tới file font
-   * @param {Object} options - Tùy chọn đăng ký font
-   * @returns {boolean} Thành công hay không
-   */
+  
   registerSingleFont(fontPath, options) {
     const fontKey = `${fontPath}-${JSON.stringify(options)}`;
     
@@ -70,10 +58,7 @@ class FontManager {
     }
   }
 
-  /**
-   * Khởi tạo và đăng ký fonts với tối ưu hóa
-   * @param {string} assetsPath - Đường dẫn tới thư mục assets
-   */
+  
   async initialize(assetsPath) {
     if (this.initialized) return;
 
@@ -161,10 +146,7 @@ class FontManager {
     }
   }
 
-  /**
-   * Tạo danh sách các biến thể font
-   * @returns {Array} Danh sách font variants
-   */
+  
   generateFontVariants() {
     const weights = ['Thin', 'ExtraLight', 'Light', 'Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold', 'Black'];
     const styles = [
@@ -201,13 +183,7 @@ class FontManager {
     logger.info('FONTS', 'Fonts dự phòng hệ thống:', this.fallbackFonts.join(', '));
   }
 
-  /**
-   * Lấy font string CSS với fallback
-   * @param {string} weight - Font weight (Bold, Regular, etc.)
-   * @param {number} size - Font size
-   * @param {string} style - Font style (normal, italic)
-   * @returns {string} Font CSS string
-   */
+  
   getFontString(weight = 'Regular', size = 16, style = 'normal') {
     const weightMap = {
       'Thin': '100',
@@ -229,18 +205,12 @@ class FontManager {
     return `${style !== 'normal' ? style + ' ' : ''}${cssWeight} ${size}px ${fontFamily}`;
   }
 
-  /**
-   * Kiểm tra xem FontManager đã được khởi tạo chưa
-   * @returns {boolean}
-   */
+  
   isInitialized() {
     return this.initialized;
   }
 
-  /**
-   * Lấy thông tin thống kê fonts
-   * @returns {Object}
-   */
+  
   getStats() {
     return {
       initialized: this.initialized,
