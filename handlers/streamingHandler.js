@@ -115,12 +115,24 @@ async function sendStreamingMessage(channel, messages, config = {}) {
             logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
             
             const trimmedContent = fullContent.trim();
+            let isRefusal = false;
             
             if (trimmedContent === "I'm sorry, but I can't help with that." ||
                 trimmedContent === "I'm sorry, but I can't help with that" ||
                 trimmedContent.match(/^I'?m sorry,? but I can'?t help with that\.?$/i)) {
                 
+                isRefusal = true;
                 fullContent = "Yêu cầu này liên quan đến nội dung vi phạm chính sách, mình hiểu bạn muốn biết nhưng mình không thể giúp với lý do an toàn. 💖";
+                
+                // Delete the old refusal message if it was sent during streaming
+                if (sentMessage) {
+                    try {
+                        await sentMessage.delete();
+                        sentMessage = null;
+                    } catch (err) {
+                        // Can't delete, will edit instead
+                    }
+                }
             }
 
             try {
