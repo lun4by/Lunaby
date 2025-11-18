@@ -50,6 +50,24 @@ class AICore {
         }
       );
 
+      // Handle image generation separately (no streaming)
+      if (config.modelType === 'image') {
+        const tokenUsage = response.data.usage || {
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          total_tokens: 0
+        };
+        
+        if (response.data.data) {
+          logger.info("AI_CORE", "Processing image generation response");
+          return {
+            content: response.data.data[0].b64_json,
+            revised_prompt: response.data.data[0].revised_prompt,
+            usage: tokenUsage
+          };
+        }
+      }
+
       // Parse streaming response
       let fullContent = '';
       let tokenUsage = {
@@ -59,50 +77,46 @@ class AICore {
       };
 
       return new Promise((resolve, reject) => {
+        let buffer = '';
+
         response.data.on('data', (chunk) => {
-          const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
+          buffer += chunk.toString();
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
           
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith('data: ')) continue;
+            
+            const data = trimmed.slice(6);
+            if (data === '[DONE]') continue;
+            
+            try {
+              const parsed = JSON.parse(data);
               
-              if (data === '[DONE]') {
-                continue;
+              if (parsed.choices && parsed.choices[0]?.delta?.content) {
+                fullContent += parsed.choices[0].delta.content;
               }
               
-              try {
-                const parsed = JSON.parse(data);
-                
-                if (parsed.choices && parsed.choices[0]?.delta?.content) {
-                  fullContent += parsed.choices[0].delta.content;
-                }
-                
-                if (parsed.usage) {
-                  tokenUsage = parsed.usage;
-                }
-              } catch (e) {
-                logger.warn("AI_CORE", "Failed to parse stream chunk:", e.message);
+              if (parsed.usage) {
+                tokenUsage = parsed.usage;
               }
+            } catch (e) {
+              logger.warn("AI_CORE", "Failed to parse stream chunk:", data.substring(0, 100));
             }
           }
         });
 
         response.data.on('end', () => {
-          if (config.modelType === 'image') {
-            logger.info("AI_CORE", "Processing image generation response");
-            resolve({
-              content: fullContent,
-              usage: tokenUsage
-            });
-          } else {
-            resolve({
-              content: fullContent,
-              usage: tokenUsage
-            });
-          }
+          logger.info("AI_CORE", `Stream completed. Content length: ${fullContent.length}`);
+          resolve({
+            content: fullContent,
+            usage: tokenUsage
+          });
         });
 
         response.data.on('error', (err) => {
+          logger.error("AI_CORE", "Stream error:", err.message);
           reject(err);
         });
       });
