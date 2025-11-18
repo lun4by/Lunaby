@@ -1,3 +1,4 @@
+const ProfileDB = require('./profiledb');
 const logger = require('../utils/logger');
 
 class XPService {
@@ -40,7 +41,6 @@ class XPService {
 
   async addXP(message) {
     try {
-      const ProfileDB = require('./profiledb');
       if (message.author.bot) return null;
       if (message.content.startsWith('!') || message.content.startsWith('/')) return null;
       if (this.isOnCooldown(message.author.id)) return null;
@@ -98,7 +98,6 @@ class XPService {
 
   async getUserXP(guildId, userId) {
     try {
-      const ProfileDB = require('./profiledb');
       const profile = await ProfileDB.getProfile(userId);
       let serverXP = profile.data.xp.find(x => x.id === guildId);
 
@@ -129,7 +128,6 @@ class XPService {
 
   async getLeaderboard(guildId, limit = 10) {
     try {
-      const ProfileDB = require('./profiledb');
       const collection = await ProfileDB.getProfileCollection();
       const profiles = await collection.find({
         'data.xp': { $elemMatch: { id: guildId } }
@@ -156,7 +154,6 @@ class XPService {
 
   async getUserRank(guildId, userId) {
     try {
-      const ProfileDB = require('./profiledb');
       const collection = await ProfileDB.getProfileCollection();
       const profiles = await collection.find({
         'data.xp': { $elemMatch: { id: guildId } }
