@@ -1,6 +1,5 @@
-const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const ConversationService = require('../services/ConversationService');
-const ImageService = require('../services/ImageService');
 const AICore = require('../services/AICore');
 const experience = require('../utils/xp');
 const consentService = require('../services/consentService');
@@ -27,12 +26,12 @@ async function processXp(message, commandExecuted, execute) {
 
     if (response.xpAdded && response.level && response.previousLevel && response.level > response.previousLevel) {
       logger.info('XP', `${message.author.tag} đã lên cấp ${response.level} trong server ${message.guild.name}`);
-      
+
       const guildProfile = await guildProfileDB.getGuildProfile(message.guild.id);
-      
+
       if (guildProfile?.settings?.levelUpNotifications) {
         const settings = guildProfile.settings;
-        
+
         if (settings.useEmbeds) {
           const embed = new EmbedBuilder()
             .setTitle('🎉 Chúc mừng Level-up!')
@@ -40,7 +39,7 @@ async function processXp(message, commandExecuted, execute) {
             .setColor(0x00FF00)
             .setThumbnail(message.author.displayAvatarURL())
             .setTimestamp();
-          
+
           // await message.channel.send({ embeds: [embed] }).catch(() => {});
         } else {
           // await message.channel.send(`🎉 Chúc mừng ${message.author}! Bạn đã đạt cấp độ ${response.level}!`).catch(() => {});
@@ -52,11 +51,6 @@ async function processXp(message, commandExecuted, execute) {
   }
 }
 
-/**
- * Xử lý tin nhắn Discord đề cập đến bot (gộp handleMentionMessage và handleChatRequest)
- * @param {import('discord.js').Message} message - Đối tượng tin nhắn Discord
- * @param {import('discord.js').Client} client - Client Discord.js
- */
 async function handleMentionMessage(message, client) {
   if (message.author.bot) return;
 
@@ -67,12 +61,12 @@ async function handleMentionMessage(message, client) {
     const hasEveryoneOrRoleMention = message.mentions.everyone || message.mentions.roles.size > 0;
 
     if (!hasEveryoneOrRoleMention) {
-      const typingPromise = message.channel.sendTyping().catch(() => {});
-      
+      const typingPromise = message.channel.sendTyping().catch(() => { });
+
       logger.info('CHAT', `Xử lý tin nhắn từ ${message.author.tag}`);
-      
+
       const hasConsented = await consentService.hasUserConsented(message.author.id);
-      
+
       if (!hasConsented) {
         try {
           const consentData = consentService.createConsentEmbed(message.author);
@@ -89,7 +83,7 @@ async function handleMentionMessage(message, client) {
 
       try {
         const content = message.content.replace(/<@!?\d+>/g, '').trim();
-        
+
         if (!content) {
           await message.reply('Tôi có thể giúp gì cho bạn hôm nay?');
           return;
@@ -97,10 +91,33 @@ async function handleMentionMessage(message, client) {
 
         await typingPromise;
 
-        const lowerContent = content.toLowerCase();
-        if (lowerContent.includes('code') ||
-            lowerContent.includes('function') ||
-            lowerContent.includes('write a')) {
+        const requestType = ConversationService.detectRequestType(content);
+        
+        if (requestType.type === 'image') {
+          const imagePrompt = requestType.match[2];
+          const commandUsed = requestType.match[1];
+          logger.info('CHAT', `Image command detected: "${commandUsed}". Prompt: ${imagePrompt}`);
+          await message.reply(`Để tạo hình ảnh, vui lòng sử dụng lệnh /image với nội dung bạn muốn tạo. Ví dụ:\n/image ${imagePrompt}`);
+          return;
+        }
+
+        if (requestType.type === 'memory') {
+          const memoryRequest = requestType.match[2].trim() || "toàn bộ cuộc trò chuyện";
+          const userId = ConversationService.extractUserId(message);
+          const memoryAnalysis = await ConversationService.getMemoryAnalysis(userId, memoryRequest);
+          
+          if (memoryAnalysis.length > 2000) {
+            const chunks = splitMessageRespectWords(memoryAnalysis, 2000);
+            for (const chunk of chunks) {
+              await message.reply(chunk);
+            }
+          } else {
+            await message.reply(memoryAnalysis);
+          }
+          return;
+        }
+
+        if (requestType.type === 'code') {
           await handleCodeRequest(message, content);
           return;
         }
@@ -135,7 +152,7 @@ async function handleMentionMessage(message, client) {
         logger.error('CHAT', `Lỗi khi xử lý tin nhắn từ ${message.author.tag}:`, error);
 
         let errorMessage = 'Xin lỗi, tôi gặp lỗi khi xử lý tin nhắn của bạn. Vui lòng thử lại sau.';
-        
+
         if (error.message.includes('Không có API provider nào được cấu hình')) {
           errorMessage = 'Xin lỗi, hệ thống AI hiện tại không khả dụng. Vui lòng thử lại sau.';
         } else if (error.message.includes('Tất cả providers đã thất bại')) {
@@ -143,9 +160,9 @@ async function handleMentionMessage(message, client) {
         } else if (error.code === 'EPROTO' || error.code === 'ECONNREFUSED' || error.message.includes('connect')) {
           errorMessage = 'Xin lỗi, tôi đang gặp vấn đề kết nối. Vui lòng thử lại sau hoặc liên hệ quản trị viên để được hỗ trợ.';
         }
-        
+
         await message.reply(errorMessage);
-        
+
         // if (message.guild) {
         //   processXp(message, false, false).catch(err => 
         //     logger.error('XP', 'Error processing XP:', err)
@@ -159,48 +176,6 @@ async function handleMentionMessage(message, client) {
       //   );
       // }
     }
-  }
-}
-
-async function handleImageGeneration(message, prompt) {
-  if (!prompt) {
-    await message.reply('Vui lòng cung cấp mô tả cho hình ảnh bạn muốn tôi tạo.');
-    return;
-  }
-
-  await message.channel.sendTyping();
-
-  try {
-    const imageResult = await ImageService.generateImage(prompt);
-
-    if (typeof imageResult === 'string') {
-      await message.reply(imageResult);
-      return;
-    }
-
-    const attachment = new AttachmentBuilder(imageResult.buffer, { name: 'generated-image.png' });
-
-    const embed = new EmbedBuilder()
-      .setTitle('Hình Ảnh Được Tạo')
-      .setDescription(`Mô tả: ${prompt}`)
-      .setColor('#0099ff')
-      .setTimestamp();
-
-    try {
-      await message.reply({ 
-        embeds: [embed],
-        files: [attachment]
-      });
-    } catch (error) {
-      if (error.code === 50013 || error.message.includes('permission')) {
-        await handlePermissionError(message, 'embedLinks', message.author.username, 'reply');
-      } else {
-        throw error;
-      }
-    }
-  } catch (error) {
-    logger.error('IMAGE', 'Lỗi khi tạo hình ảnh:', error);
-    await message.reply('Xin lỗi, tôi gặp khó khăn khi tạo hình ảnh đó.');
   }
 }
 
@@ -229,9 +204,6 @@ async function handleCodeRequest(message, prompt) {
   }
 }
 
-/**
- * Định dạng phản hồi dưới dạng khối mã nếu nó chưa được định dạng
- */
 function formatCodeResponse(text) {
   let language = 'javascript';
 
@@ -252,35 +224,6 @@ function formatCodeResponse(text) {
   }
 
   return `\`\`\`${language}\n${text}\n\`\`\``;
-}
-
-function splitMessage(text, maxLength = 2000) {
-  const chunks = [];
-
-  if (text.includes('```')) {
-    const parts = text.split(/(```(?:\w+)?\n[\s\S]*?```)/g);
-
-    let currentChunk = '';
-
-    for (const part of parts) {
-      if (currentChunk.length + part.length > maxLength) {
-        chunks.push(currentChunk);
-        currentChunk = part;
-      } else {
-        currentChunk += part;
-      }
-    }
-
-    if (currentChunk) {
-      chunks.push(currentChunk);
-    }
-  } else {
-    for (let i = 0; i < text.length; i += maxLength) {
-      chunks.push(text.substring(i, i + maxLength));
-    }
-  }
-
-  return chunks;
 }
 
 function splitMessageRespectWords(text, maxLength = 2000) {
@@ -335,6 +278,5 @@ function splitMessageRespectWords(text, maxLength = 2000) {
 module.exports = {
   handleMentionMessage,
   processXp,
-  splitMessage,
   splitMessageRespectWords
 };

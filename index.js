@@ -27,7 +27,6 @@ const client = new Client({
 client.commands = new Collection();
 client.features = ["EXPERIENCE_POINTS"];
 
-// Setup event handlers
 setupGuildEvents(client);
 setupInteractionCreateEvent(client);
 setupMessageCreateEvent(client);

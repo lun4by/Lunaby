@@ -2,7 +2,6 @@ const axios = require("axios");
 const logger = require("../utils/logger.js");
 const prompts = require("../config/prompts.js");
 const initSystem = require("./initSystem.js");
-const WebSearchService = require("./WebSearchService.js");
 
 class AICore {
   constructor() {

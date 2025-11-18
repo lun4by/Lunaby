@@ -1,11 +1,9 @@
 const logger = require("../utils/logger.js");
 const storageDB = require("./storagedb.js");
 const conversationManager = require("../handlers/conversationManager.js");
-const ownerService = require("./ownerService.js");
 const prompts = require("../config/prompts.js");
 const textUtils = require("../utils/textUtils.js");
 const AICore = require("./AICore.js");
-const WebSearchService = require("./WebSearchService.js");
 const TokenService = require("./TokenService.js");
 const MemoryService = require("./MemoryService.js");
 
@@ -21,6 +19,7 @@ const SUMMARY_MESSAGE_TRUNCATE_LENGTH = 150;
 
 const IMAGE_COMMAND_REGEX = /^(vẽ|tạo hình|vẽ hình|hình|tạo ảnh ai|tạo ảnh)\s+(.+)$/i;
 const MEMORY_COMMAND_REGEX = /^(nhớ lại|trí nhớ|lịch sử|conversation history|memory|như nãy|vừa gửi|vừa đề cập)\s*(.*)$/i;
+const CODE_COMMAND_REGEX = /\b(code|code completion|function|method|write|implement|create|viết code|viết hàm|tạo hàm|code snippet|đoạn code|class|const|let|var|function|def|return|async|await|javascript|python|java|php|c\+\+|ruby|go|rust)\b/gi;
 
 const MEMORY_ANALYSIS_SUMMARY_KEYWORDS = ["ngắn gọn", "tóm tắt"];
 const MEMORY_ANALYSIS_DETAILED_KEYWORDS = ["đầy đủ", "chi tiết"];
@@ -33,11 +32,19 @@ class ConversationService {
     logger.info("CONVERSATION_SERVICE", "Initialized conversation service");
   }
 
-  /**
-   * Trích xuất (hoặc tạo) một User ID duy nhất dựa trên ngữ cảnh tin nhắn.
-   * @param {object} message - Đối tượng tin nhắn (ví dụ: từ Discord.js).
-   * @returns {string} Một User ID duy nhất.
-   */
+  detectRequestType(prompt) {
+    const imageMatch = prompt.match(IMAGE_COMMAND_REGEX);
+    if (imageMatch) return { type: 'image', match: imageMatch };
+
+    const memoryMatch = prompt.match(MEMORY_COMMAND_REGEX);
+    if (memoryMatch) return { type: 'memory', match: memoryMatch };
+
+    const isCodeRequest = CODE_COMMAND_REGEX.test(prompt);
+    if (isCodeRequest) return { type: 'code', match: null };
+
+    return { type: 'chat', match: null };
+  }
+
   extractUserId(message) {
     if (!message?.author?.id) {
       return DEFAULT_USER_ID;
@@ -54,12 +61,6 @@ class ConversationService {
     return userId;
   }
 
-  /**
-   * Làm giàu prompt của người dùng với các ký ức có liên quan từ lịch sử.
-   * @param {string} originalPrompt - Prompt gốc của người dùng.
-   * @param {string} userId - User ID.
-   * @returns {string} Prompt đã được thêm thông tin ngữ cảnh (nếu có).
-   */
   async enrichPromptWithMemory(originalPrompt, userId) {
     try {
       const memoryContext = await MemoryService.buildMemoryContext(userId, originalPrompt);
@@ -125,12 +126,6 @@ class ConversationService {
     }
   }
 
-  /**
-   * Xử lý yêu cầu phân tích trí nhớ/lịch sử trò chuyện từ người dùng.
-   * @param {string} userId - User ID.
-   * @param {string} request - Yêu cầu cụ thể (ví dụ: "ngắn gọn", "chi tiết").
-   * @returns {string} Một chuỗi phân tích đã được định dạng.
-   */
   async getMemoryAnalysis(userId, request) {
     try {
       logger.info("CONVERSATION_SERVICE", `Analyzing memory for user ${userId}`);
@@ -212,16 +207,6 @@ class ConversationService {
   }
 
   /**
-   * (Placeholder) Định dạng nội dung phản hồi trước khi gửi đi.
-   * @param {string} content - Nội dung thô từ AI.
-   * @param {boolean} isNewConversation - Cờ báo hiệu đây có phải là cuộc trò chuyện mới không.
-   * @returns {string} Nội dung đã định dạng.
-   */
-  async formatResponseContent(content, isNewConversation) {
-    return content;
-  }
-
-  /**
    * Phương thức chính xử lý một prompt mới và trả về phản hồi của AI.
    * @param {string} prompt - Prompt của người dùng.
    * @param {object} message - Đối tượng tin nhắn gốc.
@@ -234,38 +219,9 @@ class ConversationService {
         logger.warn("CONVERSATION_SERVICE", "Cannot determine userId, using default");
       }
 
-      let ownerSpecialResponse = "";
-      if (message?.author?.id) {
-        const isOwnerInteraction = ownerService.isOwner(message.author.id);
-        const ownerMentioned = ownerService.isOwnerMentioned(prompt, message);
-
-        if (ownerMentioned) {
-          logger.info("CONVERSATION_SERVICE", "Owner mentioned in message");
-          ownerSpecialResponse = await ownerService.getOwnerMentionResponse(prompt);
-        }
-      }
-
-      const imageMatch = prompt.match(IMAGE_COMMAND_REGEX);
-      if (imageMatch) {
-        const imagePrompt = imageMatch[2];
-        const commandUsed = imageMatch[1];
-        logger.info("CONVERSATION_SERVICE", `Image command detected: "${commandUsed}". Prompt: ${imagePrompt}`);
-        return `Để tạo hình ảnh, vui lòng sử dụng lệnh /image với nội dung bạn muốn tạo. Ví dụ:\n/image ${imagePrompt}`;
-      }
-
-      const memoryMatch = prompt.match(MEMORY_COMMAND_REGEX);
-      if (memoryMatch) {
-        const memoryRequest = memoryMatch[2].trim() || "toàn bộ cuộc trò chuyện";
-        return await this.getMemoryAnalysis(userId, memoryRequest);
-      }
-      
       const enhancedPromptWithMemory = await this.enrichPromptWithMemory(prompt, userId);
 
       let content = await this.processChatCompletion(enhancedPromptWithMemory, userId);
-
-      if (ownerSpecialResponse) {
-        content = `${ownerSpecialResponse}\n\n${content}`;
-      }
 
       return content;
 
@@ -338,10 +294,8 @@ class ConversationService {
       MemoryService.updateInteractionStats(userId).catch(err =>
         logger.error('CONVERSATION_SERVICE', 'Error updating interaction stats:', err)
       );
-      
-      const formattedContent = await this.formatResponseContent(content, isNewConversation);
 
-      return formattedContent;
+      return content;
 
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error in processChatCompletion:", error.message);

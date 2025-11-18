@@ -3,7 +3,6 @@ const mongoClient = require('../services/mongoClient.js');
 const storageDB = require('../services/storagedb.js');
 const initSystem = require('../services/initSystem.js');
 const GuildProfileDB = require('../services/guildprofiledb.js');
-const ownerService = require('../services/ownerService.js');
 const { syncAllGuilds } = require('../handlers/guildHandler');
 const logger = require('../utils/logger.js');
 // const AutoUpdateService = require('../services/AutoUpdateService');
@@ -84,12 +83,6 @@ async function startbot(client, loadCommands) {
     } catch (error) {
       logger.error('SYSTEM', 'Lỗi khi khởi tạo hệ thống profile guild:', error);
       initSystem.markReady('guildProfiles');
-    }
-
-    try {
-      ownerService.initialize(client);
-    } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi khởi tạo OwnerService:', error);
     }
 
     try {
