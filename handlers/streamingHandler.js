@@ -63,6 +63,11 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                     try {
                         const parsed = JSON.parse(data);
                         const content = parsed.choices?.[0]?.delta?.content;
+                        
+                        // Log if there's an error in the response
+                        if (parsed.error) {
+                            logger.warn('STREAM', `API error: ${JSON.stringify(parsed.error)}`);
+                        }
 
                         if (content) {
                             fullContent += content;
@@ -148,6 +153,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         response.data.on('error', (error) => {
             clearInterval(typingInterval);
             logger.error('STREAMING', `Stream error: ${error.message}`);
+            logger.error('STREAMING', `Full error: ${JSON.stringify(error)}`);
             reject(error);
         });
     });
