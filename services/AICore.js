@@ -94,9 +94,15 @@ class AICore {
 
       return new Promise((resolve, reject) => {
         let buffer = '';
+        let chunkCount = 0;
+        let dataEventCount = 0;
 
         response.data.on('data', (chunk) => {
-          buffer += chunk.toString();
+          chunkCount++;
+          const chunkStr = chunk.toString();
+          logger.debug("AI_CORE", `Received chunk ${chunkCount}: ${chunkStr.substring(0, 200)}`);
+          
+          buffer += chunkStr;
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
           
@@ -105,6 +111,7 @@ class AICore {
             if (!trimmed) continue;
 
             if (trimmed.startsWith('data: ')) {
+              dataEventCount++;
               const data = trimmed.slice(6).trim();
 
               if (data === '[DONE]') {
@@ -114,30 +121,37 @@ class AICore {
               
               try {
                 const parsed = JSON.parse(data);
+                logger.debug("AI_CORE", `Parsed SSE data: ${JSON.stringify(parsed).substring(0, 200)}`);
 
                 if (parsed.choices && parsed.choices[0]) {
                   const delta = parsed.choices[0].delta;
                   if (delta && delta.content) {
                     fullContent += delta.content;
+                    logger.debug("AI_CORE", `Added content chunk, total length: ${fullContent.length}`);
                   }
                 }
 
                 if (parsed.usage) {
                   tokenUsage = parsed.usage;
+                  logger.debug("AI_CORE", `Received usage: ${JSON.stringify(tokenUsage)}`);
                 }
               } catch (e) {
                 logger.warn("AI_CORE", `Parse error: ${e.message}. Data: ${data.substring(0, 100)}`);
               }
+            } else {
+              logger.debug("AI_CORE", `Non-data line: ${trimmed.substring(0, 100)}`);
             }
           }
         });
 
         response.data.on('end', () => {
+          logger.info("AI_CORE", `Stream ended. Chunks: ${chunkCount}, Data events: ${dataEventCount}, Content length: ${fullContent.length}`);
+          
           if (fullContent.length === 0) {
             logger.error("AI_CORE", "Stream ended but no content received");
             reject(new Error("No content received from stream"));
           } else {
-            logger.info("AI_CORE", `Stream completed. Content length: ${fullContent.length} chars`);
+            logger.info("AI_CORE", `Stream completed successfully. Content length: ${fullContent.length} chars`);
             resolve({
               content: fullContent,
               usage: tokenUsage

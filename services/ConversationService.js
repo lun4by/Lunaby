@@ -258,20 +258,39 @@ class ConversationService {
         logger.debug("CONVERSATION_SERVICE", `Message[${idx}]: role="${msg?.role}", content length=${msg?.content?.length || 0}`);
       });
 
-      // Validate messages before sending
-      const validMessages = messages.filter(msg => {
-        if (!msg.role || !msg.content) {
-          logger.error("CONVERSATION_SERVICE", `Invalid message filtered: ${JSON.stringify(msg)}`);
-          return false;
+      // Validate and clean messages
+      const validMessages = [];
+      let lastRole = null;
+      
+      for (const msg of messages) {
+        // Skip invalid messages
+        if (!msg.role || !msg.content || !msg.content.trim()) {
+          logger.warn("CONVERSATION_SERVICE", `Skipping invalid message: role="${msg?.role}", content="${msg?.content?.substring(0, 50)}"`);
+          continue;
         }
-        return true;
-      });
+
+        // Validate role
+        if (!['system', 'user', 'assistant'].includes(msg.role)) {
+          logger.warn("CONVERSATION_SERVICE", `Skipping message with invalid role: ${msg.role}`);
+          continue;
+        }
+
+        // Merge consecutive messages with same role (except system)
+        if (lastRole === msg.role && msg.role !== 'system') {
+          const lastMsg = validMessages[validMessages.length - 1];
+          lastMsg.content += '\n\n' + msg.content;
+          logger.debug("CONVERSATION_SERVICE", `Merged ${msg.role} message with previous`);
+        } else {
+          validMessages.push({ role: msg.role, content: msg.content });
+          lastRole = msg.role;
+        }
+      }
 
       if (validMessages.length === 0) {
         throw new Error("No valid messages to send");
       }
 
-      logger.info("CONVERSATION_SERVICE", `Sending ${validMessages.length} valid messages (filtered ${messages.length - validMessages.length} invalid)`);
+      logger.info("CONVERSATION_SERVICE", `Sending ${validMessages.length} messages (cleaned from ${messages.length})`);
 
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('AICore timeout after 25 seconds')), AI_TIMEOUT_MS);
