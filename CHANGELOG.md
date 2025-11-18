@@ -1,5 +1,39 @@
 # Changelog - Lunaby Bot
 
+## [1.1.0-native] - 2025-11-18
+
+### 🔥 Highlights
+- Hỗ trợ streaming cho chat văn bản và hoàn thành mã (streaming dựa trên SSE, tương thích với Heroku)
+- Bộ xử lý streaming thời gian thực cho Discord để cập nhật tin nhắn dần dần
+- Cải thiện việc xác thực và gộp tin nhắn để đáp ứng yêu cầu của nhà cung cấp
+
+### ✨ Added
+ - `handlers/streamingHandler.js`: lớp giao diện streaming mới cho tin nhắn Discord (an toàn với giới hạn chỉnh sửa, hỗ trợ chia chunk)
+ - Bộ phân tích SSE trong `services/AICore.js` để xử lý các frame `event:`/`data:` của nhà cung cấp và terminator `[DONE]`
+ - Hỗ trợ `stream: true` cho các yêu cầu mô hình chạy lâu
+
+### ⚙️ Changed
+ - Chat & Code: streaming giờ là luồng mặc định, kèm fallback non-stream khi cần
+ - Search & Image: rõ ràng sử dụng endpoint non-stream (tạo ảnh và web search vẫn là non-stream)
+ - Prompts: `config/prompts.js` được chuyển sang tiếng Anh, tối ưu `thinking` và `memoryExtraction`
+ - Logging: in tiêu đề console + `console.clear()` khi khởi động; logger có màu, sạch hơn; loại bỏ emoji/icon khỏi thông điệp log
+ - Khởi tạo khi require: nhiều lệnh `require()` cho DB/dịch vụ đã được dời vào hàm để header in trước khi logs DB xuất hiện
+
+### 🛠️ Fixed
+- Đã xử lý lỗi 408/timeout trên Heroku bằng cách dùng streaming cho các yêu cầu lâu
+- Sửa lỗi xử lý buffer SSE để tái tạo các delta JSON khi bị tách qua nhiều chunk TCP
+- Loại bỏ các tin nhắn assistant rỗng và gộp các tin nhắn liên tiếp cùng vai trò để thỏa mãn xác thực của nhà cung cấp
+
+### 🧹 Removed / Cleaned
+- Đã loại bỏ prompt `analysis` cũ và hàm `analyzeContentWithAI()` (không dùng)
+- Đã xóa JSDoc và comment nội tuyến khỏi các file production để giảm footprint runtime
+
+### ⚠️ Migration / Notes
+- Các cập nhật streaming được gom lẻ để tôn trọng giới hạn chỉnh sửa của Discord (khoảng 800ms giữa các cập nhật)
+- Nếu bạn phụ thuộc vào hành vi sync khi `require` trước đây cho các module DB, hãy cập nhật import để gọi dịch vụ một cách rõ ràng sau `client.ready`
+
+---
+
 ## [1.0.0] - 2025-11-03
 
 ### 🎨 Added - Profile Customization System
@@ -127,32 +161,6 @@ user_profiles {
   }
 }
 ```
-
-### 🎯 Discord.js v14 Compliance
-All commands verified compatible:
-- ✅ SlashCommandBuilder syntax
-- ✅ EmbedBuilder (no MessageEmbed)
-- ✅ interaction.options.getString/getInteger/getUser
-- ✅ interaction.deferReply / editReply
-- ✅ AttachmentBuilder for canvas images
-- ✅ No deprecated methods
-
-### 🧹 Code Quality
-- ❌ Removed all unnecessary comments (//) from 8 files
-- ✅ Clean code without documentation clutter
-- ✅ No syntax errors across all modified files
-- ✅ Consistent code style maintained
-
-### 📝 TODO - Future Enhancements
-- [ ] Test complete profile system with real Discord bot
-- [ ] Add economy system (register, shop, buy commands)
-- [ ] Implement automatic wreath assignment for top players
-- [ ] Replace placeholder image URLs in market.json with real assets
-- [ ] Add more items to market (seasonal themes, special effects)
-- [ ] Create admin commands for inventory management
-
-### 🐛 Known Issues
-None reported yet. System ready for testing.
 
 ---
 
