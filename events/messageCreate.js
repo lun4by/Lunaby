@@ -9,28 +9,25 @@ function setupMessageCreateEvent(client) {
     try {
       if (message.author.bot) return;
 
-      if (message.guild) {
-        const xpResult = await XPService.addXP(message);
-        
-        if (xpResult && xpResult.leveledUp) {
-          try {
-            // Kiểm tra cài đặt guild trước khi gửi thông báo level-up
-            const profile = await guildProfileDB.getGuildProfile(message.guild.id);
-            const levelUpEnabled = profile?.settings?.levelUpNotifications !== false; // default true if not set
-
-            if (levelUpEnabled) {
-              await message.reply({
-                content: `🎉 Chúc mừng <@${message.author.id}>! Bạn đã lên **Level ${xpResult.level}**!`,
-                allowedMentions: { users: [message.author.id] }
-              });
-            } else {
-              logger.debug('XP', `Level-up notification suppressed for guild ${message.guild.id} (disabled in settings)`);
-            }
-          } catch (err) {
-            logger.debug('XP', 'Không thể gửi thông báo level up:', err.message);
-          }
-        }
-      }
+      // XP system disabled
+      // if (message.guild) {
+      //   const xpResult = await XPService.addXP(message);
+      //   
+      //   if (xpResult && xpResult.leveledUp) {
+      //     try {
+      //       const profile = await guildProfileDB.getGuildProfile(message.guild.id);
+      //       const levelUpEnabled = profile?.settings?.levelUpNotifications !== false;
+      //       if (levelUpEnabled) {
+      //         await message.reply({
+      //           content: `🎉 Chúc mừng <@${message.author.id}>! Bạn đã lên **Level ${xpResult.level}**!`,
+      //           allowedMentions: { users: [message.author.id] }
+      //         });
+      //       }
+      //     } catch (err) {
+      //       logger.debug('XP', 'Không thể gửi thông báo level up:', err.message);
+      //     }
+      //   }
+      // }
 
       await handleMentionMessage(message, client);
     } catch (error) {
