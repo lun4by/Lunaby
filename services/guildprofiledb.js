@@ -8,7 +8,7 @@ const profileCache = new Set();
 
 
 const guildProfileStructure = {
-  _id: String, // Guild ID
+  _id: String, 
   prefix: null,
   greeter: {
     welcome: {
@@ -27,8 +27,8 @@ const guildProfileStructure = {
     },
   },
   xp: {
-    isActive: true, // XP được kích hoạt mặc định
-    exceptions: [], // Mảng ID kênh không tính XP
+    isActive: false, 
+    exceptions: [], 
   },
   roles: {
     muted: null,
