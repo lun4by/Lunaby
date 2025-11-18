@@ -156,10 +156,31 @@ class AICore {
 
       if (error.response) {
         const status = error.response.status;
-        const data = error.response.data;
+        let data = error.response.data;
         
-        logger.error("AI_CORE", `API error response status: ${status}`);
-        logger.error("AI_CORE", `API error response data:`, data);
+        // If data is a stream (from responseType: 'stream'), read it
+        if (data && typeof data.on === 'function') {
+          try {
+            const chunks = [];
+            for await (const chunk of data) {
+              chunks.push(chunk);
+            }
+            const rawData = Buffer.concat(chunks).toString('utf-8');
+            logger.error("AI_CORE", `API error response status: ${status}, body: ${rawData}`);
+            
+            try {
+              data = JSON.parse(rawData);
+            } catch (e) {
+              logger.warn("AI_CORE", "Failed to parse error response as JSON");
+              data = { message: rawData };
+            }
+          } catch (readError) {
+            logger.error("AI_CORE", "Failed to read error stream:", readError.message);
+          }
+        } else {
+          logger.error("AI_CORE", `API error response status: ${status}`);
+          logger.error("AI_CORE", `API error response data:`, data);
+        }
 
         if (data && data.error) {
           errorMessage = data.error;
