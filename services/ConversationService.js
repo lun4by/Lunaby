@@ -252,12 +252,33 @@ class ConversationService {
         messages = conversationManager.getHistory(userId);
       }
 
+      // Log all messages for debugging
+      logger.info("CONVERSATION_SERVICE", `Total messages before validation: ${messages.length}`);
+      messages.forEach((msg, idx) => {
+        logger.debug("CONVERSATION_SERVICE", `Message[${idx}]: role="${msg?.role}", content length=${msg?.content?.length || 0}`);
+      });
+
+      // Validate messages before sending
+      const validMessages = messages.filter(msg => {
+        if (!msg.role || !msg.content) {
+          logger.error("CONVERSATION_SERVICE", `Invalid message filtered: ${JSON.stringify(msg)}`);
+          return false;
+        }
+        return true;
+      });
+
+      if (validMessages.length === 0) {
+        throw new Error("No valid messages to send");
+      }
+
+      logger.info("CONVERSATION_SERVICE", `Sending ${validMessages.length} valid messages (filtered ${messages.length - validMessages.length} invalid)`);
+
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('AICore timeout after 25 seconds')), AI_TIMEOUT_MS);
       });
       
       const result = await Promise.race([
-        AICore.processChatCompletion(messages, {
+        AICore.processChatCompletion(validMessages, {
           model: additionalConfig.model || AICore.CoreModel,
           max_tokens: additionalConfig.max_tokens || 2048,
           ...additionalConfig,
