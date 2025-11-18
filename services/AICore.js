@@ -30,7 +30,42 @@ class AICore {
       };
       
       const model = modelMap[config.modelType] || modelMap.default;
-      
+
+      if (config.modelType === 'image') {
+        const response = await axios.post(
+          `${this.lunabyBaseURL}/chat/completions`,
+          {
+            model: model,
+            messages: messages,
+            max_tokens: config.max_tokens || 2048,
+            stream: false,
+            ...config,
+          },
+          {
+            headers: {
+              "Authorization": `Bearer ${this.lunabyApiKey}`,
+              "Content-Type": "application/json"
+            },
+            timeout: 120000
+          }
+        );
+
+        const tokenUsage = response.data.usage || {
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          total_tokens: 0
+        };
+        
+        if (response.data.data) {
+          logger.info("AI_CORE", "Processing image generation response");
+          return {
+            content: response.data.data[0].b64_json,
+            revised_prompt: response.data.data[0].revised_prompt,
+            usage: tokenUsage
+          };
+        }
+      }
+
       const response = await axios.post(
         `${this.lunabyBaseURL}/chat/completions`,
         {
@@ -50,25 +85,6 @@ class AICore {
         }
       );
 
-      // Handle image generation separately (no streaming)
-      if (config.modelType === 'image') {
-        const tokenUsage = response.data.usage || {
-          prompt_tokens: 0,
-          completion_tokens: 0,
-          total_tokens: 0
-        };
-        
-        if (response.data.data) {
-          logger.info("AI_CORE", "Processing image generation response");
-          return {
-            content: response.data.data[0].b64_json,
-            revised_prompt: response.data.data[0].revised_prompt,
-            usage: tokenUsage
-          };
-        }
-      }
-
-      // Parse streaming response
       let fullContent = '';
       let tokenUsage = {
         prompt_tokens: 0,
@@ -86,33 +102,47 @@ class AICore {
           
           for (const line of lines) {
             const trimmed = line.trim();
-            if (!trimmed || !trimmed.startsWith('data: ')) continue;
-            
-            const data = trimmed.slice(6);
-            if (data === '[DONE]') continue;
-            
-            try {
-              const parsed = JSON.parse(data);
-              
-              if (parsed.choices && parsed.choices[0]?.delta?.content) {
-                fullContent += parsed.choices[0].delta.content;
+            if (!trimmed) continue;
+
+            if (trimmed.startsWith('data: ')) {
+              const data = trimmed.slice(6).trim();
+
+              if (data === '[DONE]') {
+                logger.info("AI_CORE", "Received [DONE] signal");
+                continue;
               }
               
-              if (parsed.usage) {
-                tokenUsage = parsed.usage;
+              try {
+                const parsed = JSON.parse(data);
+
+                if (parsed.choices && parsed.choices[0]) {
+                  const delta = parsed.choices[0].delta;
+                  if (delta && delta.content) {
+                    fullContent += delta.content;
+                  }
+                }
+
+                if (parsed.usage) {
+                  tokenUsage = parsed.usage;
+                }
+              } catch (e) {
+                logger.warn("AI_CORE", `Parse error: ${e.message}. Data: ${data.substring(0, 100)}`);
               }
-            } catch (e) {
-              logger.warn("AI_CORE", "Failed to parse stream chunk:", data.substring(0, 100));
             }
           }
         });
 
         response.data.on('end', () => {
-          logger.info("AI_CORE", `Stream completed. Content length: ${fullContent.length}`);
-          resolve({
-            content: fullContent,
-            usage: tokenUsage
-          });
+          if (fullContent.length === 0) {
+            logger.error("AI_CORE", "Stream ended but no content received");
+            reject(new Error("No content received from stream"));
+          } else {
+            logger.info("AI_CORE", `Stream completed. Content length: ${fullContent.length} chars`);
+            resolve({
+              content: fullContent,
+              usage: tokenUsage
+            });
+          }
         });
 
         response.data.on('error', (err) => {
