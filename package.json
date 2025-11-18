@@ -1,7 +1,7 @@
 {
   "name": "lunaby",
-  "version": "1.1.0",
-  "description": "Bot Discord hỗ trợ trò chuyện AI và tạo hình ảnh",
+  "version": "1.1.0-native",
+  "description": "Bot Discord hỗ trợ trò chuyện AI và tạo hình ảnh, phiên bản native chỉ dùng cho model Lunaby",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
