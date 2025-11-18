@@ -8,10 +8,10 @@
 
 ## Tổng Quan
 
-Lunaby là bot Discord được hỗ trợ bởi nhiều nhà cung cấp AI bao gồm Perplexity, Alibaba Qwen, OpenRouter và OpenAI. Bot có tính cách thân thiện và hỗ trợ nhiều tác vụ như trò chuyện, tạo mã nguồn và tạo hình ảnh. Tích hợp hệ thống cấp độ và thành tựu để khuyến khích tương tác người dùng.
-> Lunaby Bot hỗ trợ cả **local offline models** và **cloud providers** để đảm bảo độ tin cậy tối đa. Ngoài ra model LLM Lunaby được build dựa trên Qwen3 235B (sẽ được cập nhật sau tại Hugging Face).
+Lunaby là bot Discord được hỗ trợ bởi **local offline models**. Bot có tính cách thân thiện và hỗ trợ nhiều tác vụ như trò chuyện, tạo mã nguồn và tạo hình ảnh. Tích hợp hệ thống cấp độ và thành tựu để khuyến khích tương tác người dùng.
+> Lunaby Bot sử dụng **local offline models** với model LLM được build(fine-tune) dựa trên GPT OSS 120B (sẽ được cập nhật sau tại Hugging Face).
 
-**Phiên bản 1.1.0**: Kiến trúc hoàn toàn mới với hệ thống đa nhà cung cấp AI, tự động chuyển đổi khi lỗi và thiết kế modular để tăng độ tin cậy và dễ bảo trì.
+**Phiên bản 1.1.0**: Kiến trúc hoàn toàn mới với hệ thống AI cục bộ, tối ưu hóa hiệu suất và thiết kế modular để tăng độ tin cậy và dễ bảo trì.
 
 ## Tính Năng Chính
 
@@ -27,29 +27,23 @@ Lunaby là bot Discord được hỗ trợ bởi nhiều nhà cung cấp AI bao 
 
 ## Kiến Trúc Hệ Thống
 
-Lunaby đã được tái cấu trúc hoàn toàn với hệ thống đa nhà cung cấp mạnh mẽ:
+Lunaby đã được tái cấu trúc hoàn toàn với hệ thống AI cục bộ tối ưu:
 
 ### **AICore.js** - Trung tâm xử lý AI
-- Xử lý tất cả API calls và logic AI
-- Hỗ trợ đa nhà cung cấp với tự động chuyển đổi
-- Cấu hình API client bảo mật
-- Quản lý quota thông minh và chuyển đổi nhà cung cấp
-
-### **providers.js** - Quản lý nhà cung cấp
-- Quản lý nhiều nhà cung cấp AI (Perplexity, Qwen, OpenRouter, OpenAI)
-- Tự động chuyển đổi khi hết quota
-- Giám sát sức khỏe và theo dõi trạng thái nhà cung cấp
-- Xác thực phản hồi và lọc chất lượng
-
-### **ImageService.js** - Xử lý hình ảnh
-- Tích hợp Gradio để tạo hình ảnh
-- Theo dõi tiến trình tạo hình ảnh
-- Chức năng hình ảnh độc lập
+- Xử lý tất cả yêu cầu AI và logic xử lý
+- Tương tác với các local offline models
+- Cấu hình model bảo mật
+- Quản lý resource và tối ưu hiệu suất
 
 ### **ConversationService.js** - Quản lý cuộc trò chuyện
 - Quản lý ngữ cảnh và bộ nhớ
 - Xử lý tương tác người dùng
 - Khả năng ghi nhớ cao
+
+### **ImageService.js** - Xử lý hình ảnh
+- Tích hợp local image generation
+- Theo dõi tiến trình tạo hình ảnh
+- Chức năng hình ảnh độc lập
 
 ### **SystemService.js** - Tiện ích hệ thống
 - Xác thực môi trường và kiểm tra hệ thống
@@ -79,10 +73,10 @@ Lunaby đã được tái cấu trúc hoàn toàn với hệ thống đa nhà cu
 ## Lợi Ích Kiến Trúc
 
 ### **Độ tin cậy cao**
-- Nhiều nhà cung cấp AI với tự động chuyển đổi
-- Hạn chế gặp vấn đề do lỗi từ một vài nhà cung cấp
-- Quản lý quota thông minh
-- Xác thực chất lượng phản hồi
+- Chạy cục bộ mà không phụ thuộc vào API bên ngoài
+- Không bị giới hạn quota từ các nhà cung cấp
+- Kiểm soát hoàn toàn dữ liệu người dùng
+- Hiệu suất ổn định
 
 ### **Dễ bảo trì**
 - Kiến trúc dịch vụ modular
@@ -91,9 +85,9 @@ Lunaby đã được tái cấu trúc hoàn toàn với hệ thống đa nhà cu
 
 ### **Khả năng mở rộng**
 - Các dịch vụ có thể mở rộng dễ dàng
-- Dễ dàng thêm nhà cung cấp AI mới
-- Thêm tính năng đơn giản
+- Dễ dàng thêm tính năng mới
 - Hệ thống logger thay thế console.log
+- Dễ dàng tích hợp các local models khác
 
 ## Đóng Góp
 
@@ -102,9 +96,8 @@ Tôi chào đón mọi đóng góp, báo cáo lỗi và yêu cầu tính năng! 
 ### Hướng Dẫn Phát Triển
 - Sử dụng dịch vụ phù hợp cho từng loại chức năng
 - Tất cả logic AI: `AICore.js`
-- Quản lý nhà cung cấp: `providers.js`
-- Xử lý hình ảnh: `ImageService.js`
 - Xử lý logic cuộc trò chuyện: `ConversationService.js`
+- Xử lý hình ảnh: `ImageService.js`
 - Tiện ích hệ thống: `SystemService.js`
 
 ## Giấy Phép
