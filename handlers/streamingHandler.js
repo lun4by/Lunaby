@@ -37,6 +37,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
     let sentMessage = null;
     let buffer = '';
     let updateCount = 0;
+    let isUpdating = false;
 
     const typingInterval = setInterval(() => {
         channel.sendTyping().catch(() => { });
@@ -68,7 +69,8 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                                 (now - lastUpdate > UPDATE_INTERVAL && fullContent.length >= MIN_CHUNK_SIZE) ||
                                 fullContent.length % 200 === 0;
 
-                            if (shouldUpdate) {
+                            if (shouldUpdate && !isUpdating) {
+                                isUpdating = true;
                                 try {
                                     if (!sentMessage) {
                                         sentMessage = await channel.send(fullContent.length > DISCORD_MAX_LENGTH ? fullContent.substring(0, DISCORD_MAX_LENGTH) : fullContent);
@@ -80,6 +82,8 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                                     lastUpdate = now;
                                 } catch (editError) {
                                     logger.warn('STREAMING', `Failed to update message: ${editError.message}`);
+                                } finally {
+                                    isUpdating = false;
                                 }
                             }
                         }
