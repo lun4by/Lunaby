@@ -41,9 +41,9 @@ async function processXp(message, commandExecuted, execute) {
             .setThumbnail(message.author.displayAvatarURL())
             .setTimestamp();
           
-          await message.channel.send({ embeds: [embed] }).catch(() => {});
+          // await message.channel.send({ embeds: [embed] }).catch(() => {});
         } else {
-          await message.channel.send(`🎉 Chúc mừng ${message.author}! Bạn đã đạt cấp độ ${response.level}!`).catch(() => {});
+          // await message.channel.send(`🎉 Chúc mừng ${message.author}! Bạn đã đạt cấp độ ${response.level}!`).catch(() => {});
         }
       }
     }
@@ -125,11 +125,11 @@ async function handleMentionMessage(message, client) {
 
         logger.info('CHAT', `✓ Xử lý thành công [${message.author.tag}]`);
 
-        if (message.guild) {
-          processXp(message, false, true).catch(err => 
-            logger.error('XP', 'Error processing XP:', err)
-          );
-        }
+        // if (message.guild) {
+        //   processXp(message, false, true).catch(err => 
+        //     logger.error('XP', 'Error processing XP:', err)
+        //   );
+        // }
 
       } catch (error) {
         logger.error('CHAT', `Lỗi khi xử lý tin nhắn từ ${message.author.tag}:`, error);
@@ -146,18 +146,18 @@ async function handleMentionMessage(message, client) {
         
         await message.reply(errorMessage);
         
-        if (message.guild) {
-          processXp(message, false, false).catch(err => 
-            logger.error('XP', 'Error processing XP:', err)
-          );
-        }
+        // if (message.guild) {
+        //   processXp(message, false, false).catch(err => 
+        //     logger.error('XP', 'Error processing XP:', err)
+        //   );
+        // }
       }
     } else {
-      if (message.guild) {
-        processXp(message, false, false).catch(err => 
-          logger.error('XP', 'Error processing XP:', err)
-        );
-      }
+      // if (message.guild) {
+      //   processXp(message, false, false).catch(err => 
+      //     logger.error('XP', 'Error processing XP:', err)
+      //   );
+      // }
     }
   }
 }
