@@ -96,6 +96,10 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         response.data.on('end', async () => {
             clearInterval(typingInterval);
 
+            while (isUpdating) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
             logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
 
             try {
@@ -103,12 +107,14 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                     if (sentMessage) {
                         await sentMessage.edit(fullContent);
                     } else {
-                        sentMessage = await channel.send(fullContent);
+                        await channel.send(fullContent);
                     }
                     resolve(fullContent);
                 } else {
                     if (sentMessage) {
                         await sentMessage.edit(fullContent.substring(0, DISCORD_MAX_LENGTH));
+                    } else {
+                        sentMessage = await channel.send(fullContent.substring(0, DISCORD_MAX_LENGTH));
                     }
 
                     const remaining = fullContent.substring(DISCORD_MAX_LENGTH);
