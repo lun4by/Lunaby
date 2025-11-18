@@ -78,20 +78,14 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                             if (shouldUpdate && !isUpdating) {
                                 isUpdating = true;
                                 try {
-                                    const isRefusal = fullContent.trim().match(/^I'?m sorry,? but I can'?t help with that\.?$/i);
-                                    
-                                    if (!isRefusal) {
-                                        if (!sentMessage) {
-                                            logger.debug('STREAM', `Sending initial message (length: ${fullContent.length})`);
-                                            sentMessage = await channel.send(fullContent.length > DISCORD_MAX_LENGTH ? fullContent.substring(0, DISCORD_MAX_LENGTH) : fullContent);
-                                            logger.debug('STREAM', `Initial message sent, ID: ${sentMessage.id}`);
-                                            updateCount++;
-                                        } else if (fullContent.length <= DISCORD_MAX_LENGTH) {
-                                            await sentMessage.edit(fullContent);
-                                            updateCount++;
-                                        }
-                                        lastUpdate = now;
+                                    if (!sentMessage) {
+                                        sentMessage = await channel.send(fullContent.length > DISCORD_MAX_LENGTH ? fullContent.substring(0, DISCORD_MAX_LENGTH) : fullContent);
+                                        updateCount++;
+                                    } else if (fullContent.length <= DISCORD_MAX_LENGTH) {
+                                        await sentMessage.edit(fullContent);
+                                        updateCount++;
                                     }
+                                    lastUpdate = now;
                                 } catch (editError) {
                                     // Silent fail 
                                 } finally {
@@ -113,27 +107,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
             }
 
             logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
-            
-            const trimmedContent = fullContent.trim();
-            let isRefusal = false;
-            
-            if (trimmedContent === "I'm sorry, but I can't help with that." ||
-                trimmedContent === "I'm sorry, but I can't help with that" ||
-                trimmedContent.match(/^I'?m sorry,? but I can'?t help with that\.?$/i)) {
-                
-                isRefusal = true;
-                fullContent = "Yêu cầu này liên quan đến nội dung vi phạm chính sách, mình hiểu bạn muốn biết nhưng mình không thể giúp với lý do an toàn. 💖";
-                
-                // Delete the old refusal message if it was sent during streaming
-                if (sentMessage) {
-                    try {
-                        await sentMessage.delete();
-                        sentMessage = null;
-                    } catch (err) {
-                        // Can't delete, will edit instead
-                    }
-                }
-            }
 
             try {
                 if (fullContent.length <= DISCORD_MAX_LENGTH) {
