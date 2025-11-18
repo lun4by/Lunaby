@@ -6,6 +6,7 @@ const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const logger = require('../utils/logger.js');
 const guildProfileDB = require('../services/guildprofiledb');
+const { sendStreamingMessage } = require('./streamingHandler');
 
 async function processXp(message, commandExecuted, execute) {
   try {
@@ -122,22 +123,61 @@ async function handleMentionMessage(message, client) {
           return;
         }
 
-        const response = await ConversationService.getCompletion(content, message);
+        // Try streaming response first
+        try {
+          const userId = ConversationService.extractUserId(message);
+          const conversationManager = require('./conversationManager');
+          const prompts = require('../config/prompts');
+          
+          // Load conversation history
+          await conversationManager.loadConversationHistory(userId, prompts.system.main, AICore.getModelName());
+          let messages = conversationManager.getHistory(userId);
+          
+          // Add current user message
+          const enhancedPrompt = `
+            ${prompts.chat.responseStyle}
+            ${messages.length <= 2 ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
+            ${prompts.chat.generalInstructions}
+            ${content}
+          `;
+          
+          await conversationManager.addMessage(userId, 'user', enhancedPrompt);
+          messages = conversationManager.getHistory(userId);
+          
+          // Filter and validate messages
+          const validMessages = messages.filter(msg => msg.role && msg.content && msg.content.trim());
+          
+          // Send streaming message
+          const response = await sendStreamingMessage(message.channel, validMessages, {
+            model: AICore.getModelName()
+          });
+          
+          // Save assistant response to history
+          await conversationManager.addMessage(userId, 'assistant', response);
+          
+          logger.info('CHAT', `✓ Streaming completed [${message.author.tag}]`);
+          
+        } catch (streamError) {
+          logger.warn('CHAT', 'Streaming failed, falling back to non-streaming:', streamError.message);
+          
+          // Fallback to non-streaming
+          const response = await ConversationService.getCompletion(content, message);
 
-        if (!response) {
-          logger.error('CHAT', 'ConversationService trả về null/undefined');
-          await message.reply('Xin lỗi, tôi không thể xử lý tin nhắn của bạn lúc này.');
-          return;
-        }
-
-        // Xử lý response dài
-        if (response.length > 2000) {
-          const chunks = splitMessageRespectWords(response, 2000);
-          for (const chunk of chunks) {
-            await message.reply(chunk);
+          if (!response) {
+            logger.error('CHAT', 'ConversationService trả về null/undefined');
+            await message.reply('Xin lỗi, tôi không thể xử lý tin nhắn của bạn lúc này.');
+            return;
           }
-        } else {
-          await message.reply(response);
+
+          // Xử lý response dài
+          if (response.length > 2000) {
+            const chunks = splitMessageRespectWords(response, 2000);
+            for (const chunk of chunks) {
+              await message.reply(chunk);
+            }
+          } else {
+            await message.reply(response);
+          }
         }
 
         logger.info('CHAT', `✓ Xử lý thành công [${message.author.tag}]`);
