@@ -37,6 +37,7 @@ class AICore {
           model: model,
           messages: messages,
           max_tokens: config.max_tokens || 2048,
+          stream: true,
           ...config,
         },
         {
@@ -44,30 +45,67 @@ class AICore {
             "Authorization": `Bearer ${this.lunabyApiKey}`,
             "Content-Type": "application/json"
           },
-          timeout: 60000
+          timeout: 120000,
+          responseType: 'stream'
         }
       );
 
-      
-      const tokenUsage = response.data.usage || {
+      // Parse streaming response
+      let fullContent = '';
+      let tokenUsage = {
         prompt_tokens: 0,
         completion_tokens: 0,
         total_tokens: 0
       };
 
-      if (config.modelType === 'image' && response.data.data) {
-        logger.info("AI_CORE", "Processing image generation response");
-        return {
-          content: response.data.data[0].b64_json,
-          revised_prompt: response.data.data[0].revised_prompt,
-          usage: tokenUsage
-        };
-      }
+      return new Promise((resolve, reject) => {
+        response.data.on('data', (chunk) => {
+          const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              
+              if (data === '[DONE]') {
+                continue;
+              }
+              
+              try {
+                const parsed = JSON.parse(data);
+                
+                if (parsed.choices && parsed.choices[0]?.delta?.content) {
+                  fullContent += parsed.choices[0].delta.content;
+                }
+                
+                if (parsed.usage) {
+                  tokenUsage = parsed.usage;
+                }
+              } catch (e) {
+                logger.warn("AI_CORE", "Failed to parse stream chunk:", e.message);
+              }
+            }
+          }
+        });
 
-      return {
-        content: response.data.choices[0].message.content,
-        usage: tokenUsage
-      };
+        response.data.on('end', () => {
+          if (config.modelType === 'image') {
+            logger.info("AI_CORE", "Processing image generation response");
+            resolve({
+              content: fullContent,
+              usage: tokenUsage
+            });
+          } else {
+            resolve({
+              content: fullContent,
+              usage: tokenUsage
+            });
+          }
+        });
+
+        response.data.on('error', (err) => {
+          reject(err);
+        });
+      });
     } catch (error) {
       let errorMessage = "Đã xảy ra lỗi khi xử lý yêu cầu";
       let errorDetails = error.message;
