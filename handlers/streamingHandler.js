@@ -78,16 +78,20 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                             if (shouldUpdate && !isUpdating) {
                                 isUpdating = true;
                                 try {
-                                    if (!sentMessage) {
-                                        logger.debug('STREAM', `Sending initial message (length: ${fullContent.length})`);
-                                        sentMessage = await channel.send(fullContent.length > DISCORD_MAX_LENGTH ? fullContent.substring(0, DISCORD_MAX_LENGTH) : fullContent);
-                                        logger.debug('STREAM', `Initial message sent, ID: ${sentMessage.id}`);
-                                        updateCount++;
-                                    } else if (fullContent.length <= DISCORD_MAX_LENGTH) {
-                                        await sentMessage.edit(fullContent);
-                                        updateCount++;
+                                    const isRefusal = fullContent.trim().match(/^I'?m sorry,? but I can'?t help with that\.?$/i);
+                                    
+                                    if (!isRefusal) {
+                                        if (!sentMessage) {
+                                            logger.debug('STREAM', `Sending initial message (length: ${fullContent.length})`);
+                                            sentMessage = await channel.send(fullContent.length > DISCORD_MAX_LENGTH ? fullContent.substring(0, DISCORD_MAX_LENGTH) : fullContent);
+                                            logger.debug('STREAM', `Initial message sent, ID: ${sentMessage.id}`);
+                                            updateCount++;
+                                        } else if (fullContent.length <= DISCORD_MAX_LENGTH) {
+                                            await sentMessage.edit(fullContent);
+                                            updateCount++;
+                                        }
+                                        lastUpdate = now;
                                     }
-                                    lastUpdate = now;
                                 } catch (editError) {
                                     // Silent fail 
                                 } finally {
@@ -109,6 +113,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
             }
 
             logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
+            
             const trimmedContent = fullContent.trim();
             
             if (trimmedContent === "I'm sorry, but I can't help with that." ||
