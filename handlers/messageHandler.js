@@ -216,7 +216,7 @@ async function handleCodeRequest(message, prompt) {
     }
 
     if (formattedResponse.length > 2000) {
-      const chunks = splitMessage(formattedResponse, 2000);
+      const chunks = splitMessageRespectWords(formattedResponse, 2000);
       for (const chunk of chunks) {
         await message.reply(chunk);
       }
