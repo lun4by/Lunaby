@@ -1,5 +1,6 @@
 const axios = require('axios');
 const logger = require('../utils/logger.js');
+const { splitMessageRespectWords } = require('./messageHandler');
 
 const UPDATE_INTERVAL = 800;
 const MIN_CHUNK_SIZE = 30;
@@ -34,7 +35,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
 
   let fullContent = '';
   let lastUpdate = Date.now();
-  let sentMessage = null;
+  let sentMessages = [];
   let buffer = '';
   let updateCount = 0;
 
@@ -70,16 +71,18 @@ async function sendStreamingMessage(channel, messages, config = {}) {
 
               if (shouldUpdate) {
                 try {
-                  if (!sentMessage) {
-                    const displayContent = fullContent.length > DISCORD_MAX_LENGTH 
-                      ? fullContent.substring(0, DISCORD_MAX_LENGTH - 50) + '\n\n*[Đang tiếp tục...]*'
-                      : fullContent;
-                    sentMessage = await channel.send(displayContent);
+                  const messageIndex = Math.floor(fullContent.length / DISCORD_MAX_LENGTH);
+                  const startPos = messageIndex * DISCORD_MAX_LENGTH;
+                  const currentChunk = fullContent.substring(startPos, startPos + DISCORD_MAX_LENGTH);
+
+                  if (!sentMessages[messageIndex]) {
+                    sentMessages[messageIndex] = await channel.send(currentChunk);
                     updateCount++;
-                  } else if (fullContent.length <= DISCORD_MAX_LENGTH) {
-                    await sentMessage.edit(fullContent);
+                  } else {
+                    await sentMessages[messageIndex].edit(currentChunk);
                     updateCount++;
                   }
+                  
                   lastUpdate = now;
                 } catch (editError) {
                   logger.warn('STREAMING', `Failed to update message: ${editError.message}`);
@@ -96,30 +99,20 @@ async function sendStreamingMessage(channel, messages, config = {}) {
     response.data.on('end', async () => {
       clearInterval(typingInterval);
       
-      logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
+      logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}, Messages: ${sentMessages.length}`);
 
       try {
-        if (fullContent.length <= DISCORD_MAX_LENGTH) {
-          if (sentMessage) {
-            await sentMessage.edit(fullContent);
+        const chunks = splitMessageRespectWords(fullContent, DISCORD_MAX_LENGTH);
+        
+        for (let i = 0; i < chunks.length; i++) {
+          if (sentMessages[i]) {
+            await sentMessages[i].edit(chunks[i]);
           } else {
-            sentMessage = await channel.send(fullContent);
+            sentMessages[i] = await channel.send(chunks[i]);
           }
-          resolve(fullContent);
-        } else {
-          if (sentMessage) {
-            await sentMessage.edit(fullContent.substring(0, DISCORD_MAX_LENGTH));
-          }
-          
-          const remaining = fullContent.substring(DISCORD_MAX_LENGTH);
-          const chunks = splitByLength(remaining, DISCORD_MAX_LENGTH);
-          
-          for (const chunk of chunks) {
-            await channel.send(chunk);
-          }
-          
-          resolve(fullContent);
         }
+        
+        resolve(fullContent);
       } catch (error) {
         logger.error('STREAMING', `Error finalizing message: ${error.message}`);
         reject(error);
@@ -134,36 +127,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
   });
 }
 
-function splitByLength(text, maxLength) {
-  const chunks = [];
-  let startPos = 0;
-
-  while (startPos < text.length) {
-    if (startPos + maxLength >= text.length) {
-      chunks.push(text.substring(startPos));
-      break;
-    }
-
-    let endPos = startPos + maxLength;
-    
-    while (endPos > startPos && text[endPos] !== ' ' && text[endPos] !== '\n') {
-      endPos--;
-    }
-
-    if (endPos === startPos) {
-      endPos = startPos + maxLength;
-    } else {
-      endPos++;
-    }
-
-    chunks.push(text.substring(startPos, endPos));
-    startPos = endPos;
-  }
-
-  return chunks;
-}
-
 module.exports = {
-  sendStreamingMessage,
-  splitByLength
+  sendStreamingMessage
 };

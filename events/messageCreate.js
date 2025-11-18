@@ -7,8 +7,9 @@ const logger = require("../utils/logger.js");
 function setupMessageCreateEvent(client) {
   client.on(Events.MessageCreate, async (message) => {
     try {
-      // Xử lý XP trước
-      if (message.guild && !message.author.bot) {
+      if (message.author.bot) return;
+
+      if (message.guild) {
         const xpResult = await XPService.addXP(message);
         
         if (xpResult && xpResult.leveledUp) {
