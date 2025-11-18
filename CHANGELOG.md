@@ -14,22 +14,20 @@
 
 ### ⚙️ Changed
  - Chat & Code: streaming giờ là luồng mặc định, kèm fallback non-stream khi cần
- - Search & Image: rõ ràng sử dụng endpoint non-stream (tạo ảnh và web search vẫn là non-stream)
+ - Search & Image: sử dụng endpoint non-stream (tạo ảnh và web search vẫn là non-stream)
  - Prompts: `config/prompts.js` được chuyển sang tiếng Anh, tối ưu `thinking` và `memoryExtraction`
- - Logging: in tiêu đề console + `console.clear()` khi khởi động; logger có màu, sạch hơn; loại bỏ emoji/icon khỏi thông điệp log
- - Khởi tạo khi require: nhiều lệnh `require()` cho DB/dịch vụ đã được dời vào hàm để header in trước khi logs DB xuất hiện
+ - Logging: in tiêu đề console + `console.clear()` khi khởi động; logger có màu, sạch hơn
 
 ### 🛠️ Fixed
-- Đã xử lý lỗi 408/timeout trên Heroku bằng cách dùng streaming cho các yêu cầu lâu
+- Đã xử lý lỗi 408/timeout trên Lunaby bằng cách dùng streaming cho các yêu cầu lâu
 - Sửa lỗi xử lý buffer SSE để tái tạo các delta JSON khi bị tách qua nhiều chunk TCP
 - Loại bỏ các tin nhắn assistant rỗng và gộp các tin nhắn liên tiếp cùng vai trò để thỏa mãn xác thực của nhà cung cấp
 
 ### 🧹 Removed / Cleaned
 - Đã loại bỏ prompt `analysis` cũ và hàm `analyzeContentWithAI()` (không dùng)
-- Đã xóa JSDoc và comment nội tuyến khỏi các file production để giảm footprint runtime
 
 ### ⚠️ Migration / Notes
-- Các cập nhật streaming được gom lẻ để tôn trọng giới hạn chỉnh sửa của Discord (khoảng 800ms giữa các cập nhật)
+- Các tin nhắn streaming được tránh giới hạn chỉnh sửa của Discord (khoảng 800ms giữa các cập nhật)
 - Nếu bạn phụ thuộc vào hành vi sync khi `require` trước đây cho các module DB, hãy cập nhật import để gọi dịch vụ một cách rõ ràng sau `client.ready`
 
 ---
