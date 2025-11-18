@@ -4,13 +4,13 @@ const path = require("path");
 const loggerConfig = require("../config/loggerConfig.js");
 
 const LOG_LEVELS = {
-  debug: { priority: 0, color: "\x1b[36m" },
-  info: { priority: 1, color: "\x1b[32m" },
-  warn: { priority: 2, color: "\x1b[33m" },
-  error: { priority: 3, color: "\x1b[31m" },
+  debug: { priority: 0, color: '\x1b[36m' },
+  info: { priority: 1, color: '\x1b[32m' },
+  warn: { priority: 2, color: '\x1b[33m' },
+  error: { priority: 3, color: '\x1b[31m' },
 };
 
-const RESET_COLOR = "\x1b[0m";
+const RESET_COLOR = '\x1b[0m';
 
 let logStream = null;
 

@@ -4,7 +4,6 @@ const AICore = require('../services/AICore');
 const experience = require('../utils/xp');
 const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
-const logger = require('../utils/logger.js');
 const guildProfileDB = require('../services/guildprofiledb');
 const { sendStreamingMessage } = require('./streamingHandler');
 
@@ -64,8 +63,6 @@ async function handleMentionMessage(message, client) {
     if (!hasEveryoneOrRoleMention) {
       const typingPromise = message.channel.sendTyping().catch(() => { });
 
-      logger.info('CHAT', `Xử lý tin nhắn từ ${message.author.tag}`);
-
       const hasConsented = await consentService.hasUserConsented(message.author.id);
 
       if (!hasConsented) {
@@ -96,8 +93,6 @@ async function handleMentionMessage(message, client) {
         
         if (requestType.type === 'image') {
           const imagePrompt = requestType.match[2];
-          const commandUsed = requestType.match[1];
-          logger.info('CHAT', `Image command detected: "${commandUsed}". Prompt: ${imagePrompt}`);
           await message.reply(`Để tạo hình ảnh, vui lòng sử dụng lệnh /image với nội dung bạn muốn tạo. Ví dụ:\n/image ${imagePrompt}`);
           return;
         }
@@ -149,8 +144,6 @@ async function handleMentionMessage(message, client) {
           
           await conversationManager.addMessage(userId, 'assistant', response);
           
-          logger.info('CHAT', `✓ Streaming completed [${message.author.tag}]`);
-          
         } catch (streamError) {
           logger.warn('CHAT', 'Streaming failed, falling back to non-streaming:', streamError.message);
           
@@ -171,8 +164,6 @@ async function handleMentionMessage(message, client) {
             await message.reply(response);
           }
         }
-
-        logger.info('CHAT', `✓ Xử lý thành công [${message.author.tag}]`);
 
         // if (message.guild) {
         //   processXp(message, false, true).catch(err => 
@@ -215,24 +206,60 @@ async function handleCodeRequest(message, prompt) {
   await message.channel.sendTyping();
 
   try {
-    const result = await AICore.getCodeCompletion(prompt, message);
-    let formattedResponse = result.content || result;
-
+    const content = prompt.replace(/<@!?\d+>/g, '').trim();
+    const userId = ConversationService.extractUserId(message);
+    const conversationManager = require('./conversationManager');
+    const prompts = require('../config/prompts');
+    
+    await conversationManager.loadConversationHistory(userId, prompts.system.main, AICore.getModelName());
+    let messages = conversationManager.getHistory(userId);
+    
+    const enhancedPrompt = `
+      ${prompts.chat.responseStyle}
+      ${messages.length <= 2 ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
+      ${prompts.chat.generalInstructions}
+      Code request: ${content}
+    `;
+    
+    await conversationManager.addMessage(userId, 'user', enhancedPrompt);
+    messages = conversationManager.getHistory(userId);
+    
+    const validMessages = messages.filter(msg => msg.role && msg.content && msg.content.trim());
+    
+    const response = await sendStreamingMessage(message.channel, validMessages, {
+      model: AICore.getModelName()
+    });
+    
+    let formattedResponse = response;
     if (!formattedResponse.includes('```')) {
       formattedResponse = formatCodeResponse(formattedResponse);
     }
+    
+    await conversationManager.addMessage(userId, 'assistant', response);
+    
+  } catch (streamError) {
+    logger.warn('CODE', 'Code streaming failed, falling back to non-streaming:', streamError.message);
+    
+    try {
+      const result = await AICore.getCodeCompletion(prompt, message);
+      let formattedResponse = result.content || result;
 
-    if (formattedResponse.length > 2000) {
-      const chunks = splitMessageRespectWords(formattedResponse, 2000);
-      for (const chunk of chunks) {
-        await message.reply(chunk);
+      if (!formattedResponse.includes('```')) {
+        formattedResponse = formatCodeResponse(formattedResponse);
       }
-    } else {
-      await message.reply(formattedResponse);
+
+      if (formattedResponse.length > 2000) {
+        const chunks = splitMessageRespectWords(formattedResponse, 2000);
+        for (const chunk of chunks) {
+          await message.reply(chunk);
+        }
+      } else {
+        await message.reply(formattedResponse);
+      }
+    } catch (error) {
+      logger.error('CODE', `Lỗi khi nhận mã cho ${message.author.tag}:`, error);
+      await message.reply('Xin lỗi, tôi gặp khó khăn khi tạo mã đó.');
     }
-  } catch (error) {
-    logger.error('CODE', `Lỗi khi nhận mã cho ${message.author.tag}:`, error);
-    await message.reply('Xin lỗi, tôi gặp khó khăn khi tạo mã đó.');
   }
 }
 
