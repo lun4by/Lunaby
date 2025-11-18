@@ -96,11 +96,11 @@ class AICore {
         let buffer = '';
         let chunkCount = 0;
         let dataEventCount = 0;
+        let currentEvent = '';
 
         response.data.on('data', (chunk) => {
           chunkCount++;
           const chunkStr = chunk.toString();
-          logger.debug("AI_CORE", `Received chunk ${chunkCount}: ${chunkStr.substring(0, 200)}`);
           
           buffer += chunkStr;
           const lines = buffer.split('\n');
@@ -108,11 +108,21 @@ class AICore {
           
           for (const line of lines) {
             const trimmed = line.trim();
-            if (!trimmed) continue;
+            if (!trimmed) {
+              currentEvent = '';
+              continue;
+            }
 
-            if (trimmed.startsWith('data: ')) {
+            // Parse SSE event type
+            if (trimmed.startsWith('event:')) {
+              currentEvent = trimmed.slice(6).trim();
+              continue;
+            }
+
+            // Parse SSE data (with or without space after colon)
+            if (trimmed.startsWith('data:')) {
               dataEventCount++;
-              const data = trimmed.slice(6).trim();
+              const data = trimmed.slice(5).trim(); // Remove 'data:' and trim
 
               if (data === '[DONE]') {
                 logger.info("AI_CORE", "Received [DONE] signal");
@@ -121,25 +131,20 @@ class AICore {
               
               try {
                 const parsed = JSON.parse(data);
-                logger.debug("AI_CORE", `Parsed SSE data: ${JSON.stringify(parsed).substring(0, 200)}`);
 
                 if (parsed.choices && parsed.choices[0]) {
                   const delta = parsed.choices[0].delta;
                   if (delta && delta.content) {
                     fullContent += delta.content;
-                    logger.debug("AI_CORE", `Added content chunk, total length: ${fullContent.length}`);
                   }
                 }
 
                 if (parsed.usage) {
                   tokenUsage = parsed.usage;
-                  logger.debug("AI_CORE", `Received usage: ${JSON.stringify(tokenUsage)}`);
                 }
               } catch (e) {
-                logger.warn("AI_CORE", `Parse error: ${e.message}. Data: ${data.substring(0, 100)}`);
+                logger.debug("AI_CORE", `Parse error (might be incomplete JSON): ${e.message}`);
               }
-            } else {
-              logger.debug("AI_CORE", `Non-data line: ${trimmed.substring(0, 100)}`);
             }
           }
         });
