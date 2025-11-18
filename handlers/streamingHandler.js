@@ -71,7 +71,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                         }
                         
                         // Log safety-related responses
-                        if (content && content.includes("can't help") || content.includes("sorry")) {
+                        if (content && (content.includes("can't help") || content.includes("sorry"))) {
                             logger.warn('STREAM', `Safety filter detected. Content: "${content}"`);
                             logger.warn('STREAM', `User messages (last 3): ${JSON.stringify(messages.slice(-3))}`);
                         }
