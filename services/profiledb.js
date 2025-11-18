@@ -85,8 +85,24 @@ const getProfile = async (userId) => {
   let profile = await collection.findOne({ _id: userId });
 
   if (!profile) {
-    profile = createDefaultProfile(userId);
-    await collection.insertOne(profile);
+    try {
+      const result = await collection.updateOne(
+        { _id: userId },
+        { $setOnInsert: createProfileStructure(userId) },
+        { upsert: true }
+      );
+      
+      if (result.upsertedId || result.matchedCount > 0) {
+        logger.info("SYSTEM", `Tạo profile mới cho người dùng: ${userId}`);
+        userProfileCache.add(userId);
+      }
+    } catch (error) {
+      if (!error.message.includes('duplicate key')) {
+        logger.error("DATABASE", `Lỗi khi tạo profile cho ${userId}:`, error);
+      }
+    }
+    
+    profile = await collection.findOne({ _id: userId });
   } else {
     userProfileCache.add(userId);
   }
