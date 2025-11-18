@@ -1,5 +1,4 @@
 const { REST, Routes } = require('discord.js');
-const mongoClient = require('../services/mongoClient.js');
 const initSystem = require('../services/initSystem.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
 const logger = require('../utils/logger.js');
@@ -7,6 +6,7 @@ const logger = require('../utils/logger.js');
 
 async function storeGuildInDB(guild) {
   try {
+    const mongoClient = require('../services/mongoClient.js');
     const db = await mongoClient.getDbSafe();
 
     const guildData = {
@@ -49,6 +49,7 @@ async function storeGuildInDB(guild) {
 
 async function removeGuildFromDB(guildId) {
   try {
+    const mongoClient = require('../services/mongoClient.js');
     const db = await mongoClient.getDbSafe();
 
     await db.collection('guilds').deleteOne({ guildId: guildId });
@@ -61,6 +62,7 @@ async function removeGuildFromDB(guildId) {
 
 async function getGuildFromDB(guildId) {
   try {
+    const mongoClient = require('../services/mongoClient.js');
     const db = await mongoClient.getDbSafe();
 
     const guildData = await db.collection('guilds').findOne({ guildId: guildId });
@@ -75,6 +77,7 @@ async function getGuildFromDB(guildId) {
 
 async function updateGuildSettings(guildId, settings) {
   try {
+    const mongoClient = require('../services/mongoClient.js');
     const db = await mongoClient.getDbSafe();
 
     await db.collection('guilds').updateOne(
@@ -247,6 +250,7 @@ async function syncAllGuilds(client, commands = null) {
   logger.info('GUILD', 'ĐỒNG BỘ TẤT CẢ GUILDS');
 
   try {
+    const mongoClient = require('../services/mongoClient.js');
     logger.info('GUILD', 'Đang chờ MongoDB sẵn sàng...');
     await mongoClient.getDbSafe();
     logger.info('GUILD', 'MongoDB đã sẵn sàng');
