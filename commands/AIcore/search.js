@@ -27,9 +27,8 @@ module.exports = {
         throw new Error('Perplexity API Key chưa được cấu hình');
       }
 
-      const result = await WebSearchService.searchWithProgress(
+      const result = await WebSearchService.search(
         query,
-        interaction,
         { 
           model: 'sonar',
           systemPrompt: prompts.system.main
