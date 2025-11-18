@@ -1,6 +1,5 @@
 const axios = require('axios');
 const logger = require('../utils/logger.js');
-const { splitMessageRespectWords } = require('./messageHandler');
 
 const UPDATE_INTERVAL = 800;
 const MIN_CHUNK_SIZE = 30;
@@ -35,7 +34,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
 
     let fullContent = '';
     let lastUpdate = Date.now();
-    let sentMessages = [];
+    let sentMessage = null;
     let buffer = '';
     let updateCount = 0;
 
@@ -71,18 +70,13 @@ async function sendStreamingMessage(channel, messages, config = {}) {
 
                             if (shouldUpdate) {
                                 try {
-                                    const messageIndex = Math.floor(fullContent.length / DISCORD_MAX_LENGTH);
-                                    const startPos = messageIndex * DISCORD_MAX_LENGTH;
-                                    const currentChunk = fullContent.substring(startPos, startPos + DISCORD_MAX_LENGTH);
-
-                                    if (!sentMessages[messageIndex]) {
-                                        sentMessages[messageIndex] = await channel.send(currentChunk);
+                                    if (!sentMessage) {
+                                        sentMessage = await channel.send(fullContent.length > DISCORD_MAX_LENGTH ? fullContent.substring(0, DISCORD_MAX_LENGTH) : fullContent);
                                         updateCount++;
-                                    } else {
-                                        await sentMessages[messageIndex].edit(currentChunk);
+                                    } else if (fullContent.length <= DISCORD_MAX_LENGTH) {
+                                        await sentMessage.edit(fullContent);
                                         updateCount++;
                                     }
-
                                     lastUpdate = now;
                                 } catch (editError) {
                                     logger.warn('STREAMING', `Failed to update message: ${editError.message}`);
@@ -90,7 +84,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                             }
                         }
                     } catch (e) {
-                        // Ignore parse errors
                     }
                 }
             }
@@ -99,20 +92,30 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         response.data.on('end', async () => {
             clearInterval(typingInterval);
 
-            logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}, Messages: ${sentMessages.length}`);
+            logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
 
             try {
-                const chunks = splitMessageRespectWords(fullContent, DISCORD_MAX_LENGTH);
-
-                for (let i = 0; i < chunks.length; i++) {
-                    if (sentMessages[i]) {
-                        await sentMessages[i].edit(chunks[i]);
+                if (fullContent.length <= DISCORD_MAX_LENGTH) {
+                    if (sentMessage) {
+                        await sentMessage.edit(fullContent);
                     } else {
-                        sentMessages[i] = await channel.send(chunks[i]);
+                        sentMessage = await channel.send(fullContent);
                     }
-                }
+                    resolve(fullContent);
+                } else {
+                    if (sentMessage) {
+                        await sentMessage.edit(fullContent.substring(0, DISCORD_MAX_LENGTH));
+                    }
 
-                resolve(fullContent);
+                    const remaining = fullContent.substring(DISCORD_MAX_LENGTH);
+                    const chunks = splitByLength(remaining, DISCORD_MAX_LENGTH);
+
+                    for (const chunk of chunks) {
+                        await channel.send(chunk);
+                    }
+
+                    resolve(fullContent);
+                }
             } catch (error) {
                 logger.error('STREAMING', `Error finalizing message: ${error.message}`);
                 reject(error);
@@ -127,6 +130,36 @@ async function sendStreamingMessage(channel, messages, config = {}) {
     });
 }
 
+function splitByLength(text, maxLength) {
+    const chunks = [];
+    let startPos = 0;
+
+    while (startPos < text.length) {
+        if (startPos + maxLength >= text.length) {
+            chunks.push(text.substring(startPos));
+            break;
+        }
+
+        let endPos = startPos + maxLength;
+
+        while (endPos > startPos && text[endPos] !== ' ' && text[endPos] !== '\n') {
+            endPos--;
+        }
+
+        if (endPos === startPos) {
+            endPos = startPos + maxLength;
+        } else {
+            endPos++;
+        }
+
+        chunks.push(text.substring(startPos, endPos));
+        startPos = endPos;
+    }
+
+    return chunks;
+}
+
 module.exports = {
-    sendStreamingMessage
+    sendStreamingMessage,
+    splitByLength
 };
