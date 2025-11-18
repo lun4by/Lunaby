@@ -1,17 +1,10 @@
 const axios = require('axios');
 const logger = require('../utils/logger.js');
 
-const UPDATE_INTERVAL = 800; // Update every 800ms to avoid Discord rate limit (5 edits/5s)
-const MIN_CHUNK_SIZE = 30; // Minimum characters before first update
+const UPDATE_INTERVAL = 800;
+const MIN_CHUNK_SIZE = 30;
 const DISCORD_MAX_LENGTH = 2000;
 
-/**
- * Send streaming message to Discord channel with real-time updates
- * @param {Object} channel - Discord channel object
- * @param {Array} messages - Chat messages array
- * @param {Object} config - Configuration options
- * @returns {Promise<string>} - Complete message content
- */
 async function sendStreamingMessage(channel, messages, config = {}) {
   const apiUrl = process.env.LUNABY_BASE_URL || 'https://api.lunie.dev/v1';
   const apiKey = process.env.LUNABY_API_KEY;
@@ -45,7 +38,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
   let buffer = '';
   let updateCount = 0;
 
-  // Start typing indicator
   const typingInterval = setInterval(() => {
     channel.sendTyping().catch(() => {});
   }, 5000);
@@ -74,19 +66,17 @@ async function sendStreamingMessage(channel, messages, config = {}) {
               const now = Date.now();
               const shouldUpdate = 
                 (now - lastUpdate > UPDATE_INTERVAL && fullContent.length >= MIN_CHUNK_SIZE) ||
-                fullContent.length % 200 === 0; // Also update every 200 chars
+                fullContent.length % 200 === 0;
 
               if (shouldUpdate) {
                 try {
                   if (!sentMessage) {
-                    // First message - send it
                     const displayContent = fullContent.length > DISCORD_MAX_LENGTH 
                       ? fullContent.substring(0, DISCORD_MAX_LENGTH - 50) + '\n\n*[Đang tiếp tục...]*'
                       : fullContent;
                     sentMessage = await channel.send(displayContent);
                     updateCount++;
                   } else if (fullContent.length <= DISCORD_MAX_LENGTH) {
-                    // Update existing message if within Discord limit
                     await sentMessage.edit(fullContent);
                     updateCount++;
                   }
@@ -97,7 +87,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
               }
             }
           } catch (e) {
-            // Ignore parse errors (incomplete JSON)
+            // Ignore parse errors
           }
         }
       }
@@ -109,7 +99,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
       logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
 
       try {
-        // Final update with complete content
         if (fullContent.length <= DISCORD_MAX_LENGTH) {
           if (sentMessage) {
             await sentMessage.edit(fullContent);
@@ -118,12 +107,10 @@ async function sendStreamingMessage(channel, messages, config = {}) {
           }
           resolve(fullContent);
         } else {
-          // Content too long - split into multiple messages
           if (sentMessage) {
             await sentMessage.edit(fullContent.substring(0, DISCORD_MAX_LENGTH));
           }
           
-          // Send remaining content in new messages
           const remaining = fullContent.substring(DISCORD_MAX_LENGTH);
           const chunks = splitByLength(remaining, DISCORD_MAX_LENGTH);
           
@@ -147,9 +134,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
   });
 }
 
-/**
- * Split text into chunks respecting word boundaries
- */
 function splitByLength(text, maxLength) {
   const chunks = [];
   let startPos = 0;
@@ -162,7 +146,6 @@ function splitByLength(text, maxLength) {
 
     let endPos = startPos + maxLength;
     
-    // Find nearest word boundary
     while (endPos > startPos && text[endPos] !== ' ' && text[endPos] !== '\n') {
       endPos--;
     }

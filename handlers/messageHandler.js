@@ -123,17 +123,14 @@ async function handleMentionMessage(message, client) {
           return;
         }
 
-        // Try streaming response first
         try {
           const userId = ConversationService.extractUserId(message);
           const conversationManager = require('./conversationManager');
           const prompts = require('../config/prompts');
           
-          // Load conversation history
           await conversationManager.loadConversationHistory(userId, prompts.system.main, AICore.getModelName());
           let messages = conversationManager.getHistory(userId);
           
-          // Add current user message
           const enhancedPrompt = `
             ${prompts.chat.responseStyle}
             ${messages.length <= 2 ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
@@ -144,15 +141,12 @@ async function handleMentionMessage(message, client) {
           await conversationManager.addMessage(userId, 'user', enhancedPrompt);
           messages = conversationManager.getHistory(userId);
           
-          // Filter and validate messages
           const validMessages = messages.filter(msg => msg.role && msg.content && msg.content.trim());
           
-          // Send streaming message
           const response = await sendStreamingMessage(message.channel, validMessages, {
             model: AICore.getModelName()
           });
           
-          // Save assistant response to history
           await conversationManager.addMessage(userId, 'assistant', response);
           
           logger.info('CHAT', `✓ Streaming completed [${message.author.tag}]`);
@@ -160,7 +154,6 @@ async function handleMentionMessage(message, client) {
         } catch (streamError) {
           logger.warn('CHAT', 'Streaming failed, falling back to non-streaming:', streamError.message);
           
-          // Fallback to non-streaming
           const response = await ConversationService.getCompletion(content, message);
 
           if (!response) {
@@ -169,7 +162,6 @@ async function handleMentionMessage(message, client) {
             return;
           }
 
-          // Xử lý response dài
           if (response.length > 2000) {
             const chunks = splitMessageRespectWords(response, 2000);
             for (const chunk of chunks) {
