@@ -163,10 +163,16 @@ function buildHelpEmbed(category, visibleCategories, commandsPath) {
 	const folderPath = path.join(commandsPath, category);
 	const commandFiles = fs.readdirSync(folderPath).filter((file) => file.endsWith('.js'));
 
-	for (const file of commandFiles) {
+	const commandList = commandFiles.map((file) => {
 		const command = require(path.join(folderPath, file));
-		embed.addFields(formatCommandDetails(command));
-	}
+		const description = command.data.description || 'Không có mô tả';
+		return `/${command.data.name} : ${description}`;
+	}).join('\n');
+
+	embed.addFields({
+		name: '\u200B',
+		value: `\`\`\`${commandList || 'Không có lệnh nào'}\`\`\``,
+	});
 
 	return embed;
 }
@@ -179,22 +185,10 @@ function formatCommandSummary(commandModule) {
 function formatCommandDetails(commandModule) {
 	const description = commandModule.data.description || 'Không có mô tả';
 
-	let optionsInfo = '';
-	if (commandModule.data.options && commandModule.data.options.length > 0) {
-		optionsInfo = commandModule.data.options.map((option) => {
-			const optionDescription = option.description || 'Không có mô tả';
-			const requiredLabel = option.required ? '(Bắt buộc)' : '(Tùy chọn)';
-
-			return `- \`${option.name}\`: ${optionDescription} ${requiredLabel}`;
-		}).join('\n');
-	}
-
 	return {
 		name: `/${commandModule.data.name}`,
-		value: [
-			description,
-			optionsInfo || 'Không có tùy chọn',
-		].join('\n'),
+		value: `\`\`\`${description}\`\`\``,
+		inline: false,
 	};
 }
 

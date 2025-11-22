@@ -8,7 +8,8 @@
     "group": "AIcore",
     "description": "Vẽ một hình ảnh từ ý tưởng của bạn",
     "parameters": [
-      "Mô tả bức tranh bạn muốn mình tạo (bắt buộc)"
+      "Mô tả bức tranh bạn muốn mình tạo (bắt buộc)",
+      "Tỷ lệ khung hình (tùy chọn) - Lựa chọn: 1:1 (Vuông), 16:9 (Ngang), 9:16 (Dọc), 4:3 (Ngang tiêu chuẩn), 3:4 (Dọc tiêu chuẩn), 21:9 (Siêu rộng), 9:21 (Siêu dọc)"
     ],
     "examples": [
       "/image",
@@ -21,16 +22,44 @@
     "cooldown": null
   },
   {
-    "name": "reset",
+    "name": "memory",
     "aliases": [],
     "clientPermissions": [
       "EMBED_LINKS"
     ],
     "group": "AIcore",
-    "description": "Xóa lịch sử trò chuyện của chúng ta",
-    "parameters": [],
+    "description": "Xem và quản lý trí nhớ AI của bạn",
+    "parameters": [
+      "Xem tóm tắt trí nhớ của bạn (tùy chọn)",
+      "Thêm một trí nhớ mới (tùy chọn)",
+      "Xóa toàn bộ trí nhớ của bạn (tùy chọn)",
+      "Cài đặt quyền riêng tư (tùy chọn)",
+      "Cập nhật thông tin cá nhân (tùy chọn)",
+      "Xóa lịch sử trò chuyện của chúng ta (tùy chọn)"
+    ],
     "examples": [
-      "/reset"
+      "/memory"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "search",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "AIcore",
+    "description": "Tìm kiếm thông tin trực tuyến",
+    "parameters": [
+      "Nội dung cần tìm kiếm (bắt buộc)"
+    ],
+    "examples": [
+      "/search",
+      "/search <query>"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
@@ -60,34 +89,6 @@
     "cooldown": null
   },
   {
-    "name": "memory",
-    "aliases": [],
-    "clientPermissions": [
-      "EMBED_LINKS"
-    ],
-    "group": "AIcore",
-    "description": "Quản lý trí nhớ AI của bạn - xem, thêm, và cập nhật thông tin cá nhân",
-    "parameters": [
-      "view - Xem tóm tắt trí nhớ",
-      "add - Thêm trí nhớ mới",
-      "update - Cập nhật thông tin cá nhân",
-      "privacy - Cài đặt quyền riêng tư",
-      "clear - Xóa toàn bộ trí nhớ"
-    ],
-    "examples": [
-      "/memory view",
-      "/memory add content:\"Tôi thích anime\" category:preference importance:8",
-      "/memory update name:\"John\" age:25",
-      "/memory privacy allow_memory:true",
-      "/memory clear"
-    ],
-    "guildOnly": false,
-    "requiresDatabase": true,
-    "rankcommand": false,
-    "nsfw": false,
-    "cooldown": 5
-  },
-  {
     "name": "about",
     "aliases": [],
     "clientPermissions": [
@@ -98,6 +99,24 @@
     "parameters": [],
     "examples": [
       "/about"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "cyrene",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "Core",
+    "description": "Giới thiệu Cyrene - Nhân vật trong Honkai Star Rail",
+    "parameters": [],
+    "examples": [
+      "/cyrene"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
@@ -124,6 +143,24 @@
     "cooldown": null
   },
   {
+    "name": "lunaby",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "Core",
+    "description": "Giới thiệu về VTuber Lunaby",
+    "parameters": [],
+    "examples": [
+      "/lunaby"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
     "name": "ping",
     "aliases": [],
     "clientPermissions": [
@@ -134,27 +171,6 @@
     "parameters": [],
     "examples": [
       "/ping"
-    ],
-    "guildOnly": false,
-    "requiresDatabase": false,
-    "rankcommand": false,
-    "nsfw": false,
-    "cooldown": null
-  },
-  {
-    "name": "quotas",
-    "aliases": [],
-    "clientPermissions": [
-      "EMBED_LINKS"
-    ],
-    "group": "Core",
-    "description": "Xem thống kê hạn ngạch tin nhắn",
-    "parameters": [
-      "Xem thống kê hạn ngạch tin nhắn của người dùng (tùy chọn)",
-      "Xem thống kê hạn ngạch toàn hệ thống (Owner/Admin) (tùy chọn)"
-    ],
-    "examples": [
-      "/quotas"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
@@ -304,12 +320,29 @@
     "description": "Thiết lập kênh gửi log cho các lệnh moderation",
     "parameters": [
       "Kênh để gửi log moderation (bắt buộc)",
-      "Áp dụng cho log giám sát chat (tùy chọn)",
       "Áp dụng cho log hành động moderation (mute/ban/kick) (tùy chọn)"
     ],
     "examples": [
       "/setlogchannel",
       "/setlogchannel <channel>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
+    "name": "setting",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "moderation",
+    "description": "Quản lý cài đặt bot (Server Manager)",
+    "parameters": [],
+    "examples": [
+      "/setting"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
@@ -586,29 +619,9 @@
     "cooldown": null
   },
   {
-    "name": "generatecommands",
-    "aliases": [],
-    "clientPermissions": [
-      "ADMINISTRATOR",
-      "EMBED_LINKS"
-    ],
-    "group": "system",
-    "description": "Tạo file JSON chứa thông tin tất cả lệnh của bot (chỉ dành cho owner)",
-    "parameters": [],
-    "examples": [
-      "/generatecommands"
-    ],
-    "guildOnly": false,
-    "requiresDatabase": false,
-    "rankcommand": false,
-    "nsfw": false,
-    "cooldown": null
-  },
-  {
     "name": "logger",
     "aliases": [],
     "clientPermissions": [
-      "ADMINISTRATOR",
       "EMBED_LINKS"
     ],
     "group": "system",
@@ -631,77 +644,19 @@
     "cooldown": null
   },
   {
-    "name": "resetdb",
+    "name": "reset",
     "aliases": [],
     "clientPermissions": [
-      "ADMINISTRATOR",
       "EMBED_LINKS"
     ],
     "group": "system",
-    "description": "Xóa và tạo lại cơ sở dữ liệu (chỉ dành cho owner)",
-    "parameters": [],
-    "examples": [
-      "/resetdb"
-    ],
-    "guildOnly": false,
-    "requiresDatabase": false,
-    "rankcommand": false,
-    "nsfw": false,
-    "cooldown": null
-  },
-  {
-    "name": "resetquotas",
-    "aliases": [],
-    "clientPermissions": [
-      "ADMINISTRATOR",
-      "EMBED_LINKS"
-    ],
-    "group": "system",
-    "description": "Reset lượt nhắn tin cho người dùng (chỉ dành cho owner)",
+    "description": "Xóa và reset cơ sở dữ liệu (chỉ dành cho owner)",
     "parameters": [
-      "Người dùng cần reset lượt nhắn tin đã sử dụng (bắt buộc)",
-      "Loại reset (bắt buộc) - Lựa chọn: Hàng ngày, Hàng tuần, Hàng tháng, Tất cả"
+      "Reset mode (bắt buộc) - Lựa chọn: Database (Conversations & All Data), User Profiles (XP, Level, Achievements)"
     ],
     "examples": [
-      "/resetquotas",
-      "/resetquotas <user> Hàng ngày"
-    ],
-    "guildOnly": false,
-    "requiresDatabase": false,
-    "rankcommand": false,
-    "nsfw": false,
-    "cooldown": null
-  },
-  {
-    "name": "resetuserdb",
-    "aliases": [],
-    "clientPermissions": [
-      "ADMINISTRATOR",
-      "EMBED_LINKS"
-    ],
-    "group": "system",
-    "description": "Xóa tất cả user profiles (chỉ dành cho owner)",
-    "parameters": [],
-    "examples": [
-      "/resetuserdb"
-    ],
-    "guildOnly": false,
-    "requiresDatabase": false,
-    "rankcommand": false,
-    "nsfw": false,
-    "cooldown": null
-  },
-  {
-    "name": "update",
-    "aliases": [],
-    "clientPermissions": [
-      "EMBED_LINKS"
-    ],
-    "group": "system",
-    "description": "Kiểm tra và cập nhật bot từ GitHub (chỉ dành cho owner)",
-    "parameters": [],
-    "examples": [
-      "/update"
+      "/reset",
+      "/reset Database (Conversations & All Data)"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
