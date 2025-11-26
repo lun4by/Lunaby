@@ -93,7 +93,7 @@ async function handleMentionMessage(message, client) {
         const requestType = ConversationService.detectRequestType(content);
         
         if (requestType.type === 'image') {
-          const imagePrompt = requestType.match[2];
+          const imagePrompt = requestType.match[1];
           
           try {
             const waitMessage = await message.reply('🎨 Đang tạo hình ảnh, vui lòng chờ...');

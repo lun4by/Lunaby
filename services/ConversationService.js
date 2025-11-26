@@ -17,7 +17,7 @@ const DETAILED_MEMORY_DISPLAY_COUNT = 15;
 const DEFAULT_MEMORY_DISPLAY_COUNT = 3;
 const SUMMARY_MESSAGE_TRUNCATE_LENGTH = 150;
 
-const IMAGE_COMMAND_REGEX = /^(vẽ|tạo hình|vẽ hình|hình|tạo ảnh ai|tạo ảnh)\s+(.+)$/i;
+const IMAGE_COMMAND_REGEX = /^(?:vẽ|tạo hình|vẽ hình|hình|tạo ảnh ai|tạo ảnh)\s+(?:cho\s+(?:tôi|mình|em|anh|chị)\s+)?(?:một\s+)?(?:hình\s+(?:ảnh\s+)?|ảnh\s+(?:về\s+)?)?(.+)$/i;
 const MEMORY_COMMAND_REGEX = /^(nhớ lại|trí nhớ|lịch sử|conversation history|memory|như nãy|vừa gửi|vừa đề cập)\s*(.*)$/i;
 const CODE_COMMAND_REGEX = /\b(code|code completion|function|method|write|implement|create|viết code|viết hàm|tạo hàm|code snippet|đoạn code|class|const|let|var|function|def|return|async|await|javascript|python|java|php|c\+\+|ruby|go|rust)\b/gi;
 
