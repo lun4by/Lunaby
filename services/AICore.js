@@ -113,16 +113,14 @@ class AICore {
               continue;
             }
 
-            // Parse SSE event type
             if (trimmed.startsWith('event:')) {
               currentEvent = trimmed.slice(6).trim();
               continue;
             }
 
-            // Parse SSE data (with or without space after colon)
             if (trimmed.startsWith('data:')) {
               dataEventCount++;
-              const data = trimmed.slice(5).trim(); // Remove 'data:' and trim
+              const data = trimmed.slice(5).trim();
 
               if (data === '[DONE]') {
                 logger.info("AI_CORE", "Received [DONE] signal");
@@ -177,7 +175,6 @@ class AICore {
         const status = error.response.status;
         let data = error.response.data;
         
-        // If data is a stream (from responseType: 'stream'), read it
         if (data && typeof data.on === 'function') {
           try {
             const chunks = [];
