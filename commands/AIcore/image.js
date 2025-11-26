@@ -33,22 +33,17 @@ module.exports = {
 		const prompt = interaction.options.getString('prompt');
 		const aspectRatio = interaction.options.getString('aspect_ratio') || '1:1';
 
-		let progressTracker = null;
-
 		try {
-			progressTracker = ImageService.trackImageGenerationProgress(interaction, prompt);
-			await progressTracker.update('Đang khởi tạo...', 5);
-
-			const imageResult = await ImageService.generateImage(prompt, interaction, progressTracker, {
+			const imageResult = await ImageService.generateImage(prompt, {
 				aspect_ratio: aspectRatio,
 				output_format: 'png'
 			});
 
 			if (imageResult && imageResult.buffer) {
 				const attachment = new AttachmentBuilder(imageResult.buffer, { name: 'generated-image.png' });
-				await interaction.followUp({ files: [attachment] });
+				await interaction.editReply({ content: '🎨 Hình ảnh đã được tạo!', files: [attachment] });
 			} else {
-				await interaction.followUp({
+				await interaction.editReply({
 					content: 'Không thể tạo ảnh. Vui lòng thử lại sau.',
 				});
 				logger.warn('IMAGE', 'Image generation returned no result buffer');
@@ -69,11 +64,11 @@ module.exports = {
 			}
 
 			try {
-				await interaction.followUp({
+				await interaction.editReply({
 					content: errorMessage,
 				});
-			} catch (followUpError) {
-				logger.error('COMMAND', 'Failed to send error message:', followUpError);
+			} catch (editError) {
+				logger.error('COMMAND', 'Failed to send error message:', editError);
 			}
 		}
 	},
