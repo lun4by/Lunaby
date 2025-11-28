@@ -18,6 +18,8 @@ function formatCodeResponse(text) {
 }
 
 async function handleCodeRequest(message, content, ConversationService) {
+  const Validators = require('../../utils/validators');
+  
   await message.channel.sendTyping();
 
   try {
@@ -26,12 +28,14 @@ async function handleCodeRequest(message, content, ConversationService) {
     const conversationManager = require('../conversationManager');
     const prompts = require('../../config/prompts');
     
-    await conversationManager.loadConversationHistory(userId, prompts.system.main, AICore.getModelName());
+    const modelName = AICore.getModelName();
+    await conversationManager.loadConversationHistory(userId, prompts.system.main, modelName);
     let messages = conversationManager.getHistory(userId);
     
+    const isNewConversation = messages.length <= 2;
     const enhancedPrompt = `
       ${prompts.chat.responseStyle}
-      ${messages.length <= 2 ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
+      ${isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
       ${prompts.chat.generalInstructions}
       Code request: ${promptContent}
     `;
@@ -39,10 +43,14 @@ async function handleCodeRequest(message, content, ConversationService) {
     await conversationManager.addMessage(userId, 'user', enhancedPrompt);
     messages = conversationManager.getHistory(userId);
     
-    const validMessages = messages.filter(msg => msg.role && msg.content && msg.content.trim());
+    const validMessages = Validators.cleanMessages(messages);
+    
+    if (validMessages.length === 0) {
+      throw new Error('No valid messages for code request');
+    }
     
     const response = await sendStreamingMessage(message.channel, validMessages, {
-      model: AICore.getModelName()
+      model: modelName
     });
     
     let formattedResponse = response;
@@ -53,7 +61,10 @@ async function handleCodeRequest(message, content, ConversationService) {
     await conversationManager.addMessage(userId, 'assistant', response);
     
   } catch (streamError) {
-    logger.warn('CODE', 'Code streaming failed, falling back to non-streaming:', streamError.message);
+    const ErrorHandler = require('../../utils/ErrorHandler');
+    const logger = require('../../utils/logger');
+    
+    ErrorHandler.logError('CODE', 'Code streaming failed, falling back to non-streaming', streamError, 'warn');
     
     try {
       const result = await AICore.getCodeCompletion(content, message);
@@ -71,9 +82,12 @@ async function handleCodeRequest(message, content, ConversationService) {
       } else {
         await message.reply(formattedResponse);
       }
-    } catch (error) {
-      logger.error('CODE', `Error getting code for ${message.author.tag}:`, error);
-      await message.reply('Xin lỗi, tôi gặp khó khăn khi tạo mã đó.');
+    } catch (fallbackError) {
+      ErrorHandler.logError('CODE', 'Both streaming and fallback failed', fallbackError);
+      const userMessage = ErrorHandler.getUserFriendlyMessage(fallbackError, 'tạo mã');
+      await message.reply(userMessage).catch(() => {
+        logger.error('CODE', 'Failed to send error message to user');
+      });
     }
   }
 }

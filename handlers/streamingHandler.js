@@ -6,6 +6,10 @@ const MIN_CHUNK_SIZE = 30;
 const DISCORD_MAX_LENGTH = 2000;
 
 async function sendStreamingMessage(channel, messages, config = {}) {
+    const Validators = require('../utils/validators');
+    const ErrorHandler = require('../utils/ErrorHandler');
+    const { API_REQUEST_TIMEOUT_MS, DEFAULT_MAX_TOKENS } = require('../config/constants');
+    
     const isDM = channel.type === 1;
     
     const apiUrl = process.env.LUNABY_BASE_URL || 'https://api.lunie.dev/v1';
@@ -15,12 +19,20 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         throw new Error('LUNABY_API_KEY not configured');
     }
 
+    const validMessages = Validators.cleanMessages(messages);
+    if (validMessages.length === 0) {
+        throw new Error('No valid messages to send');
+    }
+
+    const defaultModel = config.model || 'lunaby-pro';
+    logger.info('STREAMING', `Starting stream with ${validMessages.length} messages, model: ${defaultModel}`);
+
     const response = await axios.post(
         `${apiUrl}/chat/completions`,
         {
-            model: config.model || 'lunaby-pro',
-            messages: messages,
-            max_tokens: config.max_tokens || 2048,
+            model: defaultModel,
+            messages: validMessages,
+            max_tokens: config.max_tokens || DEFAULT_MAX_TOKENS || 2048,
             stream: true,
             ...config
         },
@@ -29,7 +41,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 120000,
+            timeout: API_REQUEST_TIMEOUT_MS || 120000,
             responseType: 'stream'
         }
     );
@@ -140,8 +152,8 @@ async function sendStreamingMessage(channel, messages, config = {}) {
 
         response.data.on('error', (error) => {
             clearInterval(typingInterval);
-            logger.error('STREAMING', `Stream error: ${error.message}`);
-            logger.error('STREAMING', `Full error: ${JSON.stringify(error)}`);
+            const ErrorHandler = require('../utils/ErrorHandler');
+            ErrorHandler.logError('STREAMING', 'Stream error occurred', error);
             reject(error);
         });
     });

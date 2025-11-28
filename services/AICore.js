@@ -6,14 +6,14 @@ const initSystem = require("./initSystem.js");
 class AICore {
   constructor() {
     this.systemPrompt = prompts.system.main;
-    this.Model = "lunaby";
+    this.Model = process.env.LUNABY_MODEL || "lunaby-pro";
     this.lunabyBaseURL = process.env.LUNABY_BASE_URL || "https://api.lunie.dev/v1";
     this.lunabyApiKey = process.env.LUNABY_API_KEY;
     
     if (!this.lunabyApiKey) {
       logger.error("AI_CORE", "LUNABY_API_KEY not configured!");
     }
-    logger.info("AI_CORE", "Initialized with Lunaby API");
+    logger.info("AI_CORE", `Initialized with Lunaby API, model: ${this.Model}`);
   }
 
   async waitForProviders() {
