@@ -6,16 +6,19 @@ const textUtils = require("../utils/textUtils.js");
 const AICore = require("./AICore.js");
 const TokenService = require("./TokenService.js");
 const MemoryService = require("./MemoryService.js");
-
-const DEFAULT_USER_ID = "anonymous-user";
-const MAX_CONVERSATION_LENGTH = 30;
-const MAX_CONVERSATION_AGE_MS = 3 * 60 * 60 * 1000; // 3 giờ
-const AI_TIMEOUT_MS = 25000; // 25 giây
-const RECENT_MEMORY_MESSAGES_COUNT = 10;
-const RELEVANT_MEMORY_COUNT = 3;
-const DETAILED_MEMORY_DISPLAY_COUNT = 15;
-const DEFAULT_MEMORY_DISPLAY_COUNT = 3;
-const SUMMARY_MESSAGE_TRUNCATE_LENGTH = 150;
+const Validators = require("../utils/validators.js");
+const { 
+  DEFAULT_USER_ID,
+  MAX_CONVERSATION_LENGTH,
+  MAX_CONVERSATION_AGE_MS,
+  AI_TIMEOUT_MS,
+  RECENT_MEMORY_MESSAGES_COUNT,
+  RELEVANT_MEMORY_COUNT,
+  DETAILED_MEMORY_DISPLAY_COUNT,
+  DEFAULT_MEMORY_DISPLAY_COUNT,
+  SUMMARY_MESSAGE_TRUNCATE_LENGTH,
+  REQUEST_TYPES
+} = require("../config/constants.js");
 
 const IMAGE_COMMAND_REGEX = /^(?:vẽ|tạo hình|vẽ hình|hình|tạo ảnh ai|tạo ảnh)\s+(?:cho\s+(?:tôi|mình|em|anh|chị)\s+)?(?:một\s+)?(?:hình\s+(?:ảnh\s+)?|ảnh\s+(?:về\s+)?)?(.+)$/i;
 const MEMORY_COMMAND_REGEX = /^(nhớ lại|trí nhớ|lịch sử|conversation history|memory|như nãy|vừa gửi|vừa đề cập)\s*(.*)$/i;
@@ -34,15 +37,15 @@ class ConversationService {
 
   detectRequestType(prompt) {
     const imageMatch = prompt.match(IMAGE_COMMAND_REGEX);
-    if (imageMatch) return { type: 'image', match: imageMatch };
+    if (imageMatch) return { type: REQUEST_TYPES.IMAGE, match: imageMatch };
 
     const memoryMatch = prompt.match(MEMORY_COMMAND_REGEX);
-    if (memoryMatch) return { type: 'memory', match: memoryMatch };
+    if (memoryMatch) return { type: REQUEST_TYPES.MEMORY, match: memoryMatch };
 
     const isCodeRequest = CODE_COMMAND_REGEX.test(prompt);
-    if (isCodeRequest) return { type: 'code', match: null };
+    if (isCodeRequest) return { type: REQUEST_TYPES.CODE, match: null };
 
-    return { type: 'chat', match: null };
+    return { type: REQUEST_TYPES.CHAT, match: null };
   }
 
   extractUserId(message) {
@@ -252,39 +255,12 @@ class ConversationService {
         messages = conversationManager.getHistory(userId);
       }
 
-      // Log all messages for debugging
       logger.info("CONVERSATION_SERVICE", `Total messages before validation: ${messages.length}`);
       messages.forEach((msg, idx) => {
         logger.debug("CONVERSATION_SERVICE", `Message[${idx}]: role="${msg?.role}", content length=${msg?.content?.length || 0}`);
       });
 
-      // Validate and clean messages
-      const validMessages = [];
-      let lastRole = null;
-      
-      for (const msg of messages) {
-        // Skip invalid messages
-        if (!msg.role || !msg.content || !msg.content.trim()) {
-          logger.warn("CONVERSATION_SERVICE", `Skipping invalid message: role="${msg?.role}", content="${msg?.content?.substring(0, 50)}"`);
-          continue;
-        }
-
-        // Validate role
-        if (!['system', 'user', 'assistant'].includes(msg.role)) {
-          logger.warn("CONVERSATION_SERVICE", `Skipping message with invalid role: ${msg.role}`);
-          continue;
-        }
-
-        // Merge consecutive messages with same role (except system)
-        if (lastRole === msg.role && msg.role !== 'system') {
-          const lastMsg = validMessages[validMessages.length - 1];
-          lastMsg.content += '\n\n' + msg.content;
-          logger.debug("CONVERSATION_SERVICE", `Merged ${msg.role} message with previous`);
-        } else {
-          validMessages.push({ role: msg.role, content: msg.content });
-          lastRole = msg.role;
-        }
-      }
+      const validMessages = Validators.cleanMessages(messages);
 
       if (validMessages.length === 0) {
         throw new Error("No valid messages to send");
