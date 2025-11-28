@@ -1,6 +1,6 @@
 const AICore = require('../../services/AICore');
 const logger = require('../../utils/logger');
-const { sendStreamingMessage } = require('../streamingHandler');
+const { sendStreamingMessage } = require('../../services/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 
 function formatCodeResponse(text) {
