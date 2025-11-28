@@ -32,8 +32,6 @@ class ConversationService {
   constructor() {
     storageDB.setMaxConversationLength(MAX_CONVERSATION_LENGTH);
     storageDB.setMaxConversationAge(MAX_CONVERSATION_AGE_MS);
-
-    logger.info("CONVERSATION_SERVICE", "Initialized conversation service");
   }
 
   detectRequestType(prompt) {
@@ -310,28 +308,21 @@ class ConversationService {
   
   async processChatCompletion(prompt, userId, additionalConfig = {}) {
     const ErrorHandler = require("../utils/ErrorHandler.js");
-    
     try {
       const systemPrompt = additionalConfig.systemPrompt || prompts.system.main;
-
       const conversationHistory = conversationManager.getHistory(userId);
       const enhancedPrompt = await this.buildEnhancedPrompt(prompt, conversationHistory);
-      
       const messages = await this.loadAndPrepareHistory(userId, systemPrompt, enhancedPrompt);
       const validMessages = this.validateAndCleanMessages(messages);
-      
       const config = {
         model: additionalConfig.model || AICore.CoreModel,
         max_tokens: additionalConfig.max_tokens || 2048,
         ...additionalConfig,
       };
-
       const result = await this.callAIWithTimeout(validMessages, config);
       return await this.handleCompletionResult(userId, prompt, result);
-
     } catch (error) {
       ErrorHandler.logError("CONVERSATION_SERVICE", "Error in processChatCompletion", error);
-      
       const userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(error, "xử lý tin nhắn");
       const friendlyError = new Error(userFriendlyMessage);
       friendlyError.originalError = error;
