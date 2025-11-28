@@ -21,6 +21,131 @@ class AICore {
     return this;
   }
 
+  handleStreamData(chunk, state) {
+    const chunkStr = chunk.toString();
+    
+    state.buffer += chunkStr;
+    const lines = state.buffer.split('\n');
+    state.buffer = lines.pop() || '';
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        state.currentEvent = '';
+        continue;
+      }
+
+      if (trimmed.startsWith('event:')) {
+        state.currentEvent = trimmed.slice(6).trim();
+        continue;
+      }
+
+      if (trimmed.startsWith('data:')) {
+        state.dataEventCount++;
+        const data = trimmed.slice(5).trim();
+
+        if (data === '[DONE]') {
+          logger.info("AI_CORE", "Received [DONE] signal");
+          continue;
+        }
+        
+        try {
+          const parsed = JSON.parse(data);
+
+          if (parsed.choices && parsed.choices[0]) {
+            const delta = parsed.choices[0].delta;
+            if (delta && delta.content) {
+              state.fullContent += delta.content;
+            }
+          }
+
+          if (parsed.usage) {
+            state.tokenUsage = parsed.usage;
+          }
+        } catch (e) {
+          logger.debug("AI_CORE", `Parse error (might be incomplete JSON): ${e.message}`);
+        }
+      }
+    }
+  }
+
+  processStreamResponse(responseStream) {
+    const state = {
+      buffer: '',
+      chunkCount: 0,
+      dataEventCount: 0,
+      currentEvent: '',
+      fullContent: '',
+      tokenUsage: {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0
+      }
+    };
+
+    return new Promise((resolve, reject) => {
+      responseStream.on('data', (chunk) => {
+        state.chunkCount++;
+        this.handleStreamData(chunk, state);
+      });
+
+      responseStream.on('end', () => {
+        logger.info("AI_CORE", `Stream ended. Chunks: ${state.chunkCount}, Data events: ${state.dataEventCount}, Content length: ${state.fullContent.length}`);
+        
+        if (state.fullContent.length === 0) {
+          logger.error("AI_CORE", "Stream ended but no content received");
+          reject(new Error("No content received from stream"));
+        } else {
+          logger.info("AI_CORE", `Stream completed successfully. Content length: ${state.fullContent.length} chars`);
+          resolve({
+            content: state.fullContent,
+            usage: state.tokenUsage
+          });
+        }
+      });
+
+      responseStream.on('error', (err) => {
+        logger.error("AI_CORE", "Stream error:", err.message);
+        reject(err);
+      });
+    });
+  }
+
+  async handleImageGeneration(model, messages, config) {
+    const response = await axios.post(
+      `${this.lunabyBaseURL}/chat/completions`,
+      {
+        model: model,
+        messages: messages,
+        max_tokens: config.max_tokens || 2048,
+        stream: false,
+        ...config,
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${this.lunabyApiKey}`,
+          "Content-Type": "application/json"
+        },
+        timeout: 120000
+      }
+    );
+
+    const tokenUsage = response.data.usage || {
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      total_tokens: 0
+    };
+    
+    if (response.data.data) {
+      logger.info("AI_CORE", "Processing image generation response");
+      return {
+        content: response.data.data[0].b64_json,
+        revised_prompt: response.data.data[0].revised_prompt,
+        usage: tokenUsage
+      };
+    }
+  }
+
   async processChatCompletion(messages, config = {}) {
     try {
       const modelMap = {
@@ -32,38 +157,7 @@ class AICore {
       const model = modelMap[config.modelType] || modelMap.default;
 
       if (config.modelType === 'image') {
-        const response = await axios.post(
-          `${this.lunabyBaseURL}/chat/completions`,
-          {
-            model: model,
-            messages: messages,
-            max_tokens: config.max_tokens || 2048,
-            stream: false,
-            ...config,
-          },
-          {
-            headers: {
-              "Authorization": `Bearer ${this.lunabyApiKey}`,
-              "Content-Type": "application/json"
-            },
-            timeout: 120000
-          }
-        );
-
-        const tokenUsage = response.data.usage || {
-          prompt_tokens: 0,
-          completion_tokens: 0,
-          total_tokens: 0
-        };
-        
-        if (response.data.data) {
-          logger.info("AI_CORE", "Processing image generation response");
-          return {
-            content: response.data.data[0].b64_json,
-            revised_prompt: response.data.data[0].revised_prompt,
-            usage: tokenUsage
-          };
-        }
+        return await this.handleImageGeneration(model, messages, config);
       }
 
       const response = await axios.post(
@@ -85,88 +179,7 @@ class AICore {
         }
       );
 
-      let fullContent = '';
-      let tokenUsage = {
-        prompt_tokens: 0,
-        completion_tokens: 0,
-        total_tokens: 0
-      };
-
-      return new Promise((resolve, reject) => {
-        let buffer = '';
-        let chunkCount = 0;
-        let dataEventCount = 0;
-        let currentEvent = '';
-
-        response.data.on('data', (chunk) => {
-          chunkCount++;
-          const chunkStr = chunk.toString();
-          
-          buffer += chunkStr;
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-          
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) {
-              currentEvent = '';
-              continue;
-            }
-
-            if (trimmed.startsWith('event:')) {
-              currentEvent = trimmed.slice(6).trim();
-              continue;
-            }
-
-            if (trimmed.startsWith('data:')) {
-              dataEventCount++;
-              const data = trimmed.slice(5).trim();
-
-              if (data === '[DONE]') {
-                logger.info("AI_CORE", "Received [DONE] signal");
-                continue;
-              }
-              
-              try {
-                const parsed = JSON.parse(data);
-
-                if (parsed.choices && parsed.choices[0]) {
-                  const delta = parsed.choices[0].delta;
-                  if (delta && delta.content) {
-                    fullContent += delta.content;
-                  }
-                }
-
-                if (parsed.usage) {
-                  tokenUsage = parsed.usage;
-                }
-              } catch (e) {
-                logger.debug("AI_CORE", `Parse error (might be incomplete JSON): ${e.message}`);
-              }
-            }
-          }
-        });
-
-        response.data.on('end', () => {
-          logger.info("AI_CORE", `Stream ended. Chunks: ${chunkCount}, Data events: ${dataEventCount}, Content length: ${fullContent.length}`);
-          
-          if (fullContent.length === 0) {
-            logger.error("AI_CORE", "Stream ended but no content received");
-            reject(new Error("No content received from stream"));
-          } else {
-            logger.info("AI_CORE", `Stream completed successfully. Content length: ${fullContent.length} chars`);
-            resolve({
-              content: fullContent,
-              usage: tokenUsage
-            });
-          }
-        });
-
-        response.data.on('error', (err) => {
-          logger.error("AI_CORE", "Stream error:", err.message);
-          reject(err);
-        });
-      });
+      return await this.processStreamResponse(response.data);
     } catch (error) {
       let errorMessage = "Đã xảy ra lỗi khi xử lý yêu cầu";
       let errorDetails = error.message;
