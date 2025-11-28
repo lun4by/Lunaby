@@ -4,7 +4,7 @@ const conversationManager = require("../handlers/conversationManager.js");
 const prompts = require("../config/prompts.js");
 const textUtils = require("../utils/textUtils.js");
 const AICore = require("./AICore.js");
-const TokenService = require("./TokenService.js");
+const QuotaService = require("./QuotaService.js");
 const MemoryService = require("./MemoryService.js");
 const Validators = require("../utils/validators.js");
 const { 
@@ -285,7 +285,7 @@ class ConversationService {
       const tokenUsage = result.usage;
 
       if (tokenUsage && tokenUsage.total_tokens) {
-        TokenService.recordMessageUsage(userId, 1, 'chat').catch(err =>
+        QuotaService.recordMessageUsage(userId, 1, 'chat').catch(err =>
           logger.error('CONVERSATION_SERVICE', 'Error recording usage:', err)
         );
       }

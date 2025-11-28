@@ -4,7 +4,7 @@ const ConversationDB = require('./ConversationDB');
 const UserProfileDB = require('./UserProfileDB');
 const ImageBlacklistDB = require('./ImageBlacklistDB');
 const MemoryService = require('../MemoryService');
-const TokenService = require('../TokenService');
+const QuotaService = require('../QuotaService');
 const { COLLECTIONS } = require('../../config/constants');
 
 class DatabaseManager {
@@ -120,10 +120,10 @@ class DatabaseManager {
       }
 
       try {
-        await TokenService.initializeCollection();
-        logger.info('DATABASE', 'Initialized token limit system');
+        await QuotaService.initializeCollection();
+        logger.info('DATABASE', 'Initialized quota system');
       } catch (error) {
-        logger.error('DATABASE', 'Error initializing token limit system:', error);
+        logger.error('DATABASE', 'Error initializing quota system:', error);
       }
 
       logger.info('DATABASE', 'Set up MongoDB collections and indexes');
