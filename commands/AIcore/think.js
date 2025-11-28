@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const AICore = require('../../services/AICore');
+const QuotaService = require('../../services/QuotaService');
 const logger = require('../../utils/logger.js');
-const { splitMessageRespectWords } = require('../../handlers/messageHandler');
+const { splitMessageIntoChunks } = require('../../handlers/messageHandlers/memoryRequestHandler');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -18,9 +19,8 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      const TokenService = require('../../services/TokenService.js');
       const userId = interaction.user.id;
-      const messageCheck = await TokenService.canUseMessages(userId, 1);
+      const messageCheck = await QuotaService.canUseMessages(userId, 1);
 
       if (!messageCheck.allowed) {
         const roleNames = {
@@ -47,7 +47,7 @@ module.exports = {
       let response = result.content;
 
       if (result.usage && result.usage.total_tokens) {
-        TokenService.recordMessageUsage(userId, 1, 'think').catch(() => {});
+        QuotaService.recordMessageUsage(userId, 1, 'think').catch(() => {});
       }
 
       if (response.length <= 2000) {
@@ -55,7 +55,7 @@ module.exports = {
           content: response
         });
       } else {
-        const chunks = splitMessageRespectWords(response, 2000);
+        const chunks = splitMessageIntoChunks(response);
 
         await interaction.editReply({
           content: chunks[0]
