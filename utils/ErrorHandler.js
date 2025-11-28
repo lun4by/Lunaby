@@ -27,13 +27,13 @@ class ErrorHandler {
       return this.ERROR_CATEGORIES.DATABASE;
     }
 
-    if (code === 'EPROTO' || code === 'ECONNREFUSED' || code === 'ENOTFOUND' || 
-        message.includes('connect') || message.includes('kết nối')) {
+    if (code === 'EPROTO' || code === 'ECONNREFUSED' || code === 'ENOTFOUND' ||
+      message.includes('connect') || message.includes('kết nối')) {
       return this.ERROR_CATEGORIES.NETWORK;
     }
 
-    if (code === 'ECONNABORTED' || code === 'ETIMEDOUT' || 
-        message.includes('timeout') || message.includes('hết thời gian')) {
+    if (code === 'ECONNABORTED' || code === 'ETIMEDOUT' ||
+      message.includes('timeout') || message.includes('hết thời gian')) {
       return this.ERROR_CATEGORIES.TIMEOUT;
     }
 
