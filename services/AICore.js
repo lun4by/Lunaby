@@ -12,12 +12,14 @@ class AICore {
     
     if (!this.lunabyApiKey) {
       logger.error("AI_CORE", "LUNABY_API_KEY not configured!");
+    } else {
+      logger.debug("AI_CORE", `Initialized with model: ${this.Model}`);
     }
-    logger.info("AI_CORE", `Initialized with Lunaby API, model: ${this.Model}`);
   }
 
   async waitForProviders() {
     await initSystem.waitForReady();
+    logger.info("AI_CORE", `Ready with Lunaby API (model: ${this.Model})`);
     return this;
   }
 

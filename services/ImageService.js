@@ -7,7 +7,7 @@ const AICore = require("./AICore.js");
 
 class ImageService {
   constructor() {
-    logger.info("IMAGE_SERVICE", `Initialized with Lunaby Vision API`);
+    logger.debug("IMAGE_SERVICE", "Service initialized");
   }
 
   

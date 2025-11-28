@@ -7,9 +7,9 @@ class WebSearchService {
     this.apiKey = process.env.WEB_SEARCH_API_KEY || process.env.PERPLEXITY_API_KEY;
 
     if (!this.apiKey) {
-      logger.warn("WEB_SEARCH", "WEB_SEARCH_API_KEY not configured!");
+      logger.warn("WEB_SEARCH", "API key not configured");
     } else {
-      logger.info("WEB_SEARCH", "Initialized with Web Search API");
+      logger.debug("WEB_SEARCH", "Service initialized");
     }
   }
 

@@ -27,7 +27,7 @@ class ConversationDB {
           content: systemPrompt + ` You are running on ${modelName} model.`
         };
         await this.addMessageToConversation(validUserId, systemMessage.role, systemMessage.content);
-        logger.info('DATABASE', `Initialized new conversation for userId: ${validUserId}`);
+        logger.debug('DATABASE', `New conversation created for user: ${validUserId}`);
         return [systemMessage];
       }
 
@@ -196,7 +196,7 @@ class ConversationDB {
           { $set: { lastUpdated: Date.now() } },
           { upsert: true }
         );
-        logger.info('DATABASE', `Reinitialized conversation with system prompt for userId: ${validUserId}`);
+        logger.debug('DATABASE', `Conversation reinitialized for user: ${validUserId}`);
         return true;
       } else {
         logger.error('DATABASE', `Failed to add system prompt after clearing for userId: ${validUserId}`);

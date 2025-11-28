@@ -121,7 +121,7 @@ class DatabaseManager {
 
       try {
         await QuotaService.initializeCollection();
-        logger.info('DATABASE', 'Initialized quota system');
+        logger.info('DATABASE', 'Quota system ready');
       } catch (error) {
         logger.error('DATABASE', 'Error initializing quota system:', error);
       }
@@ -208,7 +208,7 @@ class DatabaseManager {
             maxConversationAge: ConversationDB.maxConversationAge
           }
         });
-        logger.info('DATABASE', 'Initialized conversation history configuration');
+        logger.debug('DATABASE', 'Conversation history configuration loaded');
       } else {
         await db.collection(COLLECTIONS.CONVERSATION_META).updateOne(
           { metaVersion: { $exists: true } },
@@ -255,7 +255,7 @@ class DatabaseManager {
 
       try {
         await MemoryService.initializeMemoryCollection();
-        logger.info('DATABASE', 'Initialized AI Memory System V2');
+        logger.debug('DATABASE', 'Memory system configuration loaded');
       } catch (memoryError) {
         logger.error('DATABASE', 'Error initializing Memory System:', memoryError);
       }

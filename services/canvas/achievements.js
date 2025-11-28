@@ -17,9 +17,9 @@ class AchievementCanvas {
   async initializeFonts() {
     try {
       await fontManager.initialize(ASSETS_PATH);
-      logger.info('ACHIEVEMENT', 'Fonts initialized successfully');
+      logger.debug('ACHIEVEMENT', 'Fonts loaded');
     } catch (error) {
-      logger.error('ACHIEVEMENT', 'Font initialization failed:', error);
+      logger.error('ACHIEVEMENT', 'Failed to load fonts:', error);
     }
   }
 

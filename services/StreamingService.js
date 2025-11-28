@@ -1,5 +1,6 @@
 const axios = require('axios');
 const logger = require('../utils/logger.js');
+const AICore = require('./AICore');
 const { 
     API_REQUEST_TIMEOUT_MS, 
     DEFAULT_MAX_TOKENS,
@@ -21,8 +22,9 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         throw new Error('Streaming disabled');
     }
     
-    const apiUrl = process.env.LUNABY_BASE_URL || 'https://api.lunie.dev/v1';
-    const apiKey = process.env.LUNABY_API_KEY;
+    // Use AICore's configuration for single source of truth
+    const apiUrl = AICore.lunabyBaseURL;
+    const apiKey = AICore.lunabyApiKey;
 
     if (!apiKey) {
         throw new Error('LUNABY_API_KEY not configured');
@@ -33,7 +35,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         throw new Error('No valid messages to send');
     }
 
-    const defaultModel = config.model || 'lunaby-pro';
+    const defaultModel = config.model || AICore.getModelName();
     logger.info('STREAMING', `Starting stream with ${validMessages.length} messages, model: ${defaultModel}`);
 
     const response = await axios.post(

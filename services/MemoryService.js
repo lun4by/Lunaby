@@ -8,7 +8,7 @@ class MemoryService {
     this.memoryCache = new Map(); 
     this.cacheExpiry = 30 * 60 * 1000;
     
-    logger.info('MEMORY_SERVICE', 'Initialized AI Memory System V2');
+    logger.debug('MEMORY_SERVICE', 'Service initialized');
   }
 
   
@@ -32,7 +32,7 @@ class MemoryService {
       await collection.createIndex({ 'lastUpdated': 1 });
       await collection.createIndex({ 'memories.category': 1 });
       
-      logger.info('MEMORY_SERVICE', 'Memory collection initialized with indexes');
+      logger.info('MEMORY_SERVICE', 'Memory system ready');
     } catch (error) {
       logger.error('MEMORY_SERVICE', 'Error initializing memory collection:', error);
       throw error;

@@ -6,16 +6,16 @@ class SystemService {
     this.checkTLSSecurity();
     this.initializeLogging();
     
-    logger.info("SYSTEM_SERVICE", "Initialized system service");
+    logger.debug("SYSTEM_SERVICE", "Service initialized");
   }
 
   
   async initializeLogging() {
     try {
       await logger.initializeFileLogging();
-      logger.info("SYSTEM_SERVICE", "File logging initialized successfully");
+      logger.info("SYSTEM_SERVICE", "File logging ready");
     } catch (error) {
-      logger.error("SYSTEM_SERVICE", `Error initializing file logging: ${error.message}`);
+      logger.error("SYSTEM_SERVICE", `Failed to initialize file logging: ${error.message}`);
     }
   }
 
