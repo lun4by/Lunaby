@@ -16,7 +16,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
     const isDM = channel.type === 1;
     const enableStreaming = process.env.ENABLE_STREAMING !== 'false';
     
-    // If streaming is disabled, return null to trigger fallback
     if (!enableStreaming) {
         logger.info('STREAMING', 'Streaming disabled via config, using fallback');
         throw new Error('Streaming disabled');
@@ -69,7 +68,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         channel.sendTyping().catch(() => { });
     }, 5000);
     
-    // Improved update logic with debouncing
     const scheduleUpdate = async () => {
         if (isUpdating || !fullContent) return;
         
@@ -77,10 +75,9 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         const timeSinceLastUpdate = now - lastUpdate;
         const contentDelta = fullContent.length - lastSentLength;
         
-        // Update conditions (more aggressive for smoother experience):
         const shouldUpdate = 
-            !sentMessage || // First message
-            contentDelta >= STREAM_BATCH_UPDATE_SIZE || // Enough new content
+            !sentMessage || 
+            contentDelta >= STREAM_BATCH_UPDATE_SIZE || 
             (timeSinceLastUpdate >= STREAM_UPDATE_INTERVAL_MS && contentDelta >= STREAM_MIN_CHUNK_SIZE);
         
         if (shouldUpdate) {
@@ -102,9 +99,9 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                 lastSentLength = fullContent.length;
                 updateCount++;
             } catch (editError) {
-                if (editError.code === 50027) { // Invalid webhook token
+                if (editError.code === 50027) {
                     logger.warn('STREAMING', 'Message editing failed, will try final update');
-                } else if (editError.code === 10008) { // Unknown message
+                } else if (editError.code === 10008) {
                     logger.warn('STREAMING', 'Message was deleted, creating new one');
                     sentMessage = null;
                 }
@@ -139,7 +136,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                         if (content) {
                             fullContent += content;
                             
-                            // Schedule update with debouncing
                             if (pendingUpdate) {
                                 clearTimeout(pendingUpdate);
                             }
@@ -147,7 +143,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                             pendingUpdate = setTimeout(async () => {
                                 await scheduleUpdate();
                                 pendingUpdate = null;
-                            }, 50); // Debounce by 50ms for smoother batching
+                            }, 50); 
                         }
                     } catch (e) {
                     }
@@ -158,12 +154,10 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         response.data.on('end', async () => {
             clearInterval(typingInterval);
             
-            // Clear any pending updates
             if (pendingUpdate) {
                 clearTimeout(pendingUpdate);
             }
 
-            // Wait for any in-progress updates
             let waitCount = 0;
             while (isUpdating && waitCount < 20) {
                 await new Promise(resolve => setTimeout(resolve, 50));
@@ -173,7 +167,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
             logger.info('STREAMING', `Stream completed. Length: ${fullContent.length} chars, Updates: ${updateCount}, Avg update interval: ${updateCount > 0 ? Math.round((Date.now() - lastUpdate) / updateCount) : 0}ms`);
 
             try {
-                // Final update to ensure complete content is sent
                 if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
                     if (sentMessage && sentMessage.content !== fullContent) {
                         await sentMessage.edit(fullContent);
@@ -183,7 +176,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                     }
                     resolve(fullContent);
                 } else {
-                    // Handle long messages by splitting
                     const firstPart = fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
                     
                     if (sentMessage && sentMessage.content !== firstPart) {
@@ -197,7 +189,6 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                     
                     for (let i = 0; i < chunks.length; i++) {
                         await channel.send(chunks[i]);
-                        // Small delay between chunks to avoid rate limiting
                         if (i < chunks.length - 1) {
                             await new Promise(resolve => setTimeout(resolve, 100));
                         }
