@@ -19,6 +19,12 @@ module.exports = {
   TYPING_INDICATOR_INTERVAL_MS: 5000, // 5 seconds
   GUILD_DEPLOY_DELAY_MS: 1000, // 1 second between deployments
   
+  // Streaming settings
+  STREAM_UPDATE_INTERVAL_MS: 400, // 400ms for smooth updates (was 800ms)
+  STREAM_MIN_CHUNK_SIZE: 20, // Minimum characters before updating (was 30)
+  STREAM_BATCH_UPDATE_SIZE: 150, // Update every N characters
+  STREAM_ENABLE_BY_DEFAULT: true, // Enable streaming by default
+  
   // Cache settings
   MEMORY_CACHE_EXPIRY_MS: 30 * 60 * 1000, // 30 minutes
   

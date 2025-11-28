@@ -1,16 +1,26 @@
 const axios = require('axios');
 const logger = require('../utils/logger.js');
-
-const UPDATE_INTERVAL = 800;
-const MIN_CHUNK_SIZE = 30;
-const DISCORD_MAX_LENGTH = 2000;
+const { 
+    API_REQUEST_TIMEOUT_MS, 
+    DEFAULT_MAX_TOKENS,
+    STREAM_UPDATE_INTERVAL_MS,
+    STREAM_MIN_CHUNK_SIZE,
+    STREAM_BATCH_UPDATE_SIZE,
+    DISCORD_MESSAGE_MAX_LENGTH
+} = require('../config/constants');
 
 async function sendStreamingMessage(channel, messages, config = {}) {
     const Validators = require('../utils/validators');
     const ErrorHandler = require('../utils/ErrorHandler');
-    const { API_REQUEST_TIMEOUT_MS, DEFAULT_MAX_TOKENS } = require('../config/constants');
     
     const isDM = channel.type === 1;
+    const enableStreaming = process.env.ENABLE_STREAMING !== 'false';
+    
+    // If streaming is disabled, return null to trigger fallback
+    if (!enableStreaming) {
+        logger.info('STREAMING', 'Streaming disabled via config, using fallback');
+        throw new Error('Streaming disabled');
+    }
     
     const apiUrl = process.env.LUNABY_BASE_URL || 'https://api.lunie.dev/v1';
     const apiKey = process.env.LUNABY_API_KEY;
@@ -52,10 +62,57 @@ async function sendStreamingMessage(channel, messages, config = {}) {
     let buffer = '';
     let updateCount = 0;
     let isUpdating = false;
+    let lastSentLength = 0;
+    let pendingUpdate = null;
 
     const typingInterval = setInterval(() => {
         channel.sendTyping().catch(() => { });
     }, 5000);
+    
+    // Improved update logic with debouncing
+    const scheduleUpdate = async () => {
+        if (isUpdating || !fullContent) return;
+        
+        const now = Date.now();
+        const timeSinceLastUpdate = now - lastUpdate;
+        const contentDelta = fullContent.length - lastSentLength;
+        
+        // Update conditions (more aggressive for smoother experience):
+        const shouldUpdate = 
+            !sentMessage || // First message
+            contentDelta >= STREAM_BATCH_UPDATE_SIZE || // Enough new content
+            (timeSinceLastUpdate >= STREAM_UPDATE_INTERVAL_MS && contentDelta >= STREAM_MIN_CHUNK_SIZE);
+        
+        if (shouldUpdate) {
+            isUpdating = true;
+            try {
+                const contentToSend = fullContent.length > DISCORD_MESSAGE_MAX_LENGTH 
+                    ? fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH) 
+                    : fullContent;
+                
+                if (!sentMessage) {
+                    sentMessage = await channel.send(contentToSend);
+                    logger.debug('STREAMING', `Initial message sent: ${contentToSend.length} chars`);
+                } else if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH && contentToSend !== sentMessage.content) {
+                    await sentMessage.edit(contentToSend);
+                    logger.debug('STREAMING', `Message updated: ${contentToSend.length} chars (delta: +${contentDelta})`);
+                }
+                
+                lastUpdate = now;
+                lastSentLength = fullContent.length;
+                updateCount++;
+            } catch (editError) {
+                if (editError.code === 50027) { // Invalid webhook token
+                    logger.warn('STREAMING', 'Message editing failed, will try final update');
+                } else if (editError.code === 10008) { // Unknown message
+                    logger.warn('STREAMING', 'Message was deleted, creating new one');
+                    sentMessage = null;
+                }
+            } finally {
+                isUpdating = false;
+            }
+        }
+    };
 
     return new Promise((resolve, reject) => {
         response.data.on('data', async (chunk) => {
@@ -81,29 +138,16 @@ async function sendStreamingMessage(channel, messages, config = {}) {
 
                         if (content) {
                             fullContent += content;
-
-                            const now = Date.now();
-                            const shouldUpdate =
-                                (now - lastUpdate > UPDATE_INTERVAL && fullContent.length >= MIN_CHUNK_SIZE) ||
-                                fullContent.length % 200 === 0;
-
-                            if (shouldUpdate && !isUpdating) {
-                                isUpdating = true;
-                                try {
-                                    if (!sentMessage) {
-                                        sentMessage = await channel.send(fullContent.length > DISCORD_MAX_LENGTH ? fullContent.substring(0, DISCORD_MAX_LENGTH) : fullContent);
-                                        updateCount++;
-                                    } else if (fullContent.length <= DISCORD_MAX_LENGTH) {
-                                        await sentMessage.edit(fullContent);
-                                        updateCount++;
-                                    }
-                                    lastUpdate = now;
-                                } catch (editError) {
-                                    // Silent fail 
-                                } finally {
-                                    isUpdating = false;
-                                }
+                            
+                            // Schedule update with debouncing
+                            if (pendingUpdate) {
+                                clearTimeout(pendingUpdate);
                             }
+                            
+                            pendingUpdate = setTimeout(async () => {
+                                await scheduleUpdate();
+                                pendingUpdate = null;
+                            }, 50); // Debounce by 50ms for smoother batching
                         }
                     } catch (e) {
                     }
@@ -113,39 +157,57 @@ async function sendStreamingMessage(channel, messages, config = {}) {
 
         response.data.on('end', async () => {
             clearInterval(typingInterval);
-
-            while (isUpdating) {
-                await new Promise(resolve => setTimeout(resolve, 50));
+            
+            // Clear any pending updates
+            if (pendingUpdate) {
+                clearTimeout(pendingUpdate);
             }
 
-            logger.info('STREAMING', `Stream completed. Total length: ${fullContent.length}, Updates: ${updateCount}`);
+            // Wait for any in-progress updates
+            let waitCount = 0;
+            while (isUpdating && waitCount < 20) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+                waitCount++;
+            }
+
+            logger.info('STREAMING', `Stream completed. Length: ${fullContent.length} chars, Updates: ${updateCount}, Avg update interval: ${updateCount > 0 ? Math.round((Date.now() - lastUpdate) / updateCount) : 0}ms`);
 
             try {
-                if (fullContent.length <= DISCORD_MAX_LENGTH) {
-                    if (sentMessage) {
+                // Final update to ensure complete content is sent
+                if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+                    if (sentMessage && sentMessage.content !== fullContent) {
                         await sentMessage.edit(fullContent);
-                    } else {
+                        logger.debug('STREAMING', 'Final update applied');
+                    } else if (!sentMessage) {
                         await channel.send(fullContent);
                     }
                     resolve(fullContent);
                 } else {
-                    if (sentMessage) {
-                        await sentMessage.edit(fullContent.substring(0, DISCORD_MAX_LENGTH));
-                    } else {
-                        sentMessage = await channel.send(fullContent.substring(0, DISCORD_MAX_LENGTH));
+                    // Handle long messages by splitting
+                    const firstPart = fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
+                    
+                    if (sentMessage && sentMessage.content !== firstPart) {
+                        await sentMessage.edit(firstPart);
+                    } else if (!sentMessage) {
+                        sentMessage = await channel.send(firstPart);
                     }
 
-                    const remaining = fullContent.substring(DISCORD_MAX_LENGTH);
-                    const chunks = splitByLength(remaining, DISCORD_MAX_LENGTH);
+                    const remaining = fullContent.substring(DISCORD_MESSAGE_MAX_LENGTH);
+                    const chunks = splitByLength(remaining, DISCORD_MESSAGE_MAX_LENGTH);
                     
                     for (let i = 0; i < chunks.length; i++) {
                         await channel.send(chunks[i]);
+                        // Small delay between chunks to avoid rate limiting
+                        if (i < chunks.length - 1) {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                        }
                     }
 
+                    logger.info('STREAMING', `Split into ${chunks.length + 1} messages`);
                     resolve(fullContent);
                 }
             } catch (error) {
-                logger.error('STREAMING', `Error finalizing message: ${error.message}`);
+                ErrorHandler.logError('STREAMING', 'Error finalizing message', error);
                 reject(error);
             }
         });
