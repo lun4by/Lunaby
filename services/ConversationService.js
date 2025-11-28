@@ -20,12 +20,13 @@ const {
   REQUEST_TYPES
 } = require("../config/constants.js");
 
-const IMAGE_COMMAND_REGEX = /^(?:vẽ|tạo hình|vẽ hình|hình|tạo ảnh ai|tạo ảnh)\s+(?:cho\s+(?:tôi|mình|em|anh|chị)\s+)?(?:một\s+)?(?:hình\s+(?:ảnh\s+)?|ảnh\s+(?:về\s+)?)?(.+)$/i;
-const MEMORY_COMMAND_REGEX = /^(nhớ lại|trí nhớ|lịch sử|conversation history|memory|như nãy|vừa gửi|vừa đề cập)\s*(.*)$/i;
-const CODE_COMMAND_REGEX = /\b(code|code completion|function|method|write|implement|create|viết code|viết hàm|tạo hàm|code snippet|đoạn code|class|const|let|var|function|def|return|async|await|javascript|python|java|php|c\+\+|ruby|go|rust)\b/gi;
-
-const MEMORY_ANALYSIS_SUMMARY_KEYWORDS = ["ngắn gọn", "tóm tắt"];
-const MEMORY_ANALYSIS_DETAILED_KEYWORDS = ["đầy đủ", "chi tiết"];
+const {
+  IMAGE_COMMAND_REGEX,
+  MEMORY_COMMAND_REGEX,
+  CODE_COMMAND_REGEX,
+  MEMORY_ANALYSIS_SUMMARY_KEYWORDS,
+  MEMORY_ANALYSIS_DETAILED_KEYWORDS
+} = require("../config/patterns.js");
 
 class ConversationService {
   constructor() {

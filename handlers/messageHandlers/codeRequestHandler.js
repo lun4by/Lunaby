@@ -4,18 +4,10 @@ const { sendStreamingMessage } = require('../streamingHandler');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 
 function formatCodeResponse(text) {
+  const { LANGUAGE_DETECTION_PATTERNS } = require('../../config/patterns');
   let language = 'javascript';
 
-  const langPatterns = {
-    python: /import\s+[\w.]+|def\s+\w+\s*\(|print\s*\(/i,
-    javascript: /const|let|var|function|=>|\bif\s*\(|console\.log/i,
-    java: /public\s+class|void\s+main|System\.out|import\s+java/i,
-    html: /<html|<div|<body|<head|<!DOCTYPE/i,
-    css: /body\s*{|margin:|padding:|color:|@media/i,
-    php: /<\?php|\$\w+\s*=/i
-  };
-
-  for (const [lang, pattern] of Object.entries(langPatterns)) {
+  for (const [lang, pattern] of Object.entries(LANGUAGE_DETECTION_PATTERNS)) {
     if (pattern.test(text)) {
       language = lang;
       break;
