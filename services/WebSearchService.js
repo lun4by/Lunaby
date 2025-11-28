@@ -30,7 +30,7 @@ class WebSearchService {
       const systemPrompt = options.systemPrompt || "Bạn là một trợ lý hữu ích. Hãy cung cấp thông tin chi tiết và chính xác.";
 
       const messages = [{ role: "user", content: query }];
-      
+
       if (systemPrompt) {
         messages.unshift({ role: "system", content: systemPrompt });
       }
@@ -79,7 +79,7 @@ class WebSearchService {
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;
-        
+
         logger.error("WEB_SEARCH", `API error response status: ${status}`);
         logger.error("WEB_SEARCH", `API error response data:`, data);
 
@@ -87,10 +87,10 @@ class WebSearchService {
           if (data && data.error) {
             const apiError = data.error;
             if (typeof apiError === 'string') {
-              if (apiError.toLowerCase().includes('content') || 
-                  apiError.toLowerCase().includes('policy') ||
-                  apiError.toLowerCase().includes('safety') ||
-                  apiError.toLowerCase().includes('moderation')) {
+              if (apiError.toLowerCase().includes('content') ||
+                apiError.toLowerCase().includes('policy') ||
+                apiError.toLowerCase().includes('safety') ||
+                apiError.toLowerCase().includes('moderation')) {
                 errorMessage = "Nội dung vi phạm chính sách an toàn";
                 errorDetails = "Từ khóa tìm kiếm chứa nội dung không được phép theo chính sách";
               } else if (apiError.toLowerCase().includes('internal')) {
@@ -127,7 +127,7 @@ class WebSearchService {
       }
 
       logger.error("WEB_SEARCH", `Search error: ${errorMessage} - ${errorDetails}`);
-      
+
       const finalError = new Error(errorMessage);
       finalError.details = errorDetails;
       throw finalError;
@@ -159,7 +159,7 @@ class WebSearchService {
       // Streaming & content creators
       'streamer', 'youtuber', 'tiktoker', 'content creator', 'kênh', 'channel',
       // Politics & government
-      'chính trị', 'politics', 'chính phủ', 'government', 'tổng thống', 'president', 
+      'chính trị', 'politics', 'chính phủ', 'government', 'tổng thống', 'president',
       'người nắm quyền', 'người lãnh đạo', 'leader', 'thủ tướng', 'prime minister',
       'bầu cử', 'election', 'quốc hội', 'parliament', 'đảng', 'party'
     ];
@@ -168,7 +168,7 @@ class WebSearchService {
     return searchKeywords.some(keyword => lowerText.includes(keyword));
   }
 
-  
+
   extractCitations(content) {
     const citationRegex = /\[(\d+)\]/g;
     const citations = [];
