@@ -230,96 +230,109 @@ class ConversationService {
     }
   }
 
+  async buildEnhancedPrompt(prompt, conversationHistory) {
+    const isNewConversation = !conversationHistory || conversationHistory.length <= 2;
+    return `
+      ${prompts.chat.responseStyle}
+      ${isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
+      ${prompts.chat.generalInstructions}
+      ${prompt}
+    `;
+  }
+
+  async loadAndPrepareHistory(userId, systemPrompt, enhancedPrompt) {
+    await conversationManager.loadConversationHistory(userId, systemPrompt, AICore.getModelName());
+    const conversationHistory = conversationManager.getHistory(userId);
+    
+    await conversationManager.addMessage(userId, "user", enhancedPrompt);
+
+    let messages = conversationManager.getHistory(userId);
+    if (!messages || messages.length === 0) {
+      logger.error("CONVERSATION_SERVICE", `Empty history for ${userId}, reinitializing`);
+      await conversationManager.resetConversation(userId, systemPrompt, AICore.getModelName());
+      await conversationManager.addMessage(userId, "user", enhancedPrompt);
+      messages = conversationManager.getHistory(userId);
+    }
+
+    return messages;
+  }
+
+  validateAndCleanMessages(messages) {
+    logger.info("CONVERSATION_SERVICE", `Total messages before validation: ${messages.length}`);
+    messages.forEach((msg, idx) => {
+      logger.debug("CONVERSATION_SERVICE", `Message[${idx}]: role="${msg?.role}", content length=${msg?.content?.length || 0}`);
+    });
+
+    const validMessages = Validators.cleanMessages(messages);
+
+    if (validMessages.length === 0) {
+      throw new Error("No valid messages to send");
+    }
+
+    logger.info("CONVERSATION_SERVICE", `Sending ${validMessages.length} messages (cleaned from ${messages.length})`);
+    return validMessages;
+  }
+
+  async callAIWithTimeout(validMessages, config) {
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('AICore timeout after 25 seconds')), AI_TIMEOUT_MS);
+    });
+    
+    return await Promise.race([
+      AICore.processChatCompletion(validMessages, config),
+      timeoutPromise
+    ]);
+  }
+
+  async handleCompletionResult(userId, prompt, result) {
+    const content = result.content;
+    const tokenUsage = result.usage;
+
+    if (tokenUsage && tokenUsage.total_tokens) {
+      QuotaService.recordMessageUsage(userId, 1, 'chat').catch(err =>
+        logger.error('CONVERSATION_SERVICE', 'Error recording usage:', err)
+      );
+    }
+
+    await conversationManager.addMessage(userId, "assistant", content);
+
+    MemoryService.extractMemoryFromConversation(userId, prompt, content).catch(err =>
+      logger.error('CONVERSATION_SERVICE', 'Error extracting memory:', err)
+    );
+
+    MemoryService.updateInteractionStats(userId).catch(err =>
+      logger.error('CONVERSATION_SERVICE', 'Error updating interaction stats:', err)
+    );
+
+    return content;
+  }
+
   
   async processChatCompletion(prompt, userId, additionalConfig = {}) {
+    const ErrorHandler = require("../utils/ErrorHandler.js");
+    
     try {
-      let systemPrompt = additionalConfig.systemPrompt || prompts.system.main;
+      const systemPrompt = additionalConfig.systemPrompt || prompts.system.main;
 
-      await conversationManager.loadConversationHistory(userId, systemPrompt, AICore.getModelName());
       const conversationHistory = conversationManager.getHistory(userId);
-      const isNewConversation = !conversationHistory || conversationHistory.length <= 2;
-
-      const enhancedPrompt = `
-        ${prompts.chat.responseStyle}
-        ${isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
-        ${prompts.chat.generalInstructions}
-        ${prompt}
-      `;
-
-      await conversationManager.addMessage(userId, "user", enhancedPrompt);
-
-      let messages = conversationManager.getHistory(userId);
-      if (!messages || messages.length === 0) {
-        logger.error("CONVERSATION_SERVICE", `Empty history for ${userId}, reinitializing`);
-        await conversationManager.resetConversation(userId, systemPrompt, AICore.getModelName());
-        await conversationManager.addMessage(userId, "user", enhancedPrompt);
-        messages = conversationManager.getHistory(userId);
-      }
-
-      logger.info("CONVERSATION_SERVICE", `Total messages before validation: ${messages.length}`);
-      messages.forEach((msg, idx) => {
-        logger.debug("CONVERSATION_SERVICE", `Message[${idx}]: role="${msg?.role}", content length=${msg?.content?.length || 0}`);
-      });
-
-      const validMessages = Validators.cleanMessages(messages);
-
-      if (validMessages.length === 0) {
-        throw new Error("No valid messages to send");
-      }
-
-      logger.info("CONVERSATION_SERVICE", `Sending ${validMessages.length} messages (cleaned from ${messages.length})`);
-
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('AICore timeout after 25 seconds')), AI_TIMEOUT_MS);
-      });
+      const enhancedPrompt = await this.buildEnhancedPrompt(prompt, conversationHistory);
       
-      const result = await Promise.race([
-        AICore.processChatCompletion(validMessages, {
-          model: additionalConfig.model || AICore.CoreModel,
-          max_tokens: additionalConfig.max_tokens || 2048,
-          ...additionalConfig,
-        }),
-        timeoutPromise
-      ]);
+      const messages = await this.loadAndPrepareHistory(userId, systemPrompt, enhancedPrompt);
+      const validMessages = this.validateAndCleanMessages(messages);
+      
+      const config = {
+        model: additionalConfig.model || AICore.CoreModel,
+        max_tokens: additionalConfig.max_tokens || 2048,
+        ...additionalConfig,
+      };
 
-      const content = result.content;
-      const tokenUsage = result.usage;
-
-      if (tokenUsage && tokenUsage.total_tokens) {
-        QuotaService.recordMessageUsage(userId, 1, 'chat').catch(err =>
-          logger.error('CONVERSATION_SERVICE', 'Error recording usage:', err)
-        );
-      }
-
-      await conversationManager.addMessage(userId, "assistant", content);
-
-      MemoryService.extractMemoryFromConversation(userId, prompt, content).catch(err =>
-        logger.error('CONVERSATION_SERVICE', 'Error extracting memory:', err)
-      );
-
-      MemoryService.updateInteractionStats(userId).catch(err =>
-        logger.error('CONVERSATION_SERVICE', 'Error updating interaction stats:', err)
-      );
-
-      return content;
+      const result = await this.callAIWithTimeout(validMessages, config);
+      return await this.handleCompletionResult(userId, prompt, result);
 
     } catch (error) {
-      logger.error("CONVERSATION_SERVICE", "Error in processChatCompletion:", error.message);
+      ErrorHandler.logError("CONVERSATION_SERVICE", "Error in processChatCompletion", error);
       
-      let userFriendlyMessage = "Không thể xử lý tin nhắn";
-      
-      if (error.message.includes('timeout') || error.message.includes('Hết thời gian')) {
-        userFriendlyMessage = "Yêu cầu mất quá nhiều thời gian. Vui lòng thử lại với tin nhắn ngắn gọn hơn.";
-      } else if (error.message.includes('vi phạm') || error.message.includes('không được phép')) {
-        userFriendlyMessage = "Nội dung vi phạm chính sách an toàn. Vui lòng thử lại với nội dung khác.";
-      } else if (error.message.includes('hệ thống') || error.message.includes('Internal')) {
-        userFriendlyMessage = "Hệ thống AI tạm thời bận. Vui lòng thử lại sau vài giây.";
-      } else if (error.message.includes('kết nối')) {
-        userFriendlyMessage = "Không thể kết nối đến server AI. Vui lòng thử lại sau.";
-      } else if (error.details) {
-        userFriendlyMessage = error.details;
-      }
-      
+      const userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(error, "xử lý tin nhắn");
       const friendlyError = new Error(userFriendlyMessage);
       friendlyError.originalError = error;
       throw friendlyError;
