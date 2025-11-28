@@ -41,3 +41,9 @@ Thumbs.db
 
 # Thêm MAL Client ID vào gitignore
 mal_config.json
+
+# Ignore markdown
+*.md
+*.txt
+!README.md
+!CHANGELOG.md
