@@ -1,9 +1,6 @@
-const axios = require('axios');
 const logger = require('../utils/logger.js');
 const AICore = require('./AICore');
 const { 
-    API_REQUEST_TIMEOUT_MS, 
-    DEFAULT_MAX_TOKENS,
     STREAM_UPDATE_INTERVAL_MS,
     STREAM_MIN_CHUNK_SIZE,
     STREAM_BATCH_UPDATE_SIZE,
@@ -12,238 +9,94 @@ const {
 
 async function sendStreamingMessage(channel, messages, config = {}) {
     const Validators = require('../utils/validators');
-    const ErrorHandler = require('../utils/ErrorHandler');
     
-    const isDM = channel.type === 1;
-    const enableStreaming = process.env.ENABLE_STREAMING !== 'false';
-    
-    if (!enableStreaming) {
-        logger.info('STREAMING', 'Streaming disabled via config, using fallback');
-        throw new Error('Streaming disabled');
-    }
-    
-    // Use AICore's configuration for single source of truth
-    const apiUrl = AICore.lunabyBaseURL;
-    const apiKey = AICore.lunabyApiKey;
-
-    if (!apiKey) {
-        throw new Error('LUNABY_API_KEY not configured');
-    }
+    const client = AICore.getClient();
+    if (!client) throw new Error('SDK client not initialized');
 
     const validMessages = Validators.cleanMessages(messages);
-    if (validMessages.length === 0) {
-        throw new Error('No valid messages to send');
+    if (!validMessages.length) throw new Error('No valid messages');
+
+    const stream = await client.chat.createStream(validMessages, {
+        model: config.model || AICore.getModelName(),
+        max_tokens: config.max_tokens || 2048,
+        ...config
+    });
+
+    let sentMessage = null;
+    let lastUpdate = Date.now();
+    let lastSentLength = 0;
+
+    const typingInterval = setInterval(() => channel.sendTyping().catch(() => {}), 5000);
+
+    try {
+        const fullContent = await stream.process({
+            onContent: async (chunk, accumulated) => {
+                const now = Date.now();
+                const delta = accumulated.length - lastSentLength;
+                const shouldUpdate = !sentMessage || 
+                    delta >= STREAM_BATCH_UPDATE_SIZE || 
+                    (now - lastUpdate >= STREAM_UPDATE_INTERVAL_MS && delta >= STREAM_MIN_CHUNK_SIZE);
+                
+                if (shouldUpdate) {
+                    try {
+                        const text = accumulated.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
+                        if (!sentMessage) {
+                            sentMessage = await channel.send(text);
+                        } else if (accumulated.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+                            await sentMessage.edit(text);
+                        }
+                        lastUpdate = now;
+                        lastSentLength = accumulated.length;
+                    } catch (e) {
+                        if (e.code === 10008) sentMessage = null;
+                    }
+                }
+            }
+        });
+
+        clearInterval(typingInterval);
+        await sendFinalMessage(channel, sentMessage, fullContent);
+        return fullContent;
+    } catch (error) {
+        clearInterval(typingInterval);
+        throw error;
+    }
+}
+
+async function sendFinalMessage(channel, sentMessage, content) {
+    if (content.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+        if (sentMessage && sentMessage.content !== content) {
+            await sentMessage.edit(content);
+        } else if (!sentMessage) {
+            await channel.send(content);
+        }
+        return;
     }
 
-    const defaultModel = config.model || AICore.getModelName();
-    logger.info('STREAMING', `Starting stream with ${validMessages.length} messages, model: ${defaultModel}`);
+    const first = content.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
+    if (sentMessage) await sentMessage.edit(first);
+    else await channel.send(first);
 
-    const response = await axios.post(
-        `${apiUrl}/chat/completions`,
-        {
-            model: defaultModel,
-            messages: validMessages,
-            max_tokens: config.max_tokens || DEFAULT_MAX_TOKENS || 2048,
-            stream: true,
-            ...config
-        },
-        {
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: API_REQUEST_TIMEOUT_MS || 120000,
-            responseType: 'stream'
-        }
-    );
-
-    let fullContent = '';
-    let lastUpdate = Date.now();
-    let sentMessage = null;
-    let buffer = '';
-    let updateCount = 0;
-    let isUpdating = false;
-    let lastSentLength = 0;
-    let pendingUpdate = null;
-
-    const typingInterval = setInterval(() => {
-        channel.sendTyping().catch(() => { });
-    }, 5000);
-    
-    const scheduleUpdate = async () => {
-        if (isUpdating || !fullContent) return;
-        
-        const now = Date.now();
-        const timeSinceLastUpdate = now - lastUpdate;
-        const contentDelta = fullContent.length - lastSentLength;
-        
-        const shouldUpdate = 
-            !sentMessage || 
-            contentDelta >= STREAM_BATCH_UPDATE_SIZE || 
-            (timeSinceLastUpdate >= STREAM_UPDATE_INTERVAL_MS && contentDelta >= STREAM_MIN_CHUNK_SIZE);
-        
-        if (shouldUpdate) {
-            isUpdating = true;
-            try {
-                const contentToSend = fullContent.length > DISCORD_MESSAGE_MAX_LENGTH 
-                    ? fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH) 
-                    : fullContent;
-                
-                if (!sentMessage) {
-                    sentMessage = await channel.send(contentToSend);
-                    logger.debug('STREAMING', `Initial message sent: ${contentToSend.length} chars`);
-                } else if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH && contentToSend !== sentMessage.content) {
-                    await sentMessage.edit(contentToSend);
-                    logger.debug('STREAMING', `Message updated: ${contentToSend.length} chars (delta: +${contentDelta})`);
-                }
-                
-                lastUpdate = now;
-                lastSentLength = fullContent.length;
-                updateCount++;
-            } catch (editError) {
-                if (editError.code === 50027) {
-                    logger.warn('STREAMING', 'Message editing failed, will try final update');
-                } else if (editError.code === 10008) {
-                    logger.warn('STREAMING', 'Message was deleted, creating new one');
-                    sentMessage = null;
-                }
-            } finally {
-                isUpdating = false;
-            }
-        }
-    };
-
-    return new Promise((resolve, reject) => {
-        response.data.on('data', async (chunk) => {
-            buffer += chunk.toString();
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-
-            for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed || trimmed.startsWith('event:')) continue;
-
-                if (trimmed.startsWith('data:')) {
-                    const data = trimmed.slice(5).trim();
-                    if (data === '[DONE]') continue;
-
-                    try {
-                        const parsed = JSON.parse(data);
-                        const content = parsed.choices?.[0]?.delta?.content;
-                        
-                        if (parsed.error) {
-                            logger.error('STREAM', `API error: ${JSON.stringify(parsed.error)}`);
-                        }
-
-                        if (content) {
-                            fullContent += content;
-                            
-                            if (pendingUpdate) {
-                                clearTimeout(pendingUpdate);
-                            }
-                            
-                            pendingUpdate = setTimeout(async () => {
-                                await scheduleUpdate();
-                                pendingUpdate = null;
-                            }, 50); 
-                        }
-                    } catch (e) {
-                    }
-                }
-            }
-        });
-
-        response.data.on('end', async () => {
-            clearInterval(typingInterval);
-            
-            if (pendingUpdate) {
-                clearTimeout(pendingUpdate);
-            }
-
-            let waitCount = 0;
-            while (isUpdating && waitCount < 20) {
-                await new Promise(resolve => setTimeout(resolve, 50));
-                waitCount++;
-            }
-
-            logger.info('STREAMING', `Stream completed. Length: ${fullContent.length} chars, Updates: ${updateCount}, Avg update interval: ${updateCount > 0 ? Math.round((Date.now() - lastUpdate) / updateCount) : 0}ms`);
-
-            try {
-                if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
-                    if (sentMessage && sentMessage.content !== fullContent) {
-                        await sentMessage.edit(fullContent);
-                        logger.debug('STREAMING', 'Final update applied');
-                    } else if (!sentMessage) {
-                        await channel.send(fullContent);
-                    }
-                    resolve(fullContent);
-                } else {
-                    const firstPart = fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
-                    
-                    if (sentMessage && sentMessage.content !== firstPart) {
-                        await sentMessage.edit(firstPart);
-                    } else if (!sentMessage) {
-                        sentMessage = await channel.send(firstPart);
-                    }
-
-                    const remaining = fullContent.substring(DISCORD_MESSAGE_MAX_LENGTH);
-                    const chunks = splitByLength(remaining, DISCORD_MESSAGE_MAX_LENGTH);
-                    
-                    for (let i = 0; i < chunks.length; i++) {
-                        await channel.send(chunks[i]);
-                        if (i < chunks.length - 1) {
-                            await new Promise(resolve => setTimeout(resolve, 100));
-                        }
-                    }
-
-                    logger.info('STREAMING', `Split into ${chunks.length + 1} messages`);
-                    resolve(fullContent);
-                }
-            } catch (error) {
-                ErrorHandler.logError('STREAMING', 'Error finalizing message', error);
-                reject(error);
-            }
-        });
-
-        response.data.on('error', (error) => {
-            clearInterval(typingInterval);
-            const ErrorHandler = require('../utils/ErrorHandler');
-            ErrorHandler.logError('STREAMING', 'Stream error occurred', error);
-            reject(error);
-        });
-    });
+    const chunks = splitByLength(content.substring(DISCORD_MESSAGE_MAX_LENGTH), DISCORD_MESSAGE_MAX_LENGTH);
+    for (const chunk of chunks) {
+        await channel.send(chunk);
+        await new Promise(r => setTimeout(r, 100));
+    }
 }
 
 function splitByLength(text, maxLength) {
     const chunks = [];
-    let startPos = 0;
-
-    while (startPos < text.length) {
-        if (startPos + maxLength >= text.length) {
-            chunks.push(text.substring(startPos));
-            break;
+    let start = 0;
+    while (start < text.length) {
+        let end = Math.min(start + maxLength, text.length);
+        if (end < text.length) {
+            while (end > start && text[end] !== ' ' && text[end] !== '\n') end--;
+            if (end === start) end = start + maxLength;
         }
-
-        let endPos = startPos + maxLength;
-
-        while (endPos > startPos && text[endPos] !== ' ' && text[endPos] !== '\n') {
-            endPos--;
-        }
-
-        if (endPos === startPos) {
-            endPos = startPos + maxLength;
-        } else {
-            endPos++;
-        }
-
-        chunks.push(text.substring(startPos, endPos));
-        startPos = endPos;
+        chunks.push(text.substring(start, end));
+        start = end + (text[end] === ' ' || text[end] === '\n' ? 1 : 0);
     }
-
     return chunks;
 }
 
-module.exports = {
-    sendStreamingMessage,
-    splitByLength
-};
+module.exports = { sendStreamingMessage, splitByLength };
