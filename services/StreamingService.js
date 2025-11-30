@@ -25,12 +25,15 @@ async function sendStreamingMessage(channel, messages, config = {}) {
     let sentMessage = null;
     let lastUpdate = Date.now();
     let lastSentLength = 0;
+    let pendingSend = null;
 
     const typingInterval = setInterval(() => channel.sendTyping().catch(() => {}), 5000);
 
     try {
         const fullContent = await stream.process({
             onContent: async (chunk, accumulated) => {
+                if (pendingSend) return;
+                
                 const now = Date.now();
                 const delta = accumulated.length - lastSentLength;
                 const shouldUpdate = !sentMessage || 
@@ -38,22 +41,29 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                     (now - lastUpdate >= STREAM_UPDATE_INTERVAL_MS && delta >= STREAM_MIN_CHUNK_SIZE);
                 
                 if (shouldUpdate) {
-                    try {
-                        const text = accumulated.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
-                        if (!sentMessage) {
-                            sentMessage = await channel.send(text);
-                        } else if (accumulated.length <= DISCORD_MESSAGE_MAX_LENGTH) {
-                            await sentMessage.edit(text);
+                    const text = accumulated.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
+                    
+                    pendingSend = (async () => {
+                        try {
+                            if (!sentMessage) {
+                                sentMessage = await channel.send(text);
+                            } else if (accumulated.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+                                await sentMessage.edit(text);
+                            }
+                            lastUpdate = Date.now();
+                            lastSentLength = accumulated.length;
+                        } catch (e) {
+                            if (e.code === 10008) sentMessage = null;
+                        } finally {
+                            pendingSend = null;
                         }
-                        lastUpdate = now;
-                        lastSentLength = accumulated.length;
-                    } catch (e) {
-                        if (e.code === 10008) sentMessage = null;
-                    }
+                    })();
                 }
             }
         });
 
+        if (pendingSend) await pendingSend;
+        
         clearInterval(typingInterval);
         await sendFinalMessage(channel, sentMessage, fullContent);
         return fullContent;

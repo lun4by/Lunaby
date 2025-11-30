@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const consentService = require('../services/consentService');
-const guildProfileDB = require('../services/guildprofiledb');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const logger = require('../utils/logger.js');
 
@@ -89,23 +88,6 @@ const handleCommand = async (interaction, client) => {
   }
 
   try {
-    // Check guild settings for allowed command channels
-    if (interaction.guild) {
-      const profile = await guildProfileDB.getGuildProfile(interaction.guild.id);
-      const allowedChannels = profile?.settings?.allowedCommandChannels || [];
-
-      // If allowedChannels is not empty, enforce the restriction
-      if (allowedChannels.length > 0 && !allowedChannels.includes(interaction.channelId)) {
-        const channelMentions = allowedChannels.map(id => `<#${id}>`).join(', ');
-        await interaction.reply({ 
-          content: `⚠️ Lệnh chỉ được sử dụng trong các kênh sau: ${channelMentions}`, 
-          ephemeral: true 
-        });
-        logger.debug('COMMAND', `Command /${interaction.commandName} blocked in channel ${interaction.channelId} for guild ${interaction.guild.id}`);
-        return;
-      }
-    }
-
     const aiCommands = ['chat', 'think', 'image', 'reset'];
     if (aiCommands.includes(interaction.commandName)) {
       const hasConsented = await consentService.hasUserConsented(interaction.user.id);

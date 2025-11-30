@@ -10,6 +10,7 @@ const profileCache = new Set();
 const guildProfileStructure = {
   _id: String, 
   prefix: null,
+  aiThreads: [],
   greeter: {
     welcome: {
       isEnabled: false,

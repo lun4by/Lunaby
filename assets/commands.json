@@ -619,6 +619,24 @@
     "cooldown": null
   },
   {
+    "name": "chat",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "system",
+    "description": "Tạo thread chat riêng với AI",
+    "parameters": [],
+    "examples": [
+      "/chat"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": null
+  },
+  {
     "name": "logger",
     "aliases": [],
     "clientPermissions": [

@@ -4,9 +4,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  StringSelectMenuBuilder,
-  PermissionsBitField,
-  ChannelType
+  PermissionsBitField
 } = require('discord.js');
 
 const guildProfileDB = require('../../services/guildprofiledb');
@@ -45,11 +43,9 @@ module.exports = {
         profileCache.set(guildId, profile);
       }
 
-      // Initialize settings
       if (!profile.data.settings) {
         profile.data.settings = {
           levelUpNotifications: true,
-          allowedCommandChannels: [],
           useEmbeds: true
         };
       }
@@ -133,17 +129,12 @@ function buildSettingsUI(settings, guild, disabled = false) {
         name: '📋 Sử dụng Embed', 
         value: `[${settings.useEmbeds ? 'on' : 'off'}]`, 
         inline: true 
-      },
-      { 
-        name: '💬 Kênh cho phép lệnh', 
-        value: getChannelListText(settings.allowedCommandChannels), 
-        inline: false 
       }
     )
     .setFooter({ text: disabled ? 'Đã hết hạn' : 'Tự động đóng sau 10 phút' })
     .setTimestamp();
 
-  const row1 = new ActionRowBuilder().addComponents(
+  const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('set_toggle_level')
       .setLabel(settings.levelUpNotifications ? 'Tắt Level' : 'Bật Level')
@@ -153,14 +144,6 @@ function buildSettingsUI(settings, guild, disabled = false) {
       .setCustomId('set_toggle_embed')
       .setLabel(settings.useEmbeds ? 'Tắt Embed' : 'Bật Embed')
       .setStyle(ButtonStyle.Secondary)
-      .setDisabled(disabled)
-  );
-
-  const row2 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('set_manage_channels')
-      .setLabel('💬 Quản lý kênh')
-      .setStyle(ButtonStyle.Secondary)
       .setDisabled(disabled),
     new ButtonBuilder()
       .setCustomId('set_close')
@@ -169,7 +152,7 @@ function buildSettingsUI(settings, guild, disabled = false) {
       .setDisabled(disabled)
   );
 
-  return { embed, components: [row1, row2] };
+  return { embed, components: [row] };
 }
 
 
@@ -202,36 +185,6 @@ async function handleInteraction(i, guildId, settings, guild) {
     return;
   }
 
-  if (customId === 'set_manage_channels') {
-    const textChannels = guild.channels.cache
-      .filter(c => c.type === ChannelType.GuildText)
-      .first(25);
-
-    if (textChannels.length === 0) {
-      return i.reply({ content: '❌ Không tìm thấy kênh văn bản nào.', ephemeral: true });
-    }
-
-    const select = new StringSelectMenuBuilder()
-      .setCustomId('set_channel_select')
-      .setPlaceholder('Chọn kênh (tối đa 25)')
-      .setMinValues(0)
-      .setMaxValues(Math.min(25, textChannels.length))
-      .addOptions(
-        textChannels.map(ch => ({
-          label: `#${ch.name}`,
-          value: ch.id,
-          description: settings.allowedCommandChannels.includes(ch.id) ? '✅ Đã cho phép' : 'Chưa cho phép',
-          default: settings.allowedCommandChannels.includes(ch.id)
-        }))
-      );
-
-    const selectRow = new ActionRowBuilder().addComponents(select);
-    const { embed, components } = buildSettingsUI(settings, guild);
-    
-    await i.update({ embeds: [embed], components: [...components, selectRow] });
-    return;
-  }
-
   if (customId === 'set_close') {
     await i.update({ 
       content: '✅ Cài đặt đã được đóng.', 
@@ -239,38 +192,7 @@ async function handleInteraction(i, guildId, settings, guild) {
       components: [] 
     });
     
-    // Stop collector
     i.message.collector?.stop('closed');
     return;
   }
-
-  if (customId === 'set_channel_select') {
-    const selected = i.values;
-    
-    // Replace the entire list with selected channels
-    settings.allowedCommandChannels = selected;
-    
-    await guildProfileDB.updateGuildProfile(guildId, { 
-      'settings.allowedCommandChannels': settings.allowedCommandChannels 
-    });
-
-    const { embed, components } = buildSettingsUI(settings, guild);
-    await i.update({ embeds: [embed], components });
-    
-    logger.info('SETTING', `Allowed channels updated (${guildId}): ${selected.join(',')}`);
-    return;
-  }
-}
-
-
-function getChannelListText(channels) {
-  if (!channels || channels.length === 0) {
-    return '🌐 Tất cả kênh';
-  }
-  
-  if (channels.length <= 5) {
-    return channels.map(id => `<#${id}>`).join(', ');
-  }
-  
-  return `${channels.slice(0, 5).map(id => `<#${id}>`).join(', ')} +${channels.length - 5} kênh`;
 }
