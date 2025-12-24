@@ -22,7 +22,7 @@ async function handleMentionMessage(message, client) {
       const profile = await guildProfileDB.getGuildProfile(message.guild.id);
       const aiThreads = profile?.aiThreads || [];
       const isAIThread = aiThreads.some(t => t.threadId === message.channel.id);
-      
+
       if (isAIThread) {
         await handleAIThread(message, client);
         return;
@@ -38,11 +38,14 @@ async function handleMentionMessage(message, client) {
     const hasEveryoneOrRoleMention = message.mentions.everyone || message.mentions.roles.size > 0;
 
     if (!hasEveryoneOrRoleMention) {
-      const typingPromise = message.channel.sendTyping().catch(() => { });
+      // Start typing interval - runs every 5 seconds to keep "typing" indicator visible
+      const typingInterval = setInterval(() => message.channel.sendTyping().catch(() => { }), 5000);
+      message.channel.sendTyping().catch(() => { });
 
       const hasConsented = await consentService.hasUserConsented(message.author.id);
 
       if (!hasConsented) {
+        clearInterval(typingInterval);
         try {
           const consentData = consentService.createConsentEmbed(message.author);
           await message.reply(consentData);
@@ -60,34 +63,39 @@ async function handleMentionMessage(message, client) {
         const content = message.content.replace(/<@!?\d+>/g, '').trim();
 
         if (!content) {
+          clearInterval(typingInterval);
           await message.reply('Tôi có thể giúp gì cho bạn hôm nay?');
           return;
         }
 
-        await typingPromise;
-
         const requestType = ConversationService.detectRequestType(content);
-        
+
         if (requestType.type === 'image') {
+          clearInterval(typingInterval);
           const imagePrompt = requestType.match[1];
           await handleImageRequest(message, imagePrompt);
           return;
         }
 
         if (requestType.type === 'memory') {
+          clearInterval(typingInterval);
           const memoryRequest = requestType.match[2].trim() || "toàn bộ cuộc trò chuyện";
           await handleMemoryRequest(message, ConversationService, memoryRequest);
           return;
         }
 
         if (requestType.type === 'code') {
+          clearInterval(typingInterval);
           await handleCodeRequest(message, content, ConversationService);
           return;
         }
 
+        // Clear interval before chat request - StreamingService has its own typing interval
+        clearInterval(typingInterval);
         await handleChatRequest(message, content, ConversationService);
 
       } catch (error) {
+        clearInterval(typingInterval);
         logger.error('CHAT', `Error processing message from ${message.author.tag}:`, error);
 
         let errorMessage = 'Xin lỗi, tôi gặp lỗi khi xử lý tin nhắn của bạn. Vui lòng thử lại sau.';
