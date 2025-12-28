@@ -4,6 +4,7 @@ const { logModAction, formatDuration } = require('../../utils/modUtils.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
 const { handlePermissionError } = require('../../utils/permissionUtils');
 const logger = require('../../utils/logger.js');
+const prompts = require('../../config/prompts.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -61,7 +62,6 @@ module.exports = {
 
       const formattedDuration = formatDuration(duration);
 
-      const prompts = require('../../config/prompts.js');
       const prompt = prompts.moderation.mute
         .replace('${username}', targetUser.username)
         .replace('${duration}', formattedDuration)

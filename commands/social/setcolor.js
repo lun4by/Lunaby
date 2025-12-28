@@ -11,15 +11,13 @@ module.exports = {
         .setRequired(true)),
 
   async execute(interaction) {
-    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
-
     await interaction.deferReply({ ephemeral: true });
 
     try {
       const colorInput = interaction.options.getString('color');
 
       const hexMatch = colorInput.match(/^#?([0-9a-f]{6})$/i);
-      
+
       let color = null;
       if (colorInput.toLowerCase() === 'default') {
         color = null;

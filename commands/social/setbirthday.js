@@ -11,15 +11,13 @@ module.exports = {
         .setRequired(true)),
 
   async execute(interaction) {
-    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
-
     await interaction.deferReply({ ephemeral: true });
 
     try {
       const dateInput = interaction.options.getString('date');
 
       const dateMatch = dateInput.match(/^(\d{1,2})-(\d{1,2})$/);
-      
+
       if (!dateMatch) {
         return interaction.editReply({
           content: '❌ **Định dạng ngày không hợp lệ!**\n\nVui lòng nhập theo format DD-MM (ví dụ: 02-12 cho ngày 2 tháng 12).'

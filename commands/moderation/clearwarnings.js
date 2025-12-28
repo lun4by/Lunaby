@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('disc
 const mongoClient = require('../../services/mongoClient.js');
 const ConversationService = require('../../services/ConversationService.js');
 const logger = require('../../utils/logger.js');
+const prompts = require('../../config/prompts.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -79,7 +80,6 @@ module.exports = {
 				}
 			}
 
-			const prompts = require('../../config/prompts.js');
 			const prompt = prompts.moderation.clearwarnings
 				.replace('${type}', type === 'all' ? 'tất cả' : 'cảnh cáo mới nhất')
 				.replace('${username}', targetUser.username)

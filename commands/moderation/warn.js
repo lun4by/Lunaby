@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('disc
 const ConversationService = require('../../services/ConversationService.js');
 const mongoClient = require('../../services/mongoClient.js');
 const logger = require('../../utils/logger.js');
+const prompts = require('../../config/prompts.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -71,7 +72,6 @@ module.exports = {
 				guildId: interaction.guild.id,
 			});
 
-			const prompts = require('../../config/prompts.js');
 			const prompt = prompts.moderation.warning
 				.replace('${username}', targetUser.username)
 				.replace('${reason}', reason)

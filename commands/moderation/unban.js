@@ -3,6 +3,7 @@ const ConversationService = require('../../services/ConversationService.js');
 const { logModAction } = require('../../utils/modUtils.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
 const logger = require('../../utils/logger.js');
+const prompts = require('../../config/prompts.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -49,7 +50,6 @@ module.exports = {
 
 			const user = bannedUser.user;
 
-			const prompts = require('../../config/prompts.js');
 			const prompt = prompts.moderation.unban
 				.replace('${username}', user.username)
 				.replace('${reason}', reason);

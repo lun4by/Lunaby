@@ -7,7 +7,7 @@ const AICore = require("./AICore.js");
 const QuotaService = require("./QuotaService.js");
 const MemoryService = require("./MemoryService.js");
 const Validators = require("../utils/validators.js");
-const { 
+const {
   DEFAULT_USER_ID,
   MAX_CONVERSATION_LENGTH,
   MAX_CONVERSATION_AGE_MS,
@@ -81,7 +81,7 @@ class ConversationService {
         );
 
         if (relevantMessages && relevantMessages.length > 0) {
-          conversationContext = prompts.memory.memoryContext.replace(
+          conversationContext = prompts.memory.context.replace(
             "${relevantMessagesText}",
             relevantMessages.join(". ")
           );
@@ -106,7 +106,7 @@ class ConversationService {
       const conversationSummary = recentMessages
         .filter(msg => msg.role === "user" || msg.role === "assistant")
         .map(msg => textUtils.createMessageSummary(msg.content, msg.role))
-        .filter(summaryText => summaryText); 
+        .filter(summaryText => summaryText);
 
       if (conversationSummary.length === 0) {
         return [];
@@ -153,14 +153,14 @@ class ConversationService {
 
       let analysis = "";
       const requestLower = request.toLowerCase();
-      
+
       const formatMessage = (msg) => {
-          let roleName = msg.role === "user" ? "Bạn" : "Lunaby";
-          let content = msg.content;
-          if (content.length > SUMMARY_MESSAGE_TRUNCATE_LENGTH) {
-            content = content.substring(0, SUMMARY_MESSAGE_TRUNCATE_LENGTH) + "...";
-          }
-          return `${roleName}: ${content}`;
+        let roleName = msg.role === "user" ? "Bạn" : "Lunaby";
+        let content = msg.content;
+        if (content.length > SUMMARY_MESSAGE_TRUNCATE_LENGTH) {
+          content = content.substring(0, SUMMARY_MESSAGE_TRUNCATE_LENGTH) + "...";
+        }
+        return `${roleName}: ${content}`;
       };
 
       if (MEMORY_ANALYSIS_SUMMARY_KEYWORDS.some(k => requestLower.includes(k))) {
@@ -208,7 +208,7 @@ class ConversationService {
     }
   }
 
-  
+
   async getCompletion(prompt, message = null) {
     try {
       const userId = this.extractUserId(message);
@@ -241,7 +241,7 @@ class ConversationService {
   async loadAndPrepareHistory(userId, systemPrompt, enhancedPrompt) {
     await conversationManager.loadConversationHistory(userId, systemPrompt, AICore.getModelName());
     const conversationHistory = conversationManager.getHistory(userId);
-    
+
     await conversationManager.addMessage(userId, "user", enhancedPrompt);
 
     let messages = conversationManager.getHistory(userId);
@@ -275,7 +275,7 @@ class ConversationService {
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('AICore timeout after 25 seconds')), AI_TIMEOUT_MS);
     });
-    
+
     return await Promise.race([
       AICore.processChatCompletion(validMessages, config),
       timeoutPromise
@@ -305,7 +305,7 @@ class ConversationService {
     return content;
   }
 
-  
+
   async processChatCompletion(prompt, userId, additionalConfig = {}) {
     const ErrorHandler = require("../utils/ErrorHandler.js");
     try {

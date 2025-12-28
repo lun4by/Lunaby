@@ -5,13 +5,13 @@ const prompts = require('../config/prompts.js');
 
 class MemoryService {
   constructor() {
-    this.memoryCache = new Map(); 
+    this.memoryCache = new Map();
     this.cacheExpiry = 30 * 60 * 1000;
-    
+
     logger.debug('MEMORY_SERVICE', 'Service initialized');
   }
 
-  
+
   async getMemoryCollection() {
     const db = mongoClient.getDb();
     return db.collection('user_memories');
@@ -31,7 +31,7 @@ class MemoryService {
       await collection.createIndex({ userId: 1 }, { unique: true });
       await collection.createIndex({ 'lastUpdated': 1 });
       await collection.createIndex({ 'memories.category': 1 });
-      
+
       logger.info('MEMORY_SERVICE', 'Memory system ready');
     } catch (error) {
       logger.error('MEMORY_SERVICE', 'Error initializing memory collection:', error);
@@ -39,13 +39,13 @@ class MemoryService {
     }
   }
 
-  
+
   getDefaultMemoryStructure(userId) {
     return {
       userId: userId,
       createdAt: new Date(),
       lastUpdated: new Date(),
-      
+
       // Personal information
       personalInfo: {
         name: null,
@@ -82,9 +82,9 @@ class MemoryService {
       ],
 
       relationships: {
-        friends: [], 
-        familyMembers: [], 
-        pets: [] 
+        friends: [],
+        familyMembers: [],
+        pets: []
       },
 
       interactionStats: {
@@ -93,7 +93,7 @@ class MemoryService {
         firstInteraction: new Date(),
         lastInteraction: new Date(),
         favoriteTopics: {}, // { "anime": 45, "coding": 32 }
-        conversationTimes: [], 
+        conversationTimes: [],
         responsePreferences: {
           detailLevel: 'medium',
           useEmojis: true,
@@ -102,10 +102,10 @@ class MemoryService {
       },
 
       currentContext: {
-        activeGoals: [], 
-        ongoingProjects: [], 
-        currentMood: null, 
-        recentTopics: [] 
+        activeGoals: [],
+        ongoingProjects: [],
+        currentMood: null,
+        recentTopics: []
       },
 
       privacy: {
@@ -117,7 +117,7 @@ class MemoryService {
     };
   }
 
-  
+
   async getUserMemory(userId) {
     try {
       const cached = this.memoryCache.get(userId);
@@ -146,11 +146,11 @@ class MemoryService {
     }
   }
 
-  
+
   async updateUserMemory(userId, updates) {
     try {
       const collection = await this.getMemoryCollection();
-      
+
       const updateDoc = {
         $set: {
           ...updates,
@@ -174,11 +174,11 @@ class MemoryService {
     }
   }
 
-  
+
   async addMemory(userId, memoryData) {
     try {
       const memory = await this.getUserMemory(userId);
-      
+
       if (!memory.privacy.allowMemoryStorage) {
         logger.info('MEMORY_SERVICE', `Memory storage disabled for user ${userId}`);
         return false;
@@ -213,17 +213,17 @@ class MemoryService {
     }
   }
 
-  
+
   async extractMemoryFromConversation(userId, userMessage, aiResponse) {
     try {
       const memory = await this.getUserMemory(userId);
-      
+
       if (!memory.privacy.allowPersonalInfoExtraction) {
         return null;
       }
 
       // Use AI to extract important information
-      const extractionPrompt = prompts.memory.memoryExtraction
+      const extractionPrompt = prompts.memory.extraction
         .replace('${userMessage}', userMessage)
         .replace('${aiResponse}', aiResponse);
 
@@ -290,11 +290,11 @@ class MemoryService {
     }
   }
 
-  
+
   async getRelevantMemories(userId, currentMessage, limit = 5) {
     try {
       const memory = await this.getUserMemory(userId);
-      
+
       if (!memory.memories || memory.memories.length === 0) {
         return [];
       }
@@ -306,7 +306,7 @@ class MemoryService {
         let score = mem.importance || 5;
 
         if (mem.tags && mem.tags.length > 0) {
-          const matchingTags = mem.tags.filter(tag => 
+          const matchingTags = mem.tags.filter(tag =>
             keywords.some(kw => tag.toLowerCase().includes(kw) || kw.includes(tag.toLowerCase()))
           );
           score += matchingTags.length * 3;
@@ -331,7 +331,7 @@ class MemoryService {
     }
   }
 
-  
+
   async buildMemoryContext(userId, currentMessage) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -382,7 +382,7 @@ class MemoryService {
     }
   }
 
-  
+
   async updateInteractionStats(userId, topic = null) {
     try {
       const updates = {
@@ -406,7 +406,7 @@ class MemoryService {
     }
   }
 
-  
+
   async getMemorySummary(userId) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -428,11 +428,11 @@ class MemoryService {
     }
   }
 
-  
+
   async deleteMemory(userId, memoryId) {
     try {
       const collection = await this.getMemoryCollection();
-      
+
       await collection.updateOne(
         { userId: userId },
         {
@@ -450,14 +450,14 @@ class MemoryService {
     }
   }
 
-  
+
   async clearUserMemories(userId) {
     try {
       const collection = await this.getMemoryCollection();
-      
+
       await collection.deleteOne({ userId: userId });
       this.memoryCache.delete(userId);
-      
+
       logger.info('MEMORY_SERVICE', `Cleared all memories for user ${userId}`);
       return true;
     } catch (error) {
@@ -466,7 +466,7 @@ class MemoryService {
     }
   }
 
-  
+
   async updatePrivacySettings(userId, privacySettings) {
     try {
       const updates = {};

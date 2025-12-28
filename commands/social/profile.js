@@ -1,20 +1,19 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const ProfileDB = require('../../services/profiledb');
 const XPService = require('../../services/XPService');
-const generateRankCard = require('../../services/canvas/rankCanvas');
+const { generateProfileCard } = require('../../services/canvas/profileCanvas');
+const logger = require('../../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('profile')
     .setDescription('Hiển thị profile card với XP, level, rank và thông tin cá nhân')
-    .addUserOption(option => 
+    .addUserOption(option =>
       option.setName('user')
         .setDescription('Người dùng mà bạn muốn xem profile')
         .setRequired(false)),
-    
-  async execute(interaction) {
-    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
 
+  async execute(interaction) {
     await interaction.deferReply();
 
     try {
@@ -23,55 +22,46 @@ module.exports = {
 
       if (targetUser.bot) {
         return interaction.editReply({
-          content: '❌ Bot không có XP!',
+          content: '❌ Bot không có profile!',
           ephemeral: true
         });
       }
 
       const profile = await ProfileDB.getProfile(targetUser.id);
+      const profileData = profile?.data?.profile || {};
+      const economyData = profile?.data?.economy || {};
+      const tipsData = profile?.data?.tips || {};
 
       let serverXP = await XPService.getUserXP(targetUser.id, interaction.guild.id);
-      
       if (!serverXP) {
-        serverXP = {
-          xp: 0,
-          level: 1
-        };
+        serverXP = { xp: 0, level: 1 };
       }
 
-      const { xp, level } = serverXP;
+      const serverRank = await XPService.getUserRank(targetUser.id, interaction.guild.id);
 
-      const mlvlcap = XPService.calculateLevelCap(level);
-      const lowerLim = level > 1 ? XPService.calculateLevelCap(level - 1) : 0;
-      const maxXPThisLevel = mlvlcap - lowerLim;
-      const curXPThisLevel = xp - lowerLim;
-      const percentage = Math.floor((curXPThisLevel / maxXPThisLevel) * 100);
+      // Global rank (optional - if you have global leaderboard)
+      let globalRank = null;
+      try {
+        globalRank = await XPService.getGlobalUserRank?.(targetUser.id) || null;
+      } catch { }
 
-      const rank = await XPService.getUserRank(targetUser.id, interaction.guild.id);
-
-      let wreathUrl = null;
-      if (rank && rank <= 10) {
-        wreathUrl = profile.data?.profile?.wreath || null;
-      }
-
-      const attachment = await generateRankCard(
-        member,
-        targetUser,
-        level,
-        xp,
-        mlvlcap,
-        maxXPThisLevel,
-        curXPThisLevel,
-        percentage,
-        rank,
-        wreathUrl,
-        profile.data?.profile || {}
-      );
+      const attachment = await generateProfileCard({
+        user: targetUser,
+        member: member,
+        profile: {
+          ...profileData,
+          economy: economyData,
+          tips: tipsData
+        },
+        xpData: serverXP,
+        serverRank: serverRank,
+        globalRank: globalRank
+      });
 
       await interaction.editReply({ files: [attachment] });
 
     } catch (error) {
-      console.error('Lỗi khi tạo profile card:', error);
+      logger.error('PROFILE', 'Error creating profile card:', error);
       await interaction.editReply({
         content: '❌ Có lỗi xảy ra khi tạo profile card!',
         ephemeral: true

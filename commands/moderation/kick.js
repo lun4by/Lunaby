@@ -1,31 +1,27 @@
 ﻿const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const ConversationService = require('../../services/ConversationService.js');
 const { logModAction } = require('../../utils/modUtils.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
 const { handlePermissionError } = require('../../utils/permissionUtils.js');
 const logger = require('../../utils/logger.js');
+const prompts = require('../../config/prompts.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('kick')
 		.setDescription('Đuổi một thành viên khỏi server')
-		.addUserOption((option) =>
-			option
-				.setName('user')
-				.setDescription('Thành viên cần đuổi')
-				.setRequired(true),
+		.addUserOption(option =>
+			option.setName('user').setDescription('Thành viên cần đuổi').setRequired(true)
 		)
-		.addStringOption((option) =>
-			option
-				.setName('reason')
-				.setDescription('Lý do đuổi')
-				.setRequired(false),
+		.addStringOption(option =>
+			option.setName('reason').setDescription('Lý do đuổi').setRequired(false)
 		)
 		.setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
 
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.KickMembers)) {
 			return interaction.reply({
-				content: t(interaction, 'commands.kick.errors.noPermission'),
+				content: 'Bạn không có quyền sử dụng lệnh này!',
 				ephemeral: true,
 			});
 		}
@@ -35,18 +31,16 @@ module.exports = {
 
 		if (!targetMember) {
 			return interaction.reply({
-				content: t(interaction, 'commands.kick.errors.userNotFound'),
+				content: 'Không tìm thấy thành viên này!',
 				ephemeral: true,
 			});
 		}
 
-		const reason =
-			interaction.options.getString('reason')?.trim() ||
-			t(interaction, 'commands.kick.defaultReason');
+		const reason = interaction.options.getString('reason')?.trim() || 'Không có lý do cụ thể';
 
 		if (!targetMember.kickable) {
 			return interaction.reply({
-				content: t(interaction, 'commands.kick.errors.cannotKick'),
+				content: 'Không thể đuổi thành viên này!',
 				ephemeral: true,
 			});
 		}
@@ -54,7 +48,6 @@ module.exports = {
 		await interaction.deferReply();
 
 		try {
-			const prompts = require('../../config/prompts.js');
 			const prompt = prompts.moderation.kick
 				.replace('${username}', targetUser.username)
 				.replace('${reason}', reason);
@@ -63,40 +56,16 @@ module.exports = {
 
 			const kickEmbed = new EmbedBuilder()
 				.setColor(0xffa500)
-				.setTitle(t(interaction, 'commands.kick.embeds.success.title'))
+				.setTitle('👢 Đuổi thành công')
 				.setDescription(aiResponse)
 				.addFields(
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.user'),
-						value: targetUser.tag,
-						inline: true,
-					},
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.userId'),
-						value: targetUser.id,
-						inline: true,
-					},
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.reason'),
-						value: reason,
-						inline: false,
-					},
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.moderator'),
-						value: interaction.user.tag,
-						inline: true,
-					},
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.date'),
-						value: `<t:${Math.floor(Date.now() / 1000)}:F>`,
-						inline: true,
-					},
+					{ name: 'Người dùng', value: targetUser.tag, inline: true },
+					{ name: 'ID', value: targetUser.id, inline: true },
+					{ name: 'Lý do', value: reason, inline: false },
+					{ name: 'Moderator', value: interaction.user.tag, inline: true },
+					{ name: 'Ngày', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
 				)
-				.setFooter({
-					text: t(interaction, 'commands.kick.embeds.success.footer', {
-						moderator: interaction.user.tag,
-					}),
-				})
+				.setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
 				.setTimestamp();
 
 			await targetMember.kick(reason);
@@ -113,66 +82,31 @@ module.exports = {
 				await interaction.editReply({ embeds: [kickEmbed] });
 			} catch (error) {
 				if (error.code === 50013 || error.message.includes('permission')) {
-					await handlePermissionError(
-						interaction,
-						'embedLinks',
-						interaction.user.username,
-						'editReply',
-					);
+					await handlePermissionError(interaction, 'embedLinks', interaction.user.username, 'editReply');
 				} else {
 					throw error;
 				}
 			}
 
 			const logEmbed = createModActionEmbed({
-				title: t(interaction, 'commands.kick.embeds.success.title'),
-				description: t(interaction, 'commands.kick.embeds.success.description', {
-					user: targetUser.tag,
-				}),
+				title: '👢 Đuổi thành công',
+				description: `Đã đuổi ${targetUser.tag} khỏi server.`,
 				color: 0xffa500,
 				fields: [
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.user'),
-						value: `${targetUser.tag}`,
-						inline: true,
-					},
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.userId'),
-						value: targetUser.id,
-						inline: true,
-					},
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.moderator'),
-						value: `${interaction.user.tag} (<@${interaction.user.id}>)`,
-						inline: true,
-					},
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.reason'),
-						value: reason,
-						inline: false,
-					},
-					{
-						name: t(interaction, 'commands.kick.embeds.success.fields.date'),
-						value: `<t:${Math.floor(Date.now() / 1000)}:F>`,
-						inline: false,
-					},
+					{ name: 'Người dùng', value: targetUser.tag, inline: true },
+					{ name: 'ID', value: targetUser.id, inline: true },
+					{ name: 'Moderator', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+					{ name: 'Lý do', value: reason, inline: false },
+					{ name: 'Ngày', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
 				],
-				footer: t(interaction, 'commands.kick.embeds.success.footerServer', {
-					server: interaction.guild.name,
-				}),
+				footer: `Server: ${interaction.guild.name}`,
 			});
 
 			await sendModLog(interaction.guild, logEmbed, true);
 		} catch (error) {
-			const errorMessage = t(interaction, 'commands.kick.errors.general', {
-				user: targetUser.tag,
-				error: error.message,
-			});
-
-			logger.error('MODERATION', errorMessage);
-
+			logger.error('MODERATION', `Lỗi khi đuổi ${targetUser.tag}: ${error.message}`);
 			await interaction.editReply({
-				content: errorMessage,
+				content: `Đã xảy ra lỗi khi đuổi ${targetUser.tag}: ${error.message}`,
 			});
 		}
 	},

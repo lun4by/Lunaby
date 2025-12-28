@@ -3,6 +3,7 @@ const ConversationService = require('../../services/ConversationService.js');
 const { logModAction } = require('../../utils/modUtils.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
 const logger = require('../../utils/logger.js');
+const prompts = require('../../config/prompts.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -54,7 +55,6 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      const prompts = require('../../config/prompts.js');
       const prompt = prompts.moderation.unmute
         .replace('${username}', targetUser.username)
         .replace('${reason}', reason);
