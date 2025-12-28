@@ -1,15 +1,29 @@
 const logger = require('../utils/logger.js');
 const AICore = require('./AICore');
-const { 
+const Validators = require('../utils/validators');
+const {
     STREAM_UPDATE_INTERVAL_MS,
     STREAM_MIN_CHUNK_SIZE,
     STREAM_BATCH_UPDATE_SIZE,
     DISCORD_MESSAGE_MAX_LENGTH
 } = require('../config/constants');
 
+function splitByLength(text, maxLength) {
+    const chunks = [];
+    let start = 0;
+    while (start < text.length) {
+        let end = Math.min(start + maxLength, text.length);
+        if (end < text.length) {
+            while (end > start && text[end] !== ' ' && text[end] !== '\n') end--;
+            if (end === start) end = start + maxLength;
+        }
+        chunks.push(text.substring(start, end));
+        start = end + (text[end] === ' ' || text[end] === '\n' ? 1 : 0);
+    }
+    return chunks;
+}
+
 async function sendStreamingMessage(channel, messages, config = {}) {
-    const Validators = require('../utils/validators');
-    
     const client = AICore.getClient();
     if (!client) throw new Error('SDK client not initialized');
 
@@ -19,6 +33,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
     const stream = await client.chat.createStream(validMessages, {
         model: config.model || AICore.getModelName(),
         max_tokens: config.max_tokens || 2048,
+        reasoning_effort: 'low',
         ...config
     });
 
@@ -27,22 +42,22 @@ async function sendStreamingMessage(channel, messages, config = {}) {
     let lastSentLength = 0;
     let pendingSend = null;
 
-    const typingInterval = setInterval(() => channel.sendTyping().catch(() => {}), 5000);
+    const typingInterval = setInterval(() => channel.sendTyping().catch(() => { }), 5000);
 
     try {
         const fullContent = await stream.process({
             onContent: async (chunk, accumulated) => {
                 if (pendingSend) return;
-                
+
                 const now = Date.now();
                 const delta = accumulated.length - lastSentLength;
-                const shouldUpdate = !sentMessage || 
-                    delta >= STREAM_BATCH_UPDATE_SIZE || 
+                const shouldUpdate = !sentMessage ||
+                    delta >= STREAM_BATCH_UPDATE_SIZE ||
                     (now - lastUpdate >= STREAM_UPDATE_INTERVAL_MS && delta >= STREAM_MIN_CHUNK_SIZE);
-                
+
                 if (shouldUpdate) {
                     const text = accumulated.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
-                    
+
                     pendingSend = (async () => {
                         try {
                             if (!sentMessage) {
@@ -63,50 +78,30 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         });
 
         if (pendingSend) await pendingSend;
-        
         clearInterval(typingInterval);
-        await sendFinalMessage(channel, sentMessage, fullContent);
+
+        if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+            if (sentMessage && sentMessage.content !== fullContent) {
+                await sentMessage.edit(fullContent);
+            } else if (!sentMessage) {
+                await channel.send(fullContent);
+            }
+        } else {
+            const first = fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
+            if (sentMessage) await sentMessage.edit(first);
+            else await channel.send(first);
+
+            for (const chunk of splitByLength(fullContent.substring(DISCORD_MESSAGE_MAX_LENGTH), DISCORD_MESSAGE_MAX_LENGTH)) {
+                await channel.send(chunk);
+                await new Promise(r => setTimeout(r, 100));
+            }
+        }
+
         return fullContent;
     } catch (error) {
         clearInterval(typingInterval);
         throw error;
     }
-}
-
-async function sendFinalMessage(channel, sentMessage, content) {
-    if (content.length <= DISCORD_MESSAGE_MAX_LENGTH) {
-        if (sentMessage && sentMessage.content !== content) {
-            await sentMessage.edit(content);
-        } else if (!sentMessage) {
-            await channel.send(content);
-        }
-        return;
-    }
-
-    const first = content.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
-    if (sentMessage) await sentMessage.edit(first);
-    else await channel.send(first);
-
-    const chunks = splitByLength(content.substring(DISCORD_MESSAGE_MAX_LENGTH), DISCORD_MESSAGE_MAX_LENGTH);
-    for (const chunk of chunks) {
-        await channel.send(chunk);
-        await new Promise(r => setTimeout(r, 100));
-    }
-}
-
-function splitByLength(text, maxLength) {
-    const chunks = [];
-    let start = 0;
-    while (start < text.length) {
-        let end = Math.min(start + maxLength, text.length);
-        if (end < text.length) {
-            while (end > start && text[end] !== ' ' && text[end] !== '\n') end--;
-            if (end === start) end = start + maxLength;
-        }
-        chunks.push(text.substring(start, end));
-        start = end + (text[end] === ' ' || text[end] === '\n' ? 1 : 0);
-    }
-    return chunks;
 }
 
 module.exports = { sendStreamingMessage, splitByLength };

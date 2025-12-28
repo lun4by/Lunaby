@@ -15,7 +15,7 @@ class AICore {
     this.Model = process.env.LUNABY_MODEL || "lunaby-pro";
     this.lunabyBaseURL = process.env.LUNABY_BASE_URL || "https://api.lunie.dev/v1";
     this.lunabyApiKey = process.env.LUNABY_API_KEY;
-    
+
     if (!this.lunabyApiKey) {
       logger.error("AI_CORE", "LUNABY_API_KEY not configured!");
     } else {
@@ -37,8 +37,7 @@ class AICore {
 
   async processChatCompletion(messages, config = {}) {
     const modelMap = {
-      default: "lunaby-pro",
-      thinking: "lunaby-reasoning",
+      default: "lunaby",
       image: "lunaby-vision"
     };
     const model = modelMap[config.modelType] || modelMap.default;
@@ -60,27 +59,14 @@ class AICore {
     const stream = await this.client.chat.createStream(messages, {
       model,
       max_tokens: config.max_tokens || 2048,
+      reasoning_effort: 'low',
       ...config,
     });
     const content = await stream.toContent();
-    
-    if (!content) throw new Error("No content received");
-    
-    return { content, usage: stream.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 } };
-  }
 
-  async getThinkingResponse(prompt) {
-    const thinkingPrompt = prompts.chat.thinking.replace("${promptText}", prompt);
-    const messages = [
-      { role: "system", content: this.systemPrompt },
-      { role: "user", content: thinkingPrompt },
-    ];
-    const result = await this.processChatCompletion(messages, { modelType: 'thinking' });
-    let content = result.content;
-    if (!content.includes("🧠 QUÁ TRÌNH SUY NGHĨ:") && !content.includes("💡 CÂU TRẢ LỜI:")) {
-      content = "🧠 **QUÁ TRÌNH SUY NGHĨ:**\n" + content;
-    }
-    return { content, usage: result.usage };
+    if (!content) throw new Error("No content received");
+
+    return { content, usage: stream.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 } };
   }
 
   async getCodeCompletion(prompt) {
@@ -93,7 +79,6 @@ class AICore {
   }
 
   getModelName() { return this.Model; }
-  isReady() { return !!this.lunabyApiKey && !!this.client; }
   getClient() { return this.client; }
 }
 
