@@ -21,9 +21,8 @@ class DatabaseManager {
       } catch (setupError) {
         logger.error('DATABASE', 'Error setting up database:', setupError);
         logger.info('DATABASE', 'Attempting to reset entire database...');
-        
-        const resetSuccess = await this.resetDatabase();
-        if (!resetSuccess) {
+
+        if (!await this.resetDatabase()) {
           throw new Error('Failed to recover by resetting database');
         }
       }
@@ -33,273 +32,197 @@ class DatabaseManager {
     }
   }
 
-  async initializeCollections() {
+  async getIndexNames(collection) {
     try {
-      const db = mongoClient.getDb();
-
-      try {
-        const indexes = await db.collection(COLLECTIONS.CONVERSATIONS).listIndexes().toArray();
-        const hasConversationIdIndex = indexes.some(index => index.name === 'conversationId_1');
-        const hasUserIdMessageIndexIndex = indexes.some(index => index.name === 'userId_1_messageIndex_1');
-
-        if (hasConversationIdIndex) {
-          logger.info('DATABASE', 'Detected unnecessary conversationId_1 index...');
-          try {
-            await db.collection(COLLECTIONS.CONVERSATIONS).dropIndex('conversationId_1');
-            logger.info('DATABASE', 'Dropped conversationId_1 index');
-          } catch (dropIndexError) {
-            logger.error('DATABASE', 'Failed to drop conversationId_1 index:', dropIndexError.message);
-          }
-        }
-
-        if (hasUserIdMessageIndexIndex) {
-          try {
-            await db.collection(COLLECTIONS.CONVERSATIONS).dropIndex('userId_1_messageIndex_1');
-          } catch (dropIndexError) {
-            logger.error('DATABASE', 'Failed to drop userId_1_messageIndex_1 index:', dropIndexError.message);
-          }
-        }
-
-        const deleteResult = await db.collection(COLLECTIONS.CONVERSATIONS).deleteMany({
-          $or: [
-            { userId: null },
-            { messageIndex: null },
-            { userId: { $exists: false } },
-            { messageIndex: { $exists: false } }
-          ]
-        });
-
-        if (deleteResult.deletedCount > 0) {
-          logger.info('DATABASE', `Deleted ${deleteResult.deletedCount} invalid records (userId or messageIndex is null)`);
-        }
-
-      } catch (indexError) {
-        logger.info('DATABASE', 'Attempting to drop and recreate conversations collection...');
-        try {
-          await db.collection(COLLECTIONS.CONVERSATIONS).drop();
-          logger.info('DATABASE', 'Dropped conversations collection for recreation');
-        } catch (dropError) {
-          logger.info('DATABASE', 'Conversations collection does not exist or cannot be dropped');
-        }
-      }
-
-      try {
-        const collections = await db.listCollections({ name: COLLECTIONS.CONVERSATIONS }).toArray();
-        if (collections.length === 0) {
-          await db.createCollection(COLLECTIONS.CONVERSATIONS);
-          logger.info('DATABASE', 'Created new conversations collection');
-        }
-      } catch (createError) {
-        logger.error('DATABASE', 'Error creating conversations collection:', createError);
-      }
-
-      try {
-        await db.collection(COLLECTIONS.CONVERSATIONS).createIndex({ userId: 1, messageIndex: 1 }, { unique: true });
-      } catch (indexError) {
-        logger.error('DATABASE', 'Error creating userId_1_messageIndex_1 index:', indexError);
-        await this.resetConversationsCollection();
-      }
-
-      await db.collection(COLLECTIONS.CONVERSATION_META).createIndex({ userId: 1 }, { unique: true });
-
-      try {
-        await db.createCollection(COLLECTIONS.MOD_SETTINGS);
-        await db.createCollection(COLLECTIONS.IMAGE_BLACKLIST);
-        logger.info('DATABASE', 'Created moderation system collections');
-      } catch (error) {
-        logger.info('DATABASE', 'Moderation system collections already exist or cannot be created');
-      }
-
-      try {
-        await db.collection(COLLECTIONS.MOD_SETTINGS).createIndex({ guildId: 1 }, { unique: true });
-        await db.collection(COLLECTIONS.IMAGE_BLACKLIST).createIndex({ category: 1 });
-        await db.collection(COLLECTIONS.IMAGE_BLACKLIST).createIndex({ keyword: 1 });
-        logger.info('DATABASE', 'Created moderation system indexes');
-      } catch (error) {
-        logger.error('DATABASE', 'Error creating moderation system indexes:', error);
-      }
-
-      try {
-        await QuotaService.initializeCollection();
-        logger.info('DATABASE', 'Quota system ready');
-      } catch (error) {
-        logger.error('DATABASE', 'Error initializing quota system:', error);
-      }
-
-      logger.info('DATABASE', 'Set up MongoDB collections and indexes');
-    } catch (error) {
-      logger.error('DATABASE', 'Error setting up MongoDB collections:', error);
-      throw error;
+      const indexes = await collection.listIndexes().toArray();
+      return indexes.map(idx => idx.name);
+    } catch {
+      return [];
     }
   }
 
-  async resetConversationsCollection() {
+  async safeDropIndex(collection, indexName) {
     try {
-      const db = mongoClient.getDb();
-
-      try {
-        const collections = await db.listCollections({ name: COLLECTIONS.CONVERSATIONS }).toArray();
-        if (collections.length > 0) {
-          await db.collection(COLLECTIONS.CONVERSATIONS).drop();
-          logger.info('DATABASE', 'Dropped conversations collection for recreation');
-        }
-      } catch (dropError) {
-        logger.info('DATABASE', 'Conversations collection does not exist or cannot be dropped');
-      }
-
-      try {
-        await db.createCollection(COLLECTIONS.CONVERSATIONS);
-        logger.info('DATABASE', 'Created new conversations collection');
-      } catch (createError) {
-        logger.info('DATABASE', 'Conversations collection already exists or cannot be created');
-      }
-
-      try {
-        await db.collection(COLLECTIONS.CONVERSATIONS).createIndex({ timestamp: 1 });
-        logger.info('DATABASE', 'Created timestamp_1 index');
-
-        await db.collection(COLLECTIONS.CONVERSATIONS).createIndex({ userId: 1, messageIndex: 1 }, { unique: true });
-        logger.info('DATABASE', 'Created userId_1_messageIndex_1 index');
-      } catch (indexError) {
-        logger.error('DATABASE', 'Error creating indexes for conversations collection:', indexError);
-        return false;
-      }
-
-      logger.info('DATABASE', 'Recreated conversations collection with correct indexes');
+      await collection.dropIndex(indexName);
+      logger.info('DATABASE', `Dropped ${indexName} index`);
       return true;
-    } catch (error) {
-      logger.error('DATABASE', 'Error resetting conversations collection:', error);
+    } catch (e) {
+      logger.error('DATABASE', `Failed to drop ${indexName} index:`, e.message);
+      return false;
+    }
+  }
+
+  async ensureCollection(db, name) {
+    try {
+      const exists = (await db.listCollections({ name }).toArray()).length > 0;
+      if (!exists) {
+        await db.createCollection(name);
+        logger.info('DATABASE', `Created ${name} collection`);
+      }
+      return true;
+    } catch (e) {
+      logger.error('DATABASE', `Error ensuring ${name} collection:`, e.message);
+      return false;
+    }
+  }
+
+  async initializeCollections() {
+    const db = mongoClient.getDb();
+    const convCollection = db.collection(COLLECTIONS.CONVERSATIONS);
+
+    const indexNames = await this.getIndexNames(convCollection);
+
+    if (indexNames.includes('conversationId_1')) {
+      await this.safeDropIndex(convCollection, 'conversationId_1');
+    }
+    if (indexNames.includes('userId_1_messageIndex_1')) {
+      await this.safeDropIndex(convCollection, 'userId_1_messageIndex_1');
+    }
+
+    const deleteResult = await convCollection.deleteMany({
+      $or: [
+        { userId: null },
+        { messageIndex: null },
+        { userId: { $exists: false } },
+        { messageIndex: { $exists: false } }
+      ]
+    });
+    if (deleteResult.deletedCount > 0) {
+      logger.info('DATABASE', `Deleted ${deleteResult.deletedCount} invalid records`);
+    }
+
+    await this.ensureCollection(db, COLLECTIONS.CONVERSATIONS);
+    await this.ensureCollection(db, COLLECTIONS.MOD_SETTINGS);
+    await this.ensureCollection(db, COLLECTIONS.IMAGE_BLACKLIST);
+
+    try {
+      await convCollection.createIndex({ userId: 1, messageIndex: 1 }, { unique: true });
+      await db.collection(COLLECTIONS.CONVERSATION_META).createIndex({ userId: 1 }, { unique: true });
+      await db.collection(COLLECTIONS.MOD_SETTINGS).createIndex({ guildId: 1 }, { unique: true });
+      await db.collection(COLLECTIONS.IMAGE_BLACKLIST).createIndex({ category: 1 });
+      await db.collection(COLLECTIONS.IMAGE_BLACKLIST).createIndex({ keyword: 1 });
+    } catch (e) {
+      logger.error('DATABASE', 'Error creating indexes:', e.message);
+      await this.resetConversationsCollection();
+    }
+
+    try {
+      await QuotaService.initializeCollection();
+      logger.info('DATABASE', 'Quota system ready');
+    } catch (e) {
+      logger.error('DATABASE', 'Error initializing quota system:', e.message);
+    }
+
+    logger.info('DATABASE', 'Set up MongoDB collections and indexes');
+  }
+
+  async resetConversationsCollection() {
+    const db = mongoClient.getDb();
+
+    try {
+      await db.collection(COLLECTIONS.CONVERSATIONS).drop();
+      logger.info('DATABASE', 'Dropped conversations collection');
+    } catch {
+      logger.info('DATABASE', 'Conversations collection does not exist');
+    }
+
+    await this.ensureCollection(db, COLLECTIONS.CONVERSATIONS);
+
+    try {
+      const convCollection = db.collection(COLLECTIONS.CONVERSATIONS);
+      await convCollection.createIndex({ timestamp: 1 });
+      await convCollection.createIndex({ userId: 1, messageIndex: 1 }, { unique: true });
+      logger.info('DATABASE', 'Recreated conversations collection with indexes');
+      return true;
+    } catch (e) {
+      logger.error('DATABASE', 'Error creating conversation indexes:', e.message);
       return false;
     }
   }
 
   async initializeConversationHistory() {
-    try {
-      const db = mongoClient.getDb();
+    const db = mongoClient.getDb();
+    const convCollection = db.collection(COLLECTIONS.CONVERSATIONS);
+    const indexNames = await this.getIndexNames(convCollection);
 
+    if (indexNames.includes('conversationId_1')) {
+      await this.resetConversationsCollection();
+    } else if (!indexNames.includes('timestamp_1')) {
       try {
-        const indexes = await db.collection(COLLECTIONS.CONVERSATIONS).listIndexes().toArray();
-        const hasConversationIdIndex = indexes.some(index => index.name === 'conversationId_1');
-
-        if (hasConversationIdIndex) {
-          await this.resetConversationsCollection();
-        } else {
-          const hasTimeIndex = indexes.some(index => index.name === 'timestamp_1');
-
-          if (!hasTimeIndex) {
-            await db.collection(COLLECTIONS.CONVERSATIONS).createIndex({ timestamp: 1 });
-            logger.info('DATABASE', 'Created timestamp index for conversations collection');
-          }
-        }
-      } catch (indexError) {
+        await convCollection.createIndex({ timestamp: 1 });
+        logger.info('DATABASE', 'Created timestamp index');
+      } catch (e) {
         await this.resetConversationsCollection();
       }
-
-      const conversationMeta = await db.collection(COLLECTIONS.CONVERSATION_META).findOne({
-        metaVersion: { $exists: true }
-      });
-
-      if (!conversationMeta) {
-        await db.collection(COLLECTIONS.CONVERSATION_META).insertOne({
-          metaVersion: 1,
-          lastCleanup: Date.now(),
-          config: {
-            maxConversationLength: ConversationDB.maxConversationLength,
-            maxConversationAge: ConversationDB.maxConversationAge
-          }
-        });
-        logger.debug('DATABASE', 'Conversation history configuration loaded');
-      } else {
-        await db.collection(COLLECTIONS.CONVERSATION_META).updateOne(
-          { metaVersion: { $exists: true } },
-          {
-            $set: {
-              'config.maxConversationLength': ConversationDB.maxConversationLength,
-              'config.maxConversationAge': ConversationDB.maxConversationAge,
-            }
-          }
-        );
-      }
-
-      await ConversationDB.cleanupOldConversations();
-
-      logger.info('DATABASE', 'Conversation history system ready');
-    } catch (error) {
-      logger.error('DATABASE', 'Error initializing conversation history:', error);
     }
+
+    const metaCollection = db.collection(COLLECTIONS.CONVERSATION_META);
+    const config = {
+      maxConversationLength: ConversationDB.maxConversationLength,
+      maxConversationAge: ConversationDB.maxConversationAge
+    };
+
+    await metaCollection.updateOne(
+      { metaVersion: { $exists: true } },
+      { $set: { config }, $setOnInsert: { metaVersion: 1, lastCleanup: Date.now() } },
+      { upsert: true }
+    );
+
+    await ConversationDB.cleanupOldConversations();
+    logger.info('DATABASE', 'Conversation history system ready');
   }
 
   async initializeProfiles() {
+    const db = mongoClient.getDb();
+
+    await this.ensureCollection(db, COLLECTIONS.USER_PROFILES);
+
+    const indexNames = await this.getIndexNames(db.collection(COLLECTIONS.USER_PROFILES));
+    if (indexNames.includes('userId_1')) {
+      await this.safeDropIndex(db.collection(COLLECTIONS.USER_PROFILES), 'userId_1');
+    }
+
+    logger.info('DATABASE', 'User profile system ready');
+
     try {
-      const db = mongoClient.getDb();
-
-      const collections = await db.listCollections({ name: COLLECTIONS.USER_PROFILES }).toArray();
-      if (collections.length === 0) {
-        await db.createCollection(COLLECTIONS.USER_PROFILES);
-        logger.info('DATABASE', 'Created user_profiles collection');
-      }
-
-      try {
-        const indexes = await db.collection(COLLECTIONS.USER_PROFILES).listIndexes().toArray();
-        const hasUserIdIndex = indexes.some(index => index.name === 'userId_1');
-
-        if (hasUserIdIndex) {
-          await db.collection(COLLECTIONS.USER_PROFILES).dropIndex('userId_1');
-          logger.info('DATABASE', 'Dropped old userId_1 index from user_profiles collection');
-        }
-      } catch (indexError) {
-        logger.warn('DATABASE', 'Warning when dropping old index:', indexError.message);
-      }
-
-      logger.info('DATABASE', 'User profile system ready');
-
-      try {
-        await MemoryService.initializeMemoryCollection();
-        logger.debug('DATABASE', 'Memory system configuration loaded');
-      } catch (memoryError) {
-        logger.error('DATABASE', 'Error initializing Memory System:', memoryError);
-      }
-    } catch (error) {
-      logger.error('DATABASE', 'Error initializing profile system:', error);
+      await MemoryService.initializeMemoryCollection();
+      logger.debug('DATABASE', 'Memory system ready');
+    } catch (e) {
+      logger.error('DATABASE', 'Error initializing Memory System:', e.message);
     }
   }
 
   async resetDatabase() {
-    try {
-      const db = mongoClient.getDb();
+    const db = mongoClient.getDb();
 
-      const collectionsToReset = [
-        COLLECTIONS.CONVERSATIONS,
-        COLLECTIONS.CONVERSATION_META,
-        COLLECTIONS.MOD_SETTINGS,
-        COLLECTIONS.IMAGE_BLACKLIST,
-        'monitor_settings',
-        'monitor_logs'
-      ];
+    const collectionsToReset = [
+      COLLECTIONS.CONVERSATIONS,
+      COLLECTIONS.CONVERSATION_META,
+      COLLECTIONS.MOD_SETTINGS,
+      COLLECTIONS.IMAGE_BLACKLIST,
+      'monitor_settings',
+      'monitor_logs'
+    ];
 
-      for (const collectionName of collectionsToReset) {
-        try {
-          const collections = await db.listCollections({ name: collectionName }).toArray();
-          if (collections.length > 0) {
-            await db.collection(collectionName).drop();
-            logger.info('DATABASE', `Dropped collection ${collectionName}`);
-          }
-        } catch (dropError) {
-          logger.info('DATABASE', `Collection ${collectionName} does not exist or cannot be dropped`);
+    for (const name of collectionsToReset) {
+      try {
+        const exists = (await db.listCollections({ name }).toArray()).length > 0;
+        if (exists) {
+          await db.collection(name).drop();
+          logger.info('DATABASE', `Dropped collection ${name}`);
         }
+      } catch {
+        logger.info('DATABASE', `Collection ${name} cannot be dropped`);
       }
-
-      await this.initializeCollections();
-      await this.initializeConversationHistory();
-      await this.initializeProfiles();
-      await ImageBlacklistDB.initializeDefaultBlacklist();
-
-      logger.info('DATABASE', 'Database successfully reset and recreated');
-      return true;
-    } catch (error) {
-      logger.error('DATABASE', 'Error resetting database:', error);
-      return false;
     }
+
+    await this.initializeCollections();
+    await this.initializeConversationHistory();
+    await this.initializeProfiles();
+    await ImageBlacklistDB.initializeDefaultBlacklist();
+
+    logger.info('DATABASE', 'Database successfully reset');
+    return true;
   }
 }
 
