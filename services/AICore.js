@@ -59,7 +59,6 @@ class AICore {
     const stream = await this.client.chat.createStream(messages, {
       model,
       max_tokens: config.max_tokens || 2048,
-      reasoning_effort: 'low',
       ...config,
     });
     const content = await stream.toContent();
