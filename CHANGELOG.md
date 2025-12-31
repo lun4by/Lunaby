@@ -1,5 +1,36 @@
 # Changelog - Lunaby Bot
 
+## [1.2.0-native] - 2026-01-01
+
+### 🔥 Highlights
+- Chuyển đổi hoàn toàn từ `axios` sang `native fetch` - giảm dependencies
+- Lunaby model tích hợp sẵn web search - loại bỏ WebSearchService
+- Chuẩn hóa logging với hệ thống logger thay thế console.error
+
+### ✨ Added
+- `utils/embedUtils.js`: Shared utilities cho Discord embeds (colors, status maps, helpers)
+- Status mapping helpers trong `MyAnimeListAPI.js`: `_getAnimeStatus()`, `_getMangaStatus()`, `_getSeasonName()`
+
+### ⚙️ Changed
+- `services/MyAnimeListAPI.js`: Refactored to use native fetch với AbortController timeout
+- `services/WebSearchService.js`: Đã xóa (Lunaby model tích hợp sẵn search)
+- `commands/AIcore/search.js`: Đã xóa (không cần thiết nữa)
+- 10 command files: Thay thế `console.error` → `logger.error`
+  - Social: setbio, setcolor, setbirthday, unequip, rank, leaderboard, inventory
+  - Core: about, help
+  - Moderation: modlog
+
+### 🧹 Removed
+- **`axios`** dependency từ package.json
+- **`services/WebSearchService.js`** - Lunaby model đã tích hợp sẵn search
+- **`commands/AIcore/search.js`** - Lệnh search riêng không còn cần thiết
+
+### ⚠️ Migration Notes
+- Chạy `npm install` để cập nhật dependencies sau khi xóa axios
+- Web search giờ được xử lý tự động bởi Lunaby model
+
+---
+
 ## [1.1.0-native] - 2025-11-18
 
 ### 🔥 Highlights
