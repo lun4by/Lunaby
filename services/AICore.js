@@ -1,13 +1,7 @@
 const logger = require("../utils/logger.js");
 const prompts = require("../config/prompts.js");
 const initSystem = require("./initSystem.js");
-
-let LunabyClient;
-try {
-  LunabyClient = require("../lunaby-sdk/src/index.js").LunabyClient;
-} catch {
-  LunabyClient = require("lunaby-sdk").default;
-}
+const Lunaby = require("lunaby-sdk");
 
 class AICore {
   constructor() {
@@ -19,7 +13,7 @@ class AICore {
     if (!this.lunabyApiKey) {
       logger.error("AI_CORE", "LUNABY_API_KEY not configured!");
     } else {
-      this.client = new LunabyClient({
+      this.client = new Lunaby({
         apiKey: this.lunabyApiKey,
         baseURL: this.lunabyBaseURL,
         defaultModel: this.Model,
