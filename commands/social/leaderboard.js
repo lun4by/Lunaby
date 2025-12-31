@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const XPService = require('./../../services/XPService');
 const { ordinalize } = require('./../../utils/string.js');
+const logger = require('./../../utils/logger');
 
 
 function commatize(num) {
@@ -54,7 +55,7 @@ module.exports = {
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
-      console.error('Error in leaderboard command:', error);
+      logger.error('LEADERBOARD', 'Error in leaderboard command:', error);
       await interaction.editReply({ content: 'Đã xảy ra lỗi khi tải bảng xếp hạng!', ephemeral: true });
     }
   }

@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const ProfileDB = require('../../services/profiledb');
+const logger = require('../../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -46,7 +47,7 @@ module.exports = {
       }
 
     } catch (error) {
-      console.error('Lỗi khi set color:', error);
+      logger.error('SET_COLOR', 'Lỗi khi set color:', error);
       await interaction.editReply({
         content: '❌ Có lỗi xảy ra khi cập nhật màu!'
       });

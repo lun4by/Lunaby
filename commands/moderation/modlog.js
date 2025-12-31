@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const mongoClient = require('../../services/mongoClient.js');
+const logger = require('../../utils/logger');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -52,7 +53,7 @@ module.exports = {
 
 			try {
 				await db.createCollection('modlog');
-			} catch (error) {}
+			} catch (error) { }
 
 			const filter = { guildId: interaction.guild.id };
 
@@ -136,7 +137,7 @@ module.exports = {
 
 			await interaction.editReply({ embeds: [logEmbed] });
 		} catch (error) {
-			console.error('Lỗi khi xem nhật ký moderation:', error);
+			logger.error('MODLOG', 'Lỗi khi xem nhật ký moderation:', error);
 			await interaction.editReply({
 				content: `Đã xảy ra lỗi khi xem nhật ký moderation: ${error.message}`,
 				ephemeral: true,

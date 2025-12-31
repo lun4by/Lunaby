@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const ProfileDB = require('../../services/profiledb');
+const logger = require('../../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -47,7 +48,7 @@ module.exports = {
       });
 
     } catch (error) {
-      console.error('Lỗi khi unequip item:', error);
+      logger.error('UNEQUIP', 'Lỗi khi unequip item:', error);
       await interaction.editReply({
         content: '❌ Có lỗi xảy ra khi gỡ bỏ item!'
       });

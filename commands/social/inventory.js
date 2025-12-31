@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const ProfileDB = require('../../services/profiledb');
 const market = require('../../assets/json/market.json');
+const logger = require('../../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -61,7 +62,7 @@ module.exports = {
             legendary: '🟠',
             achievement: '🌟'
           }[item.rarity] || '⚪';
-          
+
           return `${rarity} **${item.name}** (ID: ${item.id})${item.quantity > 1 ? ` x${item.quantity}` : ''}`;
         }).join('\n');
 
@@ -77,7 +78,7 @@ module.exports = {
       await interaction.editReply({ embeds: [embed] });
 
     } catch (error) {
-      console.error('Lỗi khi xem inventory:', error);
+      logger.error('INVENTORY', 'Lỗi khi xem inventory:', error);
       await interaction.editReply({
         content: '❌ Có lỗi xảy ra khi xem inventory!'
       });

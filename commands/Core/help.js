@@ -8,6 +8,7 @@
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const logger = require('../../utils/logger');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -95,7 +96,7 @@ module.exports = {
 					});
 				}
 			} catch (error) {
-				console.error('Error when disabling the help menu:', error);
+				logger.error('HELP', 'Error when disabling the help menu:', error);
 			}
 		});
 	},

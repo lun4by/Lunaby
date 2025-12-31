@@ -10,6 +10,7 @@ const { createCanvas, loadImage } = require('canvas');
 const AICore = require('../../services/AICore');
 const { formatUptime } = require('../../utils/string');
 const packageJson = require('../../package.json');
+const logger = require('../../utils/logger');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -38,7 +39,7 @@ module.exports = {
 				components: [row],
 			});
 		} catch (error) {
-			console.error('Error generating about image:', error);
+			logger.error('ABOUT', 'Error generating about image:', error);
 			await sendFallbackEmbed(interaction, contextData);
 		}
 	},
@@ -84,7 +85,7 @@ async function renderAboutCanvas(context, data) {
 	try {
 		avatarImage = await loadImage(context.client.user.displayAvatarURL({ extension: 'png', size: 256 }));
 	} catch (error) {
-		console.error('Error loading avatar:', error);
+		logger.error('ABOUT', 'Error loading avatar:', error);
 	}
 
 	if (avatarImage) {
