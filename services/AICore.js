@@ -1,7 +1,7 @@
 const logger = require("../utils/logger.js");
 const prompts = require("../config/prompts.js");
 const initSystem = require("./initSystem.js");
-const Lunaby = require("lunaby-sdk");
+const { Lunaby } = require("lunaby-sdk");
 
 class AICore {
   constructor() {
