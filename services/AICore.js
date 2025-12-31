@@ -6,26 +6,19 @@ const { Lunaby } = require("lunaby-sdk");
 class AICore {
   constructor() {
     this.systemPrompt = prompts.system.main;
-    this.Model = process.env.LUNABY_MODEL || "lunaby-pro";
-    this.lunabyBaseURL = process.env.LUNABY_BASE_URL || "https://api.lunie.dev/v1";
-    this.lunabyApiKey = process.env.LUNABY_API_KEY;
+    const apiKey = process.env.LUNABY_API_KEY;
 
-    if (!this.lunabyApiKey) {
+    if (!apiKey) {
       logger.error("AI_CORE", "LUNABY_API_KEY not configured!");
     } else {
-      this.client = new Lunaby({
-        apiKey: this.lunabyApiKey,
-        baseURL: this.lunabyBaseURL,
-        defaultModel: this.Model,
-        timeout: 120000,
-      });
-      logger.debug("AI_CORE", `Initialized with model: ${this.Model}`);
+      this.client = new Lunaby({ apiKey });
+      logger.debug("AI_CORE", "Lunaby client initialized");
     }
   }
 
   async waitForProviders() {
     await initSystem.waitForReady();
-    logger.info("AI_CORE", `Ready with model: ${this.Model}`);
+    logger.info("AI_CORE", "Ready");
     return this;
   }
 
@@ -71,7 +64,6 @@ class AICore {
     return this.processChatCompletion(messages, { max_tokens: 4000 });
   }
 
-  getModelName() { return this.Model; }
   getClient() { return this.client; }
 }
 
