@@ -31,9 +31,7 @@ async function sendStreamingMessage(channel, messages, config = {}) {
     if (!validMessages.length) throw new Error('No valid messages');
 
     const stream = await client.chat.createStream(validMessages, {
-        model: config.model || AICore.getModelName(),
         max_tokens: config.max_tokens || 2048,
-        reasoning_effort: 'low',
         ...config
     });
 

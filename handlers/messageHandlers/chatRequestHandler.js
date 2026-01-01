@@ -2,20 +2,20 @@ const AICore = require('../../services/AICore');
 const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
+const { DEFAULT_MODEL } = require('../../config/constants');
 
 async function handleChatRequest(message, content, ConversationService) {
   const Validators = require('../../utils/validators');
   const logger = require('../../utils/logger');
-  
+
   try {
     const userId = ConversationService.extractUserId(message);
     const conversationManager = require('../conversationManager');
     const prompts = require('../../config/prompts');
-    
-    const modelName = AICore.getModelName();
-    await conversationManager.loadConversationHistory(userId, prompts.system.main, modelName);
+
+    await conversationManager.loadConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(userId);
-    
+
     const isNewConversation = messages.length <= 2;
     const enhancedPrompt = `
       ${prompts.chat.responseStyle}
@@ -23,28 +23,26 @@ async function handleChatRequest(message, content, ConversationService) {
       ${prompts.chat.generalInstructions}
       ${content}
     `;
-    
+
     await conversationManager.addMessage(userId, 'user', enhancedPrompt);
     messages = conversationManager.getHistory(userId);
-    
+
     logger.debug('CHAT', `Messages before validation: ${messages.length}`);
     const validMessages = Validators.cleanMessages(messages);
     logger.debug('CHAT', `Messages after validation: ${validMessages.length}`);
-    
+
     if (validMessages.length === 0) {
       throw new Error('No valid messages after validation');
     }
-    
-    const response = await sendStreamingMessage(message.channel, validMessages, {
-      model: modelName
-    });
-    
+
+    const response = await sendStreamingMessage(message.channel, validMessages);
+
     await conversationManager.addMessage(userId, 'assistant', response);
-    
+
   } catch (streamError) {
     const ErrorHandler = require('../../utils/ErrorHandler');
     ErrorHandler.logError('CHAT', 'Streaming failed, falling back to non-streaming', streamError, 'warn');
-    
+
     try {
       const response = await ConversationService.getCompletion(content, message);
 

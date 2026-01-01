@@ -102,7 +102,7 @@ module.exports = {
   async execute(interaction) {
     try {
       const subcommand = interaction.options.getSubcommand();
-      const userId = interaction.guildId 
+      const userId = interaction.guildId
         ? `${interaction.guildId}-${interaction.user.id}`
         : `DM-${interaction.user.id}`;
 
@@ -133,9 +133,9 @@ module.exports = {
       }
     } catch (error) {
       logger.error('MEMORY_COMMAND', 'Error executing memory command:', error);
-      
+
       const errorMessage = 'Đã xảy ra lỗi khi xử lý lệnh trí nhớ. Vui lòng thử lại sau.';
-      
+
       if (interaction.deferred || interaction.replied) {
         await interaction.followUp({ content: errorMessage, ephemeral: true });
       } else {
@@ -166,7 +166,7 @@ module.exports = {
     if (summary.personalInfo.nickname) personalInfo.push(`**Nickname:** ${summary.personalInfo.nickname}`);
     if (summary.personalInfo.age) personalInfo.push(`**Tuổi:** ${summary.personalInfo.age}`);
     if (summary.personalInfo.location) personalInfo.push(`**Vị trí:** ${summary.personalInfo.location}`);
-    
+
     if (personalInfo.length > 0) {
       embed.addFields({
         name: '👤 Thông tin cá nhân',
@@ -201,7 +201,7 @@ module.exports = {
         .slice(0, 5)
         .map((mem, idx) => `${idx + 1}. ${mem.content} (⭐ ${mem.importance}/10)`)
         .join('\n');
-      
+
       embed.addFields({
         name: '💭 Trí nhớ quan trọng',
         value: memoryList,
@@ -284,9 +284,9 @@ module.exports = {
 
     // Wait for button interaction
     const filter = (i) => {
-      return i.user.id === interaction.user.id && 
-             (i.customId === `memory_clear_confirm_${userId}` || 
-              i.customId === `memory_clear_cancel_${userId}`);
+      return i.user.id === interaction.user.id &&
+        (i.customId === `memory_clear_confirm_${userId}` ||
+          i.customId === `memory_clear_cancel_${userId}`);
     };
 
     try {
@@ -297,7 +297,7 @@ module.exports = {
 
       if (buttonInteraction.customId === `memory_clear_confirm_${userId}`) {
         const success = await MemoryService.clearUserMemories(userId);
-        
+
         if (success) {
           await buttonInteraction.update({
             embeds: [
@@ -422,11 +422,12 @@ module.exports = {
       const storageDB = require('../../services/storagedb.js');
       const ConversationService = require('../../services/ConversationService.js');
       const prompts = require('../../config/prompts.js');
+      const { DEFAULT_MODEL } = require('../../config/constants.js');
 
       await storageDB.clearConversationHistory(
         interaction.user.id,
         prompts.system.main,
-        'lunaby'
+        DEFAULT_MODEL
       );
 
       const embed = new EmbedBuilder()

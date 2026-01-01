@@ -25,6 +25,7 @@ class AICore {
   async processChatCompletion(messages, config = {}) {
     const modelMap = {
       default: "lunaby",
+      pro: "lunaby-pro",
       image: "lunaby-vision"
     };
     const model = modelMap[config.modelType] || modelMap.default;

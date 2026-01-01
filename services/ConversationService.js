@@ -9,6 +9,7 @@ const MemoryService = require("./MemoryService.js");
 const Validators = require("../utils/validators.js");
 const {
   DEFAULT_USER_ID,
+  DEFAULT_MODEL,
   MAX_CONVERSATION_LENGTH,
   MAX_CONVERSATION_AGE_MS,
   AI_TIMEOUT_MS,
@@ -70,7 +71,7 @@ class ConversationService {
       const fullHistory = await storageDB.getConversationHistory(
         userId,
         prompts.system.main,
-        AICore.getModelName()
+        DEFAULT_MODEL
       );
 
       let conversationContext = '';
@@ -135,7 +136,7 @@ class ConversationService {
       const fullHistory = await storageDB.getConversationHistory(
         userId,
         prompts.system.main,
-        AICore.getModelName()
+        DEFAULT_MODEL
       );
 
       if (!fullHistory || fullHistory.length === 0) {
@@ -239,7 +240,7 @@ class ConversationService {
   }
 
   async loadAndPrepareHistory(userId, systemPrompt, enhancedPrompt) {
-    await conversationManager.loadConversationHistory(userId, systemPrompt, AICore.getModelName());
+    await conversationManager.loadConversationHistory(userId, systemPrompt, DEFAULT_MODEL);
     const conversationHistory = conversationManager.getHistory(userId);
 
     await conversationManager.addMessage(userId, "user", enhancedPrompt);
@@ -247,7 +248,7 @@ class ConversationService {
     let messages = conversationManager.getHistory(userId);
     if (!messages || messages.length === 0) {
       logger.error("CONVERSATION_SERVICE", `Empty history for ${userId}, reinitializing`);
-      await conversationManager.resetConversation(userId, systemPrompt, AICore.getModelName());
+      await conversationManager.resetConversation(userId, systemPrompt, DEFAULT_MODEL);
       await conversationManager.addMessage(userId, "user", enhancedPrompt);
       messages = conversationManager.getHistory(userId);
     }

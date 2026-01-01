@@ -2,6 +2,7 @@ const AICore = require('../../services/AICore');
 const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
+const { DEFAULT_MODEL } = require('../../config/constants');
 
 function formatCodeResponse(text) {
   const { LANGUAGE_DETECTION_PATTERNS } = require('../../config/patterns');
@@ -19,7 +20,7 @@ function formatCodeResponse(text) {
 
 async function handleCodeRequest(message, content, ConversationService) {
   const Validators = require('../../utils/validators');
-  
+
   await message.channel.sendTyping();
 
   try {
@@ -27,11 +28,10 @@ async function handleCodeRequest(message, content, ConversationService) {
     const userId = ConversationService.extractUserId(message);
     const conversationManager = require('../conversationManager');
     const prompts = require('../../config/prompts');
-    
-    const modelName = AICore.getModelName();
-    await conversationManager.loadConversationHistory(userId, prompts.system.main, modelName);
+
+    await conversationManager.loadConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(userId);
-    
+
     const isNewConversation = messages.length <= 2;
     const enhancedPrompt = `
       ${prompts.chat.responseStyle}
@@ -39,33 +39,31 @@ async function handleCodeRequest(message, content, ConversationService) {
       ${prompts.chat.generalInstructions}
       Code request: ${promptContent}
     `;
-    
+
     await conversationManager.addMessage(userId, 'user', enhancedPrompt);
     messages = conversationManager.getHistory(userId);
-    
+
     const validMessages = Validators.cleanMessages(messages);
-    
+
     if (validMessages.length === 0) {
       throw new Error('No valid messages for code request');
     }
-    
-    const response = await sendStreamingMessage(message.channel, validMessages, {
-      model: modelName
-    });
-    
+
+    const response = await sendStreamingMessage(message.channel, validMessages);
+
     let formattedResponse = response;
     if (!formattedResponse.includes('```')) {
       formattedResponse = formatCodeResponse(formattedResponse);
     }
-    
+
     await conversationManager.addMessage(userId, 'assistant', response);
-    
+
   } catch (streamError) {
     const ErrorHandler = require('../../utils/ErrorHandler');
     const logger = require('../../utils/logger');
-    
+
     ErrorHandler.logError('CODE', 'Code streaming failed, falling back to non-streaming', streamError, 'warn');
-    
+
     try {
       const result = await AICore.getCodeCompletion(content, message);
       let formattedResponse = result.content || result;

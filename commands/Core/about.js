@@ -7,8 +7,8 @@
 	ButtonStyle,
 } = require('discord.js');
 const { createCanvas, loadImage } = require('canvas');
-const AICore = require('../../services/AICore');
 const { formatUptime } = require('../../utils/string');
+const { DEFAULT_MODEL } = require('../../config/constants');
 const packageJson = require('../../package.json');
 const logger = require('../../utils/logger');
 
@@ -47,7 +47,7 @@ module.exports = {
 
 function buildContextData(interaction) {
 	return {
-		modelName: AICore.getModelName() || 'Anthropic Claude',
+		modelName: DEFAULT_MODEL,
 		memoryUsage: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2),
 		serverCount: interaction.client.guilds.cache.size,
 		uptime: formatUptime(process.uptime(), false),
