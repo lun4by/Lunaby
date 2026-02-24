@@ -1,13 +1,11 @@
 const { EmbedBuilder } = require('discord.js');
 const ConversationService = require('../services/ConversationService');
 const consentService = require('../services/consentService');
-const guildProfileDB = require('../services/guildprofiledb');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const { handleImageRequest } = require('./messageHandlers/imageRequestHandler');
 const { handleMemoryRequest, splitMessageIntoChunks } = require('./messageHandlers/memoryRequestHandler');
 const { handleCodeRequest } = require('./messageHandlers/codeRequestHandler');
 const { handleChatRequest } = require('./messageHandlers/chatRequestHandler');
-const { handleAIThread } = require('./messageHandlers/dedicatedChannelHandler');
 const logger = require('../utils/logger');
 
 
@@ -16,21 +14,6 @@ async function handleMentionMessage(message, client) {
   if (message.author.bot) return;
 
   const isDM = !message.guild;
-
-  if (!isDM && message.channel.isThread()) {
-    try {
-      const profile = await guildProfileDB.getGuildProfile(message.guild.id);
-      const aiThreads = profile?.aiThreads || [];
-      const isAIThread = aiThreads.some(t => t.threadId === message.channel.id);
-
-      if (isAIThread) {
-        await handleAIThread(message, client);
-        return;
-      }
-    } catch (err) {
-      logger.debug('MESSAGE_HANDLER', `Error checking AI thread: ${err.message}`);
-    }
-  }
 
   const shouldRespond = isDM || message.mentions.has(client.user);
 

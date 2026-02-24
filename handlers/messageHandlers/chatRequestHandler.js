@@ -33,7 +33,8 @@ async function handleChatRequest(message, content, ConversationService) {
       throw new Error('No valid messages after validation');
     }
 
-    const response = await sendStreamingMessage(message.channel, validMessages);
+    const replyTarget = message.guild ? message : null;
+    const response = await sendStreamingMessage(message.channel, validMessages, {}, replyTarget);
 
     await conversationManager.addMessage(userId, 'assistant', response);
 

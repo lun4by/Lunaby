@@ -8,9 +8,8 @@ const profileCache = new Set();
 
 
 const guildProfileStructure = {
-  _id: String, 
+  _id: String,
   prefix: null,
-  aiThreads: [],
   greeter: {
     welcome: {
       isEnabled: false,
@@ -28,8 +27,8 @@ const guildProfileStructure = {
     },
   },
   xp: {
-    isActive: false, 
-    exceptions: [], 
+    isActive: false,
+    exceptions: [],
   },
   roles: {
     muted: null,

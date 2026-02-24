@@ -23,7 +23,7 @@ function splitByLength(text, maxLength) {
     return chunks;
 }
 
-async function sendStreamingMessage(channel, messages, config = {}) {
+async function sendStreamingMessage(channel, messages, config = {}, replyToMessage = null) {
     const client = AICore.getClient();
     if (!client) throw new Error('SDK client not initialized');
 
@@ -59,7 +59,9 @@ async function sendStreamingMessage(channel, messages, config = {}) {
                     pendingSend = (async () => {
                         try {
                             if (!sentMessage) {
-                                sentMessage = await channel.send(text);
+                                sentMessage = replyToMessage
+                                    ? await replyToMessage.reply(text)
+                                    : await channel.send(text);
                             } else if (accumulated.length <= DISCORD_MESSAGE_MAX_LENGTH) {
                                 await sentMessage.edit(text);
                             }
@@ -82,12 +84,18 @@ async function sendStreamingMessage(channel, messages, config = {}) {
             if (sentMessage && sentMessage.content !== fullContent) {
                 await sentMessage.edit(fullContent);
             } else if (!sentMessage) {
-                await channel.send(fullContent);
+                sentMessage = replyToMessage
+                    ? await replyToMessage.reply(fullContent)
+                    : await channel.send(fullContent);
             }
         } else {
             const first = fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
             if (sentMessage) await sentMessage.edit(first);
-            else await channel.send(first);
+            else {
+                replyToMessage
+                    ? await replyToMessage.reply(first)
+                    : await channel.send(first);
+            }
 
             for (const chunk of splitByLength(fullContent.substring(DISCORD_MESSAGE_MAX_LENGTH), DISCORD_MESSAGE_MAX_LENGTH)) {
                 await channel.send(chunk);

@@ -88,7 +88,7 @@ const handleCommand = async (interaction, client) => {
   }
 
   try {
-    const aiCommands = ['chat', 'think', 'image', 'reset'];
+    const aiCommands = ['think', 'image', 'reset'];
     if (aiCommands.includes(interaction.commandName)) {
       const hasConsented = await consentService.hasUserConsented(interaction.user.id);
       
