@@ -3,15 +3,8 @@ const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 const { DEFAULT_MODEL } = require('../../config/constants');
-<<<<<<< HEAD
-const { formatForDiscord } = require('../../utils/discordFormatter');
-<<<<<<< HEAD
 const Validators = require('../../utils/validators');
 const logger = require('../../utils/logger');
-=======
->>>>>>> parent of f60a523 (fix)
-=======
->>>>>>> parent of b1e1f9f (Update chatRequestHandler.js)
 
 async function handleChatRequest(message, content, ConversationService) {
   const Validators = require('../../utils/validators');
