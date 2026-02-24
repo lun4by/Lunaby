@@ -1,14 +1,10 @@
-const AICore = require('../../services/AICore');
-const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/StreamingService');
-const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 const { DEFAULT_MODEL } = require('../../config/constants');
 const { formatForDiscord } = require('../../utils/discordFormatter');
+const Validators = require('../../utils/validators');
+const logger = require('../../utils/logger');
 
 async function handleChatRequest(message, content, ConversationService) {
-  const Validators = require('../../utils/validators');
-  const logger = require('../../utils/logger');
-
   try {
     const userId = ConversationService.extractUserId(message);
     const conversationManager = require('../conversationManager');
@@ -25,11 +21,10 @@ async function handleChatRequest(message, content, ConversationService) {
       ${content}
     `;
 
-    await conversationManager.addMessage(userId, 'user', enhancedPrompt);
-    messages = conversationManager.getHistory(userId);
+    const messagesForAI = [...messages, { role: 'user', content: enhancedPrompt }];
 
-    logger.debug('CHAT', `Messages before validation: ${messages.length}`);
-    const validMessages = Validators.cleanMessages(messages);
+    logger.debug('CHAT', `Messages before validation: ${messagesForAI.length}`);
+    const validMessages = Validators.cleanMessages(messagesForAI);
     logger.debug('CHAT', `Messages after validation: ${validMessages.length}`);
 
     if (validMessages.length === 0) {
@@ -39,6 +34,7 @@ async function handleChatRequest(message, content, ConversationService) {
     const rawResponse = await sendStreamingMessage(message.channel, validMessages);
     const response = formatForDiscord(rawResponse);
 
+    await conversationManager.addMessage(userId, 'user', enhancedPrompt);
     await conversationManager.addMessage(userId, 'assistant', response);
 
   } catch (streamError) {
