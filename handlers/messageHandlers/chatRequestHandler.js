@@ -3,6 +3,7 @@ const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 const { DEFAULT_MODEL } = require('../../config/constants');
+const { formatForDiscord } = require('../../utils/discordFormatter');
 
 async function handleChatRequest(message, content, ConversationService) {
   const Validators = require('../../utils/validators');
@@ -35,7 +36,8 @@ async function handleChatRequest(message, content, ConversationService) {
       throw new Error('No valid messages after validation');
     }
 
-    const response = await sendStreamingMessage(message.channel, validMessages);
+    const rawResponse = await sendStreamingMessage(message.channel, validMessages);
+    const response = formatForDiscord(rawResponse);
 
     await conversationManager.addMessage(userId, 'assistant', response);
 
@@ -44,7 +46,8 @@ async function handleChatRequest(message, content, ConversationService) {
     ErrorHandler.logError('CHAT', 'Streaming failed, falling back to non-streaming', streamError, 'warn');
 
     try {
-      const response = await ConversationService.getCompletion(content, message);
+      let response = await ConversationService.getCompletion(content, message);
+      response = formatForDiscord(response);
 
       if (!response) {
         logger.error('CHAT', 'ConversationService returned null/undefined');

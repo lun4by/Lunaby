@@ -1,6 +1,7 @@
 const logger = require('../utils/logger.js');
 const AICore = require('./AICore');
 const Validators = require('../utils/validators');
+const { formatForDiscord } = require('../utils/discordFormatter');
 const {
     STREAM_UPDATE_INTERVAL_MS,
     STREAM_MIN_CHUNK_SIZE,
@@ -78,24 +79,27 @@ async function sendStreamingMessage(channel, messages, config = {}) {
         if (pendingSend) await pendingSend;
         clearInterval(typingInterval);
 
-        if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
-            if (sentMessage && sentMessage.content !== fullContent) {
-                await sentMessage.edit(fullContent);
+        // Post-process the final content for Discord compatibility
+        const formattedContent = formatForDiscord(fullContent);
+
+        if (formattedContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+            if (sentMessage && sentMessage.content !== formattedContent) {
+                await sentMessage.edit(formattedContent);
             } else if (!sentMessage) {
-                await channel.send(fullContent);
+                await channel.send(formattedContent);
             }
         } else {
-            const first = fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
+            const first = formattedContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
             if (sentMessage) await sentMessage.edit(first);
             else await channel.send(first);
 
-            for (const chunk of splitByLength(fullContent.substring(DISCORD_MESSAGE_MAX_LENGTH), DISCORD_MESSAGE_MAX_LENGTH)) {
+            for (const chunk of splitByLength(formattedContent.substring(DISCORD_MESSAGE_MAX_LENGTH), DISCORD_MESSAGE_MAX_LENGTH)) {
                 await channel.send(chunk);
                 await new Promise(r => setTimeout(r, 100));
             }
         }
 
-        return fullContent;
+        return formattedContent;
     } catch (error) {
         clearInterval(typingInterval);
         throw error;

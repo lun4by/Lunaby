@@ -7,6 +7,7 @@ const AICore = require("./AICore.js");
 const QuotaService = require("./QuotaService.js");
 const MemoryService = require("./MemoryService.js");
 const Validators = require("../utils/validators.js");
+const { formatForDiscord } = require("../utils/discordFormatter.js");
 const {
   DEFAULT_USER_ID,
   DEFAULT_MODEL,
@@ -28,6 +29,7 @@ const {
   MEMORY_ANALYSIS_SUMMARY_KEYWORDS,
   MEMORY_ANALYSIS_DETAILED_KEYWORDS
 } = require("../config/patterns.js");
+
 
 class ConversationService {
   constructor() {
@@ -106,6 +108,18 @@ class ConversationService {
       const recentMessages = history.slice(-RECENT_MEMORY_MESSAGES_COUNT);
       const conversationSummary = recentMessages
         .filter(msg => msg.role === "user" || msg.role === "assistant")
+        .filter(msg => {
+          if (msg.role === "user") {
+            const content = msg.content.trim();
+            if (IMAGE_COMMAND_REGEX.test(content)) {
+              return false;
+            }
+            if (MEMORY_COMMAND_REGEX.test(content)) {
+              return false;
+            }
+          }
+          return true;
+        })
         .map(msg => textUtils.createMessageSummary(msg.content, msg.role))
         .filter(summaryText => summaryText);
 
@@ -284,8 +298,9 @@ class ConversationService {
   }
 
   async handleCompletionResult(userId, prompt, result) {
-    const content = result.content;
+    let content = result.content;
     const tokenUsage = result.usage;
+    content = formatForDiscord(content);
 
     if (tokenUsage && tokenUsage.total_tokens) {
       QuotaService.recordMessageUsage(userId, 1, 'chat').catch(err =>
