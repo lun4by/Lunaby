@@ -3,8 +3,6 @@ const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 const { DEFAULT_MODEL } = require('../../config/constants');
-const Validators = require('../../utils/validators');
-const logger = require('../../utils/logger');
 
 async function handleChatRequest(message, content, ConversationService) {
   const Validators = require('../../utils/validators');
