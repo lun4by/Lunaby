@@ -1,4 +1,4 @@
-const mongoClient = require('../mongoClient');
+const mongoClient = require('./mongoClient');
 const logger = require('../../utils/logger');
 const ConversationDB = require('./ConversationDB');
 const UserProfileDB = require('./UserProfileDB');

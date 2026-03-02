@@ -1,4 +1,4 @@
-const mongoClient = require('../mongoClient');
+const mongoClient = require('./mongoClient');
 const logger = require('../../utils/logger');
 const { COLLECTIONS, SEVERITY_LEVELS } = require('../../config/constants');
 
@@ -9,7 +9,7 @@ class ImageBlacklistDB {
       const blacklist = await db.collection(COLLECTIONS.IMAGE_BLACKLIST)
         .find({}, { projection: { keyword: 1, category: 1, _id: 0 } })
         .toArray();
-      
+
       const lowerText = text.toLowerCase();
       const matchedKeywords = [];
       const categories = new Set();

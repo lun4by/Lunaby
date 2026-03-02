@@ -1,4 +1,4 @@
-const mongoClient = require('./mongoClient.js');
+const mongoClient = require('./database/mongoClient.js');
 const logger = require('../utils/logger.js');
 
 class QuotaService {

@@ -1,4 +1,4 @@
-const mongoClient = require('../services/mongoClient.js');
+const mongoClient = require('../services/database/mongoClient.js');
 const storageDB = require('../services/storagedb.js');
 const initSystem = require('../services/initSystem.js');
 const GuildProfileDB = require('../services/guildprofiledb.js');
@@ -35,7 +35,7 @@ async function startbot(client, loadCommands) {
       logger.error('SYSTEM', 'Lỗi khi khởi tạo cấu trúc lịch sử cuộc trò chuyện:', error);
       initSystem.markReady('conversationHistory');
     }
-    
+
     try {
       await storageDB.initializeProfiles();
       const db = mongoClient.getDb();

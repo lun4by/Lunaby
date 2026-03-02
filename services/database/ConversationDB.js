@@ -1,10 +1,10 @@
-const mongoClient = require('../mongoClient');
+const mongoClient = require('./mongoClient');
 const logger = require('../../utils/logger');
 const Validators = require('../../utils/validators');
-const { 
-  MAX_CONVERSATION_LENGTH, 
+const {
+  MAX_CONVERSATION_LENGTH,
   MAX_CONVERSATION_AGE_MS,
-  COLLECTIONS 
+  COLLECTIONS
 } = require('../../config/constants');
 
 class ConversationDB {

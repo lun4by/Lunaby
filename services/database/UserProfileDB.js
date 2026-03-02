@@ -1,4 +1,4 @@
-const mongoClient = require('../mongoClient');
+const mongoClient = require('./mongoClient');
 const logger = require('../../utils/logger');
 const Profile = require('../profiledb');
 const Validators = require('../../utils/validators');
@@ -8,7 +8,7 @@ class UserProfileDB {
   async getUserProfile(userId) {
     try {
       Validators.validateUserIdOrThrow(userId, 'getUserProfile');
-      
+
       const db = mongoClient.getDb();
       const profiles = db.collection(COLLECTIONS.USER_PROFILES);
 
@@ -30,7 +30,7 @@ class UserProfileDB {
   async updateUserProfile(userId, updateData) {
     try {
       Validators.validateUserIdOrThrow(userId, 'updateUserProfile');
-      
+
       const db = mongoClient.getDb();
       const profiles = db.collection(COLLECTIONS.USER_PROFILES);
 
@@ -50,7 +50,7 @@ class UserProfileDB {
   async updateUserEconomy(userId, resourceType, amount) {
     try {
       Validators.validateUserIdOrThrow(userId, 'updateUserEconomy');
-      
+
       const db = mongoClient.getDb();
       const profiles = db.collection(COLLECTIONS.USER_PROFILES);
 

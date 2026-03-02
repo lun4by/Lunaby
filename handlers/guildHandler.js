@@ -1,5 +1,5 @@
 const { REST, Routes } = require('discord.js');
-const mongoClient = require('../services/mongoClient.js');
+const mongoClient = require('../services/database/mongoClient.js');
 const initSystem = require('../services/initSystem.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
 const logger = require('../utils/logger.js');
