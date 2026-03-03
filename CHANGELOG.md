@@ -8,7 +8,7 @@
 - **Cải thiện trải nghiệm người dùng**: Tối ưu hóa hiển thị thông tin, thêm icon và định dạng rõ ràng.
 
 ### Added
-- **Lệnh Quản trị**: Thêm lệnh `enable` và `disable` để quản lý trạng thái hoạt động của các module và lệnh.
+- **Lệnh Quản trị**: Thêm lệnh `enable` và `disable` bật tắt lệnh ở các kênh.
 
 ### Changed
 - **`commands/Core/lunaby.js`**: Cập nhật sử dụng `createLunabyEmbed()` thay vì `EmbedBuilder` trực tiếp.
