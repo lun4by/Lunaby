@@ -1,5 +1,5 @@
 const { MongoClient, ObjectId } = require("mongodb");
-const mongoClient = require("./mongoClient.js");
+const mongoClient = require("./database/mongoClient.js");
 const logger = require("../utils/logger.js");
 
 logger.info("SYSTEM", "GuildProfileDB module đã được tải vào hệ thống");

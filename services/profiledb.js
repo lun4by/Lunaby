@@ -1,5 +1,5 @@
 const { MongoClient, ObjectId } = require("mongodb");
-const mongoClient = require("./mongoClient.js");
+const mongoClient = require("./database/mongoClient.js");
 const logger = require("../utils/logger.js");
 
 logger.info("SYSTEM", "ProfileDB module đã được tải vào hệ thống");
@@ -91,7 +91,7 @@ const getProfile = async (userId) => {
         { $setOnInsert: createProfileStructure(userId) },
         { upsert: true }
       );
-      
+
       if (result.upsertedId || result.matchedCount > 0) {
         logger.info("SYSTEM", `Tạo profile mới cho người dùng: ${userId}`);
         userProfileCache.add(userId);
@@ -101,7 +101,7 @@ const getProfile = async (userId) => {
         logger.error("DATABASE", `Lỗi khi tạo profile cho ${userId}:`, error);
       }
     }
-    
+
     profile = await collection.findOne({ _id: userId });
   } else {
     userProfileCache.add(userId);
