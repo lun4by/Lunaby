@@ -16,6 +16,7 @@
 - Cấu trúc lại thư mục `services`: Chuyển logic hệ thống DB vào thư mục `services/database/`.
 - Cập nhật `example.env` để thêm các biến môi trường cấu hình kết nối MariaDB.
 - Sửa một số command và update file cấu hình prompt.
+- Tối ưu hóa DatabaseManager để quản lý tập trung các collection và index của MongoDB.
 
 ---
 
