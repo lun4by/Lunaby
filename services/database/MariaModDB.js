@@ -43,10 +43,43 @@ class MariaModDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
-            logger.info('MARIADB', 'Moderation tables ready');
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS guild_settings (
+          guild_id VARCHAR(32) PRIMARY KEY,
+          prefix VARCHAR(10) DEFAULT NULL,
+          xp_active BOOLEAN DEFAULT FALSE,
+          xp_exceptions JSON DEFAULT ('[]'),
+          welcome_enabled BOOLEAN DEFAULT FALSE,
+          welcome_channel VARCHAR(32),
+          welcome_message TEXT,
+          leaving_enabled BOOLEAN DEFAULT FALSE,
+          leaving_channel VARCHAR(32),
+          leaving_message TEXT,
+          muted_role VARCHAR(32),
+          suggest_channel VARCHAR(32),
+          level_up_notifications BOOLEAN DEFAULT TRUE,
+          use_embeds BOOLEAN DEFAULT TRUE,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS command_toggles (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          guild_id VARCHAR(32) NOT NULL,
+          channel_id VARCHAR(32) NOT NULL,
+          command_name VARCHAR(50) NOT NULL,
+          updated_by VARCHAR(32),
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY uk_guild_channel_cmd (guild_id, channel_id, command_name),
+          INDEX idx_guild_channel (guild_id, channel_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+
+            logger.info('MARIADB', 'All tables ready');
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error creating moderation tables:', error);
+            logger.error('MARIADB', 'Error creating tables:', error);
             return false;
         }
     }
@@ -205,6 +238,197 @@ class MariaModDB {
         } catch (error) {
             logger.error('MARIADB', 'Error getting mod logs:', error);
             return [];
+        }
+    }
+
+    async getGuildSettings(guildId) {
+        try {
+            const rows = await mariaClient.query('SELECT * FROM guild_settings WHERE guild_id = ?', [guildId]);
+            if (rows.length === 0) {
+                await mariaClient.query('INSERT IGNORE INTO guild_settings (guild_id) VALUES (?)', [guildId]);
+                return this._defaultGuildSettings(guildId);
+            }
+            const r = rows[0];
+            return {
+                _id: r.guild_id,
+                prefix: r.prefix,
+                xp: { isActive: !!r.xp_active, exceptions: JSON.parse(r.xp_exceptions || '[]') },
+                greeter: {
+                    welcome: { isEnabled: !!r.welcome_enabled, channel: r.welcome_channel, message: r.welcome_message },
+                    leaving: { isEnabled: !!r.leaving_enabled, channel: r.leaving_channel, message: r.leaving_message },
+                },
+                roles: { muted: r.muted_role },
+                channels: { suggest: r.suggest_channel },
+                settings: { levelUpNotifications: !!r.level_up_notifications, useEmbeds: !!r.use_embeds },
+            };
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting guild settings:', error);
+            return this._defaultGuildSettings(guildId);
+        }
+    }
+
+    _defaultGuildSettings(guildId) {
+        return {
+            _id: guildId,
+            prefix: null,
+            xp: { isActive: false, exceptions: [] },
+            greeter: {
+                welcome: { isEnabled: false, channel: null, message: null },
+                leaving: { isEnabled: false, channel: null, message: null },
+            },
+            roles: { muted: null },
+            channels: { suggest: null },
+            settings: { levelUpNotifications: true, useEmbeds: true },
+        };
+    }
+
+    async updateGuildSettings(guildId, updateData) {
+        try {
+            const fieldMap = {
+                'prefix': 'prefix',
+                'xp.isActive': 'xp_active',
+                'xp.exceptions': 'xp_exceptions',
+                'settings.levelUpNotifications': 'level_up_notifications',
+                'settings.useEmbeds': 'use_embeds',
+                'greeter.welcome.isEnabled': 'welcome_enabled',
+                'greeter.welcome.channel': 'welcome_channel',
+                'greeter.welcome.message': 'welcome_message',
+                'greeter.leaving.isEnabled': 'leaving_enabled',
+                'greeter.leaving.channel': 'leaving_channel',
+                'greeter.leaving.message': 'leaving_message',
+                'roles.muted': 'muted_role',
+                'channels.suggest': 'suggest_channel',
+            };
+
+            const sets = [];
+            const values = [];
+
+            for (const [key, val] of Object.entries(updateData)) {
+                const col = fieldMap[key];
+                if (col) {
+                    sets.push(`${col} = ?`);
+                    values.push(col === 'xp_exceptions' ? JSON.stringify(val) : val);
+                }
+            }
+
+            if (!sets.length) return true;
+
+            values.push(guildId);
+            await mariaClient.query(
+                `INSERT INTO guild_settings (guild_id) VALUES (?) ON DUPLICATE KEY UPDATE guild_id = guild_id`,
+                [guildId]
+            );
+            await mariaClient.query(
+                `UPDATE guild_settings SET ${sets.join(', ')} WHERE guild_id = ?`,
+                values
+            );
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', `Error updating guild settings for ${guildId}:`, error);
+            return false;
+        }
+    }
+
+    async toggleXp(guildId, isActive) {
+        return this.updateGuildSettings(guildId, { 'xp.isActive': isActive });
+    }
+
+    async setXpException(guildId, channelId, isException) {
+        try {
+            const settings = await this.getGuildSettings(guildId);
+            const exceptions = settings.xp?.exceptions || [];
+            const has = exceptions.includes(channelId);
+
+            if (isException && !has) exceptions.push(channelId);
+            else if (!isException && has) exceptions.splice(exceptions.indexOf(channelId), 1);
+            else return true;
+
+            return this.updateGuildSettings(guildId, { 'xp.exceptions': exceptions });
+        } catch (error) {
+            logger.error('MARIADB', `Error setting XP exception for ${guildId}:`, error);
+            return false;
+        }
+    }
+
+    // ===== Command Toggles =====
+
+    async disableCommand(guildId, channelId, commandName, userId) {
+        try {
+            await mariaClient.query(
+                `INSERT IGNORE INTO command_toggles (guild_id, channel_id, command_name, updated_by) VALUES (?, ?, ?, ?)`,
+                [guildId, channelId, commandName, userId]
+            );
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error disabling command:', error);
+            return false;
+        }
+    }
+
+    async enableCommand(guildId, channelId, commandName) {
+        try {
+            await mariaClient.query(
+                'DELETE FROM command_toggles WHERE guild_id = ? AND channel_id = ? AND command_name = ?',
+                [guildId, channelId, commandName]
+            );
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error enabling command:', error);
+            return false;
+        }
+    }
+
+    async disableAllCommands(guildId, channelId, commandNames, userId) {
+        try {
+            const values = commandNames.map(name => [guildId, channelId, name, userId]);
+            const placeholders = values.map(() => '(?, ?, ?, ?)').join(', ');
+            await mariaClient.query(
+                `INSERT IGNORE INTO command_toggles (guild_id, channel_id, command_name, updated_by) VALUES ${placeholders}`,
+                values.flat()
+            );
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error disabling all commands:', error);
+            return false;
+        }
+    }
+
+    async enableAllCommands(guildId, channelId) {
+        try {
+            await mariaClient.query(
+                'DELETE FROM command_toggles WHERE guild_id = ? AND channel_id = ?',
+                [guildId, channelId]
+            );
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error enabling all commands:', error);
+            return false;
+        }
+    }
+
+    async getDisabledCommands(guildId, channelId) {
+        try {
+            const rows = await mariaClient.query(
+                'SELECT command_name FROM command_toggles WHERE guild_id = ? AND channel_id = ?',
+                [guildId, channelId]
+            );
+            return rows.map(r => r.command_name);
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting disabled commands:', error);
+            return [];
+        }
+    }
+
+    async isCommandDisabled(guildId, channelId, commandName) {
+        try {
+            const rows = await mariaClient.query(
+                'SELECT 1 FROM command_toggles WHERE guild_id = ? AND channel_id = ? AND command_name = ? LIMIT 1',
+                [guildId, channelId, commandName]
+            );
+            return rows.length > 0;
+        } catch (error) {
+            logger.error('MARIADB', 'Error checking command status:', error);
+            return false;
         }
     }
 }
