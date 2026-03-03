@@ -8,6 +8,7 @@ const initSystem = require('../services/initSystem.js');
 const GuildProfileDB = require('../services/database/guildprofiledb.js');
 const { syncAllGuilds } = require('../handlers/guildHandler');
 const CommandsJSONService = require('../services/CommandsJSONService');
+const QuotaService = require('../services/QuotaService.js');
 const RoleService = require('../services/RoleService.js');
 const logger = require('../utils/logger.js');
 
@@ -37,6 +38,7 @@ async function startbot(client, loadCommands) {
       await MariaBlacklistDB.initializeDefaultBlacklist();
       await PrefixDB.initTables();
       await MariaModDB.initTables();
+      await QuotaService.initializeCollection();
       await RoleService.initializeCollection();
       initSystem.markReady('mariadb');
     } catch (error) {

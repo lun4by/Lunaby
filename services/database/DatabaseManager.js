@@ -98,13 +98,6 @@ class DatabaseManager {
       logger.error('DATABASE', 'Error creating indexes:', e.message);
       await this.resetConversationsCollection();
     }
-
-    try {
-      await QuotaService.initializeCollection();
-    } catch (e) {
-      logger.error('DATABASE', 'Quota init error:', e.message);
-    }
-
     logger.info('DATABASE', 'MongoDB collections ready');
   }
 
