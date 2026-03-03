@@ -7,6 +7,7 @@ const AICore = require("./AICore.js");
 const QuotaService = require("./QuotaService.js");
 const MemoryService = require("./MemoryService.js");
 const Validators = require("../utils/validators.js");
+const ErrorHandler = require("../utils/ErrorHandler.js");
 const {
   DEFAULT_USER_ID,
   DEFAULT_MODEL,
@@ -49,52 +50,30 @@ class ConversationService {
   }
 
   extractUserId(message) {
-    if (!message?.author?.id) {
-      return DEFAULT_USER_ID;
-    }
+    if (!message?.author?.id) return DEFAULT_USER_ID;
 
-    let userId = message.author.id;
-
-    if (message.channel && message.channel.type === "DM") {
-      userId = `DM-${userId}`;
-    } else if (message.guildId) {
-      userId = `${message.guildId}-${userId}`;
-    }
-
-    return userId;
+    const base = message.author.id;
+    if (message.channel?.type === "DM") return `DM-${base}`;
+    if (message.guildId) return `${message.guildId}-${base}`;
+    return base;
   }
 
   async enrichPromptWithMemory(originalPrompt, userId) {
     try {
       const memory = await MemoryService.getUserMemory(userId);
-
-      // Build memory context (respects allowMemoryStorage internally)
       const memoryContext = await MemoryService.buildMemoryContext(userId, originalPrompt);
 
-      // Custom instructions
-      let instructionsContext = '';
-      if (memory?.personalInfo?.customInstructions) {
-        instructionsContext = `\n[User custom instructions: ${memory.personalInfo.customInstructions}]\n`;
-      }
+      const instructionsContext = memory?.personalInfo?.customInstructions
+        ? `\n[User custom instructions: ${memory.personalInfo.customInstructions}]\n`
+        : '';
 
-      // Conversation history reference (respects allowSearchHistoryReference)
       let conversationContext = '';
-      const allowSearchRef = memory?.privacy?.allowSearchHistoryReference !== false;
+      if (memory?.privacy?.allowSearchHistoryReference !== false) {
+        const fullHistory = await storageDB.getConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
 
-      if (allowSearchRef) {
-        const fullHistory = await storageDB.getConversationHistory(
-          userId,
-          prompts.system.main,
-          DEFAULT_MODEL
-        );
-
-        if (fullHistory && fullHistory.length >= 3) {
-          const relevantMessages = await this.extractRelevantMemories(
-            fullHistory,
-            originalPrompt
-          );
-
-          if (relevantMessages && relevantMessages.length > 0) {
+        if (fullHistory?.length >= 3) {
+          const relevantMessages = await this.extractRelevantMemories(fullHistory, originalPrompt);
+          if (relevantMessages?.length) {
             conversationContext = prompts.memory.context.replace(
               "${relevantMessagesText}",
               relevantMessages.join(". ")
@@ -145,16 +124,10 @@ class ConversationService {
 
   async getMemoryAnalysis(userId, request) {
     try {
-      logger.info("CONVERSATION_SERVICE", `Analyzing memory for user ${userId}`);
+      const fullHistory = await storageDB.getConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
 
-      const fullHistory = await storageDB.getConversationHistory(
-        userId,
-        prompts.system.main,
-        DEFAULT_MODEL
-      );
-
-      if (!fullHistory || fullHistory.length === 0) {
-        return "Mình chưa có bất kỳ trí nhớ nào về cuộc trò chuyện của chúng ta. Hãy bắt đầu trò chuyện nào! 😊";
+      if (!fullHistory?.length) {
+        return "Mình chưa có bất kỳ trí nhớ nào về cuộc trò chuyện của chúng ta. Hãy bắt đầu trò chuyện nào!";
       }
 
       const userOrAssistantMessages = fullHistory.filter(
@@ -163,7 +136,7 @@ class ConversationService {
       const messageCount = userOrAssistantMessages.length;
 
       if (messageCount === 0) {
-        return "Chúng ta chưa có tin nhắn nào. Hãy bắt đầu trò chuyện nào! 😊";
+        return "Chúng ta chưa có tin nhắn nào. Hãy bắt đầu trò chuyện nào!";
       }
 
       let analysis = "";
@@ -230,16 +203,11 @@ class ConversationService {
       if (userId === DEFAULT_USER_ID) {
         logger.warn("CONVERSATION_SERVICE", "Cannot determine userId, using default");
       }
-
-      const enhancedPromptWithMemory = await this.enrichPromptWithMemory(prompt, userId);
-
-      let content = await this.processChatCompletion(enhancedPromptWithMemory, userId);
-
-      return content;
-
+      const enhancedPrompt = await this.enrichPromptWithMemory(prompt, userId);
+      return await this.processChatCompletion(enhancedPrompt, userId);
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error in getCompletion:", error.message);
-      return `Xin lỗi, hệ thống xảy ra lỗi khi xử lý cuộc trò chuyện. Vui lòng thử lại sau.`;
+      return 'Xin lỗi, hệ thống xảy ra lỗi khi xử lý cuộc trò chuyện. Vui lòng thử lại sau.';
     }
   }
 
@@ -270,18 +238,10 @@ class ConversationService {
   }
 
   validateAndCleanMessages(messages) {
-    logger.info("CONVERSATION_SERVICE", `Total messages before validation: ${messages.length}`);
-    messages.forEach((msg, idx) => {
-      logger.debug("CONVERSATION_SERVICE", `Message[${idx}]: role="${msg?.role}", content length=${msg?.content?.length || 0}`);
-    });
-
     const validMessages = Validators.cleanMessages(messages);
-
     if (validMessages.length === 0) {
       throw new Error("No valid messages to send");
     }
-
-    logger.info("CONVERSATION_SERVICE", `Sending ${validMessages.length} messages (cleaned from ${messages.length})`);
     return validMessages;
   }
 
@@ -321,29 +281,25 @@ class ConversationService {
 
 
   async processChatCompletion(prompt, userId, additionalConfig = {}) {
-    const ErrorHandler = require("../utils/ErrorHandler.js");
     try {
       const systemPrompt = additionalConfig.systemPrompt || prompts.system.main;
-
-      await conversationManager.loadConversationHistory(userId, systemPrompt, DEFAULT_MODEL);
       const conversationHistory = conversationManager.getHistory(userId);
 
       const enhancedPrompt = await this.buildEnhancedPrompt(prompt, conversationHistory);
-
       const messages = await this.loadAndPrepareHistory(userId, systemPrompt, enhancedPrompt);
-
       const validMessages = this.validateAndCleanMessages(messages);
+
       const config = {
         model: additionalConfig.model || AICore.CoreModel,
         max_tokens: additionalConfig.max_tokens || 2048,
         ...additionalConfig,
       };
+
       const result = await this.callAIWithTimeout(validMessages, config);
       return await this.handleCompletionResult(userId, prompt, result);
     } catch (error) {
       ErrorHandler.logError("CONVERSATION_SERVICE", "Error in processChatCompletion", error);
-      const userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(error, "xử lý tin nhắn");
-      const friendlyError = new Error(userFriendlyMessage);
+      const friendlyError = new Error(ErrorHandler.getUserFriendlyMessage(error, "xử lý tin nhắn"));
       friendlyError.originalError = error;
       throw friendlyError;
     }
