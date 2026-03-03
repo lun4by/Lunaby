@@ -34,7 +34,6 @@ class PseudoInteraction {
             options.set('target', mentionedUser);
         }
 
-        // Join remaining non-mention args as the primary string option
         const textArgs = args.filter(a => !a.match(/^<@!?\d+>$/));
         if (textArgs.length > 0) {
             const text = textArgs.join(' ');
