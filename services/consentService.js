@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const ProfileDB = require('./profiledb');
+const ProfileDB = require('./database/profiledb');
 const logger = require('../utils/logger.js');
 const { handlePermissionError, sendEmbedWithFallback, hasPermission } = require('../utils/permissionUtils');
 

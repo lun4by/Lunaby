@@ -1,8 +1,8 @@
 const { Collection, AttachmentBuilder } = require("discord.js");
 const path = require("path");
 const fs = require("fs");
-const ProfileDB = require("../services/profiledb");
-const GuildProfileDB = require("../services/guildprofiledb");
+const ProfileDB = require("../services/database/profiledb");
+const GuildProfileDB = require("../services/database/guildprofiledb");
 // const { checkAchievements } = require("../services/canvas/achievements");
 
 

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const ProfileDB = require('../../services/profiledb');
+const ProfileDB = require('../../services/database/profiledb');
 const logger = require('../../utils/logger');
 
 module.exports = {
@@ -27,13 +27,13 @@ module.exports = {
       );
 
       await interaction.editReply({
-        content: `✅ **Bio của bạn đã được cập nhật!**\n\n${bio}`
+        content: `**Bio của bạn đã được cập nhật!**\n\n${bio}`
       });
 
     } catch (error) {
       logger.error('SET_BIO', 'Lỗi khi set bio:', error);
       await interaction.editReply({
-        content: '❌ Có lỗi xảy ra khi cập nhật bio!'
+        content: 'Có lỗi xảy ra khi cập nhật bio!'
       });
     }
   }

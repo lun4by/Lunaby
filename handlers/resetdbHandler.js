@@ -1,5 +1,5 @@
 const storageDB = require('../services/storagedb.js');
-const ProfileDB = require('../services/profiledb.js');
+const ProfileDB = require('../services/database/profiledb.js');
 const logger = require('../utils/logger.js');
 
 

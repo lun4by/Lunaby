@@ -1,4 +1,4 @@
-const ProfileDB = require('./profiledb');
+const ProfileDB = require('./database/profiledb');
 const logger = require('../utils/logger');
 
 class XPService {

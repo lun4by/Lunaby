@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const ProfileDB = require('../../services/profiledb');
+const ProfileDB = require('../../services/database/profiledb');
 const logger = require('../../utils/logger');
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
 
       if (!dateMatch) {
         return interaction.editReply({
-          content: '❌ **Định dạng ngày không hợp lệ!**\n\nVui lòng nhập theo format DD-MM (ví dụ: 02-12 cho ngày 2 tháng 12).'
+          content: '**Định dạng ngày không hợp lệ!**\n\nVui lòng nhập theo format DD-MM (ví dụ: 02-12 cho ngày 2 tháng 12).'
         });
       }
 
@@ -30,7 +30,7 @@ module.exports = {
 
       if (day < 1 || day > 31 || month < 1 || month > 12) {
         return interaction.editReply({
-          content: '❌ **Ngày hoặc tháng không hợp lệ!**\n\nNgày phải từ 1-31, tháng phải từ 1-12.'
+          content: '**Ngày hoặc tháng không hợp lệ!**\n\nNgày phải từ 1-31, tháng phải từ 1-12.'
         });
       }
 
@@ -43,13 +43,13 @@ module.exports = {
       );
 
       await interaction.editReply({
-        content: `✅ **Ngày sinh của bạn đã được đặt thành:** ${birthday}`
+        content: `**Ngày sinh của bạn đã được đặt thành:** ${birthday}`
       });
 
     } catch (error) {
       logger.error('SET_BIRTHDAY', 'Lỗi khi set birthday:', error);
       await interaction.editReply({
-        content: '❌ Có lỗi xảy ra khi cập nhật ngày sinh!'
+        content: 'Có lỗi xảy ra khi cập nhật ngày sinh!'
       });
     }
   }

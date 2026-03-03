@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const ProfileDB = require('../../services/profiledb');
+const ProfileDB = require('../../services/database/profiledb');
 const logger = require('../../utils/logger');
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
         color = '#' + hexMatch[1];
       } else {
         return interaction.editReply({
-          content: '❌ **Mã màu không hợp lệ!**\n\nVui lòng nhập mã hex hợp lệ (ví dụ: #FF0000) hoặc "default" để reset.'
+          content: 'Mã màu không hợp lệ!\n\nVui lòng nhập mã hex hợp lệ (ví dụ: #FF0000) hoặc "default" để reset.'
         });
       }
 
@@ -38,18 +38,18 @@ module.exports = {
 
       if (color) {
         await interaction.editReply({
-          content: `✅ **Màu profile card đã được đặt thành:** \`${color}\``
+          content: `**Màu profile card đã được đặt thành:** \`${color}\``
         });
       } else {
         await interaction.editReply({
-          content: '✅ **Màu profile card đã được reset về mặc định!**'
+          content: 'Màu profile card đã được reset về mặc định!'
         });
       }
 
     } catch (error) {
       logger.error('SET_COLOR', 'Lỗi khi set color:', error);
       await interaction.editReply({
-        content: '❌ Có lỗi xảy ra khi cập nhật màu!'
+        content: 'Có lỗi xảy ra khi cập nhật màu!'
       });
     }
   }

@@ -1,6 +1,6 @@
 const mongoClient = require('./mongoClient');
 const logger = require('../../utils/logger');
-const Profile = require('../profiledb');
+const Profile = require('./profiledb');
 const Validators = require('../../utils/validators');
 const { COLLECTIONS } = require('../../config/constants');
 
