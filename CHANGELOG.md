@@ -1,5 +1,24 @@
 # Changelog - Lunaby Bot
 
+## [1.3.0-native] - 2026-03-03
+
+### 🔥 Highlights
+- **Hỗ trợ đa cơ sở dữ liệu (MongoDB + MariaDB)**: Tích hợp thêm MariaDB để quản lý Logging, Blacklist và Prefix, giúp giảm tải và phân tách rõ ràng với MongoDB (chuyên xử lý Core data như Profiles, Conversations).
+- **Hệ thống lệnh Prefix (Prefix Commands)**: Hỗ trợ người dùng gọi lệnh bằng Prefix thay vì chỉ dùng Slash Commands .
+
+### ✨ Added
+- **Prefix Handler (`handlers/prefixHandler.js`)**: Lớp giả lập `PseudoInteraction` giúp chạy các Slash Command cũ dưới dạng Prefix Command mà không cần viết lại logic lệnh.
+- **MariaDB Client (`services/database/mariaClient.js`)**: Pool kết nối đến MariaDB.
+- **Service Database Mới**: Thêm `PrefixDB.js`, `MariaBlacklistDB.js`, `MariaModDB.js` để lưu trữ dữ liệu chuyên biệt vào MariaDB.
+- **DatabaseManager (`services/database/DatabaseManager.js`)**: Quản lý tập trung các collection và index của MongoDB, thay thế các mã khởi tạo phân tán trước đây.
+
+### ⚙️ Changed
+- Cấu trúc lại thư mục `services`: Chuyển logic hệ thống DB vào thư mục `services/database/`.
+- Cập nhật `example.env` để thêm các biến môi trường cấu hình kết nối MariaDB.
+- Sửa một số command và update file cấu hình prompt.
+
+---
+
 ## [1.2.0-native] - 2026-01-01
 
 ### 🔥 Highlights
