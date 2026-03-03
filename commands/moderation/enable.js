@@ -13,8 +13,22 @@ module.exports = {
 
     async execute(interaction) {
         try {
-            const channel = interaction.options.getChannel('channel') || interaction.channel;
-            const commandsStr = interaction.options.getString('commands').toLowerCase();
+            let channel;
+            let commandsStr = '';
+
+            if (typeof interaction.options.getChannel === 'function') {
+                channel = interaction.options.getChannel('channel') || interaction.channel;
+                commandsStr = interaction.options.getString('commands') || '';
+            } else {
+                channel = interaction.channel;
+                commandsStr = interaction.args ? interaction.args.join(',') : '';
+            }
+
+            if (!commandsStr) {
+                return interaction.reply({ content: 'Vui lòng nhập tên lệnh cần bật!', ephemeral: true });
+            }
+
+            commandsStr = commandsStr.toLowerCase();
             const commands = commandsStr.split(',').map(c => c.trim()).filter(c => c);
 
             const guildId = interaction.guildId;
