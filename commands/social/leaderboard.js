@@ -19,7 +19,6 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      // Lấy leaderboard từ XPService
       const leaderboard = await XPService.getLeaderboard(interaction.guild.id, 10);
 
       if (leaderboard.length === 0) {
@@ -29,10 +28,8 @@ module.exports = {
         return interaction.editReply({ embeds: [embed] });
       }
 
-      // Tìm rank của user hiện tại
       const userRank = await XPService.getUserRank(interaction.guild.id, interaction.user.id);
 
-      // Tạo danh sách top users
       let nameList = '';
       let xpList = '';
 
