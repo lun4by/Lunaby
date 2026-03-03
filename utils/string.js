@@ -1,5 +1,4 @@
 module.exports = {
-  // Chuyển số thành dạng thứ tự (1st, 2nd, 3rd, etc.)
   ordinalize: function (number) {
     const j = number % 10;
     const k = number % 100;
@@ -21,10 +20,8 @@ module.exports = {
   normalizeText: function (text) {
     if (!text) return text;
 
-    // Loại bỏ ký tự điều khiển và format
     text = text.normalize('NFKD');
 
-    // Map font đặc biệt sang ASCII
     const specialFontMap = {
       '𝒜': 'A', '𝒝': 'B', '𝒞': 'C', '𝒟': 'D', '𝒠': 'E',
       '𝒡': 'F', '𝒢': 'G', '𝒣': 'H', '𝒤': 'I', '𝒥': 'J',
@@ -37,7 +34,6 @@ module.exports = {
       '𝓄': 'o', '𝓅': 'p', '𝓆': 'q', '𝓇': 'r', '𝓈': 's',
       '𝓉': 't', '𝓊': 'u', '𝓋': 'v', '𝓌': 'w', '𝓍': 'x',
       '𝓎': 'y', '𝓏': 'z',
-      // Font bold
       '𝗔': 'A', '𝗕': 'B', '𝗖': 'C', '𝗗': 'D', '𝗘': 'E',
       '𝗙': 'F', '𝗚': 'G', '𝗛': 'H', '𝗜': 'I', '𝗝': 'J',
       '𝗞': 'K', '𝗟': 'L', '𝗠': 'M', '𝗡': 'N', '𝗢': 'O',
@@ -49,7 +45,6 @@ module.exports = {
       '𝗼': 'o', '𝗽': 'p', '𝗾': 'q', '𝗿': 'r', '𝘀': 's',
       '𝘁': 't', '𝘂': 'u', '𝘃': 'v', '𝘄': 'w', '𝘅': 'x',
       '𝘆': 'y', '𝘇': 'z',
-      // Font italic
       '𝘈': 'A', '𝘉': 'B', '𝘊': 'C', '𝘋': 'D', '𝘌': 'E',
       '𝘍': 'F', '𝘎': 'G', '𝘏': 'H', '𝘐': 'I', '𝘑': 'J',
       '𝘒': 'K', '𝘓': 'L', '𝘔': 'M', '𝘕': 'N', '𝘖': 'O',
@@ -61,7 +56,6 @@ module.exports = {
       '𝘰': 'o', '𝘱': 'p', '𝘲': 'q', '𝘳': 'r', '𝘴': 's',
       '𝘵': 't', '𝘶': 'u', '𝘷': 'v', '𝘸': 'w', '𝘹': 'x',
       '𝘺': 'y', '𝘻': 'z',
-      // Font bold italic
       '𝙀': 'E', '𝙁': 'F', '𝙂': 'G', '𝙃': 'H', '𝙄': 'I',
       '𝙅': 'J', '𝙆': 'K', '𝙇': 'L', '𝙈': 'M', '𝙉': 'N',
       '𝙊': 'O', '𝙋': 'P', '𝙌': 'Q', '𝙍': 'R', '𝙎': 'S',
@@ -74,7 +68,6 @@ module.exports = {
       '𝙭': 'x', '𝙮': 'y', '𝙯': 'z'
     };
 
-    // Thay thế từng ký tự nếu có trong map
     return text.split('').map(char => specialFontMap[char] || char).join('');
   },
 
