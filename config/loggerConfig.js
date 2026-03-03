@@ -1,32 +1,37 @@
 
 
-// Cấu hình mặc định cho logger
 const defaultConfig = {
-  enabled: true, // Bật/tắt toàn bộ log
-  level: "info", // Mức độ log mặc định: debug, info, warn, error
-  showTimestamp: true, // Hiển thị thời gian
+  enabled: true,
+  level: "info",
+  showTimestamp: true,
   fileLogging: {
-    // Cấu hình ghi log vào file
-    enabled: true, // Bật/tắt ghi log vào file
-    directory: "logs", // Thư mục chứa file log
-    filename: "console.txt", // Tên file log mặc định
-    rotateOnStartup: true, // Đổi tên file log cũ khi khởi động
-    keepOldLogs: true, // Giữ lại các file log cũ
+    enabled: true,
+    directory: "logs",
+    filename: "console.txt",
+    rotateOnStartup: true,
+    keepOldLogs: true,
   },
   categories: {
-    // Bật/tắt log theo danh mục
-    MONITOR: true, // Hệ thống giám sát tin nhắn
-    NEURAL: true, // Hệ thống AI/NeuralNetworks
-    COMMAND: true, // Xử lý lệnh
-    DATABASE: true, // Thao tác cơ sở dữ liệu
-    SYSTEM: true, // Thông tin hệ thống
-    CHAT: true, // Chức năng trò chuyện
-    API: true, // Gọi API
-    CONVERSATION_SERVICE: true, // Conversation service logs
-    PROVIDERS: true, // API providers logs
-    AI_CORE: true, // AI Core logs
-    INIT_SYSTEM: true, // Init system logs
-    DEBUG: false, // Debug logs (tắt mặc định để tránh spam)
+    MONITOR: true,
+    NEURAL: true,
+    COMMAND: true,
+    DATABASE: true,
+    MARIADB: true,
+    SYSTEM: true,
+    CHAT: true,
+    API: true,
+    CONVERSATION_SERVICE: true,
+    CONVERSATION: false,
+    PROVIDERS: true,
+    AI_CORE: true,
+    INIT_SYSTEM: true,
+    MODERATION: true,
+    MESSAGE_EVENT: true,
+    SYSTEM_SERVICE: true,
+    XP: false,
+    FONTS: false,
+    MODLOG: true,
+    DEBUG: false,
   },
 };
 
