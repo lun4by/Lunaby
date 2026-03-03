@@ -350,8 +350,6 @@ class MariaModDB {
         }
     }
 
-    // ===== Command Toggles =====
-
     async disableCommand(guildId, channelId, commandName, userId) {
         try {
             await mariaClient.query(
