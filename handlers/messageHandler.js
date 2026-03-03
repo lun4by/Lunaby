@@ -6,6 +6,7 @@ const { handlePermissionError } = require('../utils/permissionUtils');
 const { handleMemoryRequest, splitMessageIntoChunks } = require('./messageHandlers/memoryRequestHandler');
 const { handleCodeRequest } = require('./messageHandlers/codeRequestHandler');
 const { handleChatRequest } = require('./messageHandlers/chatRequestHandler');
+const { handleImageRequest } = require('./messageHandlers/imageRequestHandler');
 const logger = require('../utils/logger');
 
 
@@ -51,7 +52,10 @@ async function handleMentionMessage(message, client) {
 
         const requestType = ConversationService.detectRequestType(content);
 
-
+        if (requestType.type === 'image') {
+          await handleImageRequest(message, content, requestType.match);
+          return;
+        }
 
         if (requestType.type === 'memory') {
           const memoryRequest = requestType.match[2].trim() || "toàn bộ cuộc trò chuyện";
