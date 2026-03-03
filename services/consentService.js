@@ -4,24 +4,17 @@ const logger = require('../utils/logger.js');
 const { handlePermissionError, sendEmbedWithFallback, hasPermission } = require('../utils/permissionUtils');
 
 class ConsentService {
-  constructor() {
-  }
-
-  
   async hasUserConsented(userId) {
     try {
       const profile = await ProfileDB.getProfile(userId);
-      if (!profile || !profile.data) {
-        return false;
-      }
-      return profile.data.consent === true;
+      return profile?.data?.consent === true;
     } catch (error) {
       logger.error('CONSENT', `Lỗi khi kiểm tra consent cho user ${userId}:`, error);
       return false;
     }
   }
 
-  
+
   createConsentEmbed(user) {
     const embed = new EmbedBuilder()
       .setTitle('🎉 Chào mừng bạn đến với Lunaby AI!')
@@ -41,7 +34,7 @@ class ConsentService {
       )
       .setColor(0x5865F2)
       .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512 }))
-      .setFooter({ 
+      .setFooter({
         text: 'Lunaby AI • Developed by s4ory'
       })
       .setTimestamp();
@@ -61,13 +54,13 @@ class ConsentService {
     return { embeds: [embed], components: [row] };
   }
 
-  
+
   async sendConsentEmbed(interaction, user) {
     const embedData = this.createConsentEmbed(user);
     return await sendEmbedWithFallback(interaction, embedData, user.username, 'embedLinks', 'reply');
   }
 
-  
+
   async handleConsentAccept(interaction, userId) {
     try {
       await this.updateUserConsent(userId, true);
@@ -78,7 +71,7 @@ class ConsentService {
           `**${interaction.user.username}** đã chấp thuận sử dụng dịch vụ của Lunaby AI!\n\n` +
           `## **Bây giờ bạn có thể:**\n` +
           `> - Trò chuyện với Lunaby bằng cách tag @Lunaby\n` +
-          `> - Sử dụng các lệnh AI như \`/think\`, \`/image\`\n` +
+          `> - Sử dụng các lệnh AI như \`/think\`\n` +
           `> - Nhận XP và level up khi hoạt động\n` +
           `> - Tận hưởng trải nghiệm AI thông minh!\n\n` +
           `**Chúc bạn có những trải nghiệm tuyệt vời với Lunaby!**`
@@ -88,20 +81,19 @@ class ConsentService {
         .setTimestamp();
 
       const embedData = { embeds: [embed], components: [] };
-      
+
       const success = await sendEmbedWithFallback(interaction, embedData, interaction.user.username, 'embedLinks', 'update');
-      
+
       if (success) {
         logger.info('CONSENT', `User ${interaction.user.tag} (${userId}) đã chấp thuận sử dụng dịch vụ`);
       }
-
     } catch (error) {
       logger.error('CONSENT', `Lỗi khi xử lý consent accept cho user ${userId}:`, error);
       await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
     }
   }
 
-  
+
   async handleConsentDecline(interaction, userId) {
     try {
       await this.updateUserConsent(userId, false);
@@ -123,32 +115,25 @@ class ConsentService {
         .setTimestamp();
 
       const embedData = { embeds: [embed], components: [] };
-      
+
       const success = await sendEmbedWithFallback(interaction, embedData, interaction.user.username, 'embedLinks', 'update');
-      
+
       if (success) {
         logger.info('CONSENT', `User ${interaction.user.tag} (${userId}) đã từ chối sử dụng dịch vụ`);
       }
-
     } catch (error) {
       logger.error('CONSENT', `Lỗi khi xử lý consent decline cho user ${userId}:`, error);
       await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
     }
   }
 
-  
+
   async updateUserConsent(userId, consented) {
     try {
       const profileCollection = await ProfileDB.getProfileCollection();
       await profileCollection.updateOne(
         { _id: userId },
-        { 
-          $set: { 
-            'data.consent': consented,
-            'data.consentDate': new Date(),
-            'data.consentVersion': '1.0'
-          } 
-        },
+        { $set: { 'data.consent': consented, 'data.consentDate': new Date(), 'data.consentVersion': '1.0' } },
         { upsert: true }
       );
     } catch (error) {
@@ -156,8 +141,6 @@ class ConsentService {
       throw error;
     }
   }
-
-
 }
 
 module.exports = new ConsentService();
