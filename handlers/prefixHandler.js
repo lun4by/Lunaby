@@ -106,9 +106,6 @@ class PseudoInteraction {
     isChatInputCommand() { return true; }
 }
 
-/**
- * Handle a prefix command from a message.
- */
 async function handlePrefixMessage(message, client) {
     if (message.author.bot) return false;
 
@@ -122,11 +119,9 @@ async function handlePrefixMessage(message, client) {
     const args = withoutPrefix.split(/\s+/);
     const commandName = args.shift().toLowerCase();
 
-    // Find matching command
     const command = findCommandByPrefix(client, commandName);
     if (!command) return false;
 
-    // Consent check for AI commands
     const aiCommands = ['think', 'image', 'reset'];
     if (aiCommands.includes(command.data?.name || commandName)) {
         const hasConsented = await consentService.hasUserConsented(message.author.id);
