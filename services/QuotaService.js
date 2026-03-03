@@ -1,14 +1,15 @@
 const logger = require('../utils/logger.js');
 const QuotaDB = require('./database/QuotaDB.js');
 const UserProfileDB = require('./database/UserProfileDB.js');
+const { ROLE_LIMITS, USER_ROLES, QUOTA_PERIOD_DAYS } = require('../config/constants.js');
 
-const VALID_ROLES = ['owner', 'admin', 'helper', 'user'];
-const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
+const VALID_ROLES = Object.values(USER_ROLES);
 const DAY_MS = 86400000;
+const PERIOD_MS = QUOTA_PERIOD_DAYS * DAY_MS;
 
 class QuotaService {
   constructor() {
-    this.roleLimits = { owner: -1, user: 600 };
+    this.roleLimits = ROLE_LIMITS;
     this.ownerId = process.env.OWNER_ID?.trim() || null;
   }
 
@@ -34,7 +35,6 @@ class QuotaService {
       const now = Date.now();
       const limitPeriod = this.roleLimits[role] || 600;
 
-      // Ensure creation in MariaDB
       await QuotaDB.createUserQuota(userId, role, limitPeriod, now);
 
       if (role !== 'user') {
