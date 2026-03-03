@@ -86,7 +86,7 @@ class DatabaseManager {
       ]
     });
     if (deleteResult.deletedCount > 0) {
-      logger.info('DATABASE', `Deleted ${deleteResult.deletedCount} invalid records`);
+      logger.debug('DATABASE', `Cleaned ${deleteResult.deletedCount} invalid records`);
     }
 
     await this.ensureCollection(db, COLLECTIONS.CONVERSATIONS);
@@ -101,12 +101,11 @@ class DatabaseManager {
 
     try {
       await QuotaService.initializeCollection();
-      logger.info('DATABASE', 'Quota system ready');
     } catch (e) {
-      logger.error('DATABASE', 'Error initializing quota system:', e.message);
+      logger.error('DATABASE', 'Quota init error:', e.message);
     }
 
-    logger.info('DATABASE', 'Set up MongoDB collections and indexes');
+    logger.info('DATABASE', 'MongoDB collections ready');
   }
 
   async resetConversationsCollection() {

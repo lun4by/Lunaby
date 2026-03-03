@@ -25,11 +25,9 @@ async function startbot(client, loadCommands) {
       await mongoClient.connect();
       await storageDB.setupCollections();
       initSystem.markReady('mongodb');
-      logger.info('SYSTEM', `Đã kết nối thành công đến MongoDB!`);
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi khởi tạo kết nối MongoDB:', error);
+      logger.error('SYSTEM', 'MongoDB init failed:', error.message);
       initSystem.markReady('mongodb');
-      logger.warn('SYSTEM', 'Bot sẽ hoạt động mà không có khả năng lưu trữ lâu dài.');
     }
 
     try {
@@ -39,18 +37,16 @@ async function startbot(client, loadCommands) {
       await PrefixDB.initTables();
       await MariaModDB.initTables();
       initSystem.markReady('mariadb');
-      logger.info('SYSTEM', 'Đã kết nối thành công đến MariaDB!');
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi khởi tạo MariaDB:', error);
+      logger.error('SYSTEM', 'MariaDB init failed:', error.message);
       initSystem.markReady('mariadb');
-      logger.warn('SYSTEM', 'Bot sẽ hoạt động mà không có MariaDB (blacklist/prefix disabled).');
     }
 
     try {
       await storageDB.initializeConversationHistory();
       initSystem.markReady('conversationHistory');
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi khởi tạo cấu trúc lịch sử cuộc trò chuyện:', error);
+      logger.error('SYSTEM', 'Conversation history init failed:', error.message);
       initSystem.markReady('conversationHistory');
     }
 
@@ -61,28 +57,23 @@ async function startbot(client, loadCommands) {
       await db.collection('user_profiles').createIndex({ 'data.xp.id': 1 });
       initSystem.markReady('profiles');
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi khởi tạo hệ thống profile người dùng:', error);
+      logger.error('SYSTEM', 'Profile system init failed:', error.message);
       initSystem.markReady('profiles');
     }
 
     try {
       const commandCount = loadCommands(client);
-      logger.info('SYSTEM', `Đã tải tổng cộng ${commandCount} lệnh!`);
+      logger.info('SYSTEM', `Đã tải ${commandCount} lệnh`);
       initSystem.markReady('commands');
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi tải commands:', error);
+      logger.error('SYSTEM', 'Command loading failed:', error.message);
       initSystem.markReady('commands');
     }
 
     try {
-      const success = await CommandsJSONService.generateCommandsJSON();
-      if (success) {
-        logger.info('SYSTEM', 'Đã tự động tạo file JSON lệnh thành công!');
-      } else {
-        logger.warn('SYSTEM', 'Không thể tạo file JSON lệnh tự động');
-      }
+      await CommandsJSONService.generateCommandsJSON();
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi tạo file JSON lệnh tự động:', error);
+      logger.error('SYSTEM', 'JSON generation failed:', error.message);
     }
 
     try {
@@ -91,20 +82,19 @@ async function startbot(client, loadCommands) {
         try {
           await GuildProfileDB.getGuildProfile(guildId);
         } catch (err) {
-          logger.error('SYSTEM', `Lỗi khi tải cấu hình guild ${guild.name}:`, err);
+          logger.error('SYSTEM', `Guild config error ${guild.name}:`, err.message);
         }
       }
       initSystem.markReady('guildProfiles');
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi khởi tạo hệ thống profile guild:', error);
+      logger.error('SYSTEM', 'Guild profiles init failed:', error.message);
       initSystem.markReady('guildProfiles');
     }
 
     try {
       await syncAllGuilds(client);
     } catch (error) {
-      logger.error('SYSTEM', 'Lỗi khi đồng bộ guilds:', error);
-      logger.error('SYSTEM', 'Stack trace:', error.stack);
+      logger.error('SYSTEM', 'Guild sync failed:', error.message);
     }
 
 
