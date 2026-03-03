@@ -1,98 +1,53 @@
-const { Collection, AttachmentBuilder } = require("discord.js");
-const path = require("path");
-const fs = require("fs");
+const { Collection } = require("discord.js");
 const ProfileDB = require("../services/database/profiledb");
 const GuildProfileDB = require("../services/database/guildprofiledb");
-// const { checkAchievements } = require("../services/canvas/achievements");
+const logger = require("./logger.js");
 
+const XP_MIN = 10;
+const XP_MAX = 25;
+const GLOBAL_XP_PER_MSG = 3;
+const COOLDOWN_MS = 60000;
+
+const noXP = (reason) => ({ xpAdded: false, reason });
+
+const calcCap = (level) => 50 * level * level + 250 * level;
 
 async function experience(message, command_executed, execute) {
-  if (!message.client.features?.includes("EXPERIENCE_POINTS")) {
-    return Promise.resolve({ xpAdded: false, reason: "DISABLED" });
-  }
-
-  if (command_executed) {
-    return Promise.resolve({ xpAdded: false, reason: "COMMAND_EXECUTED" });
-  }
-
-  if (!execute) {
-    return Promise.resolve({ xpAdded: false, reason: "COMMAND_TERMINATED" });
-  }
-
-  if (!message.guild || message.channel.type === "dm") {
-    return Promise.resolve({ xpAdded: false, reason: "DM_CHANNEL" });
-  }
+  if (!message.client.features?.includes("EXPERIENCE_POINTS")) return noXP("DISABLED");
+  if (command_executed) return noXP("COMMAND_EXECUTED");
+  if (!execute) return noXP("COMMAND_TERMINATED");
+  if (!message.guild || message.channel.type === "dm") return noXP("DM_CHANNEL");
 
   try {
-    if (!message.client.xpCooldowns) {
-      message.client.xpCooldowns = new Collection();
-    }
-
-    const userCooldown = message.client.xpCooldowns.get(message.author.id);
-    if (userCooldown) {
-      return Promise.resolve({ xpAdded: false, reason: "RECENTLY_TALKED" });
-    }
+    if (!message.client.xpCooldowns) message.client.xpCooldowns = new Collection();
+    if (message.client.xpCooldowns.has(message.author.id)) return noXP("RECENTLY_TALKED");
 
     const guildProfile = await GuildProfileDB.getGuildProfile(message.guild.id);
+    if (!guildProfile.xp?.isActive) return noXP("DISABLED_ON_GUILD");
+    if (guildProfile.xp?.exceptions?.includes(message.channel.id)) return noXP("DISABLED_ON_CHANNEL");
 
-    if (!guildProfile.xp?.isActive) {
-      return Promise.resolve({ xpAdded: false, reason: "DISABLED_ON_GUILD" });
-    }
+    const points = Math.floor(Math.random() * (XP_MAX - XP_MIN)) + XP_MIN;
+    const doc = await ProfileDB.getProfile(message.author.id);
 
-    if (guildProfile.xp?.exceptions?.includes(message.channel.id)) {
-      return Promise.resolve({ xpAdded: false, reason: "DISABLED_ON_CHANNEL" });
-    }
+    if (!doc.data.xp) doc.data.xp = [];
 
-    const max = 25;
-    const min = 10;
-    const points = Math.floor(Math.random() * (max - min)) + min;
-
-    let doc = await ProfileDB.getProfile(message.author.id);
-
-    if (!doc.data.xp) {
-      doc.data.xp = [];
-    }
-
-    const serverIndex = doc.data.xp.findIndex((x) => x.id === message.guild.id);
-    let serverData;
-    const previousLevel =
-      serverIndex !== -1 ? doc.data.xp[serverIndex].level : 0;
-
+    const serverIndex = doc.data.xp.findIndex(x => x.id === message.guild.id);
+    const previousLevel = serverIndex !== -1 ? doc.data.xp[serverIndex].level : 0;
     const isFirstXP = serverIndex === -1;
 
-    if (isFirstXP) {
-      serverData = {
-        id: message.guild.id,
-        xp: 0,
-        level: 1,
-      };
-      doc.data.xp.push(serverData);
-    } else {
-      serverData = doc.data.xp[serverIndex];
-    }
+    const serverData = isFirstXP
+      ? { id: message.guild.id, xp: 0, level: 1 }
+      : doc.data.xp[serverIndex];
 
-    const getGlobalCap = () =>
-      50 * Math.pow(doc.data.global_level, 2) + 250 * doc.data.global_level;
-    const getGlobalNext = () => getGlobalCap() - doc.data.global_xp;
-    const getLocalCap = () =>
-      50 * Math.pow(serverData.level, 2) + 250 * serverData.level;
-    const getLocalNext = () => getLocalCap() - serverData.xp;
+    if (isFirstXP) doc.data.xp.push(serverData);
 
-    doc.data.global_xp = (doc.data.global_xp || 0) + 3;
+    doc.data.global_xp = (doc.data.global_xp || 0) + GLOBAL_XP_PER_MSG;
+    while (calcCap(doc.data.global_level) - doc.data.global_xp < 1) doc.data.global_level++;
 
-    while (getGlobalNext() < 1) {
-      doc.data.global_level++;
-    }
+    serverData.xp += points;
+    while (calcCap(serverData.level) - serverData.xp < 1) serverData.level++;
 
-    serverData.xp = serverData.xp + points;
-
-    while (getLocalNext() < 1) {
-      serverData.level++;
-    }
-
-    if (serverIndex !== -1) {
-      doc.data.xp[serverIndex] = serverData;
-    }
+    if (serverIndex !== -1) doc.data.xp[serverIndex] = serverData;
 
     const profileCollection = await ProfileDB.getProfileCollection();
     await profileCollection.updateOne(
@@ -101,30 +56,9 @@ async function experience(message, command_executed, execute) {
     );
 
     message.client.xpCooldowns.set(message.author.id, Date.now());
-    setTimeout(() => {
-      message.client.xpCooldowns.delete(message.author.id);
-    }, 60000);
+    setTimeout(() => message.client.xpCooldowns.delete(message.author.id), COOLDOWN_MS);
 
-    const xpResult = {
-      xpAdded: true,
-      reason: null,
-      points,
-      level: serverData.level,
-      previousLevel,
-      totalXp: serverData.xp,
-      isFirstXP: isFirstXP,
-    };
-
-    // Kiểm tra thành tựu không đồng bộ
-    // if (xpResult.xpAdded) {
-    //   setTimeout(() => {
-    //     checkAchievements(message, xpResult).catch((err) => {
-    //       console.error("Lỗi khi kiểm tra thành tựu:", err);
-    //     });
-    //   }, 100);
-    // }
-
-    return xpResult;
+    return { xpAdded: true, reason: null, points, level: serverData.level, previousLevel, totalXp: serverData.xp, isFirstXP };
   } catch (error) {
     logger.error("XP", "Lỗi XP:", error);
     return { xpAdded: false, reason: "DB_ERROR", error: error.message };
