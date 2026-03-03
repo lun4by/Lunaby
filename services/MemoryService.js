@@ -231,6 +231,7 @@ class MemoryService {
 
       const name = memory.personalInfo.nickname || memory.personalInfo.name;
       if (name) parts.push(`[User's name: ${name}]`);
+      if (memory.personalInfo.occupation) parts.push(`[User's occupation: ${memory.personalInfo.occupation}]`);
 
       const prefParts = [];
       if (memory.preferences.likes.length) prefParts.push(`Likes: ${memory.preferences.likes.join(', ')}`);
