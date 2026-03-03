@@ -26,7 +26,6 @@ class MemoryService {
         logger.info('MEMORY_SERVICE', 'Created user_memories collection');
       }
 
-      // Create indexes for efficient querying
       const collection = await this.getMemoryCollection();
       await collection.createIndex({ userId: 1 }, { unique: true });
       await collection.createIndex({ 'lastUpdated': 1 });
@@ -46,7 +45,6 @@ class MemoryService {
       createdAt: new Date(),
       lastUpdated: new Date(),
 
-      // Personal information
       personalInfo: {
         name: null,
         nickname: null,
@@ -93,7 +91,7 @@ class MemoryService {
         totalMessages: 0,
         firstInteraction: new Date(),
         lastInteraction: new Date(),
-        favoriteTopics: {}, // { "anime": 45, "coding": 32 }
+        favoriteTopics: {},
         conversationTimes: [],
         responsePreferences: {
           detailLevel: 'medium',
@@ -224,7 +222,6 @@ class MemoryService {
         return null;
       }
 
-      // Use AI to extract important information
       const extractionPrompt = prompts.memory.extraction
         .replace('${userMessage}', userMessage)
         .replace('${aiResponse}', aiResponse);
