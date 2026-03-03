@@ -90,12 +90,10 @@ class DatabaseManager {
     }
 
     await this.ensureCollection(db, COLLECTIONS.CONVERSATIONS);
-    await this.ensureCollection(db, COLLECTIONS.MOD_SETTINGS);
 
     try {
       await convCollection.createIndex({ userId: 1, messageIndex: 1 }, { unique: true });
       await db.collection(COLLECTIONS.CONVERSATION_META).createIndex({ userId: 1 }, { unique: true });
-      await db.collection(COLLECTIONS.MOD_SETTINGS).createIndex({ guildId: 1 }, { unique: true });
     } catch (e) {
       logger.error('DATABASE', 'Error creating indexes:', e.message);
       await this.resetConversationsCollection();
@@ -193,7 +191,7 @@ class DatabaseManager {
     const collectionsToReset = [
       COLLECTIONS.CONVERSATIONS,
       COLLECTIONS.CONVERSATION_META,
-      COLLECTIONS.MOD_SETTINGS,
+      'mod_settings',
       'image_blacklist',
       'monitor_settings',
       'monitor_logs'
