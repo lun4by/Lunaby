@@ -12,9 +12,7 @@ class ErrorHandler {
   };
 
   static categorizeError(error) {
-    if (!error) {
-      return this.ERROR_CATEGORIES.UNKNOWN;
-    }
+    if (!error) return this.ERROR_CATEGORIES.UNKNOWN;
 
     const message = error.message ? error.message.toLowerCase() : '';
     const code = error.code || '';
@@ -70,10 +68,10 @@ class ErrorHandler {
 
       case this.ERROR_CATEGORIES.API:
         if (message.includes('vi phạm') || message.includes('không phù hợp')) {
-          return '❌ Nội dung vi phạm chính sách an toàn. Vui lòng thử với nội dung khác.';
+          return 'Nội dung vi phạm chính sách an toàn. Vui lòng thử với nội dung khác.';
         }
         if (message.includes('bận') || message.includes('busy')) {
-          return '⏳ Hệ thống AI đang bận. Vui lòng thử lại sau vài giây.';
+          return 'Hệ thống AI đang bận. Vui lòng thử lại sau vài giây.';
         }
         if (message.includes('401') || message.includes('403') || message.includes('xác thực')) {
           return 'Lỗi xác thực API. Vui lòng liên hệ quản trị viên.';
@@ -92,20 +90,14 @@ class ErrorHandler {
   }
 
   static logError(context, message, error, level = 'error') {
-    const category = this.categorizeError(error);
     const errorInfo = {
       context,
-      category,
+      category: this.categorizeError(error),
       message: error?.message || message,
       code: error?.code,
       stack: error?.stack
     };
-
-    if (level === 'warn') {
-      logger.warn(context, message, errorInfo);
-    } else {
-      logger.error(context, message, errorInfo);
-    }
+    logger[level === 'warn' ? 'warn' : 'error'](context, message, errorInfo);
   }
 
   static handleAsyncError(context, operation) {
@@ -137,33 +129,20 @@ class ErrorHandler {
   }
 
   static isRecoverableError(error) {
-    const category = this.categorizeError(error);
-    return [
-      this.ERROR_CATEGORIES.TIMEOUT,
-      this.ERROR_CATEGORIES.NETWORK,
-      this.ERROR_CATEGORIES.API
-    ].includes(category);
+    const { TIMEOUT, NETWORK, API } = this.ERROR_CATEGORIES;
+    return [TIMEOUT, NETWORK, API].includes(this.categorizeError(error));
   }
 
   static async retryOperation(operation, maxRetries = 3, delayMs = 1000) {
-    let lastError;
-
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
-        lastError = error;
-
-        if (!this.isRecoverableError(error) || attempt === maxRetries) {
-          throw error;
-        }
-
-        logger.warn('RETRY', `Attempt ${attempt}/${maxRetries} failed, retrying in ${delayMs}ms...`);
+        if (!this.isRecoverableError(error) || attempt === maxRetries) throw error;
+        logger.warn('RETRY', `Attempt ${attempt}/${maxRetries} failed, retrying in ${delayMs * attempt}ms...`);
         await new Promise(resolve => setTimeout(resolve, delayMs * attempt));
       }
     }
-
-    throw lastError;
   }
 }
 
