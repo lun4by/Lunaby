@@ -4,7 +4,7 @@ const {
 	EmbedBuilder,
 	ChannelType,
 } = require('discord.js');
-const mongoClient = require('../../services/mongoClient.js');
+const mongoClient = require('../../services/database/mongoClient.js');
 const logger = require('../../utils/logger.js');
 
 module.exports = {
@@ -44,7 +44,7 @@ module.exports = {
 
 			try {
 				await db.createCollection('mod_settings');
-			} catch (error) {}
+			} catch (error) { }
 
 			const logSettings = {
 				guildId: interaction.guild.id,

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const mongoClient = require('../../services/mongoClient.js');
+const mongoClient = require('../../services/database/mongoClient.js');
 const { getModLogChannel } = require('../../utils/modLogUtils.js');
 const logger = require('../../utils/logger.js');
 
@@ -80,8 +80,8 @@ module.exports = {
 				.setDescription(
 					logChannel
 						? t(interaction, 'commands.logchannel.embeds.current.description.current', {
-								channel: `<#${logChannel.id}>`,
-							})
+							channel: `<#${logChannel.id}>`,
+						})
 						: t(interaction, 'commands.logchannel.embeds.current.description.notFound'),
 				)
 				.addFields(
