@@ -4,12 +4,13 @@ const { sendStreamingMessage } = require('../../services/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 const { DEFAULT_MODEL } = require('../../config/constants');
 const Validators = require('../../utils/validators');
+const conversationManager = require('../conversationManager');
+const prompts = require('../../config/prompts');
+const ErrorHandler = require('../../utils/ErrorHandler');
 
 async function handleChatRequest(message, content, ConversationService) {
   try {
     const userId = ConversationService.extractUserId(message);
-    const conversationManager = require('../conversationManager');
-    const prompts = require('../../config/prompts');
 
     await conversationManager.loadConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(userId);
@@ -39,7 +40,6 @@ async function handleChatRequest(message, content, ConversationService) {
     await conversationManager.addMessage(userId, 'assistant', response);
 
   } catch (streamError) {
-    const ErrorHandler = require('../../utils/ErrorHandler');
     ErrorHandler.logError('CHAT', 'Streaming failed, falling back to non-streaming', streamError, 'warn');
 
     try {
@@ -47,7 +47,7 @@ async function handleChatRequest(message, content, ConversationService) {
 
       if (!response) {
         logger.error('CHAT', 'ConversationService returned null/undefined');
-        await message.reply('Xin lỗi, tôi không thể xử lý tin nhắn của bạn lúc này.');
+        await message.reply('Xin lỗi, tôi không thể xử lý tin nhắn của bạn lúc này.').catch(() => { });
         return;
       }
 

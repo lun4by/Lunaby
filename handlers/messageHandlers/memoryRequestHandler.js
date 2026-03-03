@@ -53,7 +53,7 @@ async function handleMemoryRequest(message, ConversationService, memoryRequest) 
   try {
     const userId = ConversationService.extractUserId(message);
     const memoryAnalysis = await ConversationService.getMemoryAnalysis(userId, memoryRequest);
-    
+
     if (memoryAnalysis.length > DISCORD_MESSAGE_MAX_LENGTH) {
       const chunks = splitMessageIntoChunks(memoryAnalysis);
       for (const chunk of chunks) {
@@ -64,7 +64,7 @@ async function handleMemoryRequest(message, ConversationService, memoryRequest) 
     }
   } catch (error) {
     logger.error('MEMORY', 'Error handling memory request:', error);
-    await message.reply('Xin lỗi, mình gặp lỗi khi truy cập trí nhớ của cuộc trò chuyện.');
+    await message.reply('Xin lỗi, mình gặp lỗi khi truy cập trí nhớ của cuộc trò chuyện.').catch(() => { });
   }
 }
 

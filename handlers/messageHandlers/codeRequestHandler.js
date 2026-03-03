@@ -3,6 +3,10 @@ const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 const { DEFAULT_MODEL } = require('../../config/constants');
+const Validators = require('../../utils/validators');
+const conversationManager = require('../conversationManager');
+const prompts = require('../../config/prompts');
+const ErrorHandler = require('../../utils/ErrorHandler');
 
 function formatCodeResponse(text) {
   const { LANGUAGE_DETECTION_PATTERNS } = require('../../config/patterns');
@@ -19,15 +23,9 @@ function formatCodeResponse(text) {
 }
 
 async function handleCodeRequest(message, content, ConversationService) {
-  const Validators = require('../../utils/validators');
-
-  await message.channel.sendTyping();
-
   try {
     const promptContent = content.replace(/<@!?\d+>/g, '').trim();
     const userId = ConversationService.extractUserId(message);
-    const conversationManager = require('../conversationManager');
-    const prompts = require('../../config/prompts');
 
     await conversationManager.loadConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(userId);
@@ -50,18 +48,9 @@ async function handleCodeRequest(message, content, ConversationService) {
     }
 
     const response = await sendStreamingMessage(message.channel, validMessages);
-
-    let formattedResponse = response;
-    if (!formattedResponse.includes('```')) {
-      formattedResponse = formatCodeResponse(formattedResponse);
-    }
-
     await conversationManager.addMessage(userId, 'assistant', response);
 
   } catch (streamError) {
-    const ErrorHandler = require('../../utils/ErrorHandler');
-    const logger = require('../../utils/logger');
-
     ErrorHandler.logError('CODE', 'Code streaming failed, falling back to non-streaming', streamError, 'warn');
 
     try {
