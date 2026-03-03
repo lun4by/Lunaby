@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -6,7 +7,7 @@ module.exports = {
     .setDescription('Giới thiệu về VTuber Lunaby'),
 
   async execute(interaction) {
-    const embed = new EmbedBuilder()
+    const embed = createLunabyEmbed()
       .setColor(0xFF69B4)
       .setTitle('🌙 Lunaby Hojo - VTuber')
       .setURL('https://www.youtube.com/@LunabyHojo')
@@ -26,8 +27,7 @@ module.exports = {
         { name: '🌸 Đặc điểm', value: 'Dễ thương & Thân thiện', inline: true }
       )
       .setImage('https://yt3.googleusercontent.com/oNdSvqHsFNRiwO5X_wczBznDt7KfWBOkfwrOHlY49T8LmcWNK-RbSPUx2sEDHfRYX2Kks-Bw=w2120-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj')
-      .setFooter({ text: 'Cảm ơn bạn đã ủng hộ Lunaby! 💕' })
-      .setTimestamp();
+      .setFooter({ text: 'Cảm ơn bạn đã ủng hộ Lunaby! 💕' });
 
     const row = new ActionRowBuilder()
       .addComponents(

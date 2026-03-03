@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -9,7 +10,7 @@ module.exports = {
     const videoURL = 'https://www.youtube.com/watch?v=rtSkMbDs1Xw';
     const thumbnailURL = 'https://i.ytimg.com/vi/rtSkMbDs1Xw/maxresdefault.jpg';
 
-    const embed = new EmbedBuilder()
+    const embed = createLunabyEmbed()
       .setColor(0x7EC8E3)
       .setTitle('⭐ Cyrene - Honkai Star Rail')
       .setURL(videoURL)
@@ -25,11 +26,10 @@ module.exports = {
         { name: '🎬 Loại', value: 'Character Video', inline: true },
         { name: '🏢 Nhà phát triển', value: 'HoYoverse', inline: true }
       )
-      .setFooter({ 
+      .setFooter({
         text: 'Honkai Star Rail - HoYoverse 🌌',
         iconURL: 'https://yt3.googleusercontent.com/ytc/AIdro_mF-X7qVxGxQdVt5aQHxKvJ7ZqJxVQ_0JqXwLqB=s160-c-k-c0x00ffffff-no-rj'
-      })
-      .setTimestamp();
+      });
 
     const row = new ActionRowBuilder()
       .addComponents(
@@ -47,10 +47,10 @@ module.exports = {
           .setStyle(ButtonStyle.Link)
       );
 
-    await interaction.reply({ 
+    await interaction.reply({
       content: `⭐ **${interaction.user}** đang xem thông tin về **Cyrene** trong Honkai Star Rail! 🎮`,
-      embeds: [embed], 
-      components: [row] 
+      embeds: [embed],
+      components: [row]
     });
   }
 };

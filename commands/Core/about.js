@@ -1,6 +1,5 @@
 ﻿const {
 	SlashCommandBuilder,
-	EmbedBuilder,
 	ButtonBuilder,
 	ActionRowBuilder,
 	ButtonStyle,
@@ -8,6 +7,7 @@
 const { formatUptime } = require('../../utils/string');
 const { DEFAULT_MODEL } = require('../../config/constants');
 const packageJson = require('../../package.json');
+const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -17,7 +17,7 @@ module.exports = {
 
 	async execute(interaction) {
 		const data = buildContextData(interaction);
-		const embed = new EmbedBuilder()
+		const embed = createLunabyEmbed()
 			.setColor(0x9B59B6)
 			.setTitle('Về Lunaby AI')
 			.setThumbnail(interaction.client.user.displayAvatarURL({ dynamic: true, size: 512 }))

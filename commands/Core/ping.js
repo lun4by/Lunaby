@@ -1,6 +1,7 @@
-﻿const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+﻿const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const packageJson = require('../../package.json');
 const { formatUptime } = require('../../utils/string');
+const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -48,7 +49,7 @@ module.exports = {
 function createStatusEmbed({ ping, ws }) {
 	const color = ping < 200 ? 0x57F287 : ping < 400 ? 0xFEE75C : 0xED4245;
 
-	return new EmbedBuilder()
+	return createLunabyEmbed()
 		.setColor(color)
 		.setAuthor({
 			name: 'Lunaby AI',
@@ -56,15 +57,14 @@ function createStatusEmbed({ ping, ws }) {
 		})
 		.setTitle('Trạng thái hệ thống')
 		.addFields({ name: 'Độ trễ', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false })
-		.setFooter({ text: `Lunaby v${packageJson.version} - ${formatUptime(process.uptime())}` })
-		.setTimestamp();
+		.setFooter({ text: `Lunaby v${packageJson.version} - ${formatUptime(process.uptime())}` });
 }
 
 function createDetailedEmbed(context) {
 	const mem = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
 	const shards = context.client.shard?.count || 1;
 
-	return new EmbedBuilder()
+	return createLunabyEmbed()
 		.setColor(0x9B59B6)
 		.setTitle('Thông tin chi tiết')
 		.addFields(
@@ -76,8 +76,7 @@ function createDetailedEmbed(context) {
 			{ name: 'Nền tảng', value: `\`${process.platform} ${process.arch}\``, inline: true },
 			{ name: 'Số lượng shard', value: `\`${shards}\``, inline: true },
 		)
-		.setFooter({ text: 'Lunaby AI - Phát triển bởi s4ory' })
-		.setTimestamp();
+		.setFooter({ text: 'Lunaby AI - Phát triển bởi s4ory' });
 }
 
 function createActionRow(enabled = true) {

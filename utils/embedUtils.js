@@ -1,3 +1,5 @@
+const { EmbedBuilder } = require('discord.js');
+
 const COLORS = {
     MAL: 0x2e51a2,
     ERROR: 0xED4245,
@@ -25,20 +27,6 @@ function formatStatus(type, status) {
     return STATUS_MAPS[type]?.[status] || "N/A";
 }
 
-function createBaseEmbed(title, color, description = null) {
-    const embed = { color, title, timestamp: new Date() };
-    if (description) embed.description = description;
-    return embed;
-}
-
-function createMALEmbed(title, description = null) {
-    return { ...createBaseEmbed(title, COLORS.MAL, description), footer: { text: "Powered by MyAnimeList API" } };
-}
-
-function createErrorEmbed(title, description) {
-    return createBaseEmbed(title, COLORS.ERROR, description);
-}
-
 function truncateText(text, maxLength = 500) {
     if (!text) return "";
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
@@ -50,4 +38,56 @@ function formatList(items, key = "name", limit = null) {
     return list.map(item => item[key] || item).join(", ");
 }
 
-module.exports = { COLORS, STATUS_MAPS, formatStatus, createBaseEmbed, createMALEmbed, createErrorEmbed, truncateText, formatList };
+function createBaseEmbed(title, color, description = null) {
+    const embed = { color, title, timestamp: new Date() };
+    if (description) embed.description = description;
+    return embed;
+}
+
+function createMALEmbed(title, description = null) {
+    return { ...createBaseEmbed(title, COLORS.MAL, description), footer: { text: "Powered by MyAnimeList API" } };
+}
+
+function createLunabyEmbed() {
+    return new EmbedBuilder()
+        .setColor(COLORS.LUNABY)
+        .setTimestamp();
+}
+
+function createErrorEmbed(title, description) {
+    const embed = new EmbedBuilder()
+        .setColor(COLORS.ERROR)
+        .setTitle(`${title}`);
+    if (description) embed.setDescription(description);
+    return embed;
+}
+
+function createSuccessEmbed(title, description = null) {
+    const embed = new EmbedBuilder()
+        .setColor(COLORS.SUCCESS)
+        .setTitle(`${title}`);
+    if (description) embed.setDescription(description);
+    return embed;
+}
+
+function createInfoEmbed(title, description = null) {
+    const embed = new EmbedBuilder()
+        .setColor(COLORS.INFO)
+        .setTitle(`${title}`);
+    if (description) embed.setDescription(description);
+    return embed;
+}
+
+module.exports = {
+    COLORS,
+    STATUS_MAPS,
+    formatStatus,
+    truncateText,
+    formatList,
+    createBaseEmbed,
+    createMALEmbed,
+    createLunabyEmbed,
+    createErrorEmbed,
+    createSuccessEmbed,
+    createInfoEmbed
+};
