@@ -16,8 +16,6 @@ module.exports = {
 	prefix: { name: 'about', aliases: ['info', 'botinfo'], description: 'Thông tin bot' },
 
 	async execute(interaction) {
-		await interaction.deferReply();
-
 		const data = buildContextData(interaction);
 		const embed = new EmbedBuilder()
 			.setColor(0x9B59B6)
@@ -34,8 +32,7 @@ module.exports = {
 			.setFooter({ text: `Lunaby v${data.version}` })
 			.setTimestamp();
 
-		const row = buildActionRow(interaction);
-		await interaction.editReply({ embeds: [embed], components: [row] });
+		await interaction.reply({ embeds: [embed], components: [buildActionRow(interaction)] });
 	},
 };
 
