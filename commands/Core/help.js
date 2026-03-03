@@ -129,7 +129,6 @@ function buildSelectOptions(categories) {
 function buildHelpEmbed(category, visibleCategories, commandsPath) {
 	const embed = new EmbedBuilder()
 		.setColor(0x9B59B6)
-		.setFooter({ text: 'Made with ❤️ by Lunaby Team' })
 		.setTimestamp();
 
 	if (category === 'all') {

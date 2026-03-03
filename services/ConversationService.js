@@ -66,30 +66,44 @@ class ConversationService {
 
   async enrichPromptWithMemory(originalPrompt, userId) {
     try {
+      const memory = await MemoryService.getUserMemory(userId);
+
+      // Build memory context (respects allowMemoryStorage internally)
       const memoryContext = await MemoryService.buildMemoryContext(userId, originalPrompt);
 
-      const fullHistory = await storageDB.getConversationHistory(
-        userId,
-        prompts.system.main,
-        DEFAULT_MODEL
-      );
+      // Custom instructions
+      let instructionsContext = '';
+      if (memory?.personalInfo?.customInstructions) {
+        instructionsContext = `\n[User custom instructions: ${memory.personalInfo.customInstructions}]\n`;
+      }
 
+      // Conversation history reference (respects allowSearchHistoryReference)
       let conversationContext = '';
-      if (fullHistory && fullHistory.length >= 3) {
-        const relevantMessages = await this.extractRelevantMemories(
-          fullHistory,
-          originalPrompt
+      const allowSearchRef = memory?.privacy?.allowSearchHistoryReference !== false;
+
+      if (allowSearchRef) {
+        const fullHistory = await storageDB.getConversationHistory(
+          userId,
+          prompts.system.main,
+          DEFAULT_MODEL
         );
 
-        if (relevantMessages && relevantMessages.length > 0) {
-          conversationContext = prompts.memory.context.replace(
-            "${relevantMessagesText}",
-            relevantMessages.join(". ")
+        if (fullHistory && fullHistory.length >= 3) {
+          const relevantMessages = await this.extractRelevantMemories(
+            fullHistory,
+            originalPrompt
           );
+
+          if (relevantMessages && relevantMessages.length > 0) {
+            conversationContext = prompts.memory.context.replace(
+              "${relevantMessagesText}",
+              relevantMessages.join(". ")
+            );
+          }
         }
       }
 
-      return memoryContext + conversationContext + originalPrompt;
+      return instructionsContext + memoryContext + conversationContext + originalPrompt;
 
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error enriching prompt with memory:", error);

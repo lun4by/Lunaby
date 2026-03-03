@@ -53,6 +53,7 @@ class MemoryService {
         age: null,
         location: null,
         occupation: null,
+        customInstructions: null,
         birthday: null,
         timezone: null,
         language: 'vi'
@@ -112,6 +113,7 @@ class MemoryService {
         allowMemoryStorage: true,
         allowPersonalInfoExtraction: true,
         allowPreferenceTracking: true,
+        allowSearchHistoryReference: true,
         sensitiveTopics: []
       }
     };
