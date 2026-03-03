@@ -1,4 +1,7 @@
 const mongoClient = require('../services/database/mongoClient.js');
+const mariaClient = require('../services/database/mariaClient.js');
+const MariaBlacklistDB = require('../services/database/MariaBlacklistDB.js');
+const PrefixDB = require('../services/database/PrefixDB.js');
 const storageDB = require('../services/storagedb.js');
 const initSystem = require('../services/initSystem.js');
 const GuildProfileDB = require('../services/guildprofiledb.js');
@@ -26,6 +29,19 @@ async function startbot(client, loadCommands) {
       logger.error('SYSTEM', 'Lỗi khi khởi tạo kết nối MongoDB:', error);
       initSystem.markReady('mongodb');
       logger.warn('SYSTEM', 'Bot sẽ hoạt động mà không có khả năng lưu trữ lâu dài.');
+    }
+
+    try {
+      await mariaClient.connect();
+      await MariaBlacklistDB.initTables();
+      await MariaBlacklistDB.initializeDefaultBlacklist();
+      await PrefixDB.initTables();
+      initSystem.markReady('mariadb');
+      logger.info('SYSTEM', 'Đã kết nối thành công đến MariaDB!');
+    } catch (error) {
+      logger.error('SYSTEM', 'Lỗi khi khởi tạo MariaDB:', error);
+      initSystem.markReady('mariadb');
+      logger.warn('SYSTEM', 'Bot sẽ hoạt động mà không có MariaDB (blacklist/prefix disabled).');
     }
 
     try {

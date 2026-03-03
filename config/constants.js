@@ -1,4 +1,5 @@
 module.exports = {
+  DEFAULT_PREFIX: 'e.',
   DISCORD_MESSAGE_MAX_LENGTH: 2000,
   SUMMARY_MESSAGE_TRUNCATE_LENGTH: 150,
   MAX_CONVERSATION_LENGTH: 30,
@@ -64,7 +65,7 @@ module.exports = {
     USER_QUOTAS: 'user_quotas',
     GUILDS: 'guilds',
     MOD_SETTINGS: 'mod_settings',
-    IMAGE_BLACKLIST: 'image_blacklist',
+    // IMAGE_BLACKLIST moved to MariaDB
     MONITOR_SETTINGS: 'monitor_settings',
     MONITOR_LOGS: 'monitor_logs'
   },

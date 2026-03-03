@@ -1,6 +1,6 @@
 const ConversationDB = require('./database/ConversationDB');
 const UserProfileDB = require('./database/UserProfileDB');
-const ImageBlacklistDB = require('./database/ImageBlacklistDB');
+const MariaBlacklistDB = require('./database/MariaBlacklistDB');
 const DatabaseManager = require('./database/DatabaseManager');
 const { CONVERSATION_CLEANUP_INTERVAL_MS } = require('../config/constants');
 
@@ -58,19 +58,19 @@ class StorageDB {
   }
 
   async checkImageBlacklist(text) {
-    return ImageBlacklistDB.checkImageBlacklist(text);
+    return MariaBlacklistDB.checkImageBlacklist(text);
   }
 
   async addToImageBlacklist(keyword, category, description, severity) {
-    return ImageBlacklistDB.addToImageBlacklist(keyword, category, description, severity);
+    return MariaBlacklistDB.addToImageBlacklist(keyword, category, description, severity);
   }
 
   async removeFromImageBlacklist(keyword) {
-    return ImageBlacklistDB.removeFromImageBlacklist(keyword);
+    return MariaBlacklistDB.removeFromImageBlacklist(keyword);
   }
 
   async getImageBlacklist() {
-    return ImageBlacklistDB.getImageBlacklist();
+    return MariaBlacklistDB.getImageBlacklist();
   }
 
   async initializeConversationHistory() {
@@ -82,7 +82,7 @@ class StorageDB {
   }
 
   async initializeImageBlacklist() {
-    return ImageBlacklistDB.initializeDefaultBlacklist();
+    return MariaBlacklistDB.initializeDefaultBlacklist();
   }
 
   async resetConversationsCollection() {

@@ -2,7 +2,6 @@ const mongoClient = require('./mongoClient');
 const logger = require('../../utils/logger');
 const ConversationDB = require('./ConversationDB');
 const UserProfileDB = require('./UserProfileDB');
-const ImageBlacklistDB = require('./ImageBlacklistDB');
 const MemoryService = require('../MemoryService');
 const QuotaService = require('../QuotaService');
 const { COLLECTIONS } = require('../../config/constants');
@@ -17,7 +16,6 @@ class DatabaseManager {
         await this.initializeCollections();
         await this.initializeConversationHistory();
         await this.initializeProfiles();
-        await ImageBlacklistDB.initializeDefaultBlacklist();
       } catch (setupError) {
         logger.error('DATABASE', 'Error setting up database:', setupError);
         logger.info('DATABASE', 'Attempting to reset entire database...');
@@ -93,14 +91,11 @@ class DatabaseManager {
 
     await this.ensureCollection(db, COLLECTIONS.CONVERSATIONS);
     await this.ensureCollection(db, COLLECTIONS.MOD_SETTINGS);
-    await this.ensureCollection(db, COLLECTIONS.IMAGE_BLACKLIST);
 
     try {
       await convCollection.createIndex({ userId: 1, messageIndex: 1 }, { unique: true });
       await db.collection(COLLECTIONS.CONVERSATION_META).createIndex({ userId: 1 }, { unique: true });
       await db.collection(COLLECTIONS.MOD_SETTINGS).createIndex({ guildId: 1 }, { unique: true });
-      await db.collection(COLLECTIONS.IMAGE_BLACKLIST).createIndex({ category: 1 });
-      await db.collection(COLLECTIONS.IMAGE_BLACKLIST).createIndex({ keyword: 1 });
     } catch (e) {
       logger.error('DATABASE', 'Error creating indexes:', e.message);
       await this.resetConversationsCollection();
@@ -219,7 +214,6 @@ class DatabaseManager {
     await this.initializeCollections();
     await this.initializeConversationHistory();
     await this.initializeProfiles();
-    await ImageBlacklistDB.initializeDefaultBlacklist();
 
     logger.info('DATABASE', 'Database successfully reset');
     return true;

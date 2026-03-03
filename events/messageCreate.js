@@ -1,5 +1,6 @@
 const { Events } = require("discord.js");
 const { handleMentionMessage } = require("../handlers/messageHandler");
+const { handlePrefixMessage } = require("../handlers/prefixHandler");
 const XPService = require("../services/XPService");
 const guildProfileDB = require("../services/guildprofiledb");
 const logger = require("../utils/logger.js");
@@ -28,6 +29,10 @@ function setupMessageCreateEvent(client) {
       //     }
       //   }
       // }
+
+      // Check prefix commands first
+      const handled = await handlePrefixMessage(message, client);
+      if (handled) return;
 
       await handleMentionMessage(message, client);
     } catch (error) {
