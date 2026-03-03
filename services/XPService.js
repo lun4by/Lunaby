@@ -48,7 +48,7 @@ class XPService {
       const profile = await ProfileDB.getProfile(message.author.id);
 
       let serverXP = profile.data.xp.find(x => x.id === message.guild.id);
-      
+
       if (!serverXP) {
         serverXP = {
           id: message.guild.id,
@@ -65,7 +65,7 @@ class XPService {
       serverXP.xp = currentXP + xpAdd;
 
       const nextLevelXP = this.calculateTotalXPForLevel(currentLevel + 1);
-      
+
       let leveledUp = false;
       if (serverXP.xp >= nextLevelXP) {
         serverXP.level = currentLevel + 1;
@@ -159,7 +159,6 @@ class XPService {
         'data.xp': { $elemMatch: { id: guildId } }
       }).toArray();
 
-      // Sort theo XP
       const sorted = profiles
         .map(profile => {
           const serverXP = profile.data.xp.find(x => x.id === guildId);
