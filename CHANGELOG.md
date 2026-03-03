@@ -170,13 +170,13 @@ Tích hợp hệ thống profile customization với canvas 800x600 pixels và c
   - `data.profile.inventory[]` - Array of owned items
 
 #### `services/MyAnimeListAPI.js`
-- ✅ Updated import: `MessageEmbed` → `EmbedBuilder` (Discord.js v14)
+- Updated import: `MessageEmbed` → `EmbedBuilder` (Discord.js v14)
 - Methods return embed objects (not class instances)
 
 #### `services/storagedb.js`
-- ❌ Removed `generateProfileCard()` method
-- ❌ Removed `getProfileCardData()` method
-- ❌ Removed require('./canvas/profileCanvas')
+- Removed `generateProfileCard()` method
+- Removed `getProfileCardData()` method
+- Removed require('./canvas/profileCanvas')
 
 #### `commands/social/rank.js`
 - Uses `rankCanvas.js` for rank cards
@@ -184,9 +184,9 @@ Tích hợp hệ thống profile customization với canvas 800x600 pixels và c
 
 ### 📦 Dependencies
 No changes to package.json:
-- `discord.js`: ^14.19.2 ✅
-- `canvas`: ^3.1.0 ✅
-- `mongodb`: ^6.16.0 ✅
+- `discord.js`: ^14.19.2 
+- `canvas`: ^3.1.0 
+- `mongodb`: ^6.16.0 
 
 ### ✨ Database Schema
 MongoDB collections structure remains compatible:
@@ -195,19 +195,19 @@ user_profiles {
   _id: userId,
   data: {
     profile: {
-      bio: String,           // Max 200 chars
-      background: String,    // Image URL or null
-      pattern: String,       // Image URL or null
-      emblem: String,        // Image URL or null
-      hat: String,           // Image URL or null
-      wreath: String,        // Image URL or null
-      color: String,         // Hex code (#RRGGBB) or null
-      birthday: String,      // DD-MM format or null
-      inventory: [           // Array of items
+      bio: String,
+      background: String, 
+      pattern: String,       
+      emblem: String,        
+      hat: String,           
+      wreath: String,        
+      color: String,         
+      birthday: String,      
+      inventory: [           
         { id: Number, quantity: Number }
       ]
     },
-    xp: [],                  // Server XP data
+    xp: [],                  
     global_xp: Number,
     global_level: Number,
     economy: { ... },
