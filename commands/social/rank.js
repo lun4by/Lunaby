@@ -25,11 +25,9 @@ module.exports = {
     const member = await interaction.guild.members.fetch(targetUser.id);
 
     try {
-      // Lấy profile từ profiledb
       const profile = await ProfileDB.getProfile(targetUser.id);
       const serverXP = profile.data.xp.find(x => x.id === interaction.guild.id);
 
-      // Nếu chưa có XP data cho guild này
       if (!serverXP || serverXP.xp === 0) {
         const embed = new EmbedBuilder()
           .setColor('#FF0000')
@@ -44,11 +42,9 @@ module.exports = {
       const curXPThisLevel = XPService.calculateCurrentLevelXP(xp, level);
       const percentage = Math.round((curXPThisLevel / maxXPThisLevel) * 100);
 
-      // Lấy rank của user
       const userRank = await XPService.getUserRank(interaction.guild.id, targetUser.id);
       const rank = ordinalize(userRank);
 
-      // Wreath cho top players
       const wreaths = [
         'https://i.imgur.com/xsZHQcW.png', // 1st
         'https://i.imgur.com/NmpP8oU.png', // 2nd
@@ -64,7 +60,6 @@ module.exports = {
         wreath = wreaths[3];
       }
 
-      // Tạo rank card
       const attachment = await generateRankCard(
         member,
         targetUser,
