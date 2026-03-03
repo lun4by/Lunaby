@@ -70,9 +70,9 @@ module.exports = {
   async execute(interaction) {
     const ownerId = process.env.OWNER_ID;
     if (interaction.user.id !== ownerId) {
-      return interaction.reply({ 
-        content: 'Bạn không có quyền sử dụng lệnh này!', 
-        ephemeral: true 
+      return interaction.reply({
+        content: 'Bạn không có quyền sử dụng lệnh này!',
+        ephemeral: true
       });
     }
 
