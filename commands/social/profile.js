@@ -22,7 +22,7 @@ module.exports = {
 
       if (targetUser.bot) {
         return interaction.editReply({
-          content: '❌ Bot không có profile!',
+          content: 'Bot không có profile!',
           ephemeral: true
         });
       }
@@ -39,7 +39,6 @@ module.exports = {
 
       const serverRank = await XPService.getUserRank(targetUser.id, interaction.guild.id);
 
-      // Global rank (optional - if you have global leaderboard)
       let globalRank = null;
       try {
         globalRank = await XPService.getGlobalUserRank?.(targetUser.id) || null;
@@ -63,7 +62,7 @@ module.exports = {
     } catch (error) {
       logger.error('PROFILE', 'Error creating profile card:', error);
       await interaction.editReply({
-        content: '❌ Có lỗi xảy ra khi tạo profile card!',
+        content: 'Có lỗi xảy ra khi tạo profile card!',
         ephemeral: true
       });
     }
