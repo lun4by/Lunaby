@@ -2,6 +2,7 @@ const PrefixDB = require('../services/database/PrefixDB');
 const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const MariaModDB = require('../services/database/MariaModDB');
+const QuotaService = require('../services/QuotaService');
 const logger = require('../utils/logger');
 
 class PseudoInteraction {
@@ -135,6 +136,14 @@ async function handlePrefixMessage(message, client) {
                     await handlePermissionError(message, 'embedLinks', message.author.username, 'reply');
                 }
             }
+            return true;
+        }
+    }
+
+    if (command.prefix?.adminOnly) {
+        const userRole = await RoleService.getUserRole(message.author.id);
+        if (userRole !== 'owner' && userRole !== 'admin') {
+            await message.reply('Bạn không có quyền sử dụng lệnh này.').catch(() => { });
             return true;
         }
     }

@@ -8,14 +8,12 @@ class QuotaDB {
             await mariaClient.query(`
         CREATE TABLE IF NOT EXISTS user_quotas (
           user_id VARCHAR(32) PRIMARY KEY,
-          role ENUM('owner', 'admin', 'helper', 'user') DEFAULT 'user',
           current_usage INT DEFAULT 0,
           total_usage INT DEFAULT 0,
           limit_period INT DEFAULT 600,
           period_start BIGINT,
           created_at BIGINT,
           updated_at BIGINT,
-          INDEX idx_role (role),
           INDEX idx_total_usage (total_usage)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
@@ -38,7 +36,6 @@ class QuotaDB {
             const row = rows[0];
             return {
                 userId: row.user_id,
-                role: row.role,
                 messageUsage: { current: row.current_usage, total: row.total_usage },
                 limits: { period: row.limit_period },
                 periodStart: Number(row.period_start),
@@ -51,12 +48,12 @@ class QuotaDB {
         }
     }
 
-    async createUserQuota(userId, role, limitPeriod, now) {
+    async createUserQuota(userId, limitPeriod, now) {
         try {
             await mariaClient.query(
-                `INSERT IGNORE INTO user_quotas (user_id, role, current_usage, total_usage, limit_period, period_start, created_at, updated_at)
-         VALUES (?, ?, 0, 0, ?, ?, ?, ?)`,
-                [userId, role, limitPeriod, now, now, now]
+                `INSERT IGNORE INTO user_quotas (user_id, current_usage, total_usage, limit_period, period_start, created_at, updated_at)
+          VALUES (?, 0, 0, ?, ?, ?, ?)`,
+                [userId, limitPeriod, now, now, now]
             );
             return await this.getUserQuota(userId);
         } catch (error) {
@@ -91,24 +88,23 @@ class QuotaDB {
         }
     }
 
-    async updateUserRole(userId, role, limitPeriod, now) {
-        try {
-            await mariaClient.query(
-                'UPDATE user_quotas SET role = ?, limit_period = ?, updated_at = ? WHERE user_id = ?',
-                [role, limitPeriod, now, userId]
-            );
-            return true;
-        } catch (error) {
-            logger.error('QUOTA_DB', `Error updating role for ${userId}:`, error);
-            throw error;
-        }
-    }
-
     async getAllUsers() {
         try {
             return await mariaClient.query('SELECT * FROM user_quotas');
         } catch (error) {
             logger.error('QUOTA_DB', 'Error getting all users:', error);
+            throw error;
+        }
+    }
+    async addQuotaLimit(userId, amount, now) {
+        try {
+            await mariaClient.query(
+                'UPDATE user_quotas SET limit_period = limit_period + ?, updated_at = ? WHERE user_id = ?',
+                [amount, now, userId]
+            );
+            return true;
+        } catch (error) {
+            logger.error('QUOTA_DB', `Error adding quota for ${userId}:`, error);
             throw error;
         }
     }

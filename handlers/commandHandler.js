@@ -3,6 +3,7 @@ const path = require('path');
 const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const MariaModDB = require('../services/database/MariaModDB');
+const QuotaService = require('../services/QuotaService');
 const logger = require('../utils/logger.js');
 
 let commandsJsonCache = null;
@@ -88,6 +89,13 @@ const handleCommand = async (interaction, client) => {
       const isDisabled = await MariaModDB.isCommandDisabled(interaction.guildId, interaction.channelId, interaction.commandName);
       if (isDisabled) {
         return interaction.reply({ content: 'Lệnh này đã bị tắt trong kênh này.', ephemeral: true });
+      }
+    }
+
+    if (command.prefix?.adminOnly || (command.data && command.data.default_member_permissions !== undefined)) {
+      const userRole = await RoleService.getUserRole(interaction.user.id);
+      if (userRole !== 'owner' && userRole !== 'admin') {
+        return interaction.reply({ content: 'Bạn không có quyền sử dụng lệnh này.', ephemeral: true });
       }
     }
 

@@ -8,6 +8,7 @@ const initSystem = require('../services/initSystem.js');
 const GuildProfileDB = require('../services/database/guildprofiledb.js');
 const { syncAllGuilds } = require('../handlers/guildHandler');
 const CommandsJSONService = require('../services/CommandsJSONService');
+const RoleService = require('../services/RoleService.js');
 const logger = require('../utils/logger.js');
 
 async function startbot(client, loadCommands) {
@@ -36,6 +37,7 @@ async function startbot(client, loadCommands) {
       await MariaBlacklistDB.initializeDefaultBlacklist();
       await PrefixDB.initTables();
       await MariaModDB.initTables();
+      await RoleService.initializeCollection();
       initSystem.markReady('mariadb');
     } catch (error) {
       logger.error('SYSTEM', 'MariaDB init failed:', error.message);

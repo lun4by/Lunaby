@@ -1,9 +1,7 @@
 const logger = require('../utils/logger.js');
 const QuotaDB = require('./database/QuotaDB.js');
-const UserProfileDB = require('./database/UserProfileDB.js');
-const { ROLE_LIMITS, USER_ROLES, QUOTA_PERIOD_DAYS } = require('../config/constants.js');
-
-const VALID_ROLES = Object.values(USER_ROLES);
+const RoleService = require('./RoleService.js');
+const { ROLE_LIMITS, QUOTA_PERIOD_DAYS } = require('../config/constants.js');
 const DAY_MS = 86400000;
 const PERIOD_MS = QUOTA_PERIOD_DAYS * DAY_MS;
 
@@ -18,23 +16,10 @@ class QuotaService {
       const existing = await QuotaDB.getUserQuota(userId);
       if (existing) return existing;
 
-      let role = 'user';
-      if (this.ownerId && userId === this.ownerId) {
-        role = 'owner';
-      }
-
-      const now = Date.now();
+      const role = await RoleService.getUserRole(userId);
       const limitPeriod = this.roleLimits[role] || 600;
 
-      await QuotaDB.createUserQuota(userId, role, limitPeriod, now);
-
-      if (role !== 'user') {
-        await profileCollection.updateOne(
-          { _id: userId },
-          { $set: { 'data.role': role } },
-          { upsert: true }
-        );
-      }
+      await QuotaDB.createUserQuota(userId, limitPeriod, Date.now());
 
       return await QuotaDB.getUserQuota(userId);
     } catch (error) {
@@ -78,7 +63,9 @@ class QuotaService {
   async canUseMessages(userId, estimatedMessages = 1) {
     try {
       const messageData = await this.getUserMessageData(userId);
-      const { role, messageUsage, limits } = messageData;
+      const { messageUsage, limits } = messageData;
+
+      const role = await RoleService.getUserRole(userId);
 
       if (role === 'owner' || limits.period === -1) {
         return { allowed: true, remaining: -1, role, current: messageUsage.current, limit: -1 };
@@ -116,41 +103,26 @@ class QuotaService {
     return await this.recordMessageUsage(userId, 1);
   }
 
-  async setUserRole(userId, role) {
+  async addQuota(userId, amount) {
     try {
-      if (!VALID_ROLES.includes(role)) throw new Error(`Vai trò không hợp lệ: ${role}`);
-
-      const now = Date.now();
-      const limitPeriod = this.roleLimits[role] || 600;
-
-      await QuotaDB.updateUserRole(userId, role, limitPeriod, now);
-
+      await this.getUserMessageData(userId);
+      await QuotaDB.addQuotaLimit(userId, amount, Date.now());
       return true;
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Lỗi khi đặt role cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi cộng thêm quota cho ${userId}:`, error);
       throw error;
-    }
-  }
-
-  async getUserRole(userId) {
-    try {
-      if (this.ownerId && userId === this.ownerId) return 'owner';
-      const messageData = await this.getUserMessageData(userId);
-      return messageData.role || 'user';
-    } catch (error) {
-      logger.error('QUOTA_SERVICE', `Lỗi khi lấy role của ${userId}:`, error);
-      return 'user';
     }
   }
 
   async getUserMessageStats(userId) {
     try {
       const messageData = await this.getUserMessageData(userId);
+      const role = await RoleService.getUserRole(userId);
       const periodStart = messageData.periodStart || messageData.createdAt;
       const timeRemaining = PERIOD_MS - (Date.now() - periodStart);
 
       return {
-        userId, role: messageData.role,
+        userId, role,
         usage: { current: messageData.messageUsage.current, total: messageData.messageUsage.total },
         limits: { period: messageData.limits.period },
         remaining: {
