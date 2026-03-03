@@ -2,52 +2,43 @@ const { EmbedBuilder } = require("discord.js");
 const MariaModDB = require('../services/database/MariaModDB.js');
 const logger = require("./logger.js");
 
+const FALLBACK_CHANNEL_NAMES = ["mod-logs", "mod-chat", "admin", "bot-logs"];
 
-async function sendModLog(guild, embed, isModAction = true) {
+async function getModLogChannel(guild, isModAction = true) {
   try {
     const logSettings = await MariaModDB.getSettings(guild.id);
 
-    let logChannel = null;
-
-    if (logSettings && logSettings.logChannelId) {
-      const shouldLog = isModAction
-        ? logSettings.modActionLogs !== false
-        : logSettings.monitorLogs !== false;
-
+    if (logSettings?.logChannelId) {
+      const shouldLog = isModAction ? logSettings.modActionLogs !== false : logSettings.monitorLogs !== false;
       if (shouldLog) {
         try {
-          logChannel = await guild.channels.fetch(logSettings.logChannelId);
+          const channel = await guild.channels.fetch(logSettings.logChannelId);
+          if (channel?.isTextBased()) return channel;
         } catch (error) {
-          logger.error(
-            "COMMAND",
-            `Không thể tìm thấy kênh log ${logSettings.logChannelId}:`,
-            error
-          );
+          logger.error("COMMAND", `Không thể tìm thấy kênh log ${logSettings.logChannelId}:`, error);
         }
       }
     }
 
-    if (!logChannel) {
-      logChannel = guild.channels.cache.find(
-        (channel) =>
-          channel.name.includes("mod-logs") ||
-          channel.name.includes("mod-chat") ||
-          channel.name.includes("admin") ||
-          channel.name.includes("bot-logs")
-      );
-    }
-
-    if (logChannel && logChannel.isTextBased()) {
-      return await logChannel.send({ embeds: [embed] });
-    }
-
+    const fallback = guild.channels.cache.find(ch =>
+      ch.isTextBased() && FALLBACK_CHANNEL_NAMES.some(name => ch.name.includes(name))
+    );
+    return fallback || null;
+  } catch (error) {
+    logger.error("COMMAND", "Lỗi khi lấy kênh log moderation:", error);
     return null;
+  }
+}
+
+async function sendModLog(guild, embed, isModAction = true) {
+  try {
+    const logChannel = await getModLogChannel(guild, isModAction);
+    return logChannel ? await logChannel.send({ embeds: [embed] }) : null;
   } catch (error) {
     logger.error("COMMAND", "Lỗi khi gửi log moderation:", error);
     return null;
   }
 }
-
 
 function createModActionEmbed(options) {
   const embed = new EmbedBuilder()
@@ -56,68 +47,10 @@ function createModActionEmbed(options) {
     .setDescription(options.description || "")
     .setTimestamp();
 
-  if (options.fields && Array.isArray(options.fields)) {
-    for (const field of options.fields) {
-      embed.addFields(field);
-    }
-  }
-
-  if (options.footer) {
-    embed.setFooter({ text: options.footer });
-  }
+  if (Array.isArray(options.fields)) embed.addFields(...options.fields);
+  if (options.footer) embed.setFooter({ text: options.footer });
 
   return embed;
 }
 
-
-async function getModLogChannel(guild, isModAction = true) {
-  try {
-    const logSettings = await MariaModDB.getSettings(guild.id);
-
-    let logChannel = null;
-
-    if (logSettings && logSettings.logChannelId) {
-      const shouldLog = isModAction
-        ? logSettings.modActionLogs !== false
-        : logSettings.monitorLogs !== false;
-
-      if (shouldLog) {
-        try {
-          logChannel = await guild.channels.fetch(logSettings.logChannelId);
-          if (logChannel && logChannel.isTextBased()) {
-            return logChannel;
-          }
-        } catch (error) {
-          logger.error(
-            "COMMAND",
-            `Không thể tìm thấy kênh log ${logSettings.logChannelId}:`,
-            error
-          );
-        }
-      }
-    }
-
-    logChannel = guild.channels.cache.find(
-      (channel) =>
-        channel.name.includes("mod-logs") ||
-        channel.name.includes("mod-chat") ||
-        channel.name.includes("admin") ||
-        channel.name.includes("bot-logs")
-    );
-
-    if (logChannel && logChannel.isTextBased()) {
-      return logChannel;
-    }
-
-    return null;
-  } catch (error) {
-    logger.error("COMMAND", "Lỗi khi lấy kênh log moderation:", error);
-    return null;
-  }
-}
-
-module.exports = {
-  sendModLog,
-  createModActionEmbed,
-  getModLogChannel,
-};
+module.exports = { sendModLog, createModActionEmbed, getModLogChannel };
