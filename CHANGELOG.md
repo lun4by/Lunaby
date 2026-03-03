@@ -7,18 +7,24 @@
 - **Hệ thống lệnh Prefix (Prefix Commands)**: Hỗ trợ người dùng gọi lệnh bằng Prefix thay vì chỉ dùng Slash Commands.
 
 ### Added
+- **`commands/Core/personalize.js`**: Lệnh `/personalize` mới thay thế `/memory` cũ. Cung cấp giao diện tương tác (StringSelectMenu) cho phép:
+  - Cập nhật nghề nghiệp và hướng dẫn tùy chỉnh thông qua form trực tiếp.
+  - Quản lý trí nhớ AI và bật/tắt (Toggle) việc AI sử dụng lịch sử trò chuyện.
 - **Prefix Handler (`handlers/prefixHandler.js`)**: Lớp giả lập `PseudoInteraction` giúp chạy Prefix Command mà không cần viết lại logic lệnh.
 - **MariaDB Client (`services/database/mariaClient.js`)**: Pool kết nối đến MariaDB.
 - **Service Database Mới**: Thêm `PrefixDB.js`, `MariaBlacklistDB.js`, `MariaModDB.js` để lưu trữ dữ liệu chuyên biệt vào MariaDB.
 - **DatabaseManager (`services/database/DatabaseManager.js`)**: Quản lý tập trung các collection và index của MongoDB, thay thế các mã khởi tạo phân tán trước đây.
 
 ### Changed
+- **`services/MemoryService.js`**: Mở rộng schema, bổ sung `customInstructions` và `allowSearchHistoryReference`.
+- **`services/ConversationService.js`**: Logic trò chuyện giờ đọc các cài đặt quyền riêng tư mới và tiêm thông tin tùy chỉnh vào ngữ cảnh AI.
 - Cấu trúc lại thư mục `services`: Chuyển logic hệ thống DB vào thư mục `services/database/`.
 - Cập nhật `example.env` để thêm các biến môi trường cấu hình kết nối MariaDB.
 - Sửa một số command và update file cấu hình prompt.
 - Tối ưu hóa DatabaseManager để quản lý tập trung các collection và index của MongoDB.
 
 ### Removed
+- **`commands/AIcore/memory.js`**: Đã xóa (thay bằng `personalize`).
 - Loại bỏ các câu lệnh không cần thiết.
 
 ### Migration Notes
