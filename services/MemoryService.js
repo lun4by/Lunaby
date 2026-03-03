@@ -106,6 +106,30 @@ class MemoryService {
     }
   }
 
+  async updatePrivacySettings(userId, privacyUpdates) {
+    try {
+      const collection = await this.getMemoryCollection();
+
+      const setOperations = {};
+      for (const [key, value] of Object.entries(privacyUpdates)) {
+        setOperations[`privacy.${key}`] = value;
+      }
+      setOperations.lastUpdated = new Date();
+
+      await collection.updateOne(
+        { userId },
+        { $set: setOperations },
+        { upsert: true }
+      );
+
+      this.memoryCache.delete(userId);
+      return true;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error updating privacy settings for ${userId}:`, error);
+      return false;
+    }
+  }
+
   async addMemory(userId, memoryData) {
     try {
       const memory = await this.getUserMemory(userId);
