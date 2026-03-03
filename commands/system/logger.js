@@ -46,29 +46,29 @@ module.exports = {
       const cats = Object.entries(config.categories).map(([k, v]) => `${k}: ${v ? '✅' : '❌'}`).join('\n');
       return reply(interaction,
         `**Trạng thái hệ thống ghi log:**\n` +
-        `Trạng thái: ${config.enabled ? '✅ Đang bật' : '❌ Đã tắt'}\n` +
+        `Trạng thái: ${config.enabled ? 'Đang bật' : 'Đã tắt'}\n` +
         `Mức độ: ${config.level.toUpperCase()}\n` +
         `Hiển thị thời gian: ${config.showTimestamp ? '✅' : '❌'}\n\n` +
         `**Danh mục:**\n${cats}`
       );
     }
 
-    if (sub === 'enable') { logger.setEnabled(true); return reply(interaction, '✅ Đã bật hệ thống ghi log'); }
-    if (sub === 'disable') { logger.setEnabled(false); return reply(interaction, '❌ Đã tắt hệ thống ghi log'); }
+    if (sub === 'enable') { logger.setEnabled(true); return reply(interaction, 'Đã bật hệ thống ghi log'); }
+    if (sub === 'disable') { logger.setEnabled(false); return reply(interaction, 'Đã tắt hệ thống ghi log'); }
 
     if (sub === 'level') {
       const level = interaction.options.getString('level');
       logger.setLevel(level);
-      return reply(interaction, `✅ Đã đặt mức độ ghi log thành: ${level.toUpperCase()}`);
+      return reply(interaction, `Đã đặt mức độ ghi log thành: ${level.toUpperCase()}`);
     }
 
     if (sub === 'category') {
       const category = interaction.options.getString('category');
       const enabled = interaction.options.getBoolean('enabled');
       logger.setCategoryEnabled(category, enabled);
-      return reply(interaction, `✅ Đã ${enabled ? 'bật' : 'tắt'} ghi log cho danh mục: ${category}`);
+      return reply(interaction, `Đã ${enabled ? 'bật' : 'tắt'} ghi log cho danh mục: ${category}`);
     }
 
-    if (sub === 'reset') { logger.resetConfig(); return reply(interaction, '✅ Đã khôi phục cài đặt ghi log về mặc định'); }
+    if (sub === 'reset') { logger.resetConfig(); return reply(interaction, 'Đã khôi phục cài đặt ghi log về mặc định'); }
   },
 };
