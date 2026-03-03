@@ -66,8 +66,6 @@ class MyAnimeListAPI {
     }
   }
 
-  // ── API Methods ──
-
   async searchAnime(query, limit = 10) {
     try {
       const data = await this.request("/anime", { q: query, limit, fields: ANIME_SEARCH_FIELDS });
@@ -135,8 +133,6 @@ class MyAnimeListAPI {
       return [];
     }
   }
-
-  // ── Embed Builders ──
 
   _baseEmbed(title) {
     return { color: MAL_COLOR, title, footer: FOOTER, timestamp: new Date(), fields: [] };
