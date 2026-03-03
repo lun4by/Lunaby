@@ -5,7 +5,7 @@ const { handlePermissionError } = require('../utils/permissionUtils');
 const logger = require('../utils/logger.js');
 
 let commandsJsonCache = null;
-const AI_COMMANDS = new Set(['think', 'image', 'reset']);
+const AI_COMMANDS = new Set(['think', 'reset']);
 
 const loadCommandsFromDirectory = (client, dir, commandsJson) => {
   const items = fs.readdirSync(dir, { withFileTypes: true });

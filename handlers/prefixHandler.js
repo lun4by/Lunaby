@@ -122,7 +122,7 @@ async function handlePrefixMessage(message, client) {
     const command = findCommandByPrefix(client, commandName);
     if (!command) return false;
 
-    const aiCommands = ['think', 'image', 'reset'];
+    const aiCommands = ['think', 'reset'];
     if (aiCommands.includes(command.data?.name || commandName)) {
         const hasConsented = await consentService.hasUserConsented(message.author.id);
         if (!hasConsented) {

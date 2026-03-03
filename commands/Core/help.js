@@ -104,13 +104,7 @@ module.exports = {
 };
 
 function buildSelectOptions(categories) {
-	const options = [
-		new StringSelectMenuOptionBuilder()
-			.setLabel('Tất cả lệnh')
-			.setDescription('Xem tất cả các lệnh có sẵn')
-			.setValue('all')
-			.setEmoji('📋'),
-	];
+	const options = [];
 
 	for (const folder of categories) {
 		const metadata = getCategoryMetadata(folder);
@@ -131,29 +125,6 @@ function buildHelpEmbed(category, visibleCategories, commandsPath) {
 		.setColor(0x9B59B6)
 		.setTimestamp();
 
-	if (category === 'all') {
-		embed
-			.setTitle('📋 Tất cả lệnh')
-			.setDescription('Danh sách tất cả các lệnh có sẵn theo danh mục:');
-
-		for (const folder of visibleCategories) {
-			const folderPath = path.join(commandsPath, folder);
-			const commandFiles = fs.readdirSync(folderPath).filter((file) => file.endsWith('.js'));
-			const metadata = getCategoryMetadata(folder);
-
-			const commandList = commandFiles.map((file) => {
-				const command = require(path.join(folderPath, file));
-				return formatCommandSummary(command);
-			}).join('\n');
-
-			embed.addFields({
-				name: `${metadata.emoji} ${metadata.label}`,
-				value: commandList || 'Không có lệnh nào',
-			});
-		}
-
-		return embed;
-	}
 
 	const metadata = getCategoryMetadata(category);
 
@@ -176,11 +147,6 @@ function buildHelpEmbed(category, visibleCategories, commandsPath) {
 	});
 
 	return embed;
-}
-
-function formatCommandSummary(commandModule) {
-	const description = commandModule.data.description || 'Không có mô tả';
-	return `\`/${commandModule.data.name}\` - ${description}`;
 }
 
 function getCategoryMetadata(category) {

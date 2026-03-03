@@ -2,7 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const ConversationService = require('../services/ConversationService');
 const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
-const { handleImageRequest } = require('./messageHandlers/imageRequestHandler');
+
 const { handleMemoryRequest, splitMessageIntoChunks } = require('./messageHandlers/memoryRequestHandler');
 const { handleCodeRequest } = require('./messageHandlers/codeRequestHandler');
 const { handleChatRequest } = require('./messageHandlers/chatRequestHandler');
@@ -51,11 +51,7 @@ async function handleMentionMessage(message, client) {
 
         const requestType = ConversationService.detectRequestType(content);
 
-        if (requestType.type === 'image') {
-          const imagePrompt = requestType.match[1];
-          await handleImageRequest(message, imagePrompt);
-          return;
-        }
+
 
         if (requestType.type === 'memory') {
           const memoryRequest = requestType.match[2].trim() || "toàn bộ cuộc trò chuyện";
