@@ -30,7 +30,7 @@ async function handleResetdbInteraction(interaction) {
       if (success) {
         await interaction.editReply({
           content:
-            '✅ **Đã reset database thành công!**\n\n' +
+            '**Đã reset database thành công!**\n\n' +
             '> Tất cả dữ liệu đã được xóa\n' +
             '> Database đã được tạo lại\n' +
             '> Bot sẽ không còn nhớ cuộc trò chuyện trước đây\n\n' +
@@ -41,7 +41,7 @@ async function handleResetdbInteraction(interaction) {
       } else {
         await interaction.editReply({
           content:
-            '❌ **Lỗi khi reset database!**\n\n' +
+            '**Lỗi khi reset database!**\n\n' +
             '> Có lỗi xảy ra trong quá trình reset\n' +
             '> Vui lòng kiểm tra logs để biết thêm chi tiết\n' +
             '> Liên hệ admin nếu vấn đề tiếp tục',
@@ -52,7 +52,7 @@ async function handleResetdbInteraction(interaction) {
     } else if (customId === 'reset_database_cancel') {
       await interaction.update({
         content:
-          '❌ **Đã hủy reset database!**\n\n' +
+          '**Đã hủy reset database!**\n\n' +
           '> Không có thay đổi nào được thực hiện\n' +
           '> Database vẫn giữ nguyên\n' +
           '> Tất cả dữ liệu được bảo toàn\n\n' +
@@ -75,7 +75,7 @@ async function handleResetdbInteraction(interaction) {
 
         await interaction.editReply({
           content:
-            '✅ **Đã reset user profiles thành công!**\n\n' +
+            '**Đã reset user profiles thành công!**\n\n' +
             `> Đã xóa ${result.deletedCount} user profiles\n` +
             '> Tất cả XP, level, achievements đã bị xóa\n' +
             '> Users sẽ phải đồng ý consent lại\n' +
@@ -87,7 +87,7 @@ async function handleResetdbInteraction(interaction) {
       } catch (error) {
         await interaction.editReply({
           content:
-            '❌ **Lỗi khi reset user profiles!**\n\n' +
+            '**Lỗi khi reset user profiles!**\n\n' +
             '> Có lỗi xảy ra trong quá trình reset\n' +
             '> Vui lòng kiểm tra logs để biết thêm chi tiết\n' +
             '> Liên hệ admin nếu vấn đề tiếp tục',
@@ -98,7 +98,7 @@ async function handleResetdbInteraction(interaction) {
     } else if (customId === 'reset_users_cancel') {
       await interaction.update({
         content:
-          '❌ **Đã hủy reset user profiles!**\n\n' +
+          '**Đã hủy reset user profiles!**\n\n' +
           '> Không có thay đổi nào được thực hiện\n' +
           '> User profiles vẫn giữ nguyên\n' +
           '> Tất cả dữ liệu users được bảo toàn\n\n' +
@@ -113,7 +113,7 @@ async function handleResetdbInteraction(interaction) {
 
     try {
       await interaction.followUp({
-        content: '❌ Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại sau!',
+        content: '**Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại sau!**',
         ephemeral: true,
       });
     } catch (followUpError) {
