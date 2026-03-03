@@ -211,8 +211,8 @@ async function handleToggleSearch(i, userId, interaction) {
 
     const updatedMemory = await MemoryService.getUserMemory(userId);
     const statusText = newValue
-        ? '🟢 **Đã bật** Reference search history\nLunaby sẽ sử dụng lịch sử cuộc hội thoại khi trả lời bạn.'
-        : '🔴 **Đã tắt** Reference search history\nLunaby sẽ không tham chiếu lịch sử cuộc hội thoại.';
+        ? '🟢 **Đã bật** Reference search history\nLunaby sẽ truy cập và sử dụng trí nhớ đã lưu để trả lời bạn.'
+        : '🔴 **Đã tắt** Reference search history\nLunaby sẽ không tham chiếu bất kỳ thông tin nào trong quá khứ.';
 
     const embed = new EmbedBuilder()
         .setColor(newValue ? 0x2ECC71 : 0xE74C3C)

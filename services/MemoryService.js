@@ -226,6 +226,7 @@ class MemoryService {
   async buildMemoryContext(userId, currentMessage) {
     try {
       const memory = await this.getUserMemory(userId);
+
       const relevantMemories = await this.getRelevantMemories(userId, currentMessage);
       const parts = [];
 
