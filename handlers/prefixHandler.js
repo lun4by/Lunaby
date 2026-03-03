@@ -3,17 +3,12 @@ const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const logger = require('../utils/logger');
 
-/**
- * PseudoInteraction — Adapter that wraps a Discord Message to look like a slash command Interaction.
- * This allows the same execute() function to work for both slash and prefix commands.
- */
 class PseudoInteraction {
     constructor(message, commandName, args) {
         this.message = message;
         this.commandName = commandName;
         this.args = args;
 
-        // Mirror interaction properties
         this.user = message.author;
         this.member = message.member;
         this.guild = message.guild;
@@ -27,14 +22,12 @@ class PseudoInteraction {
         this.deferred = false;
         this._sentMessage = null;
 
-        // Options parsed from args
         this._options = this._parseOptions(args, message);
     }
 
     _parseOptions(args, message) {
         const options = new Map();
 
-        // The first mentioned user is the "user" option
         const mentionedUser = message.mentions.users.first();
         if (mentionedUser) {
             options.set('user', mentionedUser);
