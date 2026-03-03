@@ -22,14 +22,10 @@ const conversationManager = (() => {
   const getUserHistory = (userId) => {
     try {
       const validUserId = validateUserId(userId);
-
       if (!userConversations.has(validUserId)) {
         userConversations.set(validUserId, []);
-        userLastActivity.set(validUserId, Date.now());
-      } else {
-        userLastActivity.set(validUserId, Date.now());
       }
-
+      userLastActivity.set(validUserId, Date.now());
       return userConversations.get(validUserId);
     } catch (error) {
       logger.error('CONVERSATION', `Lỗi khi lấy lịch sử cuộc trò chuyện: ${error.message}`);
@@ -59,9 +55,7 @@ const conversationManager = (() => {
 
         const userHistory = getUserHistory(validUserId);
         userHistory.length = 0;
-        history.forEach(msg => userHistory.push(msg));
-
-        logger.debug('CONVERSATION', `Đã tải ${history.length} tin nhắn cho userId: ${validUserId}`);
+        userHistory.push(...history);
         return [...userHistory];
       } catch (error) {
         logger.error('CONVERSATION', `Lỗi khi tải lịch sử cuộc trò chuyện: ${error.message}`);
@@ -75,12 +69,8 @@ const conversationManager = (() => {
     async addMessage(userId, role, content) {
       try {
         const validUserId = validateUserId(userId);
-
-        const userHistory = getUserHistory(validUserId);
-        userHistory.push({ role, content });
-
+        getUserHistory(validUserId).push({ role, content });
         await storageDB.addMessageToConversation(validUserId, role, content);
-        logger.debug('CONVERSATION', `Đã thêm tin nhắn (${role}) cho userId: ${validUserId}`);
         return true;
       } catch (error) {
         logger.error('CONVERSATION', `Lỗi khi thêm tin nhắn: ${error.message}`);
@@ -91,9 +81,7 @@ const conversationManager = (() => {
     getHistory(userId) {
       try {
         const validUserId = validateUserId(userId);
-        const history = [...getUserHistory(validUserId)];
-        logger.debug('CONVERSATION', `Đã lấy ${history.length} tin nhắn từ bộ nhớ cache cho userId: ${validUserId}`);
-        return history;
+        return [...getUserHistory(validUserId)];
       } catch (error) {
         logger.error('CONVERSATION', `Lỗi khi lấy lịch sử: ${error.message}`);
         return [];
@@ -104,14 +92,11 @@ const conversationManager = (() => {
       try {
         if (userId) {
           const validUserId = validateUserId(userId);
-          if (userConversations.has(validUserId)) {
-            userConversations.get(validUserId).length = 0;
-            logger.debug('CONVERSATION', `Đã xóa lịch sử cục bộ cho userId: ${validUserId}`);
-          }
+          userConversations.delete(validUserId);
+          userLastActivity.delete(validUserId);
         } else {
           userConversations.clear();
           userLastActivity.clear();
-          logger.debug('CONVERSATION', 'Đã xóa tất cả lịch sử cuộc trò chuyện cục bộ');
         }
         return true;
       } catch (error) {
