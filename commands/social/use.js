@@ -22,7 +22,7 @@ module.exports = {
       const marketItem = market.find(m => m.id === itemId);
       if (!marketItem) {
         return interaction.editReply({
-          content: '❌ **Item không tồn tại!**\n\nVui lòng kiểm tra lại ID.'
+          content: 'Item không tồn tại!\n\nVui lòng kiểm tra lại ID.'
         });
       }
 
@@ -32,7 +32,7 @@ module.exports = {
       const hasItem = inventory.some(item => item.id === itemId);
       if (!hasItem) {
         return interaction.editReply({
-          content: `❌ **Bạn không có item này trong inventory!**\n\nItem: **${marketItem.name}**\n\nHãy mua từ \`/shop\` trước.`
+          content: `Bạn không có item này trong inventory!\n\nItem: ${marketItem.name}\n\nHãy mua từ \`/shop\` trước.`
         });
       }
 
@@ -45,13 +45,13 @@ module.exports = {
       );
 
       await interaction.editReply({
-        content: `✅ **Đã trang bị item!**\n\n${marketItem.name} (${marketItem.type})\n\nHãy dùng \`/profile\` để xem thay đổi!`
+        content: `Đã trang bị item!\n\n${marketItem.name} (${marketItem.type})\n\nHãy dùng \`/profile\` để xem thay đổi!`
       });
 
     } catch (error) {
       logger.error('INVENTORY', 'Lỗi khi equip item:', error);
       await interaction.editReply({
-        content: '❌ Có lỗi xảy ra khi trang bị item!'
+        content: 'Có lỗi xảy ra khi trang bị item!'
       });
     }
   }
