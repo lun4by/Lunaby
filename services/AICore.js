@@ -3,6 +3,9 @@ const prompts = require("../config/prompts.js");
 const initSystem = require("./initSystem.js");
 const { Lunaby } = require("lunaby-sdk");
 
+const MODEL_MAP = { default: "lunaby", pro: "lunaby-pro", image: "lunaby-vision" };
+const EMPTY_USAGE = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
 class AICore {
   constructor() {
     this.systemPrompt = prompts.system.main;
@@ -23,12 +26,9 @@ class AICore {
   }
 
   async processChatCompletion(messages, config = {}) {
-    const modelMap = {
-      default: "lunaby",
-      pro: "lunaby-pro",
-      image: "lunaby-vision"
-    };
-    const model = modelMap[config.modelType] || modelMap.default;
+    if (!this.client) throw new Error("Lunaby client chưa được khởi tạo");
+
+    const model = MODEL_MAP[config.modelType] || MODEL_MAP.default;
 
     if (config.modelType === 'image') {
       const prompt = messages.find(m => m.role === 'user')?.content || '';
@@ -40,7 +40,7 @@ class AICore {
       return {
         content: result.buffer.toString('base64'),
         revised_prompt: result.revisedPrompt,
-        usage: result.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+        usage: result.usage || EMPTY_USAGE
       };
     }
 
@@ -50,10 +50,9 @@ class AICore {
       ...config,
     });
     const content = await stream.toContent();
-
     if (!content) throw new Error("No content received");
 
-    return { content, usage: stream.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 } };
+    return { content, usage: stream.usage || EMPTY_USAGE };
   }
 
   async getCodeCompletion(prompt) {
