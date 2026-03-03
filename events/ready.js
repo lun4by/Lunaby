@@ -77,7 +77,6 @@ async function startbot(client, loadCommands) {
     }
 
     try {
-      await GuildProfileDB.setupGuildProfileIndexes();
       for (const [guildId, guild] of client.guilds.cache) {
         try {
           await GuildProfileDB.getGuildProfile(guildId);

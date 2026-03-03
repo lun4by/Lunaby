@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
+const MariaModDB = require('../services/database/MariaModDB');
 const logger = require('../utils/logger.js');
 
 let commandsJsonCache = null;
@@ -34,6 +35,10 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
               logger.error('COMMAND', `Lệnh "${commandName}" thiếu name hoặc description:`, jsonData);
               continue;
             }
+
+            const dirParts = dir.split(path.sep);
+            command.category = dirParts[dirParts.length - 1];
+
             client.commands.set(commandName, command);
             commandsJson.push(jsonData);
           } catch (jsonError) {
@@ -79,6 +84,13 @@ const handleCommand = async (interaction, client) => {
   }
 
   try {
+    if (interaction.guildId) {
+      const isDisabled = await MariaModDB.isCommandDisabled(interaction.guildId, interaction.channelId, interaction.commandName);
+      if (isDisabled) {
+        return interaction.reply({ content: 'Lệnh này đã bị tắt trong kênh này.', ephemeral: true });
+      }
+    }
+
     if (AI_COMMANDS.has(interaction.commandName)) {
       const hasConsented = await consentService.hasUserConsented(interaction.user.id);
 
