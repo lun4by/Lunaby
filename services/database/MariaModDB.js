@@ -249,10 +249,22 @@ class MariaModDB {
                 return this._defaultGuildSettings(guildId);
             }
             const r = rows[0];
+
+            let exceptions = [];
+            try {
+                if (typeof r.xp_exceptions === 'string' && r.xp_exceptions.trim() !== '') {
+                    exceptions = JSON.parse(r.xp_exceptions);
+                } else if (Array.isArray(r.xp_exceptions)) {
+                    exceptions = r.xp_exceptions;
+                }
+            } catch (e) {
+                // Ignore parsing errors and default to empty array
+            }
+
             return {
                 _id: r.guild_id,
                 prefix: r.prefix,
-                xp: { isActive: !!r.xp_active, exceptions: JSON.parse(r.xp_exceptions || '[]') },
+                xp: { isActive: !!r.xp_active, exceptions },
                 greeter: {
                     welcome: { isEnabled: !!r.welcome_enabled, channel: r.welcome_channel, message: r.welcome_message },
                     leaving: { isEnabled: !!r.leaving_enabled, channel: r.leaving_channel, message: r.leaving_message },
