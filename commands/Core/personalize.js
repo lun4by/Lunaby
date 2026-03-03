@@ -52,7 +52,7 @@ module.exports = {
         collector.on('collect', async (i) => {
             if (i.user.id !== interaction.user.id) {
                 return i.reply({
-                    content: '❌ Chỉ người dùng gọi lệnh mới có thể sử dụng menu này!',
+                    content: 'Chỉ người dùng gọi lệnh mới có thể sử dụng menu này!',
                     ephemeral: true,
                 });
             }
@@ -319,7 +319,7 @@ async function handleManageMemories(i, userId) {
 async function handleClear(i, userId, interaction) {
     const confirmEmbed = new EmbedBuilder()
         .setColor(0xE74C3C)
-        .setTitle('⚠️ Xác nhận xóa dữ liệu')
+        .setTitle('Xác nhận xóa dữ liệu')
         .setDescription('Bạn có chắc chắn muốn xóa **toàn bộ** lịch sử trò chuyện và trí nhớ?\n\n**Hành động này không thể hoàn tác!**')
         .setTimestamp();
 
