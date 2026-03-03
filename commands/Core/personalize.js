@@ -256,6 +256,8 @@ async function handleToggleSearch(i, userId, interaction) {
         embeds: [buildMainEmbed(updatedMemory), embed],
         components: [buildSelectMenuRow()],
     });
+
+    autoRemoveNotification(i, updatedMemory);
 }
 
 async function handleToggleMemory(i, userId, interaction) {
@@ -279,6 +281,8 @@ async function handleToggleMemory(i, userId, interaction) {
         embeds: [buildMainEmbed(updatedMemory), embed],
         components: [buildSelectMenuRow()],
     });
+
+    autoRemoveNotification(i, updatedMemory);
 }
 
 async function handleManageMemories(i, userId) {
@@ -391,6 +395,8 @@ async function handleButtonClick(i, userId, interaction) {
                 components: [buildSelectMenuRow()],
             });
 
+            autoRemoveNotification(i, updatedMemory);
+
             logger.info('PERSONALIZE', `User ${interaction.user.tag} cleared all data`);
         } catch (error) {
             logger.error('PERSONALIZE', 'Error clearing data:', error);
@@ -406,4 +412,15 @@ async function handleButtonClick(i, userId, interaction) {
             components: [buildSelectMenuRow()],
         });
     }
+}
+
+function autoRemoveNotification(i, memory) {
+    setTimeout(async () => {
+        try {
+            await i.editReply({
+                embeds: [buildMainEmbed(memory)],
+                components: [buildSelectMenuRow()],
+            });
+        } catch { }
+    }, 5000);
 }
