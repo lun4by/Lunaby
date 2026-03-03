@@ -1,24 +1,14 @@
 const MariaModDB = require("../services/database/MariaModDB.js");
 const logger = require("./logger.js");
 
-async function logModAction(options) {
+async function logModAction({ guildId, targetId, moderatorId, action, reason, duration, count }) {
   try {
-    const success = await MariaModDB.addModLog(
-      options.guildId,
-      options.targetId,
-      options.moderatorId,
-      options.action,
-      {
-        reason: options.reason || "Không có lý do",
-        duration: options.duration || null,
-        count: options.count || null,
-      }
-    );
-
-    if (!success) {
-      logger.error("MODERATION", "Không thể lưu hành động moderation vào MariaDB");
-    }
-
+    const success = await MariaModDB.addModLog(guildId, targetId, moderatorId, action, {
+      reason: reason || "Không có lý do",
+      duration: duration || null,
+      count: count || null,
+    });
+    if (!success) logger.error("MODERATION", "Không thể lưu hành động moderation vào MariaDB");
     return success;
   } catch (error) {
     logger.error("MODERATION", "Lỗi khi lưu hành động moderation:", error);
@@ -26,14 +16,9 @@ async function logModAction(options) {
   }
 }
 
-async function getModLogs(options) {
+async function getModLogs({ guildId, targetId = null, action = null, limit = 10 }) {
   try {
-    return await MariaModDB.getModLogs({
-      guildId: options.guildId,
-      targetId: options.targetId || null,
-      action: options.action || null,
-      limit: options.limit || 10,
-    });
+    return await MariaModDB.getModLogs({ guildId, targetId, action, limit });
   } catch (error) {
     logger.error("MODERATION", "Lỗi khi lấy danh sách hành động moderation:", error);
     throw error;
