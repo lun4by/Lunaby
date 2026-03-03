@@ -1,10 +1,12 @@
 const ProfileDB = require('./database/profiledb');
 const logger = require('../utils/logger');
 
+const COOLDOWN_MS = 60000;
+const DEFAULT_SERVER_XP = (guildId) => ({ id: guildId, xp: 0, level: 1 });
+
 class XPService {
   constructor() {
     this.cooldowns = new Map();
-    this.cooldownTime = 60000; // 60 giây
   }
 
   isOnCooldown(userId) {
@@ -13,9 +15,7 @@ class XPService {
 
   addCooldown(userId) {
     this.cooldowns.set(userId, Date.now());
-    setTimeout(() => {
-      this.cooldowns.delete(userId);
-    }, this.cooldownTime);
+    setTimeout(() => this.cooldowns.delete(userId), COOLDOWN_MS);
   }
 
   calculateLevelCap(level) {
@@ -24,9 +24,7 @@ class XPService {
 
   calculateTotalXPForLevel(level) {
     let total = 0;
-    for (let i = 1; i < level; i++) {
-      total += this.calculateLevelCap(i);
-    }
+    for (let i = 1; i < level; i++) total += 300 * i;
     return total;
   }
 
@@ -36,7 +34,7 @@ class XPService {
   }
 
   calculateMaxLevelXP(level) {
-    return this.calculateLevelCap(level);
+    return 300 * level;
   }
 
   async addXP(message) {
@@ -46,29 +44,21 @@ class XPService {
       if (this.isOnCooldown(message.author.id)) return null;
 
       const profile = await ProfileDB.getProfile(message.author.id);
-
       let serverXP = profile.data.xp.find(x => x.id === message.guild.id);
 
       if (!serverXP) {
-        serverXP = {
-          id: message.guild.id,
-          xp: 0,
-          level: 1
-        };
+        serverXP = DEFAULT_SERVER_XP(message.guild.id);
         profile.data.xp.push(serverXP);
       }
 
-      const xpAdd = Math.floor(Math.random() * 10) + 15;
-      const currentXP = serverXP.xp;
-      const currentLevel = serverXP.level;
+      const xpGained = Math.floor(Math.random() * 10) + 15;
+      const previousLevel = serverXP.level;
+      serverXP.xp += xpGained;
 
-      serverXP.xp = currentXP + xpAdd;
-
-      const nextLevelXP = this.calculateTotalXPForLevel(currentLevel + 1);
-
+      const nextLevelXP = this.calculateTotalXPForLevel(previousLevel + 1);
       let leveledUp = false;
       if (serverXP.xp >= nextLevelXP) {
-        serverXP.level = currentLevel + 1;
+        serverXP.level++;
         leveledUp = true;
       }
 
@@ -80,16 +70,7 @@ class XPService {
 
       this.addCooldown(message.author.id);
 
-      logger.debug('XP', `${message.author.tag} +${xpAdd} XP (Level ${serverXP.level})`);
-
-      return {
-        xpAdded: true,
-        xpGained: xpAdd,
-        totalXP: serverXP.xp,
-        level: serverXP.level,
-        leveledUp: leveledUp,
-        previousLevel: currentLevel
-      };
+      return { xpAdded: true, xpGained, totalXP: serverXP.xp, level: serverXP.level, leveledUp, previousLevel };
     } catch (error) {
       logger.error('XP', 'Lỗi khi thêm XP:', error);
       return null;
@@ -99,26 +80,16 @@ class XPService {
   async getUserXP(guildId, userId) {
     try {
       const profile = await ProfileDB.getProfile(userId);
-      let serverXP = profile.data.xp.find(x => x.id === guildId);
-
-      if (!serverXP) {
-        serverXP = {
-          id: guildId,
-          xp: 0,
-          level: 1
-        };
-      }
+      const serverXP = profile.data.xp.find(x => x.id === guildId) || DEFAULT_SERVER_XP(guildId);
 
       const currentLevelXP = this.calculateCurrentLevelXP(serverXP.xp, serverXP.level);
       const maxLevelXP = this.calculateMaxLevelXP(serverXP.level);
-      const percentage = Math.round((currentLevelXP / maxLevelXP) * 100);
 
       return {
         xp: serverXP.xp,
         level: serverXP.level,
-        currentLevelXP: currentLevelXP,
-        maxLevelXP: maxLevelXP,
-        percentage: percentage
+        currentLevelXP, maxLevelXP,
+        percentage: Math.round((currentLevelXP / maxLevelXP) * 100)
       };
     } catch (error) {
       logger.error('XP', 'Lỗi khi lấy thông tin XP:', error);
@@ -126,26 +97,21 @@ class XPService {
     }
   }
 
+  async _getGuildProfiles(guildId) {
+    const collection = await ProfileDB.getProfileCollection();
+    return collection.find({ 'data.xp': { $elemMatch: { id: guildId } } }).toArray();
+  }
+
   async getLeaderboard(guildId, limit = 10) {
     try {
-      const collection = await ProfileDB.getProfileCollection();
-      const profiles = await collection.find({
-        'data.xp': { $elemMatch: { id: guildId } }
-      }).toArray();
-
-      const leaderboard = profiles
-        .map(profile => {
-          const serverXP = profile.data.xp.find(x => x.id === guildId);
-          return {
-            userId: profile._id,
-            xp: serverXP.xp,
-            level: serverXP.level
-          };
+      const profiles = await this._getGuildProfiles(guildId);
+      return profiles
+        .map(p => {
+          const xp = p.data.xp.find(x => x.id === guildId);
+          return { userId: p._id, xp: xp.xp, level: xp.level };
         })
         .sort((a, b) => b.xp - a.xp)
         .slice(0, limit);
-
-      return leaderboard;
     } catch (error) {
       logger.error('XP', 'Lỗi khi lấy leaderboard:', error);
       return [];
@@ -154,18 +120,11 @@ class XPService {
 
   async getUserRank(guildId, userId) {
     try {
-      const collection = await ProfileDB.getProfileCollection();
-      const profiles = await collection.find({
-        'data.xp': { $elemMatch: { id: guildId } }
-      }).toArray();
-
+      const profiles = await this._getGuildProfiles(guildId);
       const sorted = profiles
-        .map(profile => {
-          const serverXP = profile.data.xp.find(x => x.id === guildId);
-          return {
-            userId: profile._id,
-            xp: serverXP ? serverXP.xp : 0
-          };
+        .map(p => {
+          const xp = p.data.xp.find(x => x.id === guildId);
+          return { userId: p._id, xp: xp?.xp || 0 };
         })
         .sort((a, b) => b.xp - a.xp);
 
