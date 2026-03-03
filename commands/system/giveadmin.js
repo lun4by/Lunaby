@@ -5,7 +5,7 @@ const { USER_ROLES } = require('../../config/constants');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('setrole')
+        .setName('giveadmin')
         .setDescription('Thay đổi quyền (Role) của người dùng trong Bot (Owner Only)')
         .addUserOption(option =>
             option.setName('user')
@@ -23,8 +23,8 @@ module.exports = {
         }),
 
     prefix: {
-        name: 'setrole',
-        aliases: ['giverole', 'admin'],
+        name: 'giveadmin',
+        aliases: ['giverole', 'admin', 'setrole'],
         description: 'Thay đổi quyền người dùng',
         adminOnly: false
     },
@@ -45,7 +45,7 @@ module.exports = {
 
     async executePrefix(message, args) {
         if (!args || args.length < 2) {
-            return message.reply(`**Cách dùng:** \`e.setrole @user <role>\`\nCác role hợp lệ: ${Object.values(USER_ROLES).join(', ')}`);
+            return message.reply(`**Cách dùng:** \`e.giveadmin @user <role>\`\nCác role hợp lệ: ${Object.values(USER_ROLES).join(', ')}`);
         }
 
         const targetUser = message.mentions.users.first() || await message.client.users.fetch(args[0]).catch(() => null);
@@ -90,7 +90,7 @@ module.exports = {
 
             await replyFunc({ embeds: [embed] });
         } catch (error) {
-            console.error('Error in setrole command:', error);
+            console.error('Error in giveadmin command:', error);
             await replyFunc({ content: 'Đã xảy ra lỗi khi cập nhật Quyền cho người dùng này.', ephemeral: true });
         }
     }
