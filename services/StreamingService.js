@@ -1,4 +1,3 @@
-const logger = require('../utils/logger.js');
 const AICore = require('./AICore');
 const Validators = require('../utils/validators');
 const {
@@ -78,24 +77,19 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
         });
 
         if (pendingSend) await pendingSend;
-        clearInterval(typingInterval);
+
+        const sendOrReply = (text) => replyToMessage ? replyToMessage.reply(text) : channel.send(text);
 
         if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
             if (sentMessage && sentMessage.content !== fullContent) {
                 await sentMessage.edit(fullContent);
             } else if (!sentMessage) {
-                sentMessage = replyToMessage
-                    ? await replyToMessage.reply(fullContent)
-                    : await channel.send(fullContent);
+                sentMessage = await sendOrReply(fullContent);
             }
         } else {
             const first = fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
             if (sentMessage) await sentMessage.edit(first);
-            else {
-                replyToMessage
-                    ? await replyToMessage.reply(first)
-                    : await channel.send(first);
-            }
+            else await sendOrReply(first);
 
             for (const chunk of splitByLength(fullContent.substring(DISCORD_MESSAGE_MAX_LENGTH), DISCORD_MESSAGE_MAX_LENGTH)) {
                 await channel.send(chunk);
@@ -104,9 +98,8 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
         }
 
         return fullContent;
-    } catch (error) {
+    } finally {
         clearInterval(typingInterval);
-        throw error;
     }
 }
 
