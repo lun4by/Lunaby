@@ -31,7 +31,7 @@ module.exports = {
 
       if (!currentValue) {
         return interaction.editReply({
-          content: `❌ **Bạn chưa trang bị ${itemType} nào!**`
+          content: `Bạn chưa trang bị ${itemType} nào!`
         });
       }
 
@@ -44,13 +44,13 @@ module.exports = {
       );
 
       await interaction.editReply({
-        content: `✅ **Đã gỡ bỏ ${itemType}!**\n\nHãy dùng \`/profile\` để xem thay đổi.`
+        content: `Đã gỡ bỏ ${itemType}!\n\nHãy dùng \`/profile\` để xem thay đổi.`
       });
 
     } catch (error) {
       logger.error('UNEQUIP', 'Lỗi khi unequip item:', error);
       await interaction.editReply({
-        content: '❌ Có lỗi xảy ra khi gỡ bỏ item!'
+        content: 'Có lỗi xảy ra khi gỡ bỏ item!'
       });
     }
   }
