@@ -7,7 +7,7 @@
 - **Hệ thống lệnh Prefix (Prefix Commands)**: Hỗ trợ người dùng gọi lệnh bằng Prefix thay vì chỉ dùng Slash Commands .
 
 ### ✨ Added
-- **Prefix Handler (`handlers/prefixHandler.js`)**: Lớp giả lập `PseudoInteraction` giúp chạy các Slash Command cũ dưới dạng Prefix Command mà không cần viết lại logic lệnh.
+- **Prefix Handler (`handlers/prefixHandler.js`)**: Lớp giả lập `PseudoInteraction` giúp chạy Prefix Command mà không cần viết lại logic lệnh.
 - **MariaDB Client (`services/database/mariaClient.js`)**: Pool kết nối đến MariaDB.
 - **Service Database Mới**: Thêm `PrefixDB.js`, `MariaBlacklistDB.js`, `MariaModDB.js` để lưu trữ dữ liệu chuyên biệt vào MariaDB.
 - **DatabaseManager (`services/database/DatabaseManager.js`)**: Quản lý tập trung các collection và index của MongoDB, thay thế các mã khởi tạo phân tán trước đây.
