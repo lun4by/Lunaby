@@ -150,16 +150,11 @@ async function handlePrefixMessage(message, client) {
     return true;
 }
 
-/**
- * Find a command by prefix name or alias.
- */
 function findCommandByPrefix(client, name) {
-    // Direct match by slash command name
     if (client.commands.has(name)) {
         return client.commands.get(name);
     }
 
-    // Check aliases defined in prefix metadata
     for (const [, command] of client.commands) {
         if (command.prefix) {
             if (command.prefix.name === name) return command;
