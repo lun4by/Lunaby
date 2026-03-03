@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const ProfileDB = require('../../services/database/profiledb');
 const market = require('../../assets/json/market.json');
 const logger = require('../../utils/logger');
@@ -37,13 +37,6 @@ module.exports = {
         }
       }
 
-      const embed = new EmbedBuilder()
-        .setTitle(`🎒 Inventory của ${interaction.user.username}`)
-        .setColor('#7F5AF0')
-        .setDescription(`Bạn có **${inventory.length}** loại items`)
-        .setThumbnail(interaction.user.displayAvatarURL())
-        .setTimestamp();
-
       const typeEmojis = {
         background: '🖼️',
         pattern: '🎨',
@@ -52,8 +45,13 @@ module.exports = {
         wreath: '🌿'
       };
 
+      let content = `🎒 **Inventory của ${interaction.user.username}** (Tổng: ${inventory.length} loại)\n`;
+      content += `> *Dùng \`/use <id>\` để trang bị item*\n\n`;
+
       for (const [type, items] of Object.entries(itemsByType)) {
         const emoji = typeEmojis[type] || '📦';
+        content += `${emoji} **${type.toUpperCase()}**\n`;
+
         const itemList = items.map(item => {
           const rarity = {
             common: '⚪',
@@ -63,19 +61,13 @@ module.exports = {
             achievement: '🌟'
           }[item.rarity] || '⚪';
 
-          return `${rarity} **${item.name}** (ID: ${item.id})${item.quantity > 1 ? ` x${item.quantity}` : ''}`;
+          return `- ${rarity} **${item.name}** (ID: \`${item.id}\`)${item.quantity > 1 ? ` **[x${item.quantity}]**` : ''}`;
         }).join('\n');
 
-        embed.addFields({
-          name: `${emoji} ${type.toUpperCase()}`,
-          value: itemList,
-          inline: false
-        });
+        content += `${itemList}\n\n`;
       }
 
-      embed.setFooter({ text: 'Dùng /use <id> để trang bị item!' });
-
-      await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ content: content.trim() });
 
     } catch (error) {
       logger.error('INVENTORY', 'Lỗi khi xem inventory:', error);

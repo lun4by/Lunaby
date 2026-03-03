@@ -24,7 +24,6 @@ exports.createEmbed = async function (interaction, channel, guildId, channelId) 
 
     const fields = [];
 
-    // Sort categories alphabetically
     const sortedCategories = Object.keys(groups).sort();
 
     for (const groupName of sortedCategories) {
