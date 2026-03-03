@@ -18,7 +18,7 @@ class InitSystem extends EventEmitter {
   }
 
   markReady(service) {
-    if (!this.services.hasOwnProperty(service)) {
+    if (!(service in this.services)) {
       logger.warn("SYSTEM", `Không nhận dạng được service: ${service}`);
       return;
     }
@@ -26,26 +26,16 @@ class InitSystem extends EventEmitter {
     this.services[service] = true;
     logger.info("SYSTEM", `Service ${service} đã sẵn sàng`);
 
-    if (Object.values(this.services).every((status) => status)) {
+    if (Object.values(this.services).every(Boolean)) {
       this.initialized = true;
-      logger.info(
-        "SYSTEM",
-        "Tất cả services đã sẵn sàng, hệ thống đang khởi động..."
-      );
+      logger.info("SYSTEM", "Tất cả services đã sẵn sàng");
       this.emit("ready");
     }
   }
 
   async waitForReady() {
-    if (this.initialized) {
-      return true;
-    }
-
-    return new Promise((resolve) => {
-      this.once("ready", () => {
-        resolve(true);
-      });
-    });
+    if (this.initialized) return true;
+    return new Promise((resolve) => this.once("ready", () => resolve(true)));
   }
 
   getStatus() {
