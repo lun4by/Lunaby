@@ -1,3 +1,5 @@
+const VALID_LEVELS = new Set(["debug", "info", "warn", "error"]);
+
 const defaultConfig = {
   enabled: true,
   level: "info",
@@ -10,94 +12,53 @@ const defaultConfig = {
     keepOldLogs: true,
   },
   categories: {
-    MONITOR: true,
-    NEURAL: true,
-    COMMAND: true,
-    DATABASE: true,
-    MARIADB: true,
-    SYSTEM: true,
-    CHAT: true,
-    API: true,
-    CONVERSATION_SERVICE: true,
-    CONVERSATION: false,
-    PROVIDERS: true,
-    AI_CORE: true,
-    INIT_SYSTEM: true,
-    MODERATION: true,
-    MESSAGE_EVENT: true,
-    SYSTEM_SERVICE: true,
-    XP: false,
-    FONTS: false,
-    MODLOG: true,
-    DEBUG: false,
+    MONITOR: true, NEURAL: true, COMMAND: true,
+    DATABASE: true, MARIADB: true, SYSTEM: true,
+    CHAT: true, API: true, CONVERSATION_SERVICE: true,
+    CONVERSATION: false, PROVIDERS: true, AI_CORE: true,
+    INIT_SYSTEM: true, MODERATION: true, MESSAGE_EVENT: true,
+    SYSTEM_SERVICE: true, XP: false, FONTS: false,
+    MODLOG: true, DEBUG: false,
   },
 };
 
-// Cấu hình hiện tại (có thể được thay đổi trong quá trình chạy)
-let currentConfig = { ...defaultConfig };
-
+let currentConfig = structuredClone(defaultConfig);
 
 function getConfig() {
   return { ...currentConfig };
 }
 
-
 function updateConfig(newConfig) {
   currentConfig = { ...currentConfig, ...newConfig };
-
   if (newConfig.categories) {
-    currentConfig.categories = {
-      ...currentConfig.categories,
-      ...newConfig.categories,
-    };
-  }
-
-  return getConfig();
-}
-
-
-function updateFileLogging(fileConfig) {
-  if (fileConfig) {
-    currentConfig.fileLogging = { ...currentConfig.fileLogging, ...fileConfig };
+    currentConfig.categories = { ...currentConfig.categories, ...newConfig.categories };
   }
   return getConfig();
 }
-
 
 function setEnabled(enabled) {
   return updateConfig({ enabled: !!enabled });
 }
 
-
 function setLevel(level) {
-  if (["debug", "info", "warn", "error"].includes(level)) {
-    return updateConfig({ level });
-  }
-  return getConfig();
+  return VALID_LEVELS.has(level) ? updateConfig({ level }) : getConfig();
 }
-
 
 function setCategoryEnabled(category, enabled) {
-  if (currentConfig.categories.hasOwnProperty(category)) {
-    const categories = { ...currentConfig.categories };
-    categories[category] = !!enabled;
-    return updateConfig({ categories });
+  if (Object.hasOwn(currentConfig.categories, category)) {
+    return updateConfig({ categories: { [category]: !!enabled } });
   }
   return getConfig();
 }
 
-
 function resetToDefault() {
-  currentConfig = { ...defaultConfig };
+  currentConfig = structuredClone(defaultConfig);
   return getConfig();
 }
 
-module.exports = {
-  getConfig,
-  updateConfig,
-  setEnabled,
-  setLevel,
-  setCategoryEnabled,
-  resetToDefault,
-  updateFileLogging,
-};
+function updateFileLogging(fileConfig) {
+  if (fileConfig) currentConfig.fileLogging = { ...currentConfig.fileLogging, ...fileConfig };
+  return getConfig();
+}
+
+module.exports = { getConfig, updateConfig, setEnabled, setLevel, setCategoryEnabled, resetToDefault, updateFileLogging };
