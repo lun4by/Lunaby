@@ -23,6 +23,7 @@
 
 ### Migration Notes
 - Chạy `npm install` để cập nhật dependencies.
+
 ---
 
 ## [1.2.0-native] - 2026-01-01
