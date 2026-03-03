@@ -1,7 +1,7 @@
 const storageDB = require('../services/storagedb.js');
 const ProfileDB = require('../services/profiledb.js');
 const logger = require('../utils/logger.js');
-require('dotenv').config();
+
 
 async function handleResetdbInteraction(interaction) {
   if (!interaction.isButton()) return;
@@ -23,7 +23,7 @@ async function handleResetdbInteraction(interaction) {
         components: [],
       });
 
-      logger.info('RESET', `Owner ${user.tag} đã xác nhận reset database`);
+
 
       const success = await storageDB.resetDatabase();
 
@@ -36,8 +36,7 @@ async function handleResetdbInteraction(interaction) {
             '> Bot sẽ không còn nhớ cuộc trò chuyện trước đây\n\n' +
             '**Hệ thống đã sẵn sàng sử dụng!**',
         });
-
-        logger.info('RESET', 'Database đã được reset thành công');
+        logger.info('RESET', `Owner ${user.tag} đã reset database thành công`);
       } else {
         await interaction.editReply({
           content:
@@ -46,8 +45,7 @@ async function handleResetdbInteraction(interaction) {
             '> Vui lòng kiểm tra logs để biết thêm chi tiết\n' +
             '> Liên hệ admin nếu vấn đề tiếp tục',
         });
-
-        logger.error('RESET', 'Lỗi khi reset database');
+        logger.error('RESET', 'Reset database thất bại');
       }
     } else if (customId === 'reset_database_cancel') {
       await interaction.update({
@@ -67,7 +65,7 @@ async function handleResetdbInteraction(interaction) {
         components: [],
       });
 
-      logger.info('RESET', `Owner ${user.tag} đã xác nhận reset user profiles`);
+
 
       try {
         const profileCollection = await ProfileDB.getProfileCollection();
@@ -110,15 +108,11 @@ async function handleResetdbInteraction(interaction) {
     }
   } catch (error) {
     logger.error('RESET', `Lỗi khi xử lý reset interaction:`, error);
-
-    try {
-      await interaction.followUp({
-        content: '**Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại sau!**',
-        ephemeral: true,
-      });
-    } catch (followUpError) {
-      logger.error('RESET', 'Lỗi khi gửi follow-up message:', followUpError);
-    }
+    const errPayload = { content: '**Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại sau!**', ephemeral: true };
+    const respond = interaction.replied || interaction.deferred
+      ? interaction.followUp(errPayload)
+      : interaction.reply(errPayload);
+    await respond.catch(() => { });
   }
 }
 
