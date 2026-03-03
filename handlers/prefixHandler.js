@@ -1,6 +1,7 @@
 const PrefixDB = require('../services/database/PrefixDB');
 const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
+const MariaModDB = require('../services/database/MariaModDB');
 const logger = require('../utils/logger');
 
 class PseudoInteraction {
@@ -139,6 +140,14 @@ async function handlePrefixMessage(message, client) {
     }
 
     try {
+        if (message.guildId) {
+            const isDisabled = await MariaModDB.isCommandDisabled(message.guildId, message.channelId, command.data?.name || commandName);
+            if (isDisabled) {
+                await message.reply('Lệnh này đã bị tắt trong kênh này.');
+                return true;
+            }
+        }
+
         const interaction = new PseudoInteraction(message, commandName, args);
         await command.execute(interaction);
         logger.info('PREFIX', `${message.author.tag} used ${prefix}${commandName}`);
