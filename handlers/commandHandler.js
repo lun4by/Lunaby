@@ -5,6 +5,7 @@ const { handlePermissionError } = require('../utils/permissionUtils');
 const logger = require('../utils/logger.js');
 
 let commandsJsonCache = null;
+const AI_COMMANDS = new Set(['think', 'image', 'reset']);
 
 const loadCommandsFromDirectory = (client, dir, commandsJson) => {
   const items = fs.readdirSync(dir, { withFileTypes: true });
@@ -35,8 +36,6 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
             }
             client.commands.set(commandName, command);
             commandsJson.push(jsonData);
-            // const category = path.relative(path.join(__dirname, '../commands'), dir).split(path.sep)[0] || 'root';
-            // logger.info('COMMAND', `Đã tải lệnh "${commandName}" từ "${category}" - Description: "${jsonData.description}"`);
           } catch (jsonError) {
             logger.error('COMMAND', `Lỗi khi convert lệnh "${commandName}" sang JSON:`, jsonError);
             continue;
@@ -59,20 +58,12 @@ const loadCommands = (client) => {
   loadCommandsFromDirectory(client, commandsPath, commandsJson);
   commandsJsonCache = commandsJson;
   logger.info('COMMAND', `ĐÃ TẢI TỔNG CỘNG ${client.commands.size} LỆNH`);
-  if (commandsJson.length > 0) {
-    // logger.info('COMMAND', `Danh sách lệnh đã tải: ${commandsJson.map(c => c.name).join(', ')}`);
-  } else {
-    logger.warn('COMMAND', 'KHÔNG CÓ LỆNH NÀO ĐƯỢC TẢI!');
-  }
+  if (!commandsJson.length) logger.warn('COMMAND', 'KHÔNG CÓ LỆNH NÀO ĐƯỢC TẢI!');
   return client.commands.size;
 };
 
 const getCommandsJson = (client) => {
-  if (!commandsJsonCache) {
-    // logger.info('COMMAND', 'Cache rỗng, đang tải lại commands...');
-    loadCommands(client);
-  }
-  // logger.debug('COMMAND', `Đang trả về ${commandsJsonCache?.length || 0} lệnh từ cache`);
+  if (!commandsJsonCache) loadCommands(client);
   return commandsJsonCache;
 };
 
@@ -88,8 +79,7 @@ const handleCommand = async (interaction, client) => {
   }
 
   try {
-    const aiCommands = ['think', 'image', 'reset'];
-    if (aiCommands.includes(interaction.commandName)) {
+    if (AI_COMMANDS.has(interaction.commandName)) {
       const hasConsented = await consentService.hasUserConsented(interaction.user.id);
 
       if (!hasConsented) {
@@ -97,7 +87,7 @@ const handleCommand = async (interaction, client) => {
           const consentData = consentService.createConsentEmbed(interaction.user);
           await interaction.reply(consentData);
         } catch (error) {
-          if (error.code === 50013 || error.message.includes('permission')) {
+          if (error.code === 50013 || (error?.message || '').includes('permission')) {
             await handlePermissionError(interaction, 'embedLinks', interaction.user.username, 'reply');
           } else {
             throw error;
@@ -111,11 +101,11 @@ const handleCommand = async (interaction, client) => {
     logger.info('COMMAND', `Người dùng ${interaction.user.tag} đã sử dụng lệnh /${interaction.commandName}`);
   } catch (error) {
     logger.error('COMMAND', `Lỗi khi thực thi lệnh ${interaction.commandName}:`, error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'Đã xảy ra lỗi khi thực thi lệnh này!', ephemeral: true });
-    } else {
-      await interaction.reply({ content: 'Đã xảy ra lỗi khi thực thi lệnh này!', ephemeral: true });
-    }
+    const errPayload = { content: 'Đã xảy ra lỗi khi thực thi lệnh này!', ephemeral: true };
+    const respond = interaction.replied || interaction.deferred
+      ? interaction.followUp(errPayload)
+      : interaction.reply(errPayload);
+    await respond.catch(() => { });
   }
 };
 
