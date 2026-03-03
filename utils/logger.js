@@ -21,9 +21,7 @@ async function initializeFileLogging() {
     if (!config.fileLogging.enabled) return;
 
     const logDir = path.join(process.cwd(), config.fileLogging.directory);
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
+    fs.mkdirSync(logDir, { recursive: true });
 
     const currentLogFile = path.join(logDir, config.fileLogging.filename);
 
@@ -37,23 +35,12 @@ async function initializeFileLogging() {
 
     logStream = fs.createWriteStream(currentLogFile, { flags: "a" });
 
-    const startupMessage = `\nLUNABY AI STARTUP LOG\nStartup Time: ${new Date().toISOString()}\nEnvironment: ${
-      process.env.NODE_ENV || "development"
-    }\n=========================\n\n`;
+    const startupMessage = `\nLUNABY AI STARTUP LOG\nStartup Time: ${new Date().toISOString()}\nEnvironment: ${process.env.NODE_ENV || "development"
+      }\n=========================\n\n`;
     logStream.write(startupMessage);
 
-    process.on("exit", () => {
-      if (logStream) {
-        logStream.end("\nLUNABY AI SHUTDOWN\n");
-      }
-    });
-
-    process.on("SIGINT", () => {
-      if (logStream) {
-        logStream.end("\nLUNABY AI INTERRUPTED\n");
-      }
-      process.exit();
-    });
+    process.on("exit", () => logStream?.end("\nLUNABY AI SHUTDOWN\n"));
+    process.on("SIGINT", () => { logStream?.end("\nLUNABY AI INTERRUPTED\n"); process.exit(); });
 
     info("SYSTEM", "Đã khởi tạo hệ thống ghi log vào file thành công");
   } catch (error) {
@@ -93,78 +80,31 @@ function log(category, level, message, ...args) {
   const prefix = `${timestamp}${levelColor}${level.toUpperCase()}${RESET_COLOR} ${categoryStr}`;
 
   const logContent = `${prefix}${message}`;
-
-  switch (level) {
-    case "error":
-      console.error(logContent, ...args);
-      break;
-    case "warn":
-      console.warn(logContent, ...args);
-      break;
-    case "debug":
-      console.debug(logContent, ...args);
-      break;
-    case "info":
-    default:
-      console.log(logContent, ...args);
-      break;
-  }
+  const consoleFn = { error: console.error, warn: console.warn, debug: console.debug }[level] || console.log;
+  consoleFn(logContent, ...args);
 
   if (config.fileLogging?.enabled && logStream) {
-    const fileContent = `${categoryStr}${message}`;
-    writeToFile(level, fileContent);
+    writeToFile(level, `${categoryStr}${message}`);
   }
 }
 
 
-function debug(category, message, ...args) {
-  log(category, "debug", message, ...args);
-}
-
-
-function info(category, message, ...args) {
-  log(category, "info", message, ...args);
-}
-
-
-function warn(category, message, ...args) {
-  log(category, "warn", message, ...args);
-}
-
-
-function error(category, message, ...args) {
-  log(category, "error", message, ...args);
-}
-
+function debug(category, message, ...args) { log(category, "debug", message, ...args); }
+function info(category, message, ...args) { log(category, "info", message, ...args); }
+function warn(category, message, ...args) { log(category, "warn", message, ...args); }
+function error(category, message, ...args) { log(category, "error", message, ...args); }
 
 function setEnabled(enabled) {
   loggerConfig.setEnabled(enabled);
-  info("SYSTEM", `Logging ${enabled ? "enabled" : "disabled"}`);
 }
-
 
 function setLevel(level) {
-  if (LOG_LEVELS[level]) {
-    loggerConfig.setLevel(level);
-    info("SYSTEM", `Log level set to ${level}`);
-  } else {
-    warn("SYSTEM", `Invalid log level: ${level}`);
-  }
+  if (LOG_LEVELS[level]) loggerConfig.setLevel(level);
 }
-
 
 function setCategoryEnabled(category, enabled) {
-  const result = loggerConfig.setCategoryEnabled(category, enabled);
-  if (result.categories[category] === enabled) {
-    info(
-      "SYSTEM",
-      `Logging for category ${category} ${enabled ? "enabled" : "disabled"}`
-    );
-  } else {
-    warn("SYSTEM", `Invalid category: ${category}`);
-  }
+  loggerConfig.setCategoryEnabled(category, enabled);
 }
-
 
 function getConfig() {
   return loggerConfig.getConfig();
@@ -172,7 +112,6 @@ function getConfig() {
 
 function resetConfig() {
   loggerConfig.resetToDefault();
-  info("SYSTEM", "Logger configuration reset to default");
 }
 
 module.exports = {
