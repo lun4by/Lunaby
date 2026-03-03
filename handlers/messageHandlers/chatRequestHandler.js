@@ -7,10 +7,21 @@ const Validators = require('../../utils/validators');
 const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
 const ErrorHandler = require('../../utils/ErrorHandler');
+const QuotaService = require('../../services/QuotaService');
+const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 async function handleChatRequest(message, content, ConversationService) {
   try {
     const userId = ConversationService.extractUserId(message);
+
+    const quotaCheck = await QuotaService.canUseMessages(userId, 1);
+    if (!quotaCheck.allowed) {
+      const embed = createLunabyEmbed()
+        .setTitle('Hết quyền sử dụng')
+        .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** trò chuyện AI trong chu kỳ giới hạn.\n\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
+        .setColor(0xE74C3C);
+      return message.reply({ embeds: [embed] }).catch(() => { });
+    }
 
     await conversationManager.loadConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(userId);
@@ -38,6 +49,7 @@ async function handleChatRequest(message, content, ConversationService) {
     const response = await sendStreamingMessage(message.channel, validMessages, {}, replyTarget);
 
     await conversationManager.addMessage(userId, 'assistant', response);
+    await QuotaService.recordMessageUsage(userId, 1);
 
   } catch (streamError) {
     ErrorHandler.logError('CHAT', 'Streaming failed, falling back to non-streaming', streamError, 'warn');
@@ -59,6 +71,8 @@ async function handleChatRequest(message, content, ConversationService) {
       } else {
         await message.reply(response);
       }
+
+      await QuotaService.recordMessageUsage(userId, 1);
     } catch (fallbackError) {
       ErrorHandler.logError('CHAT', 'Both streaming and fallback failed', fallbackError);
       const userMessage = ErrorHandler.getUserFriendlyMessage(fallbackError, 'xử lý tin nhắn');

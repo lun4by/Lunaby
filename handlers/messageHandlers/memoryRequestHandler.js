@@ -1,5 +1,7 @@
 const logger = require('../../utils/logger');
 const { DISCORD_MESSAGE_MAX_LENGTH } = require('../../config/constants');
+const QuotaService = require('../../services/QuotaService');
+const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 function splitMessageIntoChunks(text, maxLength = DISCORD_MESSAGE_MAX_LENGTH) {
   const chunks = [];
@@ -52,6 +54,16 @@ function splitMessageIntoChunks(text, maxLength = DISCORD_MESSAGE_MAX_LENGTH) {
 async function handleMemoryRequest(message, ConversationService, memoryRequest) {
   try {
     const userId = ConversationService.extractUserId(message);
+
+    const quotaCheck = await QuotaService.canUseMessages(userId, 1);
+    if (!quotaCheck.allowed) {
+      const embed = createLunabyEmbed()
+        .setTitle('Hết quyền sử dụng')
+        .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** trò chuyện AI trong chu kỳ giới hạn.\n\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
+        .setColor(0xE74C3C);
+      return message.reply({ embeds: [embed] }).catch(() => { });
+    }
+
     const memoryAnalysis = await ConversationService.getMemoryAnalysis(userId, memoryRequest);
 
     if (memoryAnalysis.length > DISCORD_MESSAGE_MAX_LENGTH) {
@@ -62,6 +74,8 @@ async function handleMemoryRequest(message, ConversationService, memoryRequest) 
     } else {
       await message.reply(memoryAnalysis);
     }
+
+    await QuotaService.recordMessageUsage(userId, 1);
   } catch (error) {
     logger.error('MEMORY', 'Error handling memory request:', error);
     await message.reply('Xin lỗi, mình gặp lỗi khi truy cập trí nhớ của cuộc trò chuyện.').catch(() => { });

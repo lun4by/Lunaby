@@ -58,7 +58,7 @@ module.exports = {
             );
 
         if (stats.limits.period !== -1 && stats.remaining.messages <= 10) {
-            embed.setColor(0xE74C3C); // Red if running low
+            embed.setColor(0xE74C3C);
         }
 
         return embed;

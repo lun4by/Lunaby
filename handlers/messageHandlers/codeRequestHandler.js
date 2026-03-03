@@ -7,6 +7,8 @@ const Validators = require('../../utils/validators');
 const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
 const ErrorHandler = require('../../utils/ErrorHandler');
+const QuotaService = require('../../services/QuotaService');
+const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 function formatCodeResponse(text) {
   const { LANGUAGE_DETECTION_PATTERNS } = require('../../config/patterns');
@@ -26,6 +28,17 @@ async function handleCodeRequest(message, content, ConversationService) {
   try {
     const promptContent = content.replace(/<@!?\d+>/g, '').trim();
     const userId = ConversationService.extractUserId(message);
+
+    // --- QUOTA CHECK ---
+    const quotaCheck = await QuotaService.canUseMessages(userId, 1);
+    if (!quotaCheck.allowed) {
+      const embed = createLunabyEmbed()
+        .setTitle('🚫 Hết quyền sử dụng')
+        .setDescription(`Bạn đã sử dụng hết **${quotaCheck.limit} lượt** trò chuyện AI trong chu kỳ giới hạn.\n\nVui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
+        .setColor(0xE74C3C);
+      return message.reply({ embeds: [embed] }).catch(() => { });
+    }
+    // -------------------
 
     await conversationManager.loadConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(userId);
@@ -49,6 +62,7 @@ async function handleCodeRequest(message, content, ConversationService) {
 
     const response = await sendStreamingMessage(message.channel, validMessages);
     await conversationManager.addMessage(userId, 'assistant', response);
+    await QuotaService.recordMessageUsage(userId, 1);
 
   } catch (streamError) {
     ErrorHandler.logError('CODE', 'Code streaming failed, falling back to non-streaming', streamError, 'warn');
@@ -69,6 +83,8 @@ async function handleCodeRequest(message, content, ConversationService) {
       } else {
         await message.reply(formattedResponse);
       }
+
+      await QuotaService.recordMessageUsage(userId, 1);
     } catch (fallbackError) {
       ErrorHandler.logError('CODE', 'Both streaming and fallback failed', fallbackError);
       const userMessage = ErrorHandler.getUserFriendlyMessage(fallbackError, 'tạo mã');
