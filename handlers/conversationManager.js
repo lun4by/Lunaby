@@ -27,7 +27,6 @@ const conversationManager = (() => {
         userConversations.set(validUserId, []);
         userLastActivity.set(validUserId, Date.now());
       } else {
-        // Cập nhật thời gian hoạt động mới nhất
         userLastActivity.set(validUserId, Date.now());
       }
 
@@ -38,7 +37,6 @@ const conversationManager = (() => {
     }
   };
 
-  // Dọn dẹp bộ nhớ định kỳ - xóa cuộc trò chuyện không hoạt động sau 30 phút
   setInterval(() => {
     const now = Date.now();
     const inactiveThreshold = 15 * 60 * 1000;
@@ -59,7 +57,6 @@ const conversationManager = (() => {
 
         const history = await storageDB.getConversationHistory(validUserId, systemPrompt, modelName);
 
-        // Cập nhật cache cục bộ cho user
         const userHistory = getUserHistory(validUserId);
         userHistory.length = 0;
         history.forEach(msg => userHistory.push(msg));
