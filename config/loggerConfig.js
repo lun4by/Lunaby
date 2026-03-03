@@ -1,5 +1,3 @@
-
-
 const defaultConfig = {
   enabled: true,
   level: "info",
@@ -47,7 +45,6 @@ function getConfig() {
 function updateConfig(newConfig) {
   currentConfig = { ...currentConfig, ...newConfig };
 
-  // Cập nhật categories nếu có
   if (newConfig.categories) {
     currentConfig.categories = {
       ...currentConfig.categories,
