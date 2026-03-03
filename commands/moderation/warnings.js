@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const mongoClient = require('../../services/database/mongoClient.js');
+const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
 
 module.exports = {
@@ -24,16 +24,10 @@ module.exports = {
 		await interaction.deferReply();
 
 		try {
-			const db = mongoClient.getDb();
-
-			const warnings = await db
-				.collection('warnings')
-				.find({
-					userId: targetUser.id,
-					guildId: interaction.guild.id,
-				})
-				.sort({ timestamp: -1 })
-				.toArray();
+			const warnings = await MariaModDB.getWarnings(
+				interaction.guild.id,
+				targetUser.id
+			);
 
 			if (warnings.length === 0) {
 				return interaction.editReply({

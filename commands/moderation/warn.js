@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const ConversationService = require('../../services/ConversationService.js');
-const mongoClient = require('../../services/database/mongoClient.js');
+const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
 const prompts = require('../../config/prompts.js');
 
@@ -55,22 +55,33 @@ module.exports = {
 		await interaction.deferReply();
 
 		try {
-			const db = mongoClient.getDb();
+			const success = await MariaModDB.addWarning(
+				interaction.guild.id,
+				targetUser.id,
+				interaction.user.id,
+				reason
+			);
 
-			const warnData = {
-				userId: targetUser.id,
-				guildId: interaction.guild.id,
-				moderatorId: interaction.user.id,
-				reason: reason,
-				timestamp: Date.now(),
-			};
+			if (!success) {
+				return interaction.editReply({
+					content: 'Đã có lỗi xảy ra khi lưu cảnh cáo vào cơ sở dữ liệu!',
+					ephemeral: true,
+				});
+			}
 
-			await db.collection('warnings').insertOne(warnData);
+			// Add mod log entry
+			await MariaModDB.addModLog(
+				interaction.guild.id,
+				targetUser.id,
+				interaction.user.id,
+				'warn',
+				{ reason }
+			);
 
-			const warningCount = await db.collection('warnings').countDocuments({
-				userId: targetUser.id,
-				guildId: interaction.guild.id,
-			});
+			const warningCount = await MariaModDB.getWarningCount(
+				interaction.guild.id,
+				targetUser.id
+			);
 
 			const prompt = prompts.moderation.warning
 				.replace('${username}', targetUser.username)
