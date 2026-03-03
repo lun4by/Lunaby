@@ -11,7 +11,6 @@ class FontManager {
     this.fallbackFonts = this.getFallbackFonts();
   }
 
-
   getFallbackFonts() {
     const platform = os.platform();
 
@@ -27,7 +26,6 @@ class FontManager {
     }
   }
 
-
   fontExists(fontPath) {
     try {
       return fs.existsSync(fontPath) && fs.statSync(fontPath).isFile();
@@ -35,7 +33,6 @@ class FontManager {
       return false;
     }
   }
-
 
   registerSingleFont(fontPath, options) {
     const fontKey = `${fontPath}-${JSON.stringify(options)}`;
@@ -57,7 +54,6 @@ class FontManager {
       return false;
     }
   }
-
 
   async initialize(assetsPath) {
     if (this.initialized) return;
@@ -98,9 +94,7 @@ class FontManager {
         const weight = fontWeights[variant.weight];
 
         if (!weight) continue;
-
         totalCount++;
-
         const registrationConfigs = [
           {
             family: 'Montserrat',
@@ -144,7 +138,6 @@ class FontManager {
     }
   }
 
-
   generateFontVariants() {
     const weights = ['Thin', 'ExtraLight', 'Light', 'Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold', 'Black'];
     const styles = [
@@ -181,7 +174,6 @@ class FontManager {
     logger.info('FONTS', 'Fonts dự phòng hệ thống:', this.fallbackFonts.join(', '));
   }
 
-
   getFontString(weight = 'Regular', size = 16, style = 'normal') {
     const weightMap = {
       'Thin': '100',
@@ -203,11 +195,9 @@ class FontManager {
     return `${style !== 'normal' ? style + ' ' : ''}${cssWeight} ${size}px ${fontFamily}`;
   }
 
-
   isInitialized() {
     return this.initialized;
   }
-
 
   getStats() {
     return {
