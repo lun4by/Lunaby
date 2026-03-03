@@ -46,11 +46,7 @@ class DashboardService {
     try {
       this.process = spawn(npmCommand, ["run", script], {
         cwd: this.dashboardDir,
-        env: {
-          ...process.env,
-          // Ensure Next.js telemetry is disabled in production environments.
-          NEXT_TELEMETRY_DISABLED: process.env.NEXT_TELEMETRY_DISABLED || "1"
-        },
+        env: { ...process.env, NEXT_TELEMETRY_DISABLED: process.env.NEXT_TELEMETRY_DISABLED || "1" },
         stdio: ["ignore", "pipe", "pipe"]
       });
     } catch (error) {
@@ -59,19 +55,12 @@ class DashboardService {
       return;
     }
 
-    this.process.stdout.on("data", (data) => {
-      const message = data.toString().trim();
-      if (message) {
-        logger.info("DASHBOARD", message);
-      }
+    const pipeLog = (stream, level) => stream.on("data", (data) => {
+      const msg = data.toString().trim();
+      if (msg) logger[level]("DASHBOARD", msg);
     });
-
-    this.process.stderr.on("data", (data) => {
-      const message = data.toString().trim();
-      if (message) {
-        logger.error("DASHBOARD", message);
-      }
-    });
+    pipeLog(this.process.stdout, 'info');
+    pipeLog(this.process.stderr, 'error');
 
     this.process.on("exit", (code, signal) => {
       logger.warn(
@@ -105,17 +94,8 @@ class DashboardService {
 const dashboardService = new DashboardService();
 
 process.on("exit", () => dashboardService.stop());
-process.on("SIGINT", () => {
-  dashboardService.stop();
-  process.exit(0);
-});
-process.on("SIGTERM", () => {
-  dashboardService.stop();
-  process.exit(0);
-});
-process.on("SIGUSR2", () => {
-  dashboardService.stop();
-  process.exit(0);
-});
+for (const signal of ["SIGINT", "SIGTERM", "SIGUSR2"]) {
+  process.on(signal, () => { dashboardService.stop(); process.exit(0); });
+}
 
 module.exports = dashboardService;
