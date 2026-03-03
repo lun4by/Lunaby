@@ -55,21 +55,12 @@ const ACTION_MESSAGES = {
     poke: { verb: 'chọc', emoji: '👉', color: 0x00CED1, selfMsg: 'tự chọc mình' },
 };
 
-/**
- * Get a random GIF for the given action.
- */
 function getRandomGif(action) {
     const gifs = GIF_LIBRARY[action];
     if (!gifs || gifs.length === 0) return null;
     return gifs[Math.floor(Math.random() * gifs.length)];
 }
 
-/**
- * Build a GIF action embed.
- * @param {string} action - pat, hug, slap, punch, kiss, poke
- * @param {User} sender - The user performing the action
- * @param {User|null} target - The target user (can be null for self)
- */
 function buildActionEmbed(action, sender, target) {
     const info = ACTION_MESSAGES[action];
     if (!info) return null;
@@ -91,7 +82,7 @@ function buildActionEmbed(action, sender, target) {
         embed.setImage(gifUrl);
     }
 
-    embed.setFooter({ text: 'Lunaby Fun' });
+    embed.setTimestamp();
 
     return embed;
 }

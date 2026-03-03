@@ -66,12 +66,11 @@ async function handleView(interaction) {
 }
 
 async function handleSet(interaction) {
-    // Check permission
     if (interaction.guild && interaction.member) {
         const hasPermission = interaction.member.permissions?.has?.(PermissionFlagsBits.ManageGuild);
         if (!hasPermission) {
             return await interaction.reply({
-                content: '❌ Bạn cần quyền **Manage Server** để đổi prefix server!',
+                content: 'Bạn cần quyền **Manage Server** để đổi prefix server!',
                 ephemeral: true
             });
         }
@@ -79,7 +78,7 @@ async function handleSet(interaction) {
 
     if (!interaction.guild) {
         return await interaction.reply({
-            content: '❌ Lệnh này chỉ dùng được trong server! Dùng `/prefix user` để đặt prefix cá nhân.',
+            content: 'Lệnh này chỉ dùng được trong server! Dùng `/prefix user` để đặt prefix cá nhân.',
             ephemeral: true
         });
     }
@@ -88,16 +87,16 @@ async function handleSet(interaction) {
 
     if (newPrefix.length > 10) {
         return await interaction.reply({
-            content: '❌ Prefix không được dài quá 10 ký tự!',
+            content: 'Prefix không được dài quá 10 ký tự!',
             ephemeral: true
         });
     }
 
     const success = await PrefixDB.setServerPrefix(interaction.guild.id, newPrefix);
     if (success) {
-        await interaction.reply(`✅ Prefix server đã được đổi thành \`${newPrefix}\``);
+        await interaction.reply(`Prefix server đã được đổi thành \`${newPrefix}\``);
     } else {
-        await interaction.reply({ content: '❌ Không thể lưu prefix. Vui lòng thử lại sau.', ephemeral: true });
+        await interaction.reply({ content: 'Không thể lưu prefix. Vui lòng thử lại sau.', ephemeral: true });
     }
 }
 
@@ -106,16 +105,16 @@ async function handleUser(interaction) {
 
     if (newPrefix.length > 10) {
         return await interaction.reply({
-            content: '❌ Prefix không được dài quá 10 ký tự!',
+            content: 'Prefix không được dài quá 10 ký tự!',
             ephemeral: true
         });
     }
 
     const success = await PrefixDB.setUserPrefix(interaction.user.id, newPrefix);
     if (success) {
-        await interaction.reply(`✅ Prefix cá nhân của bạn đã được đổi thành \`${newPrefix}\``);
+        await interaction.reply(`Prefix cá nhân của bạn đã được đổi thành \`${newPrefix}\``);
     } else {
-        await interaction.reply({ content: '❌ Không thể lưu prefix. Vui lòng thử lại sau.', ephemeral: true });
+        await interaction.reply({ content: 'Không thể lưu prefix. Vui lòng thử lại sau.', ephemeral: true });
     }
 }
 
@@ -126,8 +125,8 @@ async function handleReset(interaction) {
     await PrefixDB.removeUserPrefix(userId);
     if (guildId && interaction.member?.permissions?.has?.(PermissionFlagsBits.ManageGuild)) {
         await PrefixDB.removeServerPrefix(guildId);
-        await interaction.reply(`✅ Đã reset prefix server và cá nhân về mặc định \`${DEFAULT_PREFIX}\``);
+        await interaction.reply(`Đã reset prefix server và cá nhân về mặc định \`${DEFAULT_PREFIX}\``);
     } else {
-        await interaction.reply(`✅ Đã reset prefix cá nhân về mặc định \`${DEFAULT_PREFIX}\``);
+        await interaction.reply(`Đã reset prefix cá nhân về mặc định \`${DEFAULT_PREFIX}\``);
     }
 }

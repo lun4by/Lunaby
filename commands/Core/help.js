@@ -183,16 +183,6 @@ function formatCommandSummary(commandModule) {
 	return `\`/${commandModule.data.name}\` - ${description}`;
 }
 
-function formatCommandDetails(commandModule) {
-	const description = commandModule.data.description || 'Không có mô tả';
-
-	return {
-		name: `/${commandModule.data.name}`,
-		value: `\`\`\`${description}\`\`\``,
-		inline: false,
-	};
-}
-
 function getCategoryMetadata(category) {
 	const categoryMap = {
 		'AIcore': { label: 'AI Core', description: 'Các lệnh AI nâng cao', emoji: '🤖' },
