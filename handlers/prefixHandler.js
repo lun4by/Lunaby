@@ -111,7 +111,7 @@ async function handlePrefixMessage(message, client) {
 
     const prefix = await PrefixDB.resolvePrefix(message.author.id, message.guild?.id);
 
-    if (!message.content.startsWith(prefix)) return false;
+    if (!message.content.toLowerCase().startsWith(prefix.toLowerCase())) return false;
 
     const withoutPrefix = message.content.slice(prefix.length).trim();
     if (!withoutPrefix) return false;
