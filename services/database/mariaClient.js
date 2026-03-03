@@ -30,7 +30,7 @@ class MariaDBClient {
         let conn;
         try {
             conn = await this.pool.getConnection();
-            logger.info('MARIADB', `Connected to MariaDB at ${host}:${port}/${database}`);
+            logger.info('MARIADB', `Connected to MariaDB`);
         } finally {
             if (conn) conn.release();
         }
