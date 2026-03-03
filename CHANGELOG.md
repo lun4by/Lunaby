@@ -2,41 +2,41 @@
 
 ## [1.3.0-native] - 2026-03-03
 
-### 🔥 Highlights
+### Highlights
 - **Hỗ trợ đa cơ sở dữ liệu (MongoDB + MariaDB)**: Tích hợp thêm MariaDB để quản lý Logging, Blacklist và Prefix, giúp giảm tải và phân tách rõ ràng với MongoDB (chuyên xử lý Core data như Profiles, Conversations).
 - **Hệ thống lệnh Prefix (Prefix Commands)**: Hỗ trợ người dùng gọi lệnh bằng Prefix thay vì chỉ dùng Slash Commands.
 
-### ✨ Added
+### Added
 - **Prefix Handler (`handlers/prefixHandler.js`)**: Lớp giả lập `PseudoInteraction` giúp chạy Prefix Command mà không cần viết lại logic lệnh.
 - **MariaDB Client (`services/database/mariaClient.js`)**: Pool kết nối đến MariaDB.
 - **Service Database Mới**: Thêm `PrefixDB.js`, `MariaBlacklistDB.js`, `MariaModDB.js` để lưu trữ dữ liệu chuyên biệt vào MariaDB.
 - **DatabaseManager (`services/database/DatabaseManager.js`)**: Quản lý tập trung các collection và index của MongoDB, thay thế các mã khởi tạo phân tán trước đây.
 
-### ⚙️ Changed
+### Changed
 - Cấu trúc lại thư mục `services`: Chuyển logic hệ thống DB vào thư mục `services/database/`.
 - Cập nhật `example.env` để thêm các biến môi trường cấu hình kết nối MariaDB.
 - Sửa một số command và update file cấu hình prompt.
 - Tối ưu hóa DatabaseManager để quản lý tập trung các collection và index của MongoDB.
 
-### 🧹 Removed
+### Removed
 - Loại bỏ các câu lệnh không cần thiết.
 
-### ⚠️ Migration Notes
+### Migration Notes
 - Chạy `npm install` để cập nhật dependencies.
 ---
 
 ## [1.2.0-native] - 2026-01-01
 
-### 🔥 Highlights
+### Highlights
 - Chuyển đổi hoàn toàn từ `axios` sang `native fetch` - giảm dependencies
 - Lunaby model tích hợp sẵn web search - loại bỏ WebSearchService
 - Chuẩn hóa logging với hệ thống logger thay thế console.error
 
-### ✨ Added
+### Added
 - `utils/embedUtils.js`: Shared utilities cho Discord embeds (colors, status maps, helpers)
 - Status mapping helpers trong `MyAnimeListAPI.js`: `_getAnimeStatus()`, `_getMangaStatus()`, `_getSeasonName()`
 
-### ⚙️ Changed
+### Changed
 - `services/MyAnimeListAPI.js`: Refactored to use native fetch với AbortController timeout
 - `services/WebSearchService.js`: Đã xóa (Lunaby model tích hợp sẵn search)
 - `commands/AIcore/search.js`: Đã xóa (không cần thiết nữa)
@@ -45,12 +45,12 @@
   - Core: about, help
   - Moderation: modlog
 
-### 🧹 Removed
+### Removed
 - **`axios`** dependency từ package.json
 - **`services/WebSearchService.js`** - Lunaby model đã tích hợp sẵn search
 - **`commands/AIcore/search.js`** - Lệnh search riêng không còn cần thiết
 
-### ⚠️ Migration Notes
+### Migration Notes
 - Chạy `npm install` để cập nhật dependencies sau khi xóa axios
 - Web search giờ được xử lý tự động bởi Lunaby model
 
@@ -58,31 +58,31 @@
 
 ## [1.1.0-native] - 2025-11-18
 
-### 🔥 Highlights
+### Highlights
 - Hỗ trợ streaming cho chat văn bản và hoàn thành mã (streaming dựa trên SSE, tương thích với Heroku)
 - Bộ xử lý streaming thời gian thực cho Discord để cập nhật tin nhắn dần dần
 - Cải thiện việc xác thực và gộp tin nhắn để đáp ứng yêu cầu của nhà cung cấp
 
-### ✨ Added
+### Added
  - `handlers/streamingHandler.js`: lớp giao diện streaming mới cho tin nhắn Discord (an toàn với giới hạn chỉnh sửa, hỗ trợ chia chunk)
  - Bộ phân tích SSE trong `services/AICore.js` để xử lý các frame `event:`/`data:` của nhà cung cấp và terminator `[DONE]`
  - Hỗ trợ `stream: true` cho các yêu cầu mô hình chạy lâu
 
-### ⚙️ Changed
+### Changed
  - Chat & Code: streaming giờ là luồng mặc định, kèm fallback non-stream khi cần
  - Search & Image: sử dụng endpoint non-stream (tạo ảnh và web search vẫn là non-stream)
  - Prompts: `config/prompts.js` được chuyển sang tiếng Anh, tối ưu `thinking` và `memoryExtraction`
  - Logging: in tiêu đề console + `console.clear()` khi khởi động; logger có màu, sạch hơn
 
-### 🛠️ Fixed
+### Fixed
 - Đã xử lý lỗi 408/timeout trên Lunaby bằng cách dùng streaming cho các yêu cầu lâu
 - Sửa lỗi xử lý buffer SSE để tái tạo các delta JSON khi bị tách qua nhiều chunk TCP
 - Loại bỏ các tin nhắn assistant rỗng và gộp các tin nhắn liên tiếp cùng vai trò để thỏa mãn xác thực của nhà cung cấp
 
-### 🧹 Removed / Cleaned
+### Removed / Cleaned
 - Đã loại bỏ prompt `analysis` cũ và hàm `analyzeContentWithAI()` (không dùng)
 
-### ⚠️ Migration / Notes
+### Migration / Notes
 - Các tin nhắn streaming được tránh giới hạn chỉnh sửa của Discord (khoảng 800ms giữa các cập nhật)
 - Nếu bạn phụ thuộc vào hành vi sync khi `require` trước đây cho các module DB, hãy cập nhật import để gọi dịch vụ một cách rõ ràng sau `client.ready`
 
@@ -90,7 +90,7 @@
 
 ## [1.0.0] - 2025-11-03
 
-### 🎨 Added - Profile Customization System
+### Added - Profile Customization System
 Tích hợp hệ thống profile customization với canvas 800x600 pixels và các tính năng tùy chỉnh đầy đủ.
 
 #### New Commands
@@ -182,13 +182,13 @@ Tích hợp hệ thống profile customization với canvas 800x600 pixels và c
 - Uses `rankCanvas.js` for rank cards
 - Compatible with Discord.js v14
 
-### 📦 Dependencies
+### Dependencies
 No changes to package.json:
 - `discord.js`: ^14.19.2 
 - `canvas`: ^3.1.0 
 - `mongodb`: ^6.16.0 
 
-### ✨ Database Schema
+### Database Schema
 MongoDB collections structure remains compatible:
 ```javascript
 user_profiles {
