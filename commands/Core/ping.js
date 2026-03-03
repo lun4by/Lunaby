@@ -6,6 +6,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('ping')
 		.setDescription('Kiểm tra độ trễ và trạng thái kết nối của bot'),
+	prefix: { name: 'ping', aliases: ['p'], description: 'Kiểm tra độ trễ' },
 
 	async execute(interaction) {
 		const sent = await interaction.deferReply({ fetchReply: true });
@@ -75,7 +76,7 @@ module.exports = {
 		collector.on('end', () => {
 			interaction.editReply({
 				components: [createActionRow(interaction, false)],
-			}).catch(() => {});
+			}).catch(() => { });
 		});
 	},
 };
