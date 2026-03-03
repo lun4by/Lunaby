@@ -13,23 +13,14 @@ class QuotaService {
     this.ownerId = process.env.OWNER_ID?.trim() || null;
   }
 
-  async getProfileCollection() {
-    const mongoClient = require('./database/mongoClient.js');
-    return mongoClient.getDb().collection('user_profiles');
-  }
-
   async initializeUserMessageData(userId) {
     try {
       const existing = await QuotaDB.getUserQuota(userId);
       if (existing) return existing;
 
-      const profileCollection = await this.getProfileCollection();
       let role = 'user';
       if (this.ownerId && userId === this.ownerId) {
         role = 'owner';
-      } else {
-        const profile = await profileCollection.findOne({ _id: userId });
-        if (profile?.data?.role) role = profile.data.role;
       }
 
       const now = Date.now();
@@ -129,18 +120,10 @@ class QuotaService {
     try {
       if (!VALID_ROLES.includes(role)) throw new Error(`Vai trò không hợp lệ: ${role}`);
 
-      const profileCollection = await this.getProfileCollection();
       const now = Date.now();
       const limitPeriod = this.roleLimits[role] || 600;
 
-      await Promise.all([
-        QuotaDB.updateUserRole(userId, role, limitPeriod, now),
-        profileCollection.updateOne(
-          { _id: userId },
-          { $set: { 'data.role': role } },
-          { upsert: true }
-        )
-      ]);
+      await QuotaDB.updateUserRole(userId, role, limitPeriod, now);
 
       return true;
     } catch (error) {
