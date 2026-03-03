@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const mongoClient = require('../../services/database/mongoClient.js');
+const MariaModDB = require('../../services/database/MariaModDB.js');
 const ConversationService = require('../../services/ConversationService.js');
 const logger = require('../../utils/logger.js');
 const prompts = require('../../config/prompts.js');
@@ -40,12 +40,10 @@ module.exports = {
 		await interaction.deferReply();
 
 		try {
-			const db = mongoClient.getDb();
-
-			const warningCount = await db.collection('warnings').countDocuments({
-				userId: targetUser.id,
-				guildId: interaction.guild.id,
-			});
+			const warningCount = await MariaModDB.getWarningCount(
+				interaction.guild.id,
+				targetUser.id
+			);
 
 			if (warningCount === 0) {
 				return interaction.editReply({
@@ -57,28 +55,24 @@ module.exports = {
 			let deletedCount = 0;
 
 			if (type === 'all') {
-				const result = await db.collection('warnings').deleteMany({
-					userId: targetUser.id,
-					guildId: interaction.guild.id,
-				});
-
-				deletedCount = result.deletedCount;
-			} else if (type === 'latest') {
-				const latestWarning = await db.collection('warnings').findOne(
-					{
-						userId: targetUser.id,
-						guildId: interaction.guild.id,
-					},
-					{
-						sort: { timestamp: -1 },
-					},
+				deletedCount = await MariaModDB.clearAllWarnings(
+					interaction.guild.id,
+					targetUser.id
 				);
-
-				if (latestWarning) {
-					await db.collection('warnings').deleteOne({ _id: latestWarning._id });
-					deletedCount = 1;
-				}
+			} else if (type === 'latest') {
+				deletedCount = await MariaModDB.clearLatestWarning(
+					interaction.guild.id,
+					targetUser.id
+				);
 			}
+
+			await MariaModDB.addModLog(
+				interaction.guild.id,
+				targetUser.id,
+				interaction.user.id,
+				'clearwarnings',
+				{ reason, count: deletedCount }
+			);
 
 			const prompt = prompts.moderation.clearwarnings
 				.replace('${type}', type === 'all' ? 'tất cả' : 'cảnh cáo mới nhất')
