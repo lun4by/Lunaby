@@ -49,84 +49,83 @@ module.exports = {
 		await interaction.deferReply();
 
 		try {
-			try {
-				const logs = await MariaModDB.getModLogs({
-					guildId: interaction.guild.id,
-					targetId: targetUser ? targetUser.id : null,
-					action: actionType,
-					limit: limit
-				});
+			const logs = await MariaModDB.getModLogs({
+				guildId: interaction.guild.id,
+				targetId: targetUser ? targetUser.id : null,
+				action: actionType,
+				limit: limit
+			});
 
-				if (logs.length === 0) {
-					return interaction.editReply({
-						content: 'Không tìm thấy nhật ký moderation nào phù hợp với bộ lọc.',
-						ephemeral: false,
-					});
-				}
-
-				const logEmbed = new EmbedBuilder()
-					.setColor(0x3498db)
-					.setTitle('📋 Nhật ký Moderation')
-					.setDescription(
-						`Hiển thị ${logs.length} hành động moderation gần nhất${targetUser ? ` cho ${targetUser.tag}` : ''}${actionType ? ` (loại: ${actionType})` : ''}.`,
-					)
-					.setFooter({ text: `Server: ${interaction.guild.name}` })
-					.setTimestamp();
-
-				for (const log of logs) {
-					const date = new Date(log.timestamp).toLocaleDateString('vi-VN');
-					const time = new Date(log.timestamp).toLocaleTimeString('vi-VN');
-
-					let moderator = 'Không rõ';
-					let target = 'Không rõ';
-
-					try {
-						const modUser = await interaction.client.users.fetch(log.moderatorId);
-						moderator = modUser.tag;
-					} catch (error) {
-						moderator = `Không rõ (ID: ${log.moderatorId})`;
-					}
-
-					try {
-						const targetUser = await interaction.client.users.fetch(log.targetId);
-						target = targetUser.tag;
-					} catch (error) {
-						target = `Không rõ (ID: ${log.targetId})`;
-					}
-
-					// Định dạng tên hành động
-					const actionName =
-						{
-							ban: '🔨 Ban',
-							unban: '🔓 Unban',
-							kick: '👢 Kick',
-							mute: '🔇 Mute',
-							unmute: '🔊 Unmute',
-							warn: '⚠️ Warn',
-							clearwarnings: '🧹 Clear Warnings',
-						}[log.action] || log.action;
-
-					// Thêm thông tin bổ sung dựa trên loại hành động
-					let additionalInfo = '';
-					if (log.action === 'mute' && log.duration) {
-						additionalInfo = `\n**Thời gian:** ${log.duration} phút`;
-					} else if (log.action === 'clearwarnings' && log.count) {
-						additionalInfo = `\n**Số cảnh cáo đã xóa:** ${log.count}`;
-					}
-
-					logEmbed.addFields({
-						name: `${actionName} - ${date} ${time}`,
-						value: `**Người thực hiện:** ${moderator}\n**Mục tiêu:** ${target}\n**Lý do:** ${log.reason || 'Không có lý do'}${additionalInfo}`,
-					});
-				}
-
-				await interaction.editReply({ embeds: [logEmbed] });
-			} catch (error) {
-				logger.error('MODLOG', 'Lỗi khi xem nhật ký moderation:', error);
-				await interaction.editReply({
-					content: `Đã xảy ra lỗi khi xem nhật ký moderation: ${error.message}`,
-					ephemeral: true,
+			if (logs.length === 0) {
+				return interaction.editReply({
+					content: 'Không tìm thấy nhật ký moderation nào phù hợp với bộ lọc.',
+					ephemeral: false,
 				});
 			}
-		},
-	};
+
+			const logEmbed = new EmbedBuilder()
+				.setColor(0x3498db)
+				.setTitle('📋 Nhật ký Moderation')
+				.setDescription(
+					`Hiển thị ${logs.length} hành động moderation gần nhất${targetUser ? ` cho ${targetUser.tag}` : ''}${actionType ? ` (loại: ${actionType})` : ''}.`,
+				)
+				.setFooter({ text: `Server: ${interaction.guild.name}` })
+				.setTimestamp();
+
+			for (const log of logs) {
+				const date = new Date(log.timestamp).toLocaleDateString('vi-VN');
+				const time = new Date(log.timestamp).toLocaleTimeString('vi-VN');
+
+				let moderator = 'Không rõ';
+				let target = 'Không rõ';
+
+				try {
+					const modUser = await interaction.client.users.fetch(log.moderatorId);
+					moderator = modUser.tag;
+				} catch (error) {
+					moderator = `Không rõ (ID: ${log.moderatorId})`;
+				}
+
+				try {
+					const targetUser = await interaction.client.users.fetch(log.targetId);
+					target = targetUser.tag;
+				} catch (error) {
+					target = `Không rõ (ID: ${log.targetId})`;
+				}
+
+				// Định dạng tên hành động
+				const actionName =
+					{
+						ban: '🔨 Ban',
+						unban: '🔓 Unban',
+						kick: '👢 Kick',
+						mute: '🔇 Mute',
+						unmute: '🔊 Unmute',
+						warn: '⚠️ Warn',
+						clearwarnings: '🧹 Clear Warnings',
+					}[log.action] || log.action;
+
+				// Thêm thông tin bổ sung dựa trên loại hành động
+				let additionalInfo = '';
+				if (log.action === 'mute' && log.duration) {
+					additionalInfo = `\n**Thời gian:** ${log.duration} phút`;
+				} else if (log.action === 'clearwarnings' && log.count) {
+					additionalInfo = `\n**Số cảnh cáo đã xóa:** ${log.count}`;
+				}
+
+				logEmbed.addFields({
+					name: `${actionName} - ${date} ${time}`,
+					value: `**Người thực hiện:** ${moderator}\n**Mục tiêu:** ${target}\n**Lý do:** ${log.reason || 'Không có lý do'}${additionalInfo}`,
+				});
+			}
+
+			await interaction.editReply({ embeds: [logEmbed] });
+		} catch (error) {
+			logger.error('MODLOG', 'Lỗi khi xem nhật ký moderation:', error);
+			await interaction.editReply({
+				content: `Đã xảy ra lỗi khi xem nhật ký moderation: ${error.message}`,
+				ephemeral: true,
+			});
+		}
+	},
+};
