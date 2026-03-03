@@ -64,8 +64,6 @@ module.exports = {
     USER_MEMORIES: 'user_memories',
     USER_QUOTAS: 'user_quotas',
     GUILDS: 'guilds',
-    MOD_SETTINGS: 'mod_settings',
-    // IMAGE_BLACKLIST moved to MariaDB
     MONITOR_SETTINGS: 'monitor_settings',
     MONITOR_LOGS: 'monitor_logs'
   },

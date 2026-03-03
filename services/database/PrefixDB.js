@@ -4,10 +4,9 @@ const { DEFAULT_PREFIX } = require('../../config/constants');
 
 class PrefixDB {
     constructor() {
-        // In-memory cache to avoid DB queries on every message
         this.userCache = new Map();
         this.serverCache = new Map();
-        this.cacheExpiry = 5 * 60 * 1000; // 5 minutes
+        this.cacheExpiry = 5 * 60 * 1000;
     }
 
     async initTables() {
@@ -37,7 +36,6 @@ class PrefixDB {
     }
 
     async getUserPrefix(userId) {
-        // Check cache
         const cached = this.userCache.get(userId);
         if (cached && Date.now() - cached.time < this.cacheExpiry) {
             return cached.prefix;
@@ -133,10 +131,6 @@ class PrefixDB {
         }
     }
 
-    /**
-     * Resolve prefix for a message context.
-     * Priority: user prefix > server prefix > default
-     */
     async resolvePrefix(userId, guildId) {
         const userPrefix = await this.getUserPrefix(userId);
         if (userPrefix) return userPrefix;

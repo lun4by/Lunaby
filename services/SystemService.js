@@ -5,11 +5,11 @@ class SystemService {
   constructor() {
     this.checkTLSSecurity();
     this.initializeLogging();
-    
+
     logger.debug("SYSTEM_SERVICE", "Service initialized");
   }
 
-  
+
   async initializeLogging() {
     try {
       await logger.initializeFileLogging();
@@ -19,7 +19,7 @@ class SystemService {
     }
   }
 
-  
+
   checkTLSSecurity() {
     if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0") {
       logger.warn("SYSTEM_SERVICE", "SECURITY WARNING: NODE_TLS_REJECT_UNAUTHORIZED=0");
@@ -30,7 +30,7 @@ class SystemService {
     }
   }
 
-  
+
   ensureTempDirectory() {
     const tempDir = "./temp";
     if (!fs.existsSync(tempDir)) {
@@ -39,7 +39,7 @@ class SystemService {
     }
   }
 
-  
+
   cleanupTempFiles(maxAge = 24 * 60 * 60 * 1000) { // 24 hours default
     try {
       const tempDir = "./temp";
@@ -54,7 +54,7 @@ class SystemService {
       for (const file of files) {
         const filePath = `${tempDir}/${file}`;
         const stats = fs.statSync(filePath);
-        
+
         if (now - stats.mtime.getTime() > maxAge) {
           fs.unlinkSync(filePath);
           cleanedCount++;
@@ -69,11 +69,11 @@ class SystemService {
     }
   }
 
-  
+
   getSystemInfo() {
     const memUsage = process.memoryUsage();
     const uptime = process.uptime();
-    
+
     return {
       nodeVersion: process.version,
       platform: process.platform,
@@ -89,12 +89,12 @@ class SystemService {
     };
   }
 
-  
+
   formatSystemInfo() {
     const info = this.getSystemInfo();
     const uptimeHours = Math.floor(info.uptime / 3600);
     const uptimeMinutes = Math.floor((info.uptime % 3600) / 60);
-    
+
     return `**System Information:**
 • Node.js: ${info.nodeVersion}
 • Platform: ${info.platform} (${info.arch})
@@ -105,14 +105,14 @@ class SystemService {
 • Process ID: ${info.pid}`;
   }
 
-  
+
   getHealthStatus() {
     const info = this.getSystemInfo();
     const memoryUsagePercent = (info.memory.heapUsed / info.memory.heapTotal) * 100;
-    
+
     let status = "healthy";
     let issues = [];
-    
+
     if (memoryUsagePercent > 90) {
       status = "critical";
       issues.push("High memory usage");
@@ -120,11 +120,11 @@ class SystemService {
       status = "warning";
       issues.push("Elevated memory usage");
     }
-    
+
     if (info.uptime < 60) {
       issues.push("Recently restarted");
     }
-    
+
     return {
       status,
       issues,
@@ -133,14 +133,12 @@ class SystemService {
     };
   }
 
-  
+
   startPeriodicTasks() {
-    // Dọn dẹp file tạm mỗi 6 giờ
     setInterval(() => {
       this.cleanupTempFiles();
     }, 6 * 60 * 60 * 1000);
 
-    // Log thông tin hệ thống mỗi 30 phút
     setInterval(() => {
       const health = this.getHealthStatus();
       if (health.status !== "healthy") {
@@ -153,28 +151,24 @@ class SystemService {
     logger.info("SYSTEM_SERVICE", "Started periodic maintenance tasks");
   }
 
-  
+
   setupGracefulShutdown() {
     const shutdown = (signal) => {
       logger.info("SYSTEM_SERVICE", `Received ${signal}, starting graceful shutdown...`);
-      
-      // Dọn dẹp tài nguyên
+
       this.cleanupTempFiles();
-      
-      // Đóng kết nối database nếu cần
+
       // await storageDB.close();
-      
+
       logger.info("SYSTEM_SERVICE", "Graceful shutdown completed");
       process.exit(0);
     };
 
     process.on("SIGTERM", () => shutdown("SIGTERM"));
     process.on("SIGINT", () => shutdown("SIGINT"));
-    
-    // Xử lý uncaught exceptions
+
     process.on("uncaughtException", (error) => {
       logger.error("SYSTEM_SERVICE", "Uncaught Exception:", error);
-      // Không exit ngay lập tức, để logger có thời gian ghi
       setTimeout(() => process.exit(1), 1000);
     });
 
@@ -185,35 +179,35 @@ class SystemService {
     logger.info("SYSTEM_SERVICE", "Graceful shutdown handlers registered");
   }
 
-  
+
   validateEnvironment() {
     const required = ["API_KEY"];
     const optional = ["GRADIO_IMAGE_SPACE", "CUSTOM_CA_CERT_PATH", "NODE_TLS_REJECT_UNAUTHORIZED"];
-    
+
     const missing = [];
     const warnings = [];
-    
+
     for (const key of required) {
       if (!process.env[key]) {
         missing.push(key);
       }
     }
-    
+
     if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0") {
       warnings.push("NODE_TLS_REJECT_UNAUTHORIZED=0 detected - security risk in production");
     }
-    
+
     if (missing.length > 0) {
       logger.error("SYSTEM_SERVICE", `Missing required environment variables: ${missing.join(", ")}`);
       throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
     }
-    
+
     if (warnings.length > 0) {
       warnings.forEach(warning => logger.warn("SYSTEM_SERVICE", warning));
     }
-    
+
     logger.info("SYSTEM_SERVICE", "Environment validation completed");
-    
+
     return {
       valid: missing.length === 0,
       missing,

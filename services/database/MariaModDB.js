@@ -4,7 +4,6 @@ const logger = require('../../utils/logger');
 class MariaModDB {
     async initTables() {
         try {
-            // Mod Settings Table
             await mariaClient.query(`
         CREATE TABLE IF NOT EXISTS mod_settings (
           guild_id VARCHAR(32) PRIMARY KEY,
@@ -16,7 +15,6 @@ class MariaModDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
-            // Mod Warnings Table
             await mariaClient.query(`
         CREATE TABLE IF NOT EXISTS mod_warnings (
           id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,7 +27,6 @@ class MariaModDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
-            // Mod Logs Table
             await mariaClient.query(`
         CREATE TABLE IF NOT EXISTS mod_logs (
           id INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,8 +50,6 @@ class MariaModDB {
             return false;
         }
     }
-
-    // --- SETTINGS ---
 
     async getSettings(guildId) {
         try {
@@ -98,8 +93,6 @@ class MariaModDB {
             return false;
         }
     }
-
-    // --- WARNINGS ---
 
     async addWarning(guildId, userId, moderatorId, reason) {
         try {
@@ -155,7 +148,6 @@ class MariaModDB {
 
     async clearLatestWarning(guildId, userId) {
         try {
-            // Find the most recent warning ID
             const rows = await mariaClient.query(
                 'SELECT id FROM mod_warnings WHERE guild_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 1',
                 [guildId, userId]
@@ -175,8 +167,6 @@ class MariaModDB {
             return 0;
         }
     }
-
-    // --- LOGS ---
 
     async addModLog(guildId, targetId, moderatorId, action, extra = {}) {
         try {

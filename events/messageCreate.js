@@ -10,25 +10,7 @@ function setupMessageCreateEvent(client) {
     try {
       if (message.author.bot) return;
 
-      // XP system disabled
-      // if (message.guild) {
-      //   const xpResult = await XPService.addXP(message);
-      //   
-      //   if (xpResult && xpResult.leveledUp) {
-      //     try {
-      //       const profile = await guildProfileDB.getGuildProfile(message.guild.id);
-      //       const levelUpEnabled = profile?.settings?.levelUpNotifications !== false;
-      //       if (levelUpEnabled) {
-      //         await message.reply({
-      //           content: `🎉 Chúc mừng <@${message.author.id}>! Bạn đã lên **Level ${xpResult.level}**!`,
-      //           allowedMentions: { users: [message.author.id] }
-      //         });
-      //       }
-      //     } catch (err) {
-      //       logger.debug('XP', 'Không thể gửi thông báo level up:', err.message);
-      //     }
-      //   }
-      // }
+
 
       // Check prefix commands first
       const handled = await handlePrefixMessage(message, client);

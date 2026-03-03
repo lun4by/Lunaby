@@ -91,7 +91,7 @@ const handleCommand = async (interaction, client) => {
     const aiCommands = ['think', 'image', 'reset'];
     if (aiCommands.includes(interaction.commandName)) {
       const hasConsented = await consentService.hasUserConsented(interaction.user.id);
-      
+
       if (!hasConsented) {
         try {
           const consentData = consentService.createConsentEmbed(interaction.user);

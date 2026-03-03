@@ -27,7 +27,6 @@ class MariaDBClient {
             charset: 'utf8mb4'
         });
 
-        // Test connection
         let conn;
         try {
             conn = await this.pool.getConnection();

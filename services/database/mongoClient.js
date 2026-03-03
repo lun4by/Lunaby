@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
-const initSystem = require("../initSystem.js");
-const logger = require("../../utils/logger.js");
+const initSystem = require("./initSystem.js");
+const logger = require("../utils/logger.js");
 
 class MongoDBClient {
   constructor() {
@@ -35,10 +35,6 @@ class MongoDBClient {
       this.isConnecting = false;
       logger.info("SYSTEM", "Đã kết nối thành công đến MongoDB");
 
-      // Chú ý: Các indexes sẽ được tạo trong storageDB.setupCollections()
-      // Để tránh xung đột, không tạo indexes ở đây
-
-      // REMOVE THIS - THIS IS CAUSING THE CIRCULAR DEPENDENCY
       // if (!initSystem.getStatus().services.mongodb) {
       //   console.log('MongoDB đang đợi trong hàng đợi khởi tạo...');
       //   await initSystem.waitForReady();
