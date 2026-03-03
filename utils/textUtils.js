@@ -1,5 +1,12 @@
+const STOP_WORDS = new Set([
+  "và", "hoặc", "nhưng", "nếu", "vì", "bởi", "với", "từ", "đến", "trong", "ngoài",
+  "a", "an", "the", "and", "or", "but", "if", "because", "with", "from", "to", "in", "out"
+]);
+
+const LOADING_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+const BAR_LENGTH = 25;
+
 module.exports = {
-  
   createMessageSummary(content, role) {
     if (!content || content.length < 5) return null;
 
@@ -9,25 +16,20 @@ module.exports = {
     return summary.length > 100 ? summary.substring(0, 100) + "..." : summary;
   },
 
-  
+
   extractKeywords(prompt) {
     if (!prompt?.length || prompt.length < 3) return [];
-
-    const stopWords = new Set([
-      "và", "hoặc", "nhưng", "nếu", "vì", "bởi", "với", "từ", "đến", "trong", "ngoài",
-      "a", "an", "the", "and", "or", "but", "if", "because", "with", "from", "to", "in", "out"
-    ]);
 
     return [...new Set(
       prompt
         .toLowerCase()
         .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
         .split(/\s+/)
-        .filter(word => word.length > 3 && !stopWords.has(word))
+        .filter(word => word.length > 3 && !STOP_WORDS.has(word))
     )].slice(0, 5);
   },
 
-  
+
   extractKeyMessages(history) {
     if (!history?.length) return [];
 
@@ -40,12 +42,12 @@ module.exports = {
     );
 
     const messages = significantMessages.length ? significantMessages : userMessages;
-    return messages.slice(-5).map(msg => 
+    return messages.slice(-5).map(msg =>
       msg.length > 100 ? msg.substring(0, 100) + "..." : msg
     );
   },
 
-  
+
   identifyMainTopics(history) {
     if (!history?.length) return ["Chưa có đủ dữ liệu"];
 
@@ -64,50 +66,35 @@ module.exports = {
       .map(entry => entry[0]);
   },
 
-  
+
   formatTimeAgo(timestamp) {
     const secondsAgo = Math.floor((Date.now() - timestamp) / 1000);
-    
+
     if (secondsAgo < 60) return `${secondsAgo} giây`;
-    
+
     const minutesAgo = Math.floor(secondsAgo / 60);
     if (minutesAgo < 60) return `${minutesAgo} phút`;
-    
+
     const hoursAgo = Math.floor(minutesAgo / 60);
     if (hoursAgo < 24) return `${hoursAgo} giờ`;
-    
+
     return `${Math.floor(hoursAgo / 24)} ngày`;
   },
 
-  
+
   getLoadingAnimation(step) {
-    const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-    return frames[step % frames.length];
+    return LOADING_FRAMES[step % LOADING_FRAMES.length];
   },
 
-  
-  getProgressBar(percent) {
-    const TOTAL_LENGTH = 25;
-    const completed = Math.floor((percent / 100) * TOTAL_LENGTH);
-    const remaining = TOTAL_LENGTH - completed;
 
-    const statusIcons = {
-      0: "⬛",
-      25: "<:thinking:1050344785153626122>",
-      50: "<:wao:1050344773698977853>",
-      75: "🔆",
-      90: "⏭️",
-      100: "<:like:1049784377103622218>",
-    };
+  getProgressBar(percent) {
+    const completed = Math.floor((percent / 100) * BAR_LENGTH);
 
     const statusIcon =
-      Object.entries(statusIcons)
+      Object.entries({ 0: "⬛", 25: "<:thinking:1050344785153626122>", 50: "<:wao:1050344773698977853>", 75: "🔆", 90: "⏭️", 100: "<:like:1049784377103622218>" })
         .reverse()
-        .find(([threshold]) => percent >= parseInt(threshold))?.[1] || "⬛";
+        .find(([t]) => percent >= parseInt(t))?.[1] || "⬛";
 
-    const progressBar = `│${"█".repeat(completed)}${"▒".repeat(remaining)}│`;
-    const percentText = `${percent.toString().padStart(3, " ")}%`;
-
-    return `${statusIcon} ${progressBar} ${percentText}`;
+    return `${statusIcon} │${"█".repeat(completed)}${"▒".repeat(BAR_LENGTH - completed)}│ ${percent.toString().padStart(3, " ")}%`;
   }
-}; 
+};
