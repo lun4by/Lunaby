@@ -26,7 +26,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('personalize')
         .setDescription('Tùy chỉnh trải nghiệm AI của bạn'),
-    prefix: { name: 'personalize', aliases: ['ps', 'settings'], description: 'Tùy chỉnh AI' },
+    prefix: { name: 'personalize', aliases: ['ps', 'canhan'], description: 'Tùy chỉnh AI' },
 
     async execute(interaction) {
         const userId = interaction.guildId
