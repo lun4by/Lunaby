@@ -1,5 +1,25 @@
 # Changelog - Lunaby Bot
 
+## [1.3.2-native] - 2026-03-04
+
+### Highlights
+- **Cập nhật giao diện Embeds**: Sử dụng `embedUtils.js` để tạo embeds nhất quán và chuyên nghiệp hơn cho toàn bộ bot.
+- **Tối ưu hóa toàn diện**: Cải thiện hiệu suất và cấu trúc mã nguồn.
+- **Cải thiện trải nghiệm người dùng**: Tối ưu hóa hiển thị thông tin, thêm icon và định dạng rõ ràng.
+
+### Added
+- **Lệnh Quản trị**: Thêm lệnh `enable` và `disable` để quản lý trạng thái hoạt động của các module và lệnh.
+
+### Changed
+- **`commands/Core/lunaby.js`**: Cập nhật sử dụng `createLunabyEmbed()` thay vì `EmbedBuilder` trực tiếp.
+- **`commands/Core/ping.js`**: Cập nhật sử dụng `createLunabyEmbed()`, `createStatusEmbed()`, `createDetailedEmbed()` từ `embedUtils.js`.
+- **`utils/embedUtils.js`**: Tối ưu hóa các hàm tạo embed, loại bỏ icon không cần thiết trong tiêu đề, cải thiện định dạng.
+
+### Migration Notes
+- Không cần thay đổi gì.
+
+---
+
 ## [1.3.0-native] - 2026-03-03
 
 ### Highlights
