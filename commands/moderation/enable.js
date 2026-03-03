@@ -24,15 +24,16 @@ module.exports = {
                 commandsStr = interaction.args ? interaction.args.join(',') : '';
             }
 
+            const guildId = interaction.guildId;
+            const channelId = channel.id;
+
             if (!commandsStr) {
-                return interaction.reply({ content: 'Vui lòng nhập tên lệnh cần bật!', ephemeral: true });
+                const embed = await enabledUtil.createEmbed(interaction, channel, guildId, channelId);
+                return interaction.reply({ embeds: [embed], ephemeral: true });
             }
 
             commandsStr = commandsStr.toLowerCase();
             const commands = commandsStr.split(',').map(c => c.trim()).filter(c => c);
-
-            const guildId = interaction.guildId;
-            const channelId = channel.id;
 
             if (commands.includes('all')) {
                 await MariaModDB.enableAllCommands(guildId, channelId);
