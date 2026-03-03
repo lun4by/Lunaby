@@ -14,6 +14,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('help')
 		.setDescription('Hiển thị danh sách lệnh và thông tin trợ giúp'),
+	prefix: { name: 'help', aliases: ['h', 'commands'], description: 'Trợ giúp' },
 
 	async execute(interaction) {
 		const isOwner = interaction.user.id === process.env.OWNER_ID;
@@ -200,6 +201,7 @@ function getCategoryMetadata(category) {
 		'moderation': { label: 'Moderation', description: 'Các lệnh quản lý server', emoji: '🛡️' },
 		'social': { label: 'Social', description: 'Các lệnh tương tác xã hội', emoji: '👥' },
 		'system': { label: 'System', description: 'Các lệnh quản lý hệ thống', emoji: '🔧' },
+		'fun': { label: 'Fun', description: 'Các lệnh giải trí và GIF', emoji: '🎉' },
 	};
 
 	return categoryMap[category] || {

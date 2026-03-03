@@ -27,6 +27,7 @@ module.exports = {
 					{ name: '9:21 (Siêu dọc)', value: '9:21' }
 				)
 		),
+	prefix: { name: 'image', aliases: ['img', 've'], description: 'Tạo hình ảnh' },
 
 	async execute(interaction) {
 		await interaction.deferReply();
@@ -50,9 +51,9 @@ module.exports = {
 			}
 		} catch (error) {
 			logger.error('COMMAND', 'Error while generating image:', error);
-			
+
 			let errorMessage = 'Đã xảy ra lỗi khi tạo ảnh.';
-			
+
 			if (error.message) {
 				if (error.message.includes('vi phạm') || error.message.includes('không phù hợp')) {
 					errorMessage = '❌ ' + error.message;

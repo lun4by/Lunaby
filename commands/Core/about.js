@@ -16,6 +16,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('about')
 		.setDescription('Hiển thị thông tin chi tiết về Lunaby bot'),
+	prefix: { name: 'about', aliases: ['info', 'botinfo'], description: 'Thông tin bot' },
 
 	async execute(interaction) {
 		await interaction.deferReply();
