@@ -21,7 +21,6 @@ async function handleMentionMessage(message, client) {
     const hasEveryoneOrRoleMention = message.mentions.everyone || message.mentions.roles.size > 0;
 
     if (!hasEveryoneOrRoleMention) {
-      // Start typing interval - runs every 5 seconds to keep "typing" indicator visible
       const typingInterval = setInterval(() => message.channel.sendTyping().catch(() => { }), 5000);
       message.channel.sendTyping().catch(() => { });
 
