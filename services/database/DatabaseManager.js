@@ -194,7 +194,7 @@ class DatabaseManager {
       COLLECTIONS.CONVERSATIONS,
       COLLECTIONS.CONVERSATION_META,
       COLLECTIONS.MOD_SETTINGS,
-      'image_blacklist', // legacy — cleanup if still exists in MongoDB
+      'image_blacklist',
       'monitor_settings',
       'monitor_logs'
     ];
