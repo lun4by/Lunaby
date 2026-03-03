@@ -1,5 +1,6 @@
-const mongoClient = require('./database/mongoClient.js');
 const logger = require('../utils/logger.js');
+const QuotaDB = require('./database/QuotaDB.js');
+const UserProfileDB = require('./database/UserProfileDB.js');
 
 const VALID_ROLES = ['owner', 'admin', 'helper', 'user'];
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
@@ -11,18 +12,14 @@ class QuotaService {
     this.ownerId = process.env.OWNER_ID?.trim() || null;
   }
 
-  async getMessageCollection() {
-    return mongoClient.getDb().collection('user_quotas');
-  }
-
   async getProfileCollection() {
+    const mongoClient = require('./database/mongoClient.js');
     return mongoClient.getDb().collection('user_profiles');
   }
 
   async initializeUserMessageData(userId) {
     try {
-      const collection = await this.getMessageCollection();
-      const existing = await collection.findOne({ userId });
+      const existing = await QuotaDB.getUserQuota(userId);
       if (existing) return existing;
 
       const profileCollection = await this.getProfileCollection();
@@ -35,14 +32,10 @@ class QuotaService {
       }
 
       const now = Date.now();
-      const messageData = {
-        userId, role,
-        messageUsage: { current: 0, total: 0 },
-        limits: { period: this.roleLimits[role] },
-        periodStart: now, createdAt: now, updatedAt: now
-      };
+      const limitPeriod = this.roleLimits[role] || 600;
 
-      await collection.insertOne(messageData);
+      // Ensure creation in MariaDB
+      await QuotaDB.createUserQuota(userId, role, limitPeriod, now);
 
       if (role !== 'user') {
         await profileCollection.updateOne(
@@ -52,7 +45,7 @@ class QuotaService {
         );
       }
 
-      return messageData;
+      return await QuotaDB.getUserQuota(userId);
     } catch (error) {
       logger.error('QUOTA_SERVICE', `Lỗi khi khởi tạo quota cho ${userId}:`, error);
       throw error;
@@ -61,15 +54,14 @@ class QuotaService {
 
   async getUserMessageData(userId) {
     try {
-      const collection = await this.getMessageCollection();
-      let messageData = await collection.findOne({ userId });
+      let messageData = await QuotaDB.getUserQuota(userId);
 
       if (!messageData) {
         return await this.initializeUserMessageData(userId);
       }
 
       await this.checkAndResetLimits(userId);
-      return await collection.findOne({ userId });
+      return await QuotaDB.getUserQuota(userId);
     } catch (error) {
       logger.error('QUOTA_SERVICE', `Lỗi khi lấy quota cho ${userId}:`, error);
       throw error;
@@ -78,18 +70,14 @@ class QuotaService {
 
   async checkAndResetLimits(userId) {
     try {
-      const collection = await this.getMessageCollection();
-      const messageData = await collection.findOne({ userId });
+      const messageData = await QuotaDB.getUserQuota(userId);
       if (!messageData) return;
 
       const now = Date.now();
       const periodStart = messageData.periodStart || messageData.createdAt;
 
       if (now - periodStart > PERIOD_MS) {
-        await collection.updateOne(
-          { userId },
-          { $set: { 'messageUsage.current': 0, periodStart: now, updatedAt: now } }
-        );
+        await QuotaDB.resetCurrentUsage(userId, now);
       }
     } catch (error) {
       logger.error('QUOTA_SERVICE', `Lỗi khi reset quota cho ${userId}:`, error);
@@ -125,15 +113,7 @@ class QuotaService {
 
   async recordMessageUsage(userId, messagesUsed = 1) {
     try {
-      const collection = await this.getMessageCollection();
-      await collection.updateOne(
-        { userId },
-        {
-          $inc: { 'messageUsage.current': messagesUsed, 'messageUsage.total': messagesUsed },
-          $set: { updatedAt: Date.now() }
-        },
-        { upsert: true }
-      );
+      await QuotaDB.recordUsage(userId, messagesUsed, Date.now());
       return true;
     } catch (error) {
       logger.error('QUOTA_SERVICE', `Lỗi khi ghi nhận usage cho ${userId}:`, error);
