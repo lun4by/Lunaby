@@ -1,11 +1,11 @@
 const fs = require("fs");
-const logger = require("../utils/logger.js");
+const path = require("path");
 const storageDB = require("./storagedb.js");
 const AICore = require("./AICore.js");
 
-class ImageService {
-  constructor() {}
+const TEMP_DIR = path.join(process.cwd(), "temp");
 
+class ImageService {
   async generateImage(prompt, options = {}) {
     const blacklistCheck = await storageDB.checkImageBlacklist(prompt);
     if (blacklistCheck.isBlocked) {
@@ -24,10 +24,8 @@ class ImageService {
       throw new Error("Không nhận được hình ảnh từ API");
     }
 
-    const outputPath = `./temp/generated_image_${Date.now()}.png`;
-    if (!fs.existsSync("./temp")) {
-      fs.mkdirSync("./temp", { recursive: true });
-    }
+    fs.mkdirSync(TEMP_DIR, { recursive: true });
+    const outputPath = path.join(TEMP_DIR, `generated_image_${Date.now()}.png`);
     fs.writeFileSync(outputPath, result.buffer);
 
     return {
