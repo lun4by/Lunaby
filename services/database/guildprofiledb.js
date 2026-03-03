@@ -1,4 +1,4 @@
-const MariaModDB = require('./database/MariaModDB');
+const MariaModDB = require('./MariaModDB');
 
 const DEFAULT_GUILD_SETTINGS = {
     _id: null,
