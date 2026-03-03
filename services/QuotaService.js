@@ -129,18 +129,12 @@ class QuotaService {
     try {
       if (!VALID_ROLES.includes(role)) throw new Error(`Vai trò không hợp lệ: ${role}`);
 
-      const [collection, profileCollection] = await Promise.all([
-        this.getMessageCollection(),
-        this.getProfileCollection()
-      ]);
-
+      const profileCollection = await this.getProfileCollection();
       const now = Date.now();
+      const limitPeriod = this.roleLimits[role] || 600;
+
       await Promise.all([
-        collection.updateOne(
-          { userId },
-          { $set: { role, 'limits.period': this.roleLimits[role], updatedAt: now } },
-          { upsert: true }
-        ),
+        QuotaDB.updateUserRole(userId, role, limitPeriod, now),
         profileCollection.updateOne(
           { _id: userId },
           { $set: { 'data.role': role } },
@@ -191,12 +185,7 @@ class QuotaService {
 
   async resetUserQuota(userId) {
     try {
-      const collection = await this.getMessageCollection();
-      const now = Date.now();
-      await collection.updateOne(
-        { userId },
-        { $set: { 'messageUsage.current': 0, periodStart: now, updatedAt: now } }
-      );
+      await QuotaDB.resetCurrentUsage(userId, Date.now());
       return true;
     } catch (error) {
       logger.error('QUOTA_SERVICE', `Lỗi khi reset quota cho ${userId}:`, error);
@@ -206,30 +195,33 @@ class QuotaService {
 
   async getSystemStats() {
     try {
-      const collection = await this.getMessageCollection();
-      const allUsers = await collection.find({}).toArray();
+      const allUsers = await QuotaDB.getAllUsers();
 
       const byRole = { owner: 0, admin: 0, helper: 0, user: 0 };
       let currentTotal = 0, grandTotal = 0;
 
-      for (const user of allUsers) {
-        byRole[user.role] = (byRole[user.role] || 0) + 1;
-        currentTotal += user.messageUsage?.current || 0;
-        grandTotal += user.messageUsage?.total || 0;
+      const usersData = [];
+
+      for (const row of allUsers) {
+        byRole[row.role] = (byRole[row.role] || 0) + 1;
+        currentTotal += row.current_usage || 0;
+        grandTotal += row.total_usage || 0;
+
+        usersData.push({
+          userId: row.user_id,
+          role: row.role,
+          current: row.current_usage || 0,
+          total: row.total_usage || 0
+        });
       }
 
       return {
         totalUsers: allUsers.length,
         byRole,
         totalMessagesUsed: { current: currentTotal, total: grandTotal },
-        topUsers: allUsers
-          .sort((a, b) => (b.messageUsage?.current || 0) - (a.messageUsage?.current || 0))
+        topUsers: usersData
+          .sort((a, b) => b.current - a.current)
           .slice(0, 10)
-          .map(u => ({
-            userId: u.userId, role: u.role,
-            current: u.messageUsage?.current || 0,
-            total: u.messageUsage?.total || 0
-          }))
       };
     } catch (error) {
       logger.error('QUOTA_SERVICE', 'Lỗi khi lấy thống kê hệ thống:', error);
@@ -239,18 +231,9 @@ class QuotaService {
 
   async initializeCollection() {
     try {
-      const db = mongoClient.getDb();
-      const collections = await db.listCollections({ name: 'user_quotas' }).toArray();
-      if (collections.length === 0) {
-        await db.createCollection('user_quotas');
-      }
-
-      const col = db.collection('user_quotas');
-      await col.createIndex({ userId: 1 }, { unique: true });
-      await col.createIndex({ role: 1 });
-      await col.createIndex({ 'messageUsage.total': -1 });
+      await QuotaDB.initTables();
     } catch (error) {
-      logger.error('QUOTA_SERVICE', 'Lỗi khi khởi tạo collection:', error);
+      logger.error('QUOTA_SERVICE', 'Lỗi khi khởi tạo bảng MariaDB user_quotas:', error);
       throw error;
     }
   }
