@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const mongoClient = require('../../services/mongoClient.js');
+const mongoClient = require('../../services/database/mongoClient.js');
 const logger = require('../../utils/logger.js');
 
 module.exports = {
