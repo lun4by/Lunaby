@@ -122,7 +122,7 @@ class QuotaService {
   }
 
   async recordTokenUsage(userId) {
-    return this.recordMessageUsage(userId, 1);
+    return await this.recordMessageUsage(userId, 1);
   }
 
   async setUserRole(userId, role) {
