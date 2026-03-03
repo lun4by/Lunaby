@@ -1,9 +1,9 @@
 module.exports = {
   // Chuyển số thành dạng thứ tự (1st, 2nd, 3rd, etc.)
-  ordinalize: function(number) {
+  ordinalize: function (number) {
     const j = number % 10;
     const k = number % 100;
-    
+
     if (j === 1 && k !== 11) {
       return number + "st";
     }
@@ -13,17 +13,17 @@ module.exports = {
     if (j === 3 && k !== 13) {
       return number + "rd";
     }
-    
+
     return number + "th";
   },
 
-  
-  normalizeText: function(text) {
+
+  normalizeText: function (text) {
     if (!text) return text;
 
     // Loại bỏ ký tự điều khiển và format
     text = text.normalize('NFKD');
-    
+
     // Map font đặc biệt sang ASCII
     const specialFontMap = {
       '𝒜': 'A', '𝒝': 'B', '𝒞': 'C', '𝒟': 'D', '𝒠': 'E',
@@ -78,29 +78,29 @@ module.exports = {
     return text.split('').map(char => specialFontMap[char] || char).join('');
   },
 
-  
-  formatUptime: function(uptime, includePrefix = false) {
+
+  formatUptime: function (uptime, includePrefix = false) {
     const days = Math.floor(uptime / 86400);
     const hours = Math.floor((uptime % 86400) / 3600);
     const minutes = Math.floor((uptime % 3600) / 60);
     const seconds = Math.floor(uptime % 60);
-    
+
     let uptimeString = '';
-    
+
     if (days > 0) {
       uptimeString += `${days}d `;
     }
-    
+
     if (hours > 0 || days > 0) {
       uptimeString += `${hours}h `;
     }
-    
+
     if (minutes > 0 || hours > 0 || days > 0) {
       uptimeString += `${minutes}m `;
     }
-    
+
     uptimeString += `${seconds}s`;
-    
+
     return includePrefix ? `Uptime: ${uptimeString}` : uptimeString;
   }
 };
