@@ -16,15 +16,11 @@ async function handleConsentInteraction(interaction) {
     }
   } catch (error) {
     logger.error('CONSENT_HANDLER', `Lỗi khi xử lý consent interaction cho user ${userId}:`, error);
-
-    try {
-      await interaction.followUp({
-        content: 'Có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại sau!',
-        ephemeral: true
-      });
-    } catch (followUpError) {
-      logger.error('CONSENT_HANDLER', 'Lỗi khi gửi follow-up message:', followUpError);
-    }
+    const errPayload = { content: 'Có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại sau!', ephemeral: true };
+    const respond = interaction.replied || interaction.deferred
+      ? interaction.followUp(errPayload)
+      : interaction.reply(errPayload);
+    await respond.catch(() => { });
   }
 }
 
