@@ -2,7 +2,7 @@ const storageDB = require('../services/storagedb.js');
 const logger = require('../utils/logger.js');
 
 const conversationManager = (() => {
-  
+
   const userConversations = new Map();
   const userLastActivity = new Map();
 
@@ -41,7 +41,7 @@ const conversationManager = (() => {
   // Dọn dẹp bộ nhớ định kỳ - xóa cuộc trò chuyện không hoạt động sau 30 phút
   setInterval(() => {
     const now = Date.now();
-    const inactiveThreshold = 30 * 60 * 1000;
+    const inactiveThreshold = 15 * 60 * 1000;
 
     for (const [userId, lastActive] of userLastActivity.entries()) {
       if (now - lastActive > inactiveThreshold) {
@@ -50,7 +50,7 @@ const conversationManager = (() => {
         logger.debug('CONVERSATION', `Đã xóa bộ đệm cuộc trò chuyện không hoạt động cho user ${userId}`);
       }
     }
-  }, 10 * 60 * 1000);
+  }, 5 * 60 * 1000);
 
   return {
     async loadConversationHistory(userId, systemPrompt, modelName) {

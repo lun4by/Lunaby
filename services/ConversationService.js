@@ -241,7 +241,6 @@ class ConversationService {
 
   async loadAndPrepareHistory(userId, systemPrompt, enhancedPrompt) {
     await conversationManager.loadConversationHistory(userId, systemPrompt, DEFAULT_MODEL);
-    const conversationHistory = conversationManager.getHistory(userId);
 
     await conversationManager.addMessage(userId, "user", enhancedPrompt);
 
@@ -311,9 +310,14 @@ class ConversationService {
     const ErrorHandler = require("../utils/ErrorHandler.js");
     try {
       const systemPrompt = additionalConfig.systemPrompt || prompts.system.main;
+
+      await conversationManager.loadConversationHistory(userId, systemPrompt, DEFAULT_MODEL);
       const conversationHistory = conversationManager.getHistory(userId);
+
       const enhancedPrompt = await this.buildEnhancedPrompt(prompt, conversationHistory);
+
       const messages = await this.loadAndPrepareHistory(userId, systemPrompt, enhancedPrompt);
+
       const validMessages = this.validateAndCleanMessages(messages);
       const config = {
         model: additionalConfig.model || AICore.CoreModel,
