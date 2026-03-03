@@ -1,6 +1,6 @@
 const mariaClient = require('./mariaClient');
 const logger = require('../../utils/logger');
-const { DEFAULT_QUOTA_ROLES, PERIOD_MS } = require('../../config/constants'); // Will define constants
+const { DEFAULT_QUOTA_ROLES, PERIOD_MS } = require('../../config/constants');
 
 class QuotaDB {
     async initTables() {
