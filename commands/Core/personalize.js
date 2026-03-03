@@ -14,8 +14,7 @@ const MemoryService = require('../../services/MemoryService.js');
 const logger = require('../../utils/logger.js');
 
 const MENU_OPTIONS = [
-    { value: 'occupation', label: 'Your occupation', description: 'Nhập nghề nghiệp của bạn', emoji: '✏️' },
-    { value: 'instructions', label: 'Custom instructions', description: 'Tùy chỉnh cách Lunaby phản hồi bạn', emoji: '📝' },
+    { value: 'personal_info', label: 'Personal info & Instructions', description: 'Nghề nghiệp & hướng dẫn tùy chỉnh', emoji: '✏️' },
     { value: 'toggle_search', label: 'Reference search history', description: 'Bật/tắt tham chiếu lịch sử tìm kiếm', emoji: '🔍' },
     { value: 'toggle_memory', label: 'Reference saved memories', description: 'Bật/tắt lưu trữ và sử dụng trí nhớ', emoji: '🧠' },
     { value: 'manage', label: 'Manage your saved memories', description: 'Xem trí nhớ Lunaby đã lưu về bạn', emoji: '📋' },
@@ -134,10 +133,8 @@ async function handleMenuSelection(i, userId, interaction) {
     const selected = i.values[0];
 
     switch (selected) {
-        case 'occupation':
-            return showOccupationModal(i, userId);
-        case 'instructions':
-            return showInstructionsModal(i, userId);
+        case 'personal_info':
+            return showPersonalInfoModal(i, userId);
         case 'toggle_search':
             return handleToggleSearch(i, userId, interaction);
         case 'toggle_memory':
@@ -149,83 +146,53 @@ async function handleMenuSelection(i, userId, interaction) {
     }
 }
 
-async function showOccupationModal(i, userId) {
+async function showPersonalInfoModal(i, userId) {
     const memory = await MemoryService.getUserMemory(userId);
     const currentOccupation = memory?.personalInfo?.occupation || '';
+    const currentInstructions = memory?.personalInfo?.customInstructions || '';
 
     const modal = new ModalBuilder()
-        .setCustomId(`personalize_occupation_${userId}`)
-        .setTitle('Your occupation');
+        .setCustomId(`personalize_personal_info_${userId}`)
+        .setTitle('Personal info & Instructions');
 
-    const input = new TextInputBuilder()
+    const occupationInput = new TextInputBuilder()
         .setCustomId('occupation_input')
-        .setLabel('Nghề nghiệp')
+        .setLabel('✏️ Nghề nghiệp')
         .setPlaceholder('Engineer, student, designer...')
         .setStyle(TextInputStyle.Short)
         .setMaxLength(100)
         .setRequired(false);
 
-    if (currentOccupation) input.setValue(currentOccupation);
-
-    modal.addComponents(new ActionRowBuilder().addComponents(input));
-    await i.showModal(modal);
-
-    try {
-        const modalInteraction = await i.awaitModalSubmit({
-            filter: (mi) => mi.customId === `personalize_occupation_${userId}` && mi.user.id === i.user.id,
-            time: 120000,
-        });
-
-        const value = modalInteraction.fields.getTextInputValue('occupation_input').trim();
-
-        if (value) {
-            await MemoryService.updateUserMemory(userId, { 'personalInfo.occupation': value });
-        } else {
-            await MemoryService.updateUserMemory(userId, { 'personalInfo.occupation': null });
-        }
-
-        const updatedMemory = await MemoryService.getUserMemory(userId);
-        await modalInteraction.update({
-            embeds: [buildMainEmbed(updatedMemory)],
-            components: [buildSelectMenuRow()],
-        });
-    } catch { }
-}
-
-async function showInstructionsModal(i, userId) {
-    const memory = await MemoryService.getUserMemory(userId);
-    const currentInstructions = memory?.personalInfo?.customInstructions || '';
-
-    const modal = new ModalBuilder()
-        .setCustomId(`personalize_instructions_${userId}`)
-        .setTitle('Custom instructions');
-
-    const input = new TextInputBuilder()
+    const instructionsInput = new TextInputBuilder()
         .setCustomId('instructions_input')
-        .setLabel('Hướng dẫn tùy chỉnh')
+        .setLabel('📝 Hướng dẫn tùy chỉnh')
         .setPlaceholder('Sở thích, phong cách trả lời mong muốn...')
         .setStyle(TextInputStyle.Paragraph)
         .setMaxLength(500)
         .setRequired(false);
 
-    if (currentInstructions) input.setValue(currentInstructions);
+    if (currentOccupation) occupationInput.setValue(currentOccupation);
+    if (currentInstructions) instructionsInput.setValue(currentInstructions);
 
-    modal.addComponents(new ActionRowBuilder().addComponents(input));
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(occupationInput),
+        new ActionRowBuilder().addComponents(instructionsInput),
+    );
     await i.showModal(modal);
 
     try {
         const modalInteraction = await i.awaitModalSubmit({
-            filter: (mi) => mi.customId === `personalize_instructions_${userId}` && mi.user.id === i.user.id,
+            filter: (mi) => mi.customId === `personalize_personal_info_${userId}` && mi.user.id === i.user.id,
             time: 120000,
         });
 
-        const value = modalInteraction.fields.getTextInputValue('instructions_input').trim();
+        const occupation = modalInteraction.fields.getTextInputValue('occupation_input').trim();
+        const instructions = modalInteraction.fields.getTextInputValue('instructions_input').trim();
 
-        if (value) {
-            await MemoryService.updateUserMemory(userId, { 'personalInfo.customInstructions': value });
-        } else {
-            await MemoryService.updateUserMemory(userId, { 'personalInfo.customInstructions': null });
-        }
+        await MemoryService.updateUserMemory(userId, {
+            'personalInfo.occupation': occupation || null,
+            'personalInfo.customInstructions': instructions || null,
+        });
 
         const updatedMemory = await MemoryService.getUserMemory(userId);
         await modalInteraction.update({
