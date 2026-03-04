@@ -11,7 +11,8 @@ function check(userId, commandName, cooldownSeconds = DEFAULT_COOLDOWN) {
 
     if (expiresAt && Date.now() < expiresAt) {
         const remaining = Math.ceil((expiresAt - Date.now()) / 1000);
-        return { onCooldown: true, remaining };
+        const expiresAtUnix = Math.ceil(expiresAt / 1000);
+        return { onCooldown: true, remaining, expiresAtUnix };
     }
 
     return { onCooldown: false, remaining: 0 };

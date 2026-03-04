@@ -105,10 +105,10 @@ const handleCommand = async (interaction, client) => {
 
     if (!isPrivileged) {
       const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
-      const { onCooldown, remaining } = CooldownService.check(interaction.user.id, interaction.commandName, cooldownTime);
+      const { onCooldown, expiresAtUnix } = CooldownService.check(interaction.user.id, interaction.commandName, cooldownTime);
       if (onCooldown) {
         return interaction.reply({
-          content: `Bạn phải chờ **${remaining}** giây nữa mới được xài lệnh tiếp!`,
+          content: `Bạn phải chờ <t:${expiresAtUnix}:R> mới được xài lệnh tiếp!`,
           ephemeral: true,
         });
       }
