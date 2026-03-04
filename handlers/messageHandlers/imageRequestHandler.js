@@ -31,13 +31,7 @@ async function handleImageRequest(message, content, requestMatch) {
 
         const attachment = new AttachmentBuilder(imageResult.localPath, { name: 'lunaby_art.png' });
 
-        const embed = createLunabyEmbed()
-            .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() })
-            .setDescription(`**Yêu cầu:** ${userPrompt}`)
-            .setImage('attachment://lunaby_art.png')
-            .setColor(0xA020F0);
-
-        await message.reply({ embeds: [embed], files: [attachment] });
+        await message.reply({ content: `✨ Đây là tác phẩm Lunaby vẽ cho bạn nè`, files: [attachment] });
         waitMsg.delete().catch(() => { });
 
         await conversationManager.addMessage(userId, 'user', `[Yêu cầu vẽ ảnh]: ${userPrompt}`);
@@ -48,9 +42,9 @@ async function handleImageRequest(message, content, requestMatch) {
     } catch (error) {
         logger.error('IMAGE', 'Error processing image generation:', error);
 
-        let errorText = "Xin lỗi, mình gặp lỗi khi đang vẽ tranh. Vui lòng thử lại sau nhé!";
+        let errorText = "Aaa! Lunaby lỡ tay làm hỏng mất rồi, bạn thử yêu cầu lại được hong";
         if (error.message.includes('Nội dung không phù hợp') || error.message.includes('blacklist')) {
-            errorText = "Yêu cầu của bạn vi phạm tiêu chuẩn an toàn (chứa từ khóa nhạy cảm). Mình không thể vẽ được.";
+            errorText = "Yêu cầu của bạn vi phạm tiêu chuẩn an toàn. Mình không thể vẽ cho bạn được.";
         }
 
         ErrorHandler.logError('IMAGE', 'Image Generation failed', error, 'warn');
