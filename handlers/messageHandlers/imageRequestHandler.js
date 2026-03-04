@@ -22,10 +22,10 @@ async function handleImageRequest(message, content, requestMatch) {
         const userPrompt = requestMatch && requestMatch[1] ? requestMatch[1].trim() : content;
 
         if (!userPrompt || userPrompt.length < 2) {
-            return message.reply("Bạn muốn mình vẽ gì nào? Hãy diễn tả thật chi tiết nhé!");
+            return message.reply("Bạn muốn mình vẽ gì nào? Hãy diễn tả thật chi tiết chút coi!");
         }
 
-        const waitMsg = await message.reply("✨ Đang lấy bút giấy ra vẽ... Khoảng 5-10 giây nhé!");
+        const waitMsg = await message.reply("✨ Chờ xíu nhaa, Lunaby đang đang vẽ cho bạn nà...");
 
         const imageResult = await ImageService.generateImage(userPrompt);
 
@@ -33,8 +33,7 @@ async function handleImageRequest(message, content, requestMatch) {
 
         const embed = createLunabyEmbed()
             .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() })
-            .setTitle('Tác phẩm đã hoàn thành!')
-            .setDescription(`**Yêu cầu:** ${userPrompt}\n*Prompt tối ưu:* _${imageResult.revisedPrompt}_`)
+            .setDescription(`**Yêu cầu:** ${userPrompt}`)
             .setImage('attachment://lunaby_art.png')
             .setColor(0xA020F0);
 
