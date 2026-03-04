@@ -28,6 +28,7 @@ module.exports = {
                 .setDescription('Reset prefix về mặc định')),
 
     prefix: { name: 'prefix', aliases: ['px'], description: 'Quản lý prefix' },
+    cooldown: 10,
 
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();

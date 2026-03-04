@@ -6,11 +6,8 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('quota')
         .setDescription('Kiểm tra số lượt trò chuyện với AI còn lại của bạn'),
-    prefix: {
-        name: 'quota',
-        aliases: ['limit', 'usage'],
-        description: 'Kiểm tra giới hạn sử dụng AI'
-    },
+    prefix: { name: 'quota', aliases: ['limit', 'usage'], description: 'Kiểm tra giới hạn sử dụng AI' },
+    cooldown: 5,
 
     async execute(interaction) {
         if (!interaction.isCommand || !interaction.isCommand()) {

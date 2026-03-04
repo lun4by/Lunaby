@@ -5,6 +5,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('lunaby')
     .setDescription('Giới thiệu về VTuber Lunaby'),
+  cooldown: 30,
 
   async execute(interaction) {
     const embed = createLunabyEmbed()

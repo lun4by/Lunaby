@@ -14,6 +14,7 @@ module.exports = {
 		.setName('about')
 		.setDescription('Hiển thị thông tin chi tiết về Lunaby bot'),
 	prefix: { name: 'about', aliases: ['info', 'botinfo'], description: 'Thông tin bot' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		const data = buildContextData(interaction);

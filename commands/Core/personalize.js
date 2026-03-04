@@ -26,6 +26,7 @@ module.exports = {
         .setName('personalize')
         .setDescription('Tùy chỉnh trải nghiệm AI của bạn'),
     prefix: { name: 'personalize', aliases: ['ps', 'canhan'], description: 'Tùy chỉnh AI' },
+    cooldown: 5,
 
     async execute(interaction) {
         const userId = interaction.guildId

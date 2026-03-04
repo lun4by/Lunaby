@@ -15,6 +15,7 @@ module.exports = {
 		.setName('help')
 		.setDescription('Hiển thị danh sách lệnh và thông tin trợ giúp'),
 	prefix: { name: 'help', aliases: ['h', 'commands'], description: 'Trợ giúp' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		const isOwner = interaction.user.id === process.env.OWNER_ID;
