@@ -1,7 +1,5 @@
 const logger = require('../../utils/logger');
 const { DISCORD_MESSAGE_MAX_LENGTH } = require('../../config/constants');
-const QuotaService = require('../../services/QuotaService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 function splitMessageIntoChunks(text, maxLength = DISCORD_MESSAGE_MAX_LENGTH) {
   const chunks = [];
