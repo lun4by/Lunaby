@@ -36,7 +36,7 @@ module.exports = {
 			.addOptions(buildSelectOptions(visibleCategories));
 
 		const row = new ActionRowBuilder().addComponents(select);
-		const banner = 'https://raw.githubusercontent.com/lun4by/Lunaby/refs/heads/main/assets/Lunaby_Banner.jpg';
+		const banner = 'https://raw.githubusercontent.com/lun4by/Lunaby/refs/heads/main/assets/Lunaby_Help.jpg';
 
 		const welcomeEmbed = new EmbedBuilder()
 			.setColor(0x9B59B6)
