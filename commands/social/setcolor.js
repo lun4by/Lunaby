@@ -10,6 +10,8 @@ module.exports = {
       option.setName('color')
         .setDescription('Mã màu hex (ví dụ: #FF0000) hoặc "default" để reset')
         .setRequired(true)),
+  prefix: { name: 'setcolor', aliases: ['sc'], description: 'Đặt màu profile card' },
+  cooldown: 5,
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });

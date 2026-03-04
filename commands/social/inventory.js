@@ -7,6 +7,8 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('inventory')
     .setDescription('Xem các items trong inventory của bạn'),
+  prefix: { name: 'inventory', aliases: ['inv'], description: 'Xem inventory' },
+  cooldown: 5,
 
   async execute(interaction) {
     return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });

@@ -12,6 +12,8 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Hiển thị bảng xếp hạng XP của server'),
+  prefix: { name: 'leaderboard', aliases: ['lb'], description: 'Xem bảng xếp hạng' },
+  cooldown: 5,
 
   async execute(interaction) {
     return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });

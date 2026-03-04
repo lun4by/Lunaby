@@ -12,6 +12,8 @@ module.exports = {
       option.setName('user')
         .setDescription('Người dùng mà bạn muốn xem profile')
         .setRequired(false)),
+  prefix: { name: 'profile', aliases: ['p'], description: 'Xem profile' },
+  cooldown: 5,
 
   async execute(interaction) {
     await interaction.deferReply();

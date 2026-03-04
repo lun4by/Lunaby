@@ -17,6 +17,8 @@ module.exports = {
           { name: 'Hat (Mũ)', value: 'hat' },
           { name: 'Wreath (Vòng nguyệt quế)', value: 'wreath' }
         )),
+  prefix: { name: 'unequip', aliases: ['ue'], description: 'Gỡ bỏ item' },
+  cooldown: 5,
 
   async execute(interaction) {
     return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });

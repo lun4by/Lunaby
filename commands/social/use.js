@@ -10,6 +10,8 @@ module.exports = {
       option.setName('id')
         .setDescription('ID của item cần trang bị')
         .setRequired(true)),
+  prefix: { name: 'use', aliases: ['u'], description: 'Trang bị item' },
+  cooldown: 5,
 
   async execute(interaction) {
     return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });

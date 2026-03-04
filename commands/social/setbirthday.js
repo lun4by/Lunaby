@@ -10,6 +10,8 @@ module.exports = {
       option.setName('date')
         .setDescription('Ngày sinh theo định dạng DD-MM (ví dụ: 02-12)')
         .setRequired(true)),
+  prefix: { name: 'setbirthday', aliases: ['sbirthday'], description: 'Đặt ngày sinh' },
+  cooldown: 5,
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });

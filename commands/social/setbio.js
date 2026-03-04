@@ -11,6 +11,8 @@ module.exports = {
         .setDescription('Nội dung bio (tối đa 200 ký tự)')
         .setRequired(true)
         .setMaxLength(200)),
+  prefix: { name: 'setbio', aliases: ['sb'], description: 'Đặt bio' },
+  cooldown: 5,
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });

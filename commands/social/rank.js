@@ -15,6 +15,8 @@ module.exports = {
         .setDescription('Người dùng cần xem rank')
         .setRequired(false)
     ),
+  prefix: { name: 'rank', aliases: ['r'], description: 'Xem rank' },
+  cooldown: 5,
 
   async execute(interaction) {
     return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
