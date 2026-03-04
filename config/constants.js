@@ -23,12 +23,13 @@ module.exports = {
   USER_ROLES: {
     OWNER: 'owner',
     ADMIN: 'admin',
-    HELPER: 'helper',
+    PRO: 'pro',
     USER: 'user'
   },
   ROLE_LIMITS: {
     owner: -1,
     admin: -1,
+    pro: 100,
     user: 10
   },
   DEFAULT_USER_ID: 'anonymous-user',

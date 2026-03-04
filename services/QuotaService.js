@@ -152,7 +152,7 @@ class QuotaService {
     try {
       const allUsers = await QuotaDB.getAllUsers();
 
-      const byRole = { owner: 0, admin: 0, helper: 0, user: 0 };
+      const byRole = { owner: 0, admin: 0, pro: 0, user: 0 };
       let currentTotal = 0, grandTotal = 0;
 
       const usersData = [];

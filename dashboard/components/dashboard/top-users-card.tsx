@@ -13,7 +13,7 @@ type TopUsersCardProps = {
 const ROLE_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "success" | "warning" }> = {
   owner: { label: "Owner", variant: "success" },
   admin: { label: "Admin", variant: "default" },
-  helper: { label: "Helper", variant: "secondary" },
+  pro: { label: "Pro", variant: "secondary" },
   user: { label: "User", variant: "outline" }
 };
 

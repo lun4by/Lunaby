@@ -7,7 +7,7 @@ class RoleDB {
             await mariaClient.query(`
         CREATE TABLE IF NOT EXISTS user_roles (
           user_id VARCHAR(32) PRIMARY KEY,
-          role ENUM('owner', 'admin', 'helper', 'user') DEFAULT 'user',
+          role ENUM('owner', 'admin', 'pro', 'user') DEFAULT 'user',
           created_at BIGINT,
           updated_at BIGINT,
           INDEX idx_role (role)

@@ -24,7 +24,7 @@ module.exports = {
 
     prefix: {
         name: 'giveadmin',
-        aliases: ['giverole', 'admin', 'setrole'],
+        aliases: ['giverole'],
         description: 'Thay đổi quyền người dùng',
         adminOnly: false
     },
