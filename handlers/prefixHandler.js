@@ -4,6 +4,7 @@ const { handlePermissionError } = require('../utils/permissionUtils');
 const MariaModDB = require('../services/database/MariaModDB');
 const QuotaService = require('../services/QuotaService');
 const RoleService = require('../services/RoleService');
+const CooldownService = require('../services/CooldownService');
 const logger = require('../utils/logger');
 
 class PseudoInteraction {
@@ -158,8 +159,24 @@ async function handlePrefixMessage(message, client) {
             }
         }
 
+        const userRole = await RoleService.getUserRole(message.author.id);
+        if (userRole !== 'owner' && userRole !== 'admin') {
+            const cmdName = command.data?.name || commandName;
+            const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
+            const { onCooldown, remaining } = CooldownService.check(message.author.id, cmdName, cooldownTime);
+            if (onCooldown) {
+                await message.reply(`Bạn phải chờ **${remaining}** giây nữa mới được xài lệnh tiếp!`);
+                return true;
+            }
+        }
+
         const interaction = new PseudoInteraction(message, commandName, args);
         await command.execute(interaction);
+
+        const cmdName = command.data?.name || commandName;
+        const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
+        CooldownService.set(message.author.id, cmdName, cooldownTime);
+
         logger.info('PREFIX', `${message.author.tag} used ${prefix}${commandName}`);
     } catch (error) {
         logger.error('PREFIX', `Error executing prefix command ${commandName}:`, error);

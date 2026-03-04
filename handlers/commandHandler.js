@@ -5,6 +5,7 @@ const { handlePermissionError } = require('../utils/permissionUtils');
 const MariaModDB = require('../services/database/MariaModDB');
 const QuotaService = require('../services/QuotaService');
 const RoleService = require('../services/RoleService');
+const CooldownService = require('../services/CooldownService');
 const logger = require('../utils/logger.js');
 
 let commandsJsonCache = null;
@@ -93,10 +94,23 @@ const handleCommand = async (interaction, client) => {
       }
     }
 
+    const userRole = await RoleService.getUserRole(interaction.user.id);
+    const isPrivileged = userRole === 'owner' || userRole === 'admin';
+
     if (command.prefix?.adminOnly || (command.data && command.data.default_member_permissions !== undefined)) {
-      const userRole = await RoleService.getUserRole(interaction.user.id);
-      if (userRole !== 'owner' && userRole !== 'admin') {
+      if (!isPrivileged) {
         return interaction.reply({ content: 'Bạn không có quyền sử dụng lệnh này.', ephemeral: true });
+      }
+    }
+
+    if (!isPrivileged) {
+      const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
+      const { onCooldown, remaining } = CooldownService.check(interaction.user.id, interaction.commandName, cooldownTime);
+      if (onCooldown) {
+        return interaction.reply({
+          content: `Bạn phải chờ **${remaining}** giây nữa mới được xài lệnh tiếp!`,
+          ephemeral: true,
+        });
       }
     }
 
@@ -119,6 +133,11 @@ const handleCommand = async (interaction, client) => {
     }
 
     await command.execute(interaction);
+
+    // Set cooldown sau khi execute thành công
+    const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
+    CooldownService.set(interaction.user.id, interaction.commandName, cooldownTime);
+
     logger.info('COMMAND', `Người dùng ${interaction.user.tag} đã sử dụng lệnh /${interaction.commandName}`);
   } catch (error) {
     logger.error('COMMAND', `Lỗi khi thực thi lệnh ${interaction.commandName}:`, error);
