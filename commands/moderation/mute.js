@@ -25,6 +25,8 @@ module.exports = {
         .setDescription('Lý do mute')
         .setRequired(false))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+  prefix: { name: 'mute', aliases: ['cấm'], description: 'Cấm người dùng' },
+  cooldown: 5,
 
   async execute(interaction) {
     if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {

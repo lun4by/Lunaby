@@ -18,6 +18,8 @@ module.exports = {
         .setDescription('Lý do unmute')
         .setRequired(false))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+  prefix: { name: 'unmute', aliases: ['bỏ cấm'], description: 'Bỏ cấm người dùng' },
+  cooldown: 5,
 
   async execute(interaction) {
     if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {

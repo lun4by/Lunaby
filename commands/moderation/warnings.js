@@ -10,6 +10,8 @@ module.exports = {
 			option.setName('user').setDescription('Thành viên cần xem cảnh cáo').setRequired(true),
 		)
 		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+	prefix: { name: 'warnings', aliases: ['w'], description: 'Xem danh sách cảnh cáo' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {

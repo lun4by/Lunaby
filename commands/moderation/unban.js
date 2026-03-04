@@ -16,6 +16,8 @@ module.exports = {
 			option.setName('reason').setDescription('Lý do unban').setRequired(false),
 		)
 		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+	prefix: { name: 'unban', aliases: ['bỏ cấm'], description: 'Bỏ cấm người dùng' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {

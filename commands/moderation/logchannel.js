@@ -8,6 +8,8 @@ module.exports = {
 		.setName('logchannel')
 		.setDescription('Xem cài đặt kênh log hiện tại')
 		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+	prefix: { name: 'logchannel', aliases: ['lc'], description: 'Xem cài đặt kênh log' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {

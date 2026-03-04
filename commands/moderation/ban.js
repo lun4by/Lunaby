@@ -25,6 +25,8 @@ module.exports = {
 				.setRequired(false),
 		)
 		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+	prefix: { name: 'ban', aliases: ['cấm'], description: 'Cấm người dùng' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {

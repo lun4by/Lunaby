@@ -10,6 +10,8 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageChannels)
         .addStringOption(opt => opt.setName('commands').setDescription('Tên lệnh cần bật (cách nhau bằng dấu phẩy) hoặc "all"').setRequired(true))
         .addChannelOption(opt => opt.setName('channel').setDescription('Kênh (mặc định: kênh hiện tại)').addChannelTypes(ChannelType.GuildText)),
+    prefix: { name: 'enable', aliases: ['en'], description: 'Bật lệnh' },
+    cooldown: 5,
 
     async execute(interaction) {
         try {

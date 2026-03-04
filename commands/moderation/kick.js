@@ -17,6 +17,8 @@ module.exports = {
 			option.setName('reason').setDescription('Lý do đuổi').setRequired(false)
 		)
 		.setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
+	prefix: { name: 'kick', aliases: ['cấm'], description: 'Cấm người dùng' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.KickMembers)) {

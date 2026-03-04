@@ -25,6 +25,8 @@ module.exports = {
 				.setRequired(false),
 		)
 		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+	prefix: { name: 'setlogchannel', aliases: ['slc'], description: 'Thiết lập kênh log' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {

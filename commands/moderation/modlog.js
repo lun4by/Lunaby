@@ -33,6 +33,8 @@ module.exports = {
 				.setMaxValue(25),
 		)
 		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+	prefix: { name: 'modlog', aliases: ['ml'], description: 'Xem nhật ký hành động moderation' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {

@@ -22,6 +22,8 @@ module.exports = {
 			option.setName('reason').setDescription('Lý do xóa cảnh cáo').setRequired(false),
 		)
 		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+	prefix: { name: 'clearwarnings', aliases: ['cw'], description: 'Xóa cảnh cáo' },
+	cooldown: 5,
 
 	async execute(interaction) {
 		if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
