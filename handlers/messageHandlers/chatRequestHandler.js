@@ -19,7 +19,7 @@ async function handleChatRequest(message, content, ConversationService) {
     if (!quotaCheck.allowed) {
       const embed = createLunabyEmbed()
         .setTitle('Hết quyền sử dụng')
-        .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** trò chuyện AI trong chu kỳ giới hạn.\n\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
+        .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** trò chuyện AI trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
         .setColor(0xE74C3C);
       return message.reply({ embeds: [embed] }).catch(() => { });
     }
