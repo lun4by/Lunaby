@@ -56,14 +56,7 @@ async function handleMemoryRequest(message, ConversationService, memoryRequest) 
     const conversationId = ConversationService.extractUserId(message);
     const globalUserId = message.author.id;
 
-    const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
-    if (!quotaCheck.allowed) {
-      const embed = createLunabyEmbed()
-        .setTitle('Hết quyền sử dụng')
-        .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** trò chuyện AI trong chu kỳ giới hạn.\n\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
-        .setColor(0xE74C3C);
-      return message.reply({ embeds: [embed] }).catch(() => { });
-    }
+
 
     const memoryAnalysis = await ConversationService.getMemoryAnalysis(conversationId, memoryRequest);
 
@@ -76,7 +69,7 @@ async function handleMemoryRequest(message, ConversationService, memoryRequest) 
       await message.reply(memoryAnalysis);
     }
 
-    await QuotaService.recordMessageUsage(globalUserId, 1);
+
   } catch (error) {
     logger.error('MEMORY', 'Error handling memory request:', error);
     await message.reply('Xin lỗi, mình gặp lỗi khi truy cập trí nhớ của cuộc trò chuyện.').catch(() => { });
