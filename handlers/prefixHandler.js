@@ -163,9 +163,10 @@ async function handlePrefixMessage(message, client) {
         if (userRole !== 'owner' && userRole !== 'admin') {
             const cmdName = command.data?.name || commandName;
             const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
-            const { onCooldown, expiresAtUnix } = CooldownService.check(message.author.id, cmdName, cooldownTime);
+            const { onCooldown, remaining, expiresAtUnix } = CooldownService.check(message.author.id, cmdName, cooldownTime);
             if (onCooldown) {
-                await message.reply(`Bạn phải chờ <t:${expiresAtUnix}:R> mới được xài lệnh tiếp!`);
+                const msg = await message.reply(`Bạn phải chờ <t:${expiresAtUnix}:R> mới được xài lệnh tiếp!`);
+                setTimeout(() => msg.delete().catch(() => { }), remaining * 1000);
                 return true;
             }
         }
