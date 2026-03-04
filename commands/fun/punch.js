@@ -7,6 +7,8 @@ module.exports = {
         .setDescription('Đấm ai đó')
         .addUserOption(opt => opt.setName('user').setDescription('Người bạn muốn đấm').setRequired(false)),
     prefix: { name: 'punch', aliases: ['dam'], description: 'Đấm ai đó' },
+    cooldown: 5,
+
     async execute(interaction) {
         const target = interaction.options.getUser('user');
         const embed = buildActionEmbed('punch', interaction.user, target);

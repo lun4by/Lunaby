@@ -7,6 +7,8 @@ module.exports = {
         .setDescription('Hôn ai đó')
         .addUserOption(opt => opt.setName('user').setDescription('Người bạn muốn hôn').setRequired(false)),
     prefix: { name: 'kiss', aliases: ['hon'], description: 'Hôn ai đó' },
+    cooldown: 5,
+
     async execute(interaction) {
         const target = interaction.options.getUser('user');
         const embed = buildActionEmbed('kiss', interaction.user, target);
