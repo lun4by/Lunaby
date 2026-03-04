@@ -30,7 +30,7 @@ module.exports = {
     owner: -1,
     admin: -1,
     pro: 100,
-    user: 10
+    user: 1
   },
   DEFAULT_USER_ID: 'anonymous-user',
   DEFAULT_LANGUAGE: 'vi',
