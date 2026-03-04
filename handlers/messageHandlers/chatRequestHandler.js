@@ -12,9 +12,10 @@ const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 async function handleChatRequest(message, content, ConversationService) {
   try {
-    const userId = ConversationService.extractUserId(message);
+    const conversationId = ConversationService.extractUserId(message);
+    const globalUserId = message.author.id;
 
-    const quotaCheck = await QuotaService.canUseMessages(userId, 1);
+    const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
     if (!quotaCheck.allowed) {
       const embed = createLunabyEmbed()
         .setTitle('Hết quyền sử dụng')
@@ -23,8 +24,8 @@ async function handleChatRequest(message, content, ConversationService) {
       return message.reply({ embeds: [embed] }).catch(() => { });
     }
 
-    await conversationManager.loadConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
-    let messages = conversationManager.getHistory(userId);
+    await conversationManager.loadConversationHistory(conversationId, prompts.system.main, DEFAULT_MODEL);
+    let messages = conversationManager.getHistory(conversationId);
 
     const isNewConversation = messages.length <= 2;
     const enhancedPrompt = `
@@ -34,8 +35,8 @@ async function handleChatRequest(message, content, ConversationService) {
       ${content}
     `;
 
-    await conversationManager.addMessage(userId, 'user', enhancedPrompt);
-    messages = conversationManager.getHistory(userId);
+    await conversationManager.addMessage(conversationId, 'user', enhancedPrompt);
+    messages = conversationManager.getHistory(conversationId);
 
     logger.debug('CHAT', `Messages before validation: ${messages.length}`);
     const validMessages = Validators.cleanMessages(messages);
@@ -48,8 +49,8 @@ async function handleChatRequest(message, content, ConversationService) {
     const replyTarget = message.guild ? message : null;
     const response = await sendStreamingMessage(message.channel, validMessages, {}, replyTarget);
 
-    await conversationManager.addMessage(userId, 'assistant', response);
-    await QuotaService.recordMessageUsage(userId, 1);
+    await conversationManager.addMessage(conversationId, 'assistant', response);
+    await QuotaService.recordMessageUsage(globalUserId, 1);
 
   } catch (streamError) {
     ErrorHandler.logError('CHAT', 'Streaming failed, falling back to non-streaming', streamError, 'warn');
@@ -72,7 +73,7 @@ async function handleChatRequest(message, content, ConversationService) {
         await message.reply(response);
       }
 
-      await QuotaService.recordMessageUsage(userId, 1);
+      await QuotaService.recordMessageUsage(globalUserId, 1);
     } catch (fallbackError) {
       ErrorHandler.logError('CHAT', 'Both streaming and fallback failed', fallbackError);
       const userMessage = ErrorHandler.getUserFriendlyMessage(fallbackError, 'xử lý tin nhắn');

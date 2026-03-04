@@ -67,7 +67,7 @@ class QuotaService {
 
       const role = await RoleService.getUserRole(userId);
 
-      if (role === 'owner' || limits.period === -1) {
+      if (role === 'owner' || role === 'admin' || limits.period === -1) {
         return { allowed: true, remaining: -1, role, current: messageUsage.current, limit: -1 };
       }
 

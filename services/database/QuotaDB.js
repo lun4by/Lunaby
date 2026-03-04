@@ -99,7 +99,7 @@ class QuotaDB {
     async addQuotaLimit(userId, amount, now) {
         try {
             await mariaClient.query(
-                'UPDATE user_quotas SET limit_period = limit_period + ?, updated_at = ? WHERE user_id = ?',
+                'UPDATE user_quotas SET limit_period = GREATEST(0, limit_period + ?), updated_at = ? WHERE user_id = ? AND limit_period != -1',
                 [amount, now, userId]
             );
             return true;

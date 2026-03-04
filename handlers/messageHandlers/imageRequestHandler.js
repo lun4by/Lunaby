@@ -8,9 +8,10 @@ const conversationManager = require('../conversationManager');
 
 async function handleImageRequest(message, content, requestMatch) {
     try {
-        const userId = message.author.id;
+        const conversationId = conversationManager.extractUserId ? conversationManager.extractUserId(message) : (message.guildId ? `${message.guildId}-${message.author.id}` : `DM-${message.author.id}`);
+        const globalUserId = message.author.id;
 
-        const quotaCheck = await QuotaService.canUseMessages(userId, 1);
+        const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
         if (!quotaCheck.allowed) {
             const embed = createLunabyEmbed()
                 .setTitle('Hết quyền sử dụng')
@@ -34,10 +35,10 @@ async function handleImageRequest(message, content, requestMatch) {
         await message.reply({ content: `✨ Đây là tác phẩm Lunaby vẽ cho bạn nè`, files: [attachment] });
         waitMsg.delete().catch(() => { });
 
-        await conversationManager.addMessage(userId, 'user', `[Yêu cầu vẽ ảnh]: ${userPrompt}`);
-        await conversationManager.addMessage(userId, 'assistant', `[Đã gửi 1 hình ảnh] Của bạn đây! Mình đã vẽ theo yêu cầu: "${userPrompt}"`);
+        await conversationManager.addMessage(conversationId, 'user', `[Yêu cầu vẽ ảnh]: ${userPrompt}`);
+        await conversationManager.addMessage(conversationId, 'assistant', `[Đã gửi 1 hình ảnh] Của bạn đây! Mình đã vẽ theo yêu cầu: "${userPrompt}"`);
 
-        await QuotaService.recordMessageUsage(userId, 1);
+        await QuotaService.recordMessageUsage(globalUserId, 1);
 
     } catch (error) {
         logger.error('IMAGE', 'Error processing image generation:', error);
