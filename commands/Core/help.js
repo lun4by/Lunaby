@@ -36,12 +36,14 @@ module.exports = {
 			.addOptions(buildSelectOptions(visibleCategories));
 
 		const row = new ActionRowBuilder().addComponents(select);
+		const banner = 'https://raw.githubusercontent.com/lun4by/Lunaby/refs/heads/main/assets/Lunaby_Banner.jpg';
 
 		const welcomeEmbed = new EmbedBuilder()
 			.setColor(0x9B59B6)
 			.setTitle('📚 Trợ Giúp - Lunaby')
 			.setDescription('Chào mừng bạn đến với hệ thống trợ giúp!\n\n> Chọn một danh mục từ menu bên dưới để xem chi tiết các lệnh.')
-			.setFooter({ text: 'Made with ❤️ by s4ory' })
+			.setImage(banner)
+			.setFooter({ text: 'Made by s4ory' })
 			.setTimestamp();
 
 		await interaction.reply({
@@ -59,7 +61,7 @@ module.exports = {
 		collector.on('collect', async (i) => {
 			if (i.user.id !== interaction.user.id) {
 				return i.reply({
-					content: '❌ Chỉ người dùng gọi lệnh mới có thể sử dụng menu này!',
+					content: 'Chỉ người dùng gọi lệnh mới có thể sử dụng menu này!',
 					ephemeral: true,
 				});
 			}
@@ -68,7 +70,7 @@ module.exports = {
 
 			if (category === 'setting' && !isOwner) {
 				return i.reply({
-					content: '❌ Bạn không có quyền xem danh mục này!',
+					content: 'Bạn không có quyền xem danh mục này!',
 					ephemeral: true,
 				});
 			}
