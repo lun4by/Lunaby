@@ -1,7 +1,7 @@
 # Lunaby - Bot Trợ Lý AI Cho Discord
 
 <div align="center">
-  <img src="./assets/lunaby-avatar.png" alt="Ảnh đại diện bot Lunaby" width="200" height="200" style="border-radius: 50%;">
+  <img src="./assets/avatar.png" alt="Ảnh đại diện bot Lunaby" width="200" height="200" style="border-radius: 50%;">
   <br>
   <em>Trợ lý AI thông minh cho Discord của bạn</em>
 </div>
