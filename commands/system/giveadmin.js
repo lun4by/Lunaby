@@ -22,12 +22,7 @@ module.exports = {
             return opt;
         }),
 
-    prefix: {
-        name: 'giveadmin',
-        aliases: ['giverole'],
-        description: 'Thay đổi quyền người dùng',
-        adminOnly: false
-    },
+    prefix: { name: 'giveadmin', aliases: ['giverole'], description: 'Thay đổi quyền người dùng', adminOnly: false },
 
     async execute(interaction) {
         if (!interaction.isCommand || !interaction.isCommand()) {

@@ -30,6 +30,7 @@ module.exports = {
         { name: 'Database (Conversations & All Data)', value: 'database' },
         { name: 'User Profiles (XP, Level, Achievements)', value: 'users' }
       )),
+  prefix: { name: 'reset', aliases: ['r'], description: 'Reset database' },
 
   async execute(interaction) {
     if (interaction.user.id !== OWNER_ID) {

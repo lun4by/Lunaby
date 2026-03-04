@@ -33,6 +33,7 @@ module.exports = {
         ))
       .addBooleanOption(opt => opt.setName('enabled').setDescription('Bật/tắt').setRequired(true)))
     .addSubcommand(sub => sub.setName('reset').setDescription('Khôi phục cài đặt ghi log về mặc định')),
+  prefix: { name: 'logger', aliases: ['log'], description: 'Quản lý cài đặt hệ thống ghi log' },
 
   async execute(interaction) {
     if (interaction.user.id !== OWNER_ID) {

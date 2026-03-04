@@ -15,12 +15,7 @@ module.exports = {
                 .setDescription('Số lượt muốn cộng thêm (dùng số âm để trừ đi)')
                 .setRequired(true)),
 
-    prefix: {
-        name: 'addquota',
-        aliases: ['givequota', 'setquota'],
-        description: 'Thêm/bớt quota cho user',
-        adminOnly: true
-    },
+    prefix: { name: 'addquota', aliases: ['givequota', 'setquota'], description: 'Thêm/bớt quota cho user', adminOnly: true },
 
     async execute(interaction) {
         if (!interaction.isCommand || !interaction.isCommand()) {
