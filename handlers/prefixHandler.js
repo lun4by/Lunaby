@@ -3,6 +3,7 @@ const consentService = require('../services/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const MariaModDB = require('../services/database/MariaModDB');
 const QuotaService = require('../services/QuotaService');
+const RoleService = require('../services/RoleService');
 const logger = require('../utils/logger');
 
 class PseudoInteraction {
