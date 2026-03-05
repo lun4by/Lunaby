@@ -53,11 +53,10 @@ function createStatusEmbed({ ping, ws }, client) {
 	return createLunabyEmbed()
 		.setColor(color)
 		.setAuthor({
-			name: 'Lunaby AI',
+			name: 'Lunaby',
 			iconURL: client.user.displayAvatarURL(),
 		})
-		.setTitle('Trạng thái hệ thống')
-		.addFields({ name: 'Độ trễ', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false })
+		.addFields({ name: 'Trạng thái hệ thống', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false })
 		.setFooter({ text: `Lunaby v${packageJson.version} - ${formatUptime(process.uptime())}` });
 }
 
