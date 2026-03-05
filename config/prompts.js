@@ -120,6 +120,11 @@ Return JSON:
 }`,
   },
 
+  voiceGreeting: {
+    join: `Hãy tạo một lời chào ngắn gọn, vui vẻ và đáng yêu (tối đa 2 câu) cho thành viên \${memberName} vừa vào kênh voice "\${channelName}". Sử dụng emoji phù hợp. Phong cách deredere, không lặp lại cùng một pattern. Chỉ trả lời nội dung lời chào, không giải thích gì thêm.`,
+    leave: `Hãy tạo một lời tạm biệt ngắn gọn, dễ thương (tối đa 2 câu) cho thành viên \${memberName} vừa rời kênh voice "\${channelName}". Sử dụng emoji phù hợp. Phong cách deredere, không lặp lại cùng một pattern. Chỉ trả lời nội dung lời tạm biệt, không giải thích gì thêm.`,
+  },
+
   moderation: {
     warning: `Create a serious but not overly harsh warning message for member \${username} with reason: "\${reason}". This is their \${warningCount} warning. The message should have the tone of a fair but serious moderator, no more than 3 sentences.`,
     unmute: `Create a brief, positive message about unmuting member \${username} with reason: "\${reason}". The message should have a friendly moderator tone, no more than 2 sentences.`,

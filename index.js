@@ -6,12 +6,13 @@ const {
 	GatewayIntentBits,
 	Partials,
 	Collection,
-	} = require("discord.js");
+} = require("discord.js");
 const { loadCommands } = require("./handlers/commandHandler");
 const { startbot } = require("./events/ready");
 const { setupGuildEvents } = require("./events/guildEvents");
 const { setupInteractionCreateEvent } = require("./events/interactionCreate");
 const { setupMessageCreateEvent } = require("./events/messageCreate");
+const { setupVoiceStateEvent } = require("./events/voiceStateUpdate");
 const logger = require("./utils/logger.js");
 
 const client = new Client({
@@ -22,8 +23,9 @@ const client = new Client({
 		GatewayIntentBits.DirectMessages,
 		GatewayIntentBits.GuildMembers,
 		GatewayIntentBits.GuildMessageReactions,
+		GatewayIntentBits.GuildVoiceStates,
 	],
-	partials: [Partials.Channel, Partials.Message, Partials.Reaction], 
+	partials: [Partials.Channel, Partials.Message, Partials.Reaction],
 });
 
 client.commands = new Collection();
@@ -32,6 +34,7 @@ client.features = ["EXPERIENCE_POINTS"];
 setupGuildEvents(client);
 setupInteractionCreateEvent(client);
 setupMessageCreateEvent(client);
+setupVoiceStateEvent(client);
 
 startbot(client, () => loadCommands(client));
 

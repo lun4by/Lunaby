@@ -59,6 +59,7 @@ class MariaModDB {
           suggest_channel VARCHAR(32),
           level_up_notifications BOOLEAN DEFAULT TRUE,
           use_embeds BOOLEAN DEFAULT TRUE,
+          voice_toggle_enabled BOOLEAN DEFAULT FALSE,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
@@ -77,6 +78,12 @@ class MariaModDB {
       `);
 
             logger.info('MARIADB', 'All tables ready');
+
+            try {
+                await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS voice_toggle_enabled BOOLEAN DEFAULT FALSE`);
+            } catch (e) {
+            }
+
             return true;
         } catch (error) {
             logger.error('MARIADB', 'Error creating tables:', error);
@@ -269,6 +276,7 @@ class MariaModDB {
                     welcome: { isEnabled: !!r.welcome_enabled, channel: r.welcome_channel, message: r.welcome_message },
                     leaving: { isEnabled: !!r.leaving_enabled, channel: r.leaving_channel, message: r.leaving_message },
                 },
+                voiceToggle: { isEnabled: !!r.voice_toggle_enabled },
                 roles: { muted: r.muted_role },
                 channels: { suggest: r.suggest_channel },
                 settings: { levelUpNotifications: !!r.level_up_notifications, useEmbeds: !!r.use_embeds },
@@ -288,6 +296,7 @@ class MariaModDB {
                 welcome: { isEnabled: false, channel: null, message: null },
                 leaving: { isEnabled: false, channel: null, message: null },
             },
+            voiceToggle: { isEnabled: false },
             roles: { muted: null },
             channels: { suggest: null },
             settings: { levelUpNotifications: true, useEmbeds: true },
@@ -308,6 +317,7 @@ class MariaModDB {
                 'greeter.leaving.isEnabled': 'leaving_enabled',
                 'greeter.leaving.channel': 'leaving_channel',
                 'greeter.leaving.message': 'leaving_message',
+                'voiceToggle.isEnabled': 'voice_toggle_enabled',
                 'roles.muted': 'muted_role',
                 'channels.suggest': 'suggest_channel',
             };
