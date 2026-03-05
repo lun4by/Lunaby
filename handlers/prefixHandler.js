@@ -66,8 +66,11 @@ class PseudoInteraction {
                 const val = self._options.get(name);
                 return val ? parseInt(val) : null;
             },
+            getSubcommandGroup() {
+                return self.args.length >= 2 ? self.args[0] : null;
+            },
             getSubcommand() {
-                return self.args[0] || null;
+                return self.args.length >= 2 ? self.args[1] : (self.args[0] || null);
             }
         };
     }
