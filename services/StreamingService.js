@@ -37,46 +37,64 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
     let sentMessage = null;
     let lastUpdate = Date.now();
     let lastSentLength = 0;
-    let pendingSend = null;
+    let isEditing = false;
+    let pendingAccumulated = null;
+
+    const processDisplayQueue = async () => {
+        if (isEditing) return;
+        isEditing = true;
+
+        while (pendingAccumulated !== null) {
+            const currentAccum = pendingAccumulated;
+            pendingAccumulated = null;
+
+            const textToUpdate = currentAccum.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
+
+            try {
+                if (!sentMessage) {
+                    sentMessage = replyToMessage
+                        ? await replyToMessage.reply(textToUpdate)
+                        : await channel.send(textToUpdate);
+                } else if (currentAccum.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+                    await sentMessage.edit(textToUpdate);
+                }
+                lastUpdate = Date.now();
+                lastSentLength = currentAccum.length;
+            } catch (e) {
+                if (e.code === 10008) sentMessage = null;
+            }
+
+            // Khoảng nghỉ nhỏ để tránh bị discord.js throttle gắt khi edit liên tục
+            await new Promise(r => setTimeout(r, 150));
+        }
+
+        isEditing = false;
+    };
 
     const typingInterval = setInterval(() => channel.sendTyping().catch(() => { }), 5000);
 
     try {
         const fullContent = await stream.process({
             onContent: async (chunk, accumulated) => {
-                if (pendingSend) return;
-
                 const now = Date.now();
                 const delta = accumulated.length - lastSentLength;
+
+                // Cập nhật khi thoả mãn kích thước chunk hoặc thời gian delay
                 const shouldUpdate = !sentMessage ||
                     delta >= STREAM_BATCH_UPDATE_SIZE ||
                     (now - lastUpdate >= STREAM_UPDATE_INTERVAL_MS && delta >= STREAM_MIN_CHUNK_SIZE);
 
                 if (shouldUpdate) {
-                    const text = accumulated.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
-
-                    pendingSend = (async () => {
-                        try {
-                            if (!sentMessage) {
-                                sentMessage = replyToMessage
-                                    ? await replyToMessage.reply(text)
-                                    : await channel.send(text);
-                            } else if (accumulated.length <= DISCORD_MESSAGE_MAX_LENGTH) {
-                                await sentMessage.edit(text);
-                            }
-                            lastUpdate = Date.now();
-                            lastSentLength = accumulated.length;
-                        } catch (e) {
-                            if (e.code === 10008) sentMessage = null;
-                        } finally {
-                            pendingSend = null;
-                        }
-                    })();
+                    pendingAccumulated = accumulated;
+                    processDisplayQueue();
                 }
             }
         });
 
-        if (pendingSend) await pendingSend;
+        // Đợi cho đến khi toàn bộ hàng đợi render Discord hiện tại đã xong
+        while (isEditing) {
+            await new Promise(r => setTimeout(r, 100));
+        }
 
         const sendOrReply = (text) => replyToMessage ? replyToMessage.reply(text) : channel.send(text);
 
