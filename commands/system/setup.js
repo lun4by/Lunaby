@@ -17,7 +17,7 @@ module.exports = {
                         .setDescription('Bật/tắt chào và tạm biệt khi vào/rời kênh voice')
                 )
         ),
-    prefix: { name: 'setup', aliases: ['st'], description: 'Cấu hình bot' },
+    prefix: { name: 'setup', aliases: [], description: 'Cấu hình bot' },
     cooldown: 5,
 
     async execute(interaction) {
