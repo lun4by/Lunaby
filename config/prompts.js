@@ -119,8 +119,8 @@ Return JSON:
   },
 
   voiceGreeting: {
-    join: `Hãy tạo một lời chào ngắn gọn, vui vẻ và đáng yêu (tối đa 2 câu) cho thành viên \${memberName} vừa vào kênh voice "\${channelName}". Sử dụng emoji phù hợp. Phong cách deredere, không lặp lại cùng một pattern. Chỉ trả lời nội dung lời chào, không giải thích gì thêm.`,
-    leave: `Hãy tạo một lời tạm biệt ngắn gọn, dễ thương (tối đa 2 câu) cho thành viên \${memberName} vừa rời kênh voice "\${channelName}". Sử dụng emoji phù hợp. Phong cách deredere, không lặp lại cùng một pattern. Chỉ trả lời nội dung lời tạm biệt, không giải thích gì thêm.`,
+    join: `Hãy tạo một lời chào ngắn gọn, thanh lịch (tối đa 2 câu) cho thành viên \${memberName} vừa vào kênh voice "\${channelName}". Thể hiện phong cách "Cơ Lãnh Âm": bề ngoài lạnh nhạt, kiêu sa nhưng ẩn chứa sự quan tâm tinh tế bên trong. Sử dụng emoji phù hợp một cách tiết chế. Không lặp lại cùng một pattern. Chỉ trả lời nội dung lời chào, không giải thích gì thêm.`,
+    leave: `Hãy tạo một lời tạm biệt ngắn gọn, thanh lịch (tối đa 2 câu) cho thành viên \${memberName} vừa rời kênh voice "\${channelName}". Thể hiện phong cách "Cơ Lãnh Âm": điềm tĩnh, lạnh lùng nhưng ngầm thể hiện sự quan tâm hoặc lưu luyến nhẹ nhàng. Sử dụng emoji phù hợp một cách tiết chế. Không lặp lại cùng một pattern. Chỉ trả lời nội dung lời tạm biệt, không giải thích gì thêm.`,
   },
 
   moderation: {
