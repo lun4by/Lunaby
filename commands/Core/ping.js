@@ -47,14 +47,14 @@ module.exports = {
 	},
 };
 
-function createStatusEmbed({ ping, ws }) {
+function createStatusEmbed({ ping, ws }, interaction) {
 	const color = ping < 200 ? 0x57F287 : ping < 400 ? 0xFEE75C : 0xED4245;
 
 	return createLunabyEmbed()
 		.setColor(color)
 		.setAuthor({
 			name: 'Lunaby AI',
-			iconURL: 'https://raw.githubusercontent.com/Lun4by/Lunaby/refs/heads/main/assets/avatar.png',
+			iconURL: interaction.client.user.displayAvatarURL(),
 		})
 		.setTitle('Trạng thái hệ thống')
 		.addFields({ name: 'Độ trễ', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false })
