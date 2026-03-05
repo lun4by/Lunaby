@@ -39,7 +39,7 @@ class MariaDBClient {
     }
 
     async query(sql, params = []) {
-        if (!this.pool) throw new Error('MariaDB not connected. Call connect() first.');
+        if (!this.pool) await this.connect();
         let conn;
         try {
             conn = await this.pool.getConnection();
