@@ -4,9 +4,6 @@ const AICore = require('../services/AICore.js');
 const prompts = require('../config/prompts.js');
 const logger = require('../utils/logger.js');
 
-const cooldowns = new Map();
-const COOLDOWN_MS = 5000;
-
 function setupVoiceStateEvent(client) {
     client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
         try {
@@ -40,11 +37,6 @@ function setupVoiceStateEvent(client) {
             const settings = await GuildProfileDB.getGuildProfile(guild.id);
             if (!settings?.voiceToggle?.isEnabled) return;
 
-            const cooldownKey = `${guild.id}-${member.id}`;
-            const now = Date.now();
-            if (cooldowns.has(cooldownKey) && now - cooldowns.get(cooldownKey) < COOLDOWN_MS) return;
-            cooldowns.set(cooldownKey, now);
-
             const memberName = member.displayName || member.user.username;
             const channelName = voiceChannel.name;
 
@@ -72,13 +64,6 @@ function setupVoiceStateEvent(client) {
             logger.error('VOICE_TOGGLE', 'Error handling voice state update:', error);
         }
     });
-
-    setInterval(() => {
-        const now = Date.now();
-        for (const [key, timestamp] of cooldowns) {
-            if (now - timestamp > COOLDOWN_MS * 2) cooldowns.delete(key);
-        }
-    }, 5 * 60 * 1000);
 
     logger.info('EVENTS', 'Đã đăng ký event: VoiceStateUpdate');
 }
