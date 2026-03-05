@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const GuildProfileDB = require('../../services/database/guildprofiledb.js');
 const logger = require('../../utils/logger.js');
 
@@ -43,18 +43,11 @@ async function handleVoiceToggle(interaction) {
             'voiceToggle.isEnabled': newEnabled,
         });
 
-        const embed = new EmbedBuilder()
-            .setColor(newEnabled ? 0x2ECC71 : 0xE74C3C)
-            .setTitle(newEnabled ? '🔊 Voice Toggle đã bật!' : '🔇 Voice Toggle đã tắt!')
-            .setDescription(
-                newEnabled
-                    ? 'Lunaby sẽ chào/tạm biệt thành viên khi vào/rời kênh voice.\nTin nhắn sẽ được gửi vào kênh chat của kênh voice đó.'
-                    : 'Lunaby sẽ không còn chào/tạm biệt khi vào/rời kênh voice nữa.'
-            )
-            .setFooter({ text: `Thay đổi bởi ${interaction.user.tag}` })
-            .setTimestamp();
+        const message = newEnabled
+            ? '**Voice Toggle đã bật!**\nLunaby sẽ chào/tạm biệt thành viên khi vào/rời kênh voice.'
+            : '**Voice Toggle đã tắt!**\nLunaby sẽ không còn chào/tạm biệt khi vào/rời kênh voice nữa.';
 
-        await interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({ content: message });
 
         logger.info('SETUP', `Voice toggle ${newEnabled ? 'enabled' : 'disabled'} for guild ${interaction.guild.name} by ${interaction.user.tag}`);
     } catch (error) {

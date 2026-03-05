@@ -4,6 +4,31 @@ const AICore = require('../services/AICore.js');
 const prompts = require('../config/prompts.js');
 const logger = require('../utils/logger.js');
 
+async function sendVoiceGreeting(eventType, memberName, voiceChannel) {
+    const channelName = voiceChannel.name;
+
+    const promptTemplate = eventType === 'join'
+        ? prompts.voiceGreeting.join
+        : prompts.voiceGreeting.leave;
+
+    const prompt = promptTemplate
+        .replace('${memberName}', memberName)
+        .replace('${channelName}', channelName);
+
+    const messages = [
+        { role: 'system', content: prompts.system.main },
+        { role: 'user', content: prompt },
+    ];
+
+    const result = await AICore.processChatCompletion(messages, { max_tokens: 256 });
+
+    if (result?.content) {
+        await voiceChannel.send(result.content);
+    }
+
+    logger.debug('VOICE_TOGGLE', `${eventType === 'join' ? 'Greeted' : 'Farewell'} ${memberName} in ${voiceChannel.guild.name}/${channelName}`);
+}
+
 function setupVoiceStateEvent(client) {
     client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
         try {
@@ -18,48 +43,19 @@ function setupVoiceStateEvent(client) {
 
             if (oldChannel?.id === newChannel?.id) return;
 
-            let eventType = null;
-            let voiceChannel = null;
-
-            if (!oldChannel && newChannel) {
-                eventType = 'join';
-                voiceChannel = newChannel;
-            } else if (oldChannel && !newChannel) {
-                eventType = 'leave';
-                voiceChannel = oldChannel;
-            } else if (oldChannel && newChannel) {
-                eventType = 'join';
-                voiceChannel = newChannel;
-            }
-
-            if (!eventType) return;
-
             const settings = await GuildProfileDB.getGuildProfile(guild.id);
             if (!settings?.voiceToggle?.isEnabled) return;
 
             const memberName = member.displayName || member.user.username;
-            const channelName = voiceChannel.name;
 
-            const promptTemplate = eventType === 'join'
-                ? prompts.voiceGreeting.join
-                : prompts.voiceGreeting.leave;
-
-            const prompt = promptTemplate
-                .replace('${memberName}', memberName)
-                .replace('${channelName}', channelName);
-
-            const messages = [
-                { role: 'system', content: prompts.system.main },
-                { role: 'user', content: prompt },
-            ];
-
-            const result = await AICore.processChatCompletion(messages, { max_tokens: 256 });
-
-            if (result?.content) {
-                await voiceChannel.send(result.content);
+            if (oldChannel && newChannel) {
+                await sendVoiceGreeting('leave', memberName, oldChannel);
+                await sendVoiceGreeting('join', memberName, newChannel);
+            } else if (!oldChannel && newChannel) {
+                await sendVoiceGreeting('join', memberName, newChannel);
+            } else if (oldChannel && !newChannel) {
+                await sendVoiceGreeting('leave', memberName, oldChannel);
             }
-
-            logger.debug('VOICE_TOGGLE', `${eventType === 'join' ? 'Greeted' : 'Farewell'} ${memberName} in ${guild.name}/${channelName}`);
         } catch (error) {
             logger.error('VOICE_TOGGLE', 'Error handling voice state update:', error);
         }
