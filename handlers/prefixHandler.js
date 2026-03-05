@@ -97,6 +97,9 @@ class PseudoInteraction {
 
     async editReply(content) {
         if (this._sentMessage) {
+            if (typeof content === 'object' && content.embeds && !content.content) {
+                content.content = '';
+            }
             return await this._sentMessage.edit(content);
         }
         return await this.reply(content);
