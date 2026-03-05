@@ -136,7 +136,6 @@ const handleCommand = async (interaction, client) => {
 
     await command.execute(interaction);
 
-    // Set cooldown sau khi execute thành công
     const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
     CooldownService.set(interaction.user.id, interaction.commandName, cooldownTime);
 
