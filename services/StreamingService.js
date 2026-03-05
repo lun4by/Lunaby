@@ -54,16 +54,18 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
             onContent: async (chunk, accumulated) => {
                 if (pendingSend) return;
 
+                // Xóa ngang markdown do model thỉnh thoảng tự sinh ra
+                const cleanAccumulated = accumulated.replace(/---+/g, '');
+
                 const now = Date.now();
-                const delta = accumulated.length - lastSentLength;
+                const delta = cleanAccumulated.length - lastSentLength;
                 const shouldUpdate = !currentMessage ||
-                    delta >= STREAM_BATCH_UPDATE_SIZE ||
                     (now - lastUpdate >= STREAM_UPDATE_INTERVAL_MS && delta >= STREAM_MIN_CHUNK_SIZE);
 
                 if (shouldUpdate) {
                     pendingSend = (async () => {
                         try {
-                            const chunks = splitByLength(accumulated, DISCORD_MESSAGE_MAX_LENGTH);
+                            const chunks = splitByLength(cleanAccumulated, DISCORD_MESSAGE_MAX_LENGTH);
 
                             if (!currentMessage) {
                                 currentMessage = await getTargetMessage(true);
@@ -82,7 +84,7 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
                             }
 
                             lastUpdate = Date.now();
-                            lastSentLength = accumulated.length;
+                            lastSentLength = cleanAccumulated.length;
                         } catch (e) {
                             logger.error('STREAM', 'Error during stream update', e);
                         } finally {
