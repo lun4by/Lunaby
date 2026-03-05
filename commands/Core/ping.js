@@ -16,7 +16,7 @@ module.exports = {
 		const latency = { ping: pingLatency, ws: interaction.client.ws.ping };
 
 		const response = await interaction.editReply({
-			embeds: [createStatusEmbed(latency)],
+			embeds: [createStatusEmbed(latency, interaction.client)],
 			components: [createActionRow(true)],
 		});
 
@@ -33,7 +33,7 @@ module.exports = {
 			if (i.customId === 'refresh_status') {
 				const refreshed = { ping: pingLatency, ws: interaction.client.ws.ping };
 				await i.update({
-					embeds: [createStatusEmbed(refreshed)],
+					embeds: [createStatusEmbed(refreshed, interaction.client)],
 					components: [createActionRow(true)],
 				});
 			} else if (i.customId === 'detailed_info') {
@@ -47,14 +47,14 @@ module.exports = {
 	},
 };
 
-function createStatusEmbed({ ping, ws }) {
+function createStatusEmbed({ ping, ws }, client) {
 	const color = ping < 200 ? 0x57F287 : ping < 400 ? 0xFEE75C : 0xED4245;
 
 	return createLunabyEmbed()
 		.setColor(color)
 		.setAuthor({
 			name: 'Lunaby AI',
-			iconURL: interaction.client.user.displayAvatarURL(),
+			iconURL: client.user.displayAvatarURL(),
 		})
 		.setTitle('Trạng thái hệ thống')
 		.addFields({ name: 'Độ trễ', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false })
