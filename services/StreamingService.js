@@ -34,64 +34,40 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
         ...config
     });
 
-    let currentMessage = null;
+    let sentMessage = null;
     let lastUpdate = Date.now();
     let lastSentLength = 0;
     let pendingSend = null;
-    let messageChunks = [];
 
     const typingInterval = setInterval(() => channel.sendTyping().catch(() => { }), 5000);
-
-    const getTargetMessage = async (isFirstMessage) => {
-        if (isFirstMessage && replyToMessage) {
-            return replyToMessage.reply('...');
-        }
-        return channel.send('...');
-    };
-
-    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     try {
         const fullContent = await stream.process({
             onContent: async (chunk, accumulated) => {
-                const cleanAccumulated = accumulated.replace(/\n*---+\n*/g, '\n\n').trimStart();
-
-                while (pendingSend) {
-                    await sleep(50);
-                }
+                if (pendingSend) return;
 
                 const now = Date.now();
-                const delta = cleanAccumulated.length - lastSentLength;
-                const shouldUpdate = !currentMessage ||
+                const delta = accumulated.length - lastSentLength;
+                const shouldUpdate = !sentMessage ||
+                    delta >= STREAM_BATCH_UPDATE_SIZE ||
                     (now - lastUpdate >= STREAM_UPDATE_INTERVAL_MS && delta >= STREAM_MIN_CHUNK_SIZE);
 
                 if (shouldUpdate) {
+                    const text = accumulated.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
+
                     pendingSend = (async () => {
                         try {
-                            const chunks = splitByLength(cleanAccumulated, DISCORD_MESSAGE_MAX_LENGTH);
-
-                            if (!currentMessage) {
-                                currentMessage = await getTargetMessage(true);
-                                messageChunks.push(currentMessage);
+                            if (!sentMessage) {
+                                sentMessage = replyToMessage
+                                    ? await replyToMessage.reply(text)
+                                    : await channel.send(text);
+                            } else if (accumulated.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+                                await sentMessage.edit(text);
                             }
-                            while (messageChunks.length < chunks.length) {
-                                const newMsg = await getTargetMessage(false);
-                                messageChunks.push(newMsg);
-                            }
-
-                            const currentChunkIndex = chunks.length - 1;
-                            const activeMessage = messageChunks[currentChunkIndex];
-
-                            if (activeMessage) {
-                                await activeMessage.edit(chunks[currentChunkIndex]);
-                            }
-
                             lastUpdate = Date.now();
-                            lastSentLength = cleanAccumulated.length;
-
-                            await sleep(STREAM_UPDATE_INTERVAL_MS);
+                            lastSentLength = accumulated.length;
                         } catch (e) {
-                            logger.error('STREAM', 'Error during stream update', e);
+                            if (e.code === 10008) sentMessage = null;
                         } finally {
                             pendingSend = null;
                         }
@@ -102,25 +78,26 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
 
         if (pendingSend) await pendingSend;
 
-        const cleanFullContent = fullContent.replace(/---+/g, '');
-        const finalChunks = splitByLength(cleanFullContent, DISCORD_MESSAGE_MAX_LENGTH);
+        const sendOrReply = (text) => replyToMessage ? replyToMessage.reply(text) : channel.send(text);
 
-        while (messageChunks.length < finalChunks.length) {
-            const newMsg = await getTargetMessage(messageChunks.length === 0);
-            messageChunks.push(newMsg);
+        if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+            if (sentMessage && sentMessage.content !== fullContent) {
+                await sentMessage.edit(fullContent);
+            } else if (!sentMessage) {
+                sentMessage = await sendOrReply(fullContent);
+            }
+        } else {
+            const first = fullContent.substring(0, DISCORD_MESSAGE_MAX_LENGTH);
+            if (sentMessage) await sentMessage.edit(first);
+            else await sendOrReply(first);
+
+            for (const chunk of splitByLength(fullContent.substring(DISCORD_MESSAGE_MAX_LENGTH), DISCORD_MESSAGE_MAX_LENGTH)) {
+                await channel.send(chunk);
+                await new Promise(r => setTimeout(r, 100));
+            }
         }
 
-        const updatePromises = finalChunks.map((content, idx) => {
-            const msg = messageChunks[idx];
-            if (msg && msg.content !== content) {
-                return msg.edit(content).catch(() => { });
-            }
-            return Promise.resolve();
-        });
-
-        await Promise.allSettled(updatePromises);
-
-        return cleanFullContent;
+        return fullContent;
     } finally {
         clearInterval(typingInterval);
     }
