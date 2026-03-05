@@ -78,10 +78,10 @@ class PseudoInteraction {
     async deferReply(opts = {}) {
         this.deferred = true;
         if (opts.fetchReply) {
-            this._sentMessage = await this.message.reply('⏳ Đang xử lý...');
+            this._sentMessage = await this.message.reply('Đang xử lý...');
             return this._sentMessage;
         }
-        this._sentMessage = await this.message.reply('⏳ Đang xử lý...');
+        this._sentMessage = await this.message.reply('Đang xử lý...');
         return this._sentMessage;
     }
 
