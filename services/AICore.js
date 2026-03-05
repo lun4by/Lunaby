@@ -44,6 +44,18 @@ class AICore {
       };
     }
 
+    if (config.stream === false) {
+      const response = await this.client.chat.create(messages, {
+        model,
+        max_tokens: config.max_tokens || 2048,
+        ...config,
+      });
+      const content = response.data.choices[0]?.message?.content;
+      if (!content) throw new Error("No content received");
+
+      return { content, usage: response.data.usage || EMPTY_USAGE };
+    }
+
     const stream = await this.client.chat.createStream(messages, {
       model,
       max_tokens: config.max_tokens || 2048,
