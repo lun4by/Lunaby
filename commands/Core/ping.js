@@ -54,7 +54,7 @@ function createStatusEmbed({ ping, ws }) {
 		.setColor(color)
 		.setAuthor({
 			name: 'Lunaby AI',
-			iconURL: 'https://raw.githubusercontent.com/Lun4by/Lunaby/refs/heads/main/assets/lunaby-avatar.png',
+			iconURL: 'https://raw.githubusercontent.com/Lun4by/Lunaby/refs/heads/main/assets/avatar.png',
 		})
 		.setTitle('Trạng thái hệ thống')
 		.addFields({ name: 'Độ trễ', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false })
