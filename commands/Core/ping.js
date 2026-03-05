@@ -36,8 +36,6 @@ module.exports = {
 					embeds: [createStatusEmbed(refreshed, interaction.client)],
 					components: [createActionRow(true)],
 				});
-			} else if (i.customId === 'detailed_info') {
-				await i.reply({ embeds: [createDetailedEmbed(i)], ephemeral: true });
 			}
 		});
 
@@ -60,36 +58,12 @@ function createStatusEmbed({ ping, ws }, client) {
 		.setFooter({ text: `Lunaby v${packageJson.version} - ${formatUptime(process.uptime())}` });
 }
 
-function createDetailedEmbed(context) {
-	const mem = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-	const shards = context.client.shard?.count || 1;
-
-	return createLunabyEmbed()
-		.setColor(0x9B59B6)
-		.setTitle('Thông tin chi tiết')
-		.addFields(
-			{ name: 'Phiên bản Bot', value: `\`${packageJson.version}\``, inline: true },
-			{ name: 'Phiên bản discord.js', value: `\`${packageJson.dependencies['discord.js'].replace('^', '')}\``, inline: true },
-			{ name: 'Phiên bản Node.js', value: `\`${process.version}\``, inline: true },
-			{ name: 'Thời gian hoạt động', value: `\`${formatUptime(process.uptime())}\``, inline: false },
-			{ name: 'Bộ nhớ sử dụng', value: `\`${mem} MB\``, inline: true },
-			{ name: 'Nền tảng', value: `\`${process.platform} ${process.arch}\``, inline: true },
-			{ name: 'Số lượng shard', value: `\`${shards}\``, inline: true },
-		)
-		.setFooter({ text: 'Lunaby AI - Phát triển bởi s4ory' });
-}
-
 function createActionRow(enabled = true) {
 	return new ActionRowBuilder().addComponents(
 		new ButtonBuilder()
 			.setCustomId('refresh_status')
 			.setLabel('Làm mới')
 			.setStyle(ButtonStyle.Primary)
-			.setDisabled(!enabled),
-		new ButtonBuilder()
-			.setCustomId('detailed_info')
-			.setLabel('Chi tiết')
-			.setStyle(ButtonStyle.Secondary)
 			.setDisabled(!enabled),
 	);
 }
