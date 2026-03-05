@@ -47,7 +47,7 @@ module.exports = {
 	},
 };
 
-function createStatusEmbed({ ping, ws }, interaction) {
+function createStatusEmbed({ ping, ws }) {
 	const color = ping < 200 ? 0x57F287 : ping < 400 ? 0xFEE75C : 0xED4245;
 
 	return createLunabyEmbed()
