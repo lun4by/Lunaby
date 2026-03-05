@@ -20,7 +20,7 @@ async function sendVoiceGreeting(eventType, memberName, voiceChannel) {
         { role: 'user', content: prompt },
     ];
 
-    const result = await AICore.processChatCompletion(messages, { max_tokens: 256 });
+    const result = await AICore.processChatCompletion(messages, { max_tokens: 256, stream: false });
 
     if (result?.content) {
         await voiceChannel.send(result.content);

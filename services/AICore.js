@@ -44,15 +44,28 @@ class AICore {
       };
     }
 
-    const stream = await this.client.chat.createStream(messages, {
-      model,
-      max_tokens: config.max_tokens || 2048,
-      ...config,
-    });
-    const content = await stream.toContent();
-    if (!content) throw new Error("No content received");
+    const isStreaming = config.stream !== false;
 
-    return { content, usage: stream.usage || EMPTY_USAGE };
+    if (isStreaming) {
+      const stream = await this.client.chat.createStream(messages, {
+        model,
+        max_tokens: config.max_tokens || 2048,
+        ...config,
+      });
+      const content = await stream.toContent();
+      if (!content) throw new Error("No content received");
+
+      return { content, usage: stream.usage || EMPTY_USAGE };
+    } else {
+      const response = await this.client.chat.create(messages, {
+        model,
+        max_tokens: config.max_tokens || 2048,
+        ...config,
+      });
+      if (!response || !response.content) throw new Error("No content received");
+
+      return { content: response.content, usage: response.usage || EMPTY_USAGE };
+    }
   }
 
   async getCodeCompletion(prompt) {
