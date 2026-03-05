@@ -49,13 +49,16 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
         return channel.send('...');
     };
 
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
     try {
         const fullContent = await stream.process({
             onContent: async (chunk, accumulated) => {
-                if (pendingSend) return;
+                const cleanAccumulated = accumulated.replace(/\n*---+\n*/g, '\n\n').trimStart();
 
-                // Xóa ngang markdown do model thỉnh thoảng tự sinh ra
-                const cleanAccumulated = accumulated.replace(/---+/g, '');
+                while (pendingSend) {
+                    await sleep(50);
+                }
 
                 const now = Date.now();
                 const delta = cleanAccumulated.length - lastSentLength;
@@ -85,6 +88,8 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
 
                             lastUpdate = Date.now();
                             lastSentLength = cleanAccumulated.length;
+
+                            await sleep(STREAM_UPDATE_INTERVAL_MS);
                         } catch (e) {
                             logger.error('STREAM', 'Error during stream update', e);
                         } finally {
@@ -97,7 +102,8 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
 
         if (pendingSend) await pendingSend;
 
-        const finalChunks = splitByLength(fullContent, DISCORD_MESSAGE_MAX_LENGTH);
+        const cleanFullContent = fullContent.replace(/---+/g, '');
+        const finalChunks = splitByLength(cleanFullContent, DISCORD_MESSAGE_MAX_LENGTH);
 
         while (messageChunks.length < finalChunks.length) {
             const newMsg = await getTargetMessage(messageChunks.length === 0);
@@ -114,7 +120,7 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
 
         await Promise.allSettled(updatePromises);
 
-        return fullContent;
+        return cleanFullContent;
     } finally {
         clearInterval(typingInterval);
     }
