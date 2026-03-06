@@ -19,7 +19,7 @@ async function handleResetdbInteraction(interaction) {
   try {
     if (customId === 'reset_database_confirm') {
       await interaction.update({
-        content: '⏳ **Đang reset database...**',
+        content: '**Đang reset database...**',
         components: [],
       });
 
