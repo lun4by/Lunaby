@@ -23,7 +23,7 @@ const sendResponse = (interaction, content) => {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('log')
+        .setName('systemlog')
         .setDescription('Thiết lập kênh gửi log sự kiện global của bot (chỉ Owner/Admin)')
         .addChannelOption((option) =>
             option
@@ -33,7 +33,7 @@ module.exports = {
                 .setRequired(true)
         ),
     prefix: {
-        name: 'log', aliases: ['setgloballog'], description: 'Thiết lập kênh gửi log join/left của bot (chỉ Owner/Admin)', adminOnly: true
+        name: 'systemlog', aliases: [], description: 'Thiết lập kênh gửi log join/left của bot (chỉ Owner/Admin)', adminOnly: true
     },
 
     async execute(interaction) {
