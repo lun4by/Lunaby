@@ -1,11 +1,5 @@
 const { SlashCommandBuilder, ChannelType } = require('discord.js');
-const RoleService = require('../../services/RoleService.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
-
-const checkPermissions = async (userId) => {
-    const role = await RoleService.getUserRole(userId);
-    return role === 'owner' || role === 'admin';
-};
 
 const getTargetChannel = (interaction) => {
     return interaction.options?.getChannel('channel') || interaction.mentions?.channels?.first();
