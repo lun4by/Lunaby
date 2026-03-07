@@ -19,7 +19,6 @@ async function handleGuildMemberAdd(member) {
 
         if (!channel || !channel.isTextBased()) return;
 
-        // Replace placeholders
         const message = welcomeMessageTemp
             .replace(/{user}/g, `<@${member.id}>`)
             .replace(/{server}/g, member.guild.name)
