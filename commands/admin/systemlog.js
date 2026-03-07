@@ -32,11 +32,6 @@ module.exports = {
 
     async execute(interaction) {
         const userId = interaction.user?.id || interaction.author?.id;
-        const hasPermission = await checkPermissions(userId);
-
-        if (!hasPermission) {
-            return sendResponse(interaction, 'Bạn không có quyền sử dụng lệnh này (Yêu cầu Owner hoặc Admin).');
-        }
 
         const logChannel = getTargetChannel(interaction);
 
