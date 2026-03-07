@@ -1,20 +1,6 @@
 const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 
-const getTargetChannel = (interaction) => {
-    return interaction.options?.getChannel('channel') || interaction.mentions?.channels?.first();
-};
-
-const sendResponse = (interaction, content) => {
-    if (interaction.reply && !interaction.replied) {
-        return interaction.reply({ content, ephemeral: true });
-    }
-    if (interaction.editReply) {
-        return interaction.editReply({ content });
-    }
-    return interaction.channel.send({ content });
-};
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('systemlog')
@@ -31,15 +17,19 @@ module.exports = {
     },
 
     async execute(interaction) {
+        const isSlash = interaction.isCommand && interaction.isCommand();
         const userId = interaction.user?.id || interaction.author?.id;
 
-        const logChannel = getTargetChannel(interaction);
+        const logChannel = isSlash
+            ? interaction.options.getChannel('channel')
+            : (interaction.message || interaction).mentions?.channels?.first();
 
         if (!logChannel) {
-            return sendResponse(interaction, 'Vui lòng cung cấp một kênh hợp lệ.');
+            const replyObj = isSlash ? interaction : (interaction.message || interaction);
+            return replyObj.reply({ content: 'Vui lòng cung cấp hoặc mention một kênh hợp lệ (VD: `e.systemlog #log-channel`).', ephemeral: true });
         }
 
-        if (interaction.deferReply) {
+        if (isSlash && !interaction.deferred && !interaction.replied) {
             await interaction.deferReply({ ephemeral: true });
         }
 
@@ -49,6 +39,10 @@ module.exports = {
             ? `Đã thiết lập kênh log global thành công tại <#${logChannel.id}>.`
             : 'Đã xảy ra lỗi khi lưu thiết lập kênh log vào database.';
 
-        return sendResponse(interaction, responseMessage);
+        if (isSlash) {
+            return interaction.editReply({ content: responseMessage });
+        } else {
+            return (interaction.message || interaction).reply({ content: responseMessage });
+        }
     },
 };
