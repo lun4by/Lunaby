@@ -77,6 +77,15 @@ class MariaModDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS bot_settings (
+          setting_key VARCHAR(50) PRIMARY KEY,
+          setting_value VARCHAR(255),
+          updated_by VARCHAR(32),
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+
             logger.info('MARIADB', 'All tables ready');
 
             try {
@@ -87,6 +96,35 @@ class MariaModDB {
             return true;
         } catch (error) {
             logger.error('MARIADB', 'Error creating tables:', error);
+            return false;
+        }
+    }
+
+    async getBotSetting(key) {
+        try {
+            const rows = await mariaClient.query(
+                'SELECT setting_value FROM bot_settings WHERE setting_key = ?',
+                [key]
+            );
+            return rows.length > 0 ? rows[0].setting_value : null;
+        } catch (error) {
+            logger.error('MARIADB', `Error getting bot setting ${key}:`, error);
+            return null;
+        }
+    }
+
+    async setBotSetting(key, value, updatedBy) {
+        try {
+            await mariaClient.query(`
+                INSERT INTO bot_settings (setting_key, setting_value, updated_by)
+                VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                setting_value = VALUES(setting_value),
+                updated_by = VALUES(updated_by)
+            `, [key, value, updatedBy]);
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', `Error setting bot setting ${key}:`, error);
             return false;
         }
     }
