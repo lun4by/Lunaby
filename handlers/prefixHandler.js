@@ -8,10 +8,11 @@ const CooldownService = require('../services/CooldownService');
 const logger = require('../utils/logger');
 
 class PseudoInteraction {
-    constructor(message, commandName, args) {
+    constructor(message, commandName, args, command) {
         this.message = message;
         this.commandName = commandName;
         this.args = args;
+        this.command = command; // Inject command here to parse schema
 
         this.user = message.author;
         this.member = message.member;
@@ -52,6 +53,35 @@ class PseudoInteraction {
 
     get options() {
         const self = this;
+        let subGroupName = null;
+        let subCommandName = null;
+
+        if (self.command?.data) {
+            try {
+                const jsonData = self.command.data.toJSON();
+                if (jsonData.options) {
+                    const arg0 = self.args[0]?.toLowerCase();
+                    const arg1 = self.args[1]?.toLowerCase();
+
+                    // 2 = SUB_COMMAND_GROUP, 1 = SUB_COMMAND
+                    const groupOpt = jsonData.options.find(opt => opt.name === arg0 && opt.type === 2);
+                    const subCmdOpt = jsonData.options.find(opt => opt.name === arg0 && opt.type === 1);
+
+                    if (groupOpt) {
+                        subGroupName = arg0;
+                        const subOpt = groupOpt.options?.find(opt => opt.name === arg1 && opt.type === 1);
+                        if (subOpt) {
+                            subCommandName = arg1;
+                        }
+                    } else if (subCmdOpt) {
+                        subCommandName = arg0;
+                    }
+                }
+            } catch (e) {
+                // Ignore parse errors, fallback to null
+            }
+        }
+
         return {
             getString(name) { return self._options.get(name) || null; },
             getUser(name) { return self._options.get(name) || null; },
@@ -67,10 +97,10 @@ class PseudoInteraction {
                 return val ? parseInt(val) : null;
             },
             getSubcommandGroup() {
-                return self.args.length >= 2 ? self.args[0] : null;
+                return subGroupName;
             },
             getSubcommand() {
-                return self.args.length >= 2 ? self.args[1] : (self.args[0] || null);
+                return subCommandName;
             }
         };
     }
@@ -154,6 +184,12 @@ async function handlePrefixMessage(message, client) {
             await message.reply('Bạn không có quyền sử dụng lệnh này.').catch(() => { });
             return true;
         }
+    } else if (command.data?.default_member_permissions) {
+        const requiredPermissions = BigInt(command.data.default_member_permissions);
+        if (message.member && !message.member.permissions.has(requiredPermissions)) {
+            await message.reply('Bạn không có đủ quyền trong server để sử dụng lệnh này.').catch(() => { });
+            return true;
+        }
     }
 
     try {
@@ -177,7 +213,7 @@ async function handlePrefixMessage(message, client) {
             }
         }
 
-        const interaction = new PseudoInteraction(message, commandName, args);
+        const interaction = new PseudoInteraction(message, commandName, args, command);
         await command.execute(interaction);
 
         const cmdName = command.data?.name || commandName;

@@ -13,6 +13,7 @@ const { setupGuildEvents } = require("./events/guildEvents");
 const { setupInteractionCreateEvent } = require("./events/interactionCreate");
 const { setupMessageCreateEvent } = require("./events/messageCreate");
 const { setupVoiceStateEvent } = require("./events/voiceStateUpdate");
+const { setupGuildMemberAddEvent } = require("./events/guildMemberAdd");
 const logger = require("./utils/logger.js");
 
 const client = new Client({
@@ -35,6 +36,7 @@ setupGuildEvents(client);
 setupInteractionCreateEvent(client);
 setupMessageCreateEvent(client);
 setupVoiceStateEvent(client);
+setupGuildMemberAddEvent(client);
 
 startbot(client, () => loadCommands(client));
 

@@ -18,45 +18,29 @@ module.exports = {
     prefix: { name: 'addquota', aliases: ['givequota', 'setquota'], description: 'Thêm/bớt quota cho user', adminOnly: true },
 
     async execute(interaction) {
-        if (!interaction.isCommand || !interaction.isCommand()) {
-            return this.executePrefix(interaction.message || interaction, [
-                interaction.args[0],
-                interaction.args[1]
-            ]);
+        const isSlash = interaction.isCommand && interaction.isCommand();
+        
+        const targetUser = isSlash 
+            ? interaction.options.getUser('user') 
+            : interaction.message?.mentions?.users?.first();
+            
+        let amountRaw = isSlash 
+            ? interaction.options.getInteger('amount') 
+            : interaction.args?.find(a => !a.match(/^<@!?\d+>$/));
+            
+        if (!targetUser || amountRaw === undefined || amountRaw === null) {
+            return interaction.reply(`**Cách dùng:** \`e.addquota @user <số_lượng>\``);
         }
 
-        const targetUser = interaction.options.getUser('user');
-        const amount = interaction.options.getInteger('amount');
-
-        await this.handleQuotaChange(interaction, targetUser, amount);
-    },
-
-    async executePrefix(message, args) {
-        if (!args || args.length < 2) {
-            return message.reply(`**Cách dùng:** \`e.addquota @user <số_lượng>\``);
-        }
-
-        const targetUser = message.mentions.users.first() || await message.client.users.fetch(args[0]).catch(() => null);
-        if (!targetUser) {
-            return message.reply('Không tìm thấy người dùng này.');
-        }
-
-        const amount = parseInt(args[1]);
+        const amount = parseInt(amountRaw);
         if (isNaN(amount)) {
-            return message.reply('Số lượng phải là một con số hợp lệ.');
+            return interaction.reply('Số lượng phải là một con số hợp lệ.');
         }
-
-        await this.handleQuotaChange(message, targetUser, amount);
-    },
-
-    async handleQuotaChange(interactionOrMessage, targetUser, amount) {
-        const isInteraction = interactionOrMessage.isCommand && interactionOrMessage.isCommand();
-        const replyFunc = isInteraction ? (data) => interactionOrMessage.reply(data) : (data) => interactionOrMessage.reply(data);
 
         try {
             const beforeStats = await QuotaService.getUserMessageStats(targetUser.id);
             if (beforeStats.limits.period === -1) {
-                return replyFunc({ content: `**${targetUser.tag}** hiện đang có quyền sử dụng vô hạn (Owner/Admin) nên không cần cộng thêm.`, ephemeral: true });
+                return interaction.reply({ content: `**${targetUser.tag}** hiện đang có quyền sử dụng vô hạn (Owner/Admin) nên không cần cộng thêm.`, ephemeral: true });
             }
             await QuotaService.addQuota(targetUser.id, amount);
 
@@ -77,10 +61,10 @@ module.exports = {
                     { name: '✅ Còn lại', value: `${afterStats.remaining.messages} lượt`, inline: true }
                 );
 
-            await replyFunc({ embeds: [embed] });
+            await interaction.reply({ embeds: [embed] });
         } catch (error) {
             console.error('Error in addquota command:', error);
-            await replyFunc({ content: '❌ Đã xảy ra lỗi khi cập nhật Quota cho người dùng này.', ephemeral: true });
+            await interaction.reply({ content: '❌ Đã xảy ra lỗi khi cập nhật Quota cho người dùng này.', ephemeral: true });
         }
     }
 };

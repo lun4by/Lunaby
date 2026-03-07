@@ -10,23 +10,11 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        if (!interaction.isCommand || !interaction.isCommand()) {
-            return this.executePrefix(interaction.message || interaction, []);
-        }
-
         const userId = interaction.user.id;
         const stats = await QuotaService.getUserMessageStats(userId);
 
         const embed = this.buildQuotaEmbed(interaction.user, stats);
         await interaction.reply({ embeds: [embed] });
-    },
-
-    async executePrefix(message, args) {
-        const userId = message.author.id;
-        const stats = await QuotaService.getUserMessageStats(userId);
-
-        const embed = this.buildQuotaEmbed(message.author, stats);
-        await message.reply({ embeds: [embed] });
     },
 
     buildQuotaEmbed(user, stats) {

@@ -25,50 +25,36 @@ module.exports = {
     prefix: { name: 'giveadmin', aliases: ['giverole'], description: 'Thay đổi quyền người dùng', adminOnly: false },
 
     async execute(interaction) {
-        if (!interaction.isCommand || !interaction.isCommand()) {
-            return this.executePrefix(interaction.message || interaction, [
-                interaction.args[0],
-                interaction.args[1]
-            ]);
+        const isSlash = interaction.isCommand && interaction.isCommand();
+        
+        const targetUser = isSlash 
+            ? interaction.options.getUser('user') 
+            : interaction.message?.mentions?.users?.first();
+            
+        let roleRaw = isSlash 
+            ? interaction.options.getString('role') 
+            : interaction.args?.find(a => !a.match(/^<@!?\d+>$/));
+            
+        const role = roleRaw?.toLowerCase();
+
+        if (!targetUser || !role) {
+            return interaction.reply(`**Cách dùng:** \`e.giveadmin @user <role>\`\nCác role hợp lệ: ${Object.values(USER_ROLES).join(', ')}`);
         }
 
-        const targetUser = interaction.options.getUser('user');
-        const role = interaction.options.getString('role');
-
-        await this.handleRoleChange(interaction, targetUser, role);
-    },
-
-    async executePrefix(message, args) {
-        if (!args || args.length < 2) {
-            return message.reply(`**Cách dùng:** \`e.giveadmin @user <role>\`\nCác role hợp lệ: ${Object.values(USER_ROLES).join(', ')}`);
-        }
-
-        const targetUser = message.mentions.users.first() || await message.client.users.fetch(args[0]).catch(() => null);
-        if (!targetUser) {
-            return message.reply('Không tìm thấy người dùng này.');
-        }
-
-        const role = args[1].toLowerCase();
         if (!Object.values(USER_ROLES).includes(role)) {
-            return message.reply(`Quyền không hợp lệ! Hãy dùng một trong các quyền sau: ${Object.values(USER_ROLES).join(', ')}`);
+            return interaction.reply(`Quyền không hợp lệ! Hãy dùng một trong các quyền sau: ${Object.values(USER_ROLES).join(', ')}`);
         }
 
-        await this.handleRoleChange(message, targetUser, role);
-    },
-
-    async handleRoleChange(interactionOrMessage, targetUser, role) {
-        const isInteraction = interactionOrMessage.isCommand && interactionOrMessage.isCommand();
-        const replyFunc = isInteraction ? (data) => interactionOrMessage.reply(data) : (data) => interactionOrMessage.reply(data);
-        const executorId = isInteraction ? interactionOrMessage.user.id : interactionOrMessage.author.id;
+        const executorId = interaction.user.id;
 
         try {
             if (executorId !== process.env.OWNER_ID?.trim()) {
-                return replyFunc({ content: 'Lệnh này chỉ dành cho Owner của Bot!', ephemeral: true });
+                return interaction.reply({ content: 'Lệnh này chỉ dành cho Owner của Bot!', ephemeral: true });
             }
 
             const currentRole = await RoleService.getUserRole(targetUser.id);
             if (currentRole === role) {
-                return replyFunc({ content: `Người dùng **${targetUser.tag}** hiện đã có quyền **${role}** rồi.`, ephemeral: true });
+                return interaction.reply({ content: `Người dùng **${targetUser.tag}** hiện đã có quyền **${role}** rồi.`, ephemeral: true });
             }
 
             await RoleService.setUserRole(targetUser.id, role);
@@ -83,10 +69,10 @@ module.exports = {
                     { name: '🌟 Quyền mới', value: role, inline: true }
                 );
 
-            await replyFunc({ embeds: [embed] });
+            await interaction.reply({ embeds: [embed] });
         } catch (error) {
             console.error('Error in giveadmin command:', error);
-            await replyFunc({ content: 'Đã xảy ra lỗi khi cập nhật Quyền cho người dùng này.', ephemeral: true });
+            await interaction.reply({ content: 'Đã xảy ra lỗi khi cập nhật Quyền cho người dùng này.', ephemeral: true });
         }
     }
 };

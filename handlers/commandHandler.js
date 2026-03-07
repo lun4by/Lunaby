@@ -97,9 +97,14 @@ const handleCommand = async (interaction, client) => {
     const userRole = await RoleService.getUserRole(interaction.user.id);
     const isPrivileged = userRole === 'owner' || userRole === 'admin';
 
-    if (command.prefix?.adminOnly || (command.data && command.data.default_member_permissions !== undefined)) {
-      if (!isPrivileged) {
-        return interaction.reply({ content: 'Bạn không có quyền sử dụng lệnh này.', ephemeral: true });
+    if (command.prefix?.adminOnly && !isPrivileged) {
+      return interaction.reply({ content: 'Bạn không có quyền sử dụng lệnh này.', ephemeral: true });
+    }
+
+    if (command.data && command.data.default_member_permissions) {
+      const requiredPermissions = BigInt(command.data.default_member_permissions);
+      if (!interaction.memberPermissions.has(requiredPermissions)) {
+        return interaction.reply({ content: 'Bạn không có đủ quyền trong server để sử dụng lệnh này.', ephemeral: true });
       }
     }
 

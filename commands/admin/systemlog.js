@@ -18,20 +18,21 @@ module.exports = {
 
     async execute(interaction) {
         const isSlash = interaction.isCommand && interaction.isCommand();
-        const userId = interaction.user?.id || interaction.author?.id;
+        const userId = interaction.user.id;
 
         const logChannel = isSlash
             ? interaction.options.getChannel('channel')
-            : (interaction.message || interaction).mentions?.channels?.first();
+            : interaction.message?.mentions?.channels?.first();
 
         if (!logChannel) {
-            const replyObj = isSlash ? interaction : (interaction.message || interaction);
-            return replyObj.reply({ content: 'Vui lòng cung cấp hoặc mention một kênh hợp lệ (VD: `e.systemlog #log-channel`).', ephemeral: true });
+            return interaction.reply({ content: 'Vui lòng cung cấp hoặc mention một kênh hợp lệ (VD: `e.systemlog #log-channel`).', ephemeral: true });
         }
 
         if (isSlash && !interaction.deferred && !interaction.replied) {
             await interaction.deferReply({ ephemeral: true });
         }
+
+        const replyFunc = isSlash ? (data) => interaction.editReply(data) : (data) => interaction.reply(data);
 
         const isSuccess = await MariaModDB.setBotSetting('global_log_channel', logChannel.id, userId);
 
@@ -39,10 +40,6 @@ module.exports = {
             ? `Đã thiết lập kênh log global thành công tại <#${logChannel.id}>.`
             : 'Đã xảy ra lỗi khi lưu thiết lập kênh log vào database.';
 
-        if (isSlash) {
-            return interaction.editReply({ content: responseMessage });
-        } else {
-            return (interaction.message || interaction).reply({ content: responseMessage });
-        }
+        return replyFunc({ content: responseMessage });
     },
 };
