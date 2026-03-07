@@ -4,28 +4,25 @@ const logger = require('../../utils/logger.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('setup')
-        .setDescription('Cấu hình các tính năng của bot')
+        .setName('voicewelcome')
+        .setDescription('Cấu hình tính năng chào/tạm biệt khi vào/rời kênh voice')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-        .addSubcommandGroup(group =>
-            group
-                .setName('voice')
-                .setDescription('Cấu hình tính năng voice')
-                .addSubcommand(sub =>
-                    sub
-                        .setName('toggle')
-                        .setDescription('Bật/tắt chào và tạm biệt khi vào/rời kênh voice')
-                )
+        .addSubcommand(sub =>
+            sub
+                .setName('toggle')
+                .setDescription('Bật/tắt chào và tạm biệt khi vào/rời kênh voice')
         ),
-    prefix: { name: 'setup', aliases: [], description: 'Cấu hình bot' },
+    prefix: { name: 'voicewelcome', aliases: ['vw'], description: 'Cấu hình tính năng voice welcome' },
     cooldown: 5,
 
     async execute(interaction) {
-        const subGroup = interaction.options.getSubcommandGroup();
         const subCommand = interaction.options.getSubcommand();
 
-        if (subGroup === 'voice' && subCommand === 'toggle') {
+        if (subCommand === 'toggle') {
             return handleVoiceToggle(interaction);
+        } else {
+            const reply = interaction.reply ? interaction.reply.bind(interaction) : interaction.message.reply.bind(interaction.message);
+            return reply({ content: 'Vui lòng dùng: `/voicewelcome toggle` hoặc `e.voicewelcome toggle`' });
         }
     },
 };
