@@ -33,9 +33,7 @@ module.exports = {
                 .setRequired(true)
         ),
     prefix: {
-        name: 'log',
-        aliases: ['setgloballog'],
-        description: 'Thiết lập kênh gửi log sự kiện global của bot (chỉ Owner/Admin)'
+        name: 'log', aliases: ['setgloballog'], description: 'Thiết lập kênh gửi log join/left của bot (chỉ Owner/Admin)', adminOnly: true
     },
 
     async execute(interaction) {
