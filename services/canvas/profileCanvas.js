@@ -17,19 +17,15 @@ try {
     logger.warn('PROFILE_CANVAS', 'Could not register Montserrat fonts, falling back to default:', err.message);
 }
 
-// ── Constants ──────────────────────────────────────────────
 const WIDTH = 934;
 const HEIGHT = 500;
 const CARD_RADIUS = 20;
 const DEFAULT_THEME = '#9B59B6';
 
-// ── ProfileCanvas Class ───────────────────────────────────
 class ProfileCanvas {
     constructor() {
         this.imageCache = new Map();
     }
-
-    // ── Image Helpers ─────────────────────────────────────
     async loadImg(src) {
         if (this.imageCache.has(src)) return this.imageCache.get(src);
         try {
@@ -48,7 +44,6 @@ class ProfileCanvas {
             : { r: 155, g: 89, b: 182 };
     }
 
-    // ── Drawing Primitives ────────────────────────────────
     roundRect(ctx, x, y, w, h, r) {
         ctx.beginPath();
         ctx.moveTo(x + r, y);
@@ -90,7 +85,6 @@ class ProfileCanvas {
         return truncated + '…';
     }
 
-    // ── Main Render ───────────────────────────────────────
     async createProfileCard(data) {
         const {
             user,
@@ -109,43 +103,30 @@ class ProfileCanvas {
         // ── 1. Background ─────────────────────────────────
         await this.drawBackground(ctx, profile, rgb);
 
-        // ── 2. Card overlay (rounded dark glass) ──────────
         this.fillRoundRect(ctx, 0, 0, WIDTH, HEIGHT, CARD_RADIUS, 'rgba(13, 17, 23, 0.85)');
         this.strokeRoundRect(ctx, 0, 0, WIDTH, HEIGHT, CARD_RADIUS, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`, 2);
 
-        // ── 3. Banner area ────────────────────────────────
         await this.drawBanner(ctx, profile, rgb);
 
-        // ── 4. Avatar ─────────────────────────────────────
         await this.drawAvatar(ctx, user, member, theme, rgb, serverRank, profile);
 
-        // ── 5. Username + Tag ─────────────────────────────
         this.drawUsername(ctx, user, member);
 
-        // ── 6. Level & Rank Badges ────────────────────────
         this.drawBadges(ctx, xpData, serverRank, globalRank, theme, rgb);
-
-        // ── 7. XP Progress Bar ────────────────────────────
         this.drawXPBar(ctx, xpData, theme, rgb);
 
-        // ── 8. Info Panels (Bio, Birthday, Balance) ───────
         this.drawInfoPanels(ctx, profile, rgb);
 
-        // ── 9. Tips Badge ─────────────────────────────────
         this.drawTipsBadge(ctx, profile, theme);
 
-        // ── 10. Emblem ────────────────────────────────────
         await this.drawEmblem(ctx, profile);
 
         return canvas.toBuffer('image/png');
     }
-
-    // ── Background ────────────────────────────────────────
     async drawBackground(ctx, profile, rgb) {
         if (profile.background) {
             const bgImg = await this.loadImg(profile.background);
             if (bgImg) {
-                // Save and clip to rounded rect
                 ctx.save();
                 this.roundRect(ctx, 0, 0, WIDTH, HEIGHT, CARD_RADIUS);
                 ctx.clip();
@@ -157,7 +138,6 @@ class ProfileCanvas {
             }
         }
 
-        // Default gradient background
         ctx.save();
         this.roundRect(ctx, 0, 0, WIDTH, HEIGHT, CARD_RADIUS);
         ctx.clip();
@@ -169,7 +149,6 @@ class ProfileCanvas {
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-        // Subtle decorative circles
         ctx.globalAlpha = 0.03;
         for (let i = 0; i < 12; i++) {
             const size = 30 + Math.random() * 80;
@@ -184,13 +163,11 @@ class ProfileCanvas {
         ctx.restore();
     }
 
-    // ── Banner ────────────────────────────────────────────
     async drawBanner(ctx, profile, rgb) {
         const bannerH = 170;
 
         ctx.save();
         this.roundRect(ctx, 0, 0, WIDTH, bannerH, CARD_RADIUS);
-        // Override bottom corners to be square
         ctx.rect(0, bannerH - CARD_RADIUS, WIDTH, CARD_RADIUS);
         ctx.clip();
 
@@ -207,7 +184,6 @@ class ProfileCanvas {
             this.drawDefaultBanner(ctx, rgb, bannerH);
         }
 
-        // Bottom fade
         const fadeGrad = ctx.createLinearGradient(0, bannerH - 60, 0, bannerH);
         fadeGrad.addColorStop(0, 'rgba(13, 17, 23, 0)');
         fadeGrad.addColorStop(1, 'rgba(13, 17, 23, 0.95)');
@@ -216,7 +192,6 @@ class ProfileCanvas {
 
         ctx.restore();
 
-        // Accent line under banner
         ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)`;
         ctx.fillRect(30, bannerH, WIDTH - 60, 2);
     }
@@ -230,13 +205,11 @@ class ProfileCanvas {
         ctx.fillRect(0, 0, WIDTH, h);
     }
 
-    // ── Avatar ────────────────────────────────────────────
     async drawAvatar(ctx, user, member, theme, rgb, serverRank, profile) {
         const avatarRadius = 60;
         const cx = 100;
-        const cy = 170; // straddles the banner
+        const cy = 170;
 
-        // Glow effect
         ctx.save();
         ctx.shadowColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.6)`;
         ctx.shadowBlur = 25;
@@ -246,27 +219,23 @@ class ProfileCanvas {
         ctx.fill();
         ctx.restore();
 
-        // Outer ring
         ctx.beginPath();
         ctx.arc(cx, cy, avatarRadius + 5, 0, Math.PI * 2);
         ctx.strokeStyle = theme;
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        // Dark circle behind avatar
         ctx.beginPath();
         ctx.arc(cx, cy, avatarRadius + 2, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(13, 17, 23, 1)';
         ctx.fill();
 
-        // Avatar image
         const avatarUrl = user.displayAvatarURL({ extension: 'png', size: 256 });
         const avatarImg = await this.loadImg(avatarUrl);
         if (avatarImg) {
             this.drawCircleImage(ctx, avatarImg, cx, cy, avatarRadius);
         }
 
-        // Wreath overlay
         if (profile.wreath || (serverRank && serverRank <= 10)) {
             const wreathSize = avatarRadius * 2 + 40;
             const wreathImg = profile.wreath
@@ -277,7 +246,6 @@ class ProfileCanvas {
             }
         }
 
-        // Online status dot
         const statusColors = {
             online: '#43B581',
             idle: '#FAA61A',
@@ -300,25 +268,20 @@ class ProfileCanvas {
         ctx.fill();
     }
 
-    // ── Username ──────────────────────────────────────────
     drawUsername(ctx, user, member) {
         const x = 180;
         const y = 200;
-
-        // Display name
         ctx.font = 'bold 28px Montserrat';
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'left';
         const displayName = this.truncateText(ctx, member?.displayName || user.username, 350);
         ctx.fillText(displayName, x, y);
 
-        // Tag
         ctx.font = '500 16px Montserrat';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
         ctx.fillText(`@${user.username}`, x, y + 24);
     }
 
-    // ── Badges (Level, Rank) ──────────────────────────────
     drawBadges(ctx, xpData, serverRank, globalRank, theme, rgb) {
         const badgeY = 155;
         let badgeX = WIDTH - 30;
@@ -342,7 +305,6 @@ class ProfileCanvas {
             accent: true,
         });
 
-        // Draw badges right-to-left
         badges.forEach((badge) => {
             ctx.font = 'bold 14px Montserrat';
             const valueWidth = ctx.measureText(badge.value).width;
@@ -352,38 +314,31 @@ class ProfileCanvas {
             const pillHeight = 42;
             const pillX = badgeX - totalWidth;
 
-            // Pill background
             this.fillRoundRect(ctx, pillX, badgeY, totalWidth, pillHeight, 10, badge.color);
             if (badge.accent) {
                 this.strokeRoundRect(ctx, pillX, badgeY, totalWidth, pillHeight, 10, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.5)`, 1.5);
             }
 
-            // Value
             ctx.font = 'bold 16px Montserrat';
             ctx.fillStyle = badge.accent ? theme : '#FFFFFF';
             ctx.textAlign = 'center';
             ctx.fillText(badge.value, pillX + totalWidth / 2, badgeY + 20);
 
-            // Label
             ctx.font = '500 9px Montserrat';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
             ctx.fillText(badge.label, pillX + totalWidth / 2, badgeY + 34);
 
-            badgeX = pillX - 8; // spacing
+            badgeX = pillX - 8;
         });
     }
 
-    // ── XP Progress Bar ───────────────────────────────────
     drawXPBar(ctx, xpData, theme, rgb) {
         const level = xpData.level || 1;
         const xp = xpData.xp || 0;
-
-        // Calculate XP for current level
         const xpForLevel = (lvl) => 5 * (lvl * lvl) + 50 * lvl + 100;
         const maxXP = xpForLevel(level);
         let currentXP = xp;
 
-        // Accumulate XP from previous levels
         let totalXPForPrevLevels = 0;
         for (let i = 1; i < level; i++) {
             totalXPForPrevLevels += xpForLevel(i);
@@ -397,12 +352,10 @@ class ProfileCanvas {
         const barH = 16;
         const barR = barH / 2;
 
-        // Background
         this.fillRoundRect(ctx, barX, barY, barW, barH, barR, 'rgba(255, 255, 255, 0.06)');
 
-        // Fill
         if (progress > 0.01) {
-            const fillW = Math.max(barH, barW * progress); // min width = height for round cap
+            const fillW = Math.max(barH, barW * progress);
             ctx.save();
             this.roundRect(ctx, barX, barY, fillW, barH, barR);
             ctx.clip();
@@ -413,26 +366,22 @@ class ProfileCanvas {
             ctx.fillStyle = grad;
             ctx.fillRect(barX, barY, fillW, barH);
 
-            // Shine effect
             ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
             ctx.fillRect(barX, barY, fillW, barH / 2);
 
             ctx.restore();
         }
 
-        // XP text
         ctx.font = '500 12px Montserrat';
         ctx.textAlign = 'right';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
         ctx.fillText(`${this.formatNumber(currentXP)} / ${this.formatNumber(maxXP)} XP`, barX + barW, barY - 6);
 
-        // Percentage
         ctx.textAlign = 'left';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.fillText(`${Math.round(progress * 100)}%`, barX, barY - 6);
     }
 
-    // ── Info Panels ───────────────────────────────────────
     drawInfoPanels(ctx, profile, rgb) {
         const panelY = 285;
         const panelH = 80;
@@ -441,29 +390,24 @@ class ProfileCanvas {
         const glassColor = 'rgba(255, 255, 255, 0.04)';
         const glassBorder = 'rgba(255, 255, 255, 0.08)';
 
-        // ─ Bio Panel (full width)
         const bioX = 30;
         const bioW = WIDTH - 60;
         this.fillRoundRect(ctx, bioX, panelY, bioW, panelH, panelRadius, glassColor);
         this.strokeRoundRect(ctx, bioX, panelY, bioW, panelH, panelRadius, glassBorder);
 
-        // Bio label
         ctx.font = 'bold 11px Montserrat';
         ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`;
         ctx.textAlign = 'left';
         ctx.fillText('BIO', bioX + 18, panelY + 22);
 
-        // Bio text
         ctx.font = '500 14px Montserrat';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
         const bioText = this.truncateText(ctx, profile.bio || 'No bio written.', bioW - 40);
         ctx.fillText(bioText, bioX + 18, panelY + 50);
 
-        // ─ Bottom Row: Birthday | Balance
         const bottomY = panelY + panelH + gap;
         const halfW = (bioW - gap) / 2;
 
-        // Birthday Panel
         this.fillRoundRect(ctx, bioX, bottomY, halfW, 70, panelRadius, glassColor);
         this.strokeRoundRect(ctx, bioX, bottomY, halfW, 70, panelRadius, glassBorder);
 
@@ -477,7 +421,6 @@ class ProfileCanvas {
         const birthdayText = profile.birthday ? this.formatBirthday(profile.birthday) : 'Not set';
         ctx.fillText(birthdayText, bioX + 18, bottomY + 50);
 
-        // Balance Panel
         const balX = bioX + halfW + gap;
         this.fillRoundRect(ctx, balX, bottomY, halfW, 70, panelRadius, glassColor);
         this.strokeRoundRect(ctx, balX, bottomY, halfW, 70, panelRadius, glassBorder);
@@ -496,7 +439,6 @@ class ProfileCanvas {
         ctx.fillText(`👛 ${this.formatNumber(wallet)}`, balX + halfW / 2 + 10, bottomY + 48);
     }
 
-    // ── Tips Badge ────────────────────────────────────────
     drawTipsBadge(ctx, profile, theme) {
         const tipCount = profile.tips?.received || 0;
         const x = WIDTH - 120;
@@ -513,7 +455,6 @@ class ProfileCanvas {
         ctx.fillText(`⭐ ${tipCount} TIP${tipCount !== 1 ? 'S' : ''}`, x + w / 2, y + 20);
     }
 
-    // ── Emblem ────────────────────────────────────────────
     async drawEmblem(ctx, profile) {
         if (!profile.emblem) return;
         const emblemImg = await this.loadImg(profile.emblem);
@@ -528,7 +469,6 @@ class ProfileCanvas {
         ctx.globalAlpha = 1;
     }
 
-    // ── Utility ───────────────────────────────────────────
     lightenColor(rgb, amount) {
         const r = Math.min(255, Math.floor(rgb.r + (255 - rgb.r) * amount));
         const g = Math.min(255, Math.floor(rgb.g + (255 - rgb.g) * amount));
@@ -562,7 +502,6 @@ class ProfileCanvas {
     }
 }
 
-// ── Exports ───────────────────────────────────────────────
 const profileCanvas = new ProfileCanvas();
 
 async function generateProfileCard(data) {
