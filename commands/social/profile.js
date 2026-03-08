@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const ProfileDB = require('../../services/database/profiledb');
 const XPService = require('../../services/XPService');
 const { generateProfileCard } = require('../../services/canvas/profileCanvas');

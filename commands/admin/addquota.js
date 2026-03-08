@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const QuotaService = require('../../services/QuotaService');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
+const logger = require('../../utils/logger');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -16,6 +17,7 @@ module.exports = {
                 .setRequired(true)),
 
     prefix: { name: 'addquota', aliases: ['givequota', 'setquota'], description: 'Thêm/bớt quota cho user', adminOnly: true },
+    cooldown: 5,
 
     async execute(interaction) {
         const isSlash = interaction.isCommand && interaction.isCommand();
@@ -63,7 +65,7 @@ module.exports = {
 
             await interaction.reply({ embeds: [embed] });
         } catch (error) {
-            console.error('Error in addquota command:', error);
+            logger.error('ADMIN', 'Error in addquota command:', error);
             await interaction.reply({ content: '❌ Đã xảy ra lỗi khi cập nhật Quota cho người dùng này.', ephemeral: true });
         }
     }

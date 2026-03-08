@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
+const logger = require('../../utils/logger');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,6 +25,7 @@ module.exports = {
                 .setDescription('Tắt thông báo chào mừng')
         ),
     prefix: { name: 'welcome', aliases: ['setwelcome'], description: 'Cài đặt thông báo chào mừng thành viên mới (chỉ Admin)' },
+    cooldown: 5,
     async execute(interaction) {
         const isSlash = interaction.isCommand && interaction.isCommand();
         const guildId = interaction.guild?.id;
@@ -82,7 +84,7 @@ module.exports = {
                 return replyFunc({ content: `✅|Đã thiết lập thành công thông báo chào mừng tại kênh <#${channel.id}>.\nNội dung: \`${message}\`` });
             }
         } catch (error) {
-            console.error('Error setting welcome:', error);
+            logger.error('SYSTEM', 'Error setting welcome:', error);
             return replyFunc({ content: '❌|Đã có lỗi xảy ra khi lưu thiết lập chào mừng.', ephemeral: true });
         }
     }

@@ -15,6 +15,7 @@ module.exports = {
     prefix: {
         name: 'systemlog', aliases: [], description: 'Thiết lập kênh gửi log join/left của bot (chỉ Owner/Admin)', adminOnly: true
     },
+    cooldown: 5,
 
     async execute(interaction) {
         const isSlash = interaction.isCommand && interaction.isCommand();

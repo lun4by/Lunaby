@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const RoleService = require('../../services/RoleService');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 const { USER_ROLES } = require('../../config/constants');
+const logger = require('../../utils/logger');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -22,7 +23,8 @@ module.exports = {
             return opt;
         }),
 
-    prefix: { name: 'giveadmin', aliases: ['giverole'], description: 'Thay đổi quyền người dùng', adminOnly: false },
+    prefix: { name: 'giveadmin', aliases: ['giverole'], description: 'Thay đổi quyền người dùng' },
+    cooldown: 5,
 
     async execute(interaction) {
         const isSlash = interaction.isCommand && interaction.isCommand();
@@ -71,7 +73,7 @@ module.exports = {
 
             await interaction.reply({ embeds: [embed] });
         } catch (error) {
-            console.error('Error in giveadmin command:', error);
+            logger.error('ADMIN', 'Error in giveadmin command:', error);
             await interaction.reply({ content: 'Đã xảy ra lỗi khi cập nhật Quyền cho người dùng này.', ephemeral: true });
         }
     }
