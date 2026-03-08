@@ -1,92 +1,114 @@
 [
   {
-    "name": "image",
+    "name": "addquota",
     "aliases": [],
     "clientPermissions": [
       "EMBED_LINKS"
     ],
-    "group": "AIcore",
-    "description": "Vẽ một hình ảnh từ ý tưởng của bạn",
+    "group": "admin",
+    "description": "Thêm hoặc bớt lượt sử dụng AI cho một người dùng (Admin Only)",
     "parameters": [
-      "Mô tả bức tranh bạn muốn mình tạo (bắt buộc)",
-      "Tỷ lệ khung hình (tùy chọn) - Lựa chọn: 1:1 (Vuông), 16:9 (Ngang), 9:16 (Dọc), 4:3 (Ngang tiêu chuẩn), 3:4 (Dọc tiêu chuẩn), 21:9 (Siêu rộng), 9:21 (Siêu dọc)"
+      "Người dùng cần thay đổi lượt (bắt buộc)",
+      "Số lượt muốn cộng thêm (dùng số âm để trừ đi) (bắt buộc)"
     ],
     "examples": [
-      "/image",
-      "/image <prompt>"
+      "/addquota",
+      "/addquota <user> <amount>"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
-    "name": "memory",
+    "name": "giveadmin",
     "aliases": [],
     "clientPermissions": [
       "EMBED_LINKS"
     ],
-    "group": "AIcore",
-    "description": "Xem và quản lý trí nhớ AI của bạn",
+    "group": "admin",
+    "description": "Thay đổi quyền (Role) của người dùng trong Bot (Owner Only)",
     "parameters": [
-      "Xem tóm tắt trí nhớ của bạn (tùy chọn)",
-      "Thêm một trí nhớ mới (tùy chọn)",
-      "Xóa toàn bộ trí nhớ của bạn (tùy chọn)",
-      "Cài đặt quyền riêng tư (tùy chọn)",
-      "Cập nhật thông tin cá nhân (tùy chọn)",
-      "Xóa lịch sử trò chuyện của chúng ta (tùy chọn)"
+      "Người dùng cần thay đổi quyền (bắt buộc)",
+      "Quyền mới (bắt buộc) - Lựa chọn: owner, admin, pro, user"
     ],
     "examples": [
-      "/memory"
+      "/giveadmin",
+      "/giveadmin <user> owner"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
-    "name": "search",
+    "name": "logger",
     "aliases": [],
     "clientPermissions": [
       "EMBED_LINKS"
     ],
-    "group": "AIcore",
-    "description": "Tìm kiếm thông tin trực tuyến",
+    "group": "admin",
+    "description": "Quản lý cài đặt hệ thống ghi log (chỉ dành cho owner)",
     "parameters": [
-      "Nội dung cần tìm kiếm (bắt buộc)"
+      "Xem trạng thái hiện tại của hệ thống ghi log (tùy chọn)",
+      "Bật hệ thống ghi log (tùy chọn)",
+      "Tắt hệ thống ghi log (tùy chọn)",
+      "Đặt mức độ ghi log (tùy chọn)",
+      "Bật/tắt ghi log cho một danh mục (tùy chọn)",
+      "Khôi phục cài đặt ghi log về mặc định (tùy chọn)"
     ],
     "examples": [
-      "/search",
-      "/search <query>"
+      "/logger"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
-    "name": "think",
+    "name": "reset",
     "aliases": [],
     "clientPermissions": [
       "EMBED_LINKS"
     ],
-    "group": "AIcore",
-    "description": "Hiển thị quá trình suy nghĩ của AI khi trả lời câu hỏi của bạn",
+    "group": "admin",
+    "description": "Xóa và reset cơ sở dữ liệu (chỉ dành cho owner)",
     "parameters": [
-      "Nhập câu hỏi hoặc vấn đề bạn muốn AI phân tích (bắt buộc)"
+      "Reset mode (bắt buộc) - Lựa chọn: Database (Conversations & All Data), User Profiles (XP, Level, Achievements)"
     ],
     "examples": [
-      "/think",
-      "/think <prompt>"
+      "/reset",
+      "/reset Database (Conversations & All Data)"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 10
+  },
+  {
+    "name": "systemlog",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "admin",
+    "description": "Thiết lập kênh gửi log sự kiện global của bot (chỉ Owner/Admin)",
+    "parameters": [
+      "Kênh để nhận log của bot (bắt buộc)"
+    ],
+    "examples": [
+      "/systemlog",
+      "/systemlog <channel>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
   },
   {
     "name": "about",
@@ -95,7 +117,7 @@
       "EMBED_LINKS"
     ],
     "group": "Core",
-    "description": "Hiển thị thông tin chi tiết về Lunaby bot",
+    "description": "Hiển thị thông tin về Lunaby",
     "parameters": [],
     "examples": [
       "/about"
@@ -104,7 +126,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "cyrene",
@@ -122,7 +144,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 30
   },
   {
     "name": "help",
@@ -140,7 +162,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "lunaby",
@@ -158,7 +180,25 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 30
+  },
+  {
+    "name": "personalize",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "Core",
+    "description": "Tùy chỉnh trải nghiệm AI của bạn",
+    "parameters": [],
+    "examples": [
+      "/personalize"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
   },
   {
     "name": "ping",
@@ -176,7 +216,168 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 10
+  },
+  {
+    "name": "prefix",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "Core",
+    "description": "Quản lý prefix của bot",
+    "parameters": [
+      "Xem prefix hiện tại (tùy chọn)",
+      "Đặt prefix cho server (cần quyền Manage Server) (tùy chọn)",
+      "Đặt prefix cá nhân (chỉ áp dụng cho bạn) (tùy chọn)",
+      "Reset prefix về mặc định (tùy chọn)"
+    ],
+    "examples": [
+      "/prefix"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 10
+  },
+  {
+    "name": "quota",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "Core",
+    "description": "Kiểm tra số lượt trò chuyện với AI còn lại của bạn",
+    "parameters": [],
+    "examples": [
+      "/quota"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "hug",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "fun",
+    "description": "Ôm ai đó",
+    "parameters": [
+      "Người bạn muốn ôm (tùy chọn)"
+    ],
+    "examples": [
+      "/hug"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "kiss",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "fun",
+    "description": "Hôn ai đó",
+    "parameters": [
+      "Người bạn muốn hôn (tùy chọn)"
+    ],
+    "examples": [
+      "/kiss"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "pat",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "fun",
+    "description": "Xoa đầu ai đó",
+    "parameters": [
+      "Người bạn muốn xoa đầu (tùy chọn)"
+    ],
+    "examples": [
+      "/pat"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "poke",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "fun",
+    "description": "Chọc ai đó",
+    "parameters": [
+      "Người bạn muốn chọc (tùy chọn)"
+    ],
+    "examples": [
+      "/poke"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "punch",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "fun",
+    "description": "Đấm ai đó",
+    "parameters": [
+      "Người bạn muốn đấm (tùy chọn)"
+    ],
+    "examples": [
+      "/punch"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "slap",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "fun",
+    "description": "Tát ai đó",
+    "parameters": [
+      "Người bạn muốn tát (tùy chọn)"
+    ],
+    "examples": [
+      "/slap"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
   },
   {
     "name": "ban",
@@ -199,7 +400,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "clearwarnings",
@@ -222,7 +423,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "kick",
@@ -231,10 +432,10 @@
       "EMBED_LINKS"
     ],
     "group": "moderation",
-    "description": "Đuổi một thành viên khỏi server",
+    "description": "�u?i m?t th�nh vi�n kh?i server",
     "parameters": [
-      "Thành viên cần đuổi (bắt buộc)",
-      "Lý do đuổi (tùy chọn)"
+      "Th�nh vi�n c?n du?i (bắt buộc)",
+      "L� do du?i (tùy chọn)"
     ],
     "examples": [
       "/kick",
@@ -244,7 +445,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "logchannel",
@@ -262,7 +463,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "modlog",
@@ -284,7 +485,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "mute",
@@ -307,7 +508,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "setlogchannel",
@@ -330,7 +531,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "setting",
@@ -348,7 +549,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "unban",
@@ -370,7 +571,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "unmute",
@@ -392,7 +593,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "warn",
@@ -414,7 +615,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "warnings",
@@ -435,7 +636,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "inventory",
@@ -453,7 +654,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "leaderboard",
@@ -471,7 +672,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "profile",
@@ -491,7 +692,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "rank",
@@ -511,7 +712,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "setbio",
@@ -532,7 +733,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "setbirthday",
@@ -553,7 +754,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "setcolor",
@@ -574,7 +775,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "unequip",
@@ -595,7 +796,7 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
     "name": "use",
@@ -616,70 +817,95 @@
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
-    "name": "chat",
+    "name": "disable",
     "aliases": [],
     "clientPermissions": [
+      "MANAGE_CHANNELS",
       "EMBED_LINKS"
     ],
     "group": "system",
-    "description": "Tạo thread chat riêng với AI",
-    "parameters": [],
-    "examples": [
-      "/chat"
-    ],
-    "guildOnly": false,
-    "requiresDatabase": false,
-    "rankcommand": false,
-    "nsfw": false,
-    "cooldown": null
-  },
-  {
-    "name": "logger",
-    "aliases": [],
-    "clientPermissions": [
-      "EMBED_LINKS"
-    ],
-    "group": "system",
-    "description": "Quản lý cài đặt hệ thống ghi log (chỉ dành cho owner)",
+    "description": "Tắt một lệnh hoặc nhiều lệnh trong kênh",
     "parameters": [
-      "Xem trạng thái hiện tại của hệ thống ghi log (tùy chọn)",
-      "Bật hệ thống ghi log (tùy chọn)",
-      "Tắt hệ thống ghi log (tùy chọn)",
-      "Đặt mức độ ghi log (tùy chọn)",
-      "Bật/tắt ghi log cho một danh mục (tùy chọn)",
-      "Khôi phục cài đặt ghi log về mặc định (tùy chọn)"
+      "Tên lệnh cần tắt (cách nhau bằng dấu phẩy) hoặc \"all\" (bắt buộc)",
+      "Kênh (mặc định: kênh hiện tại) (tùy chọn)"
     ],
     "examples": [
-      "/logger"
+      "/disable",
+      "/disable <commands>"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
   },
   {
-    "name": "reset",
+    "name": "enable",
     "aliases": [],
     "clientPermissions": [
+      "MANAGE_CHANNELS",
       "EMBED_LINKS"
     ],
     "group": "system",
-    "description": "Xóa và reset cơ sở dữ liệu (chỉ dành cho owner)",
+    "description": "Bật một lệnh hoặc nhiều lệnh trong kênh",
     "parameters": [
-      "Reset mode (bắt buộc) - Lựa chọn: Database (Conversations & All Data), User Profiles (XP, Level, Achievements)"
+      "Tên lệnh cần bật (cách nhau bằng dấu phẩy) hoặc \"all\" (bắt buộc)",
+      "Kênh (mặc định: kênh hiện tại) (tùy chọn)"
     ],
     "examples": [
-      "/reset",
-      "/reset Database (Conversations & All Data)"
+      "/enable",
+      "/enable <commands>"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
     "rankcommand": false,
     "nsfw": false,
-    "cooldown": null
+    "cooldown": 5
+  },
+  {
+    "name": "voicewelcome",
+    "aliases": [],
+    "clientPermissions": [
+      "MANAGE_GUILD",
+      "EMBED_LINKS"
+    ],
+    "group": "system",
+    "description": "Cấu hình tính năng chào/tạm biệt khi vào/rời kênh voice",
+    "parameters": [
+      "Bật/tắt chào và tạm biệt khi vào/rời kênh voice (tùy chọn)"
+    ],
+    "examples": [
+      "/voicewelcome"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "welcome",
+    "aliases": [],
+    "clientPermissions": [
+      "MANAGE_GUILD",
+      "EMBED_LINKS"
+    ],
+    "group": "system",
+    "description": "Cài đặt thông báo chào mừng thành viên mới",
+    "parameters": [
+      "Thiết lập kênh và tin nhắn chào mừng (tùy chọn)",
+      "Tắt thông báo chào mừng (tùy chọn)"
+    ],
+    "examples": [
+      "/welcome"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
   }
 ]
