@@ -148,6 +148,19 @@ class QuotaService {
     }
   }
 
+  async syncQuotaForRole(userId, role) {
+    try {
+      const newLimit = this.roleLimits[role] ?? 600;
+      await this.initializeUserMessageData(userId);
+      await QuotaDB.setQuotaLimit(userId, newLimit, Date.now());
+      logger.info('QUOTA_SERVICE', `Đã đồng bộ quota cho ${userId}: role=${role}, limit=${newLimit}`);
+      return true;
+    } catch (error) {
+      logger.error('QUOTA_SERVICE', `Lỗi khi đồng bộ quota cho ${userId}:`, error);
+      throw error;
+    }
+  }
+
   async getSystemStats() {
     try {
       const allUsers = await QuotaDB.getAllUsers();

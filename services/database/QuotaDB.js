@@ -108,6 +108,19 @@ class QuotaDB {
             throw error;
         }
     }
+
+    async setQuotaLimit(userId, newLimit, now) {
+        try {
+            await mariaClient.query(
+                'UPDATE user_quotas SET limit_period = ?, updated_at = ? WHERE user_id = ?',
+                [newLimit, now, userId]
+            );
+            return true;
+        } catch (error) {
+            logger.error('QUOTA_DB', `Error setting quota limit for ${userId}:`, error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new QuotaDB();

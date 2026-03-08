@@ -37,6 +37,9 @@ class RoleService {
 
             const now = Date.now();
             await RoleDB.setUserRole(userId, role, now);
+            const QuotaService = require('./QuotaService.js');
+            await QuotaService.syncQuotaForRole(userId, role);
+
             return true;
         } catch (error) {
             logger.error('ROLE_SERVICE', `Lỗi khi đặt role cho ${userId}:`, error);
