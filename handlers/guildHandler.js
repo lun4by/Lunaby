@@ -2,6 +2,17 @@ const { REST, Routes } = require('discord.js');
 const mongoClient = require('../services/database/mongoClient.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
 const logger = require('../utils/logger.js');
+const MariaModDB = require('../services/database/MariaModDB.js');
+
+const sendGlobalLog = async (client, message) => {
+    const logChannelId = await MariaModDB.getBotSetting('global_log_channel');
+    if (!logChannelId) return;
+
+    const logChannel = await client.channels.fetch(logChannelId).catch(() => null);
+    if (logChannel?.isTextBased()) {
+        await logChannel.send(message);
+    }
+};
 
 
 async function storeGuildInDB(guild) {
@@ -64,7 +75,6 @@ async function getGuildFromDB(guildId) {
   }
 }
 
-
 async function updateGuildSettings(guildId, settings) {
   try {
     const db = await mongoClient.getDbSafe();
@@ -101,6 +111,7 @@ function findDefaultChannel(guild) {
 
 async function handleGuildLeave(guild) {
   logger.info('GUILD', `Bot đã rời khỏi server: ${guild.name} (${guild.id})`);
+  await sendGlobalLog(guild.client, `Bot rời khỏi guild: ${guild.name} (${guild.id})`);
   try {
     await removeGuildFromDB(guild.id);
   } catch (error) {
@@ -146,6 +157,7 @@ async function deployCommandsToGuild(guildId, existingCommands = null, client = 
 
 async function handleGuildJoin(guild, commands) {
   logger.info('GUILD', `Bot tham gia guild: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
+  await sendGlobalLog(guild.client, `Bot tham gia guild mới: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
 
   try {
     await storeGuildInDB(guild);
@@ -162,7 +174,7 @@ async function handleGuildJoin(guild, commands) {
     if (defaultChannel) {
       await defaultChannel.send({
         content: `Xin chào! Lunaby đã sẵn sàng hỗ trợ server **${guild.name}**!\n` +
-          `Bạn có thể chat với mình bằng cách @mention Lunaby hoặc sử dụng các lệnh slash.\n` +
+          `Bạn có thể chat với mình bằng cách @Luna hoặc sử dụng các lệnh slash.\n` +
           `Cảm ơn đã thêm mình vào server!`
       });
     }
