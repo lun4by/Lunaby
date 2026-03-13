@@ -27,11 +27,8 @@ async function handleChatRequest(message, content, ConversationService) {
     await conversationManager.loadConversationHistory(conversationId, prompts.system.main, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(conversationId);
 
-    const isNewConversation = messages.length <= 2;
     const enhancedPrompt = `
-      ${prompts.chat.responseStyle}
-      ${isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
-      ${prompts.chat.generalInstructions}
+      ${prompts.chat.instructions}
       ${content}
     `;
 

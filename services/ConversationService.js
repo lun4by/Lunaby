@@ -212,11 +212,8 @@ class ConversationService {
   }
 
   async buildEnhancedPrompt(prompt, conversationHistory) {
-    const isNewConversation = !conversationHistory || conversationHistory.length <= 2;
     return `
-      ${prompts.chat.responseStyle}
-      ${isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
-      ${prompts.chat.generalInstructions}
+      ${prompts.chat.instructions}
       ${prompt}
     `;
   }
