@@ -1,4 +1,4 @@
-const IMAGE_COMMAND_REGEX = /^(?:vẽ|tạo hình|vẽ hình|hình|tạo ảnh ai|tạo ảnh)\s+(?:cho\s+(?:tôi|mình|em|anh|chị)\s+)?(?:một\s+)?(?:hình\s+(?:ảnh\s+)?|ảnh\s+(?:về\s+)?)?(.+)$/i;
+const IMAGE_COMMAND_REGEX = /^(?:vẽ|tạo hình|tạo ảnh|phác họa|thiết kế|generate|draw|create image|tạo|cho tôi coi|cho mình xem|vẽ hình|hình|tạo ảnh ai)(?:\s+(?:cho\s+(?:tôi|mình|em|anh|chị|tớ|tao|bạn)\s+)?(?:một\s+)?(?:cái\s+)?(?:bức\s+)?(?:hình\s+(?:ảnh\s+)?|ảnh\s+(?:về\s+)?|tranh\s+(?:về\s+)?)?)?\s+(.+)$/i;
 
 const MEMORY_COMMAND_REGEX = /^(nhớ lại|trí nhớ|lịch sử|conversation history|memory|như nãy|vừa gửi|vừa đề cập)\s*(.*)$/i;
 
