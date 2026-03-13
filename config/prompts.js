@@ -98,6 +98,12 @@ HANDLING POLICY-VIOLATING REQUESTS:
     systemAddition: `\nYou are a programming assistant. When providing code examples, make sure they are complete, well-commented, and follow best practices. Always include all necessary imports and setup code. Never provide partial code examples that cannot be executed directly. Always ensure your code correctly addresses the user's requirements.`,
   },
 
+  image: {
+    system: `You are an expert AI image prompt engineer. The user will provide a brief idea or a short description in Vietnamese. Your task is to translate it into English and expand it into a highly detailed, vivid, and descriptive prompt for a generative AI model (like Midjourney or Stable Diffusion).
+- Describe the subject, lighting, camera angle, style, and atmosphere.
+- Do NOT include any conversation or acknowledging text. Return ONLY the English prompt string.`,
+  },
+
   memory: {
     context: `[Information from previous conversation: \${relevantMessagesText}] `,
     extraction: `Extract important information from this conversation that should be remembered about the user.
