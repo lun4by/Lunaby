@@ -30,7 +30,7 @@ async function handleImageRequest(message, content, requestMatch) {
 
         const imageResult = await ImageService.generateImage(userPrompt);
 
-        const attachment = new AttachmentBuilder(imageResult.localPath, { name: 'lunaby_art.png' });
+        const attachment = new AttachmentBuilder(imageResult.buffer, { name: 'lunaby_art.png' });
 
         await message.reply({ content: `✨ Đây là tác phẩm Lunaby vẽ cho bạn nè`, files: [attachment] });
         waitMsg.delete().catch(() => { });

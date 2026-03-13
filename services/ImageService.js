@@ -1,9 +1,5 @@
-const fs = require("fs");
-const path = require("path");
 const storageDB = require("./storagedb.js");
 const AICore = require("./AICore.js");
-
-const TEMP_DIR = path.join(process.cwd(), "temp");
 
 class ImageService {
   async generateImage(prompt, options = {}) {
@@ -24,13 +20,8 @@ class ImageService {
       throw new Error("Không nhận được hình ảnh từ API");
     }
 
-    fs.mkdirSync(TEMP_DIR, { recursive: true });
-    const outputPath = path.join(TEMP_DIR, `generated_image_${Date.now()}.png`);
-    fs.writeFileSync(outputPath, result.buffer);
-
     return {
       buffer: result.buffer,
-      localPath: outputPath,
       revisedPrompt: result.revisedPrompt || prompt,
       usage: result.usage
     };

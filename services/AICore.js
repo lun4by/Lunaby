@@ -32,15 +32,17 @@ class AICore {
 
     if (config.modelType === 'image') {
       const prompt = messages.find(m => m.role === 'user')?.content || '';
-      const result = await this.client.images.generateBuffer(prompt, {
+      const response = await this.client.images.generate(prompt, {
         model,
         aspect_ratio: config.aspect_ratio || '1:1',
         output_format: config.output_format || 'png',
       });
+      
+      const imageData = response.data.data[0];
       return {
-        content: result.buffer.toString('base64'),
-        revised_prompt: result.revisedPrompt,
-        usage: result.usage || EMPTY_USAGE
+        content: imageData.b64_json,
+        revised_prompt: imageData.revised_prompt || imageData.revisedPrompt,
+        usage: response.data.usage || EMPTY_USAGE
       };
     }
 
