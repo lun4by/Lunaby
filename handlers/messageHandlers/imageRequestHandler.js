@@ -11,7 +11,7 @@ async function handleImageRequest(message, content, requestMatch) {
         const conversationId = conversationManager.extractUserId ? conversationManager.extractUserId(message) : (message.guildId ? `${message.guildId}-${message.author.id}` : `DM-${message.author.id}`);
         const globalUserId = message.author.id;
 
-        const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
+        const quotaCheck = await QuotaService.canUseImages(globalUserId, 1);
         if (!quotaCheck.allowed) {
             const embed = createLunabyEmbed()
                 .setTitle('Hết quyền sử dụng')
@@ -38,7 +38,7 @@ async function handleImageRequest(message, content, requestMatch) {
         await conversationManager.addMessage(conversationId, 'user', `[Yêu cầu vẽ ảnh]: ${userPrompt}`);
         await conversationManager.addMessage(conversationId, 'assistant', `[Đã gửi 1 hình ảnh] Của bạn đây! Mình đã vẽ theo yêu cầu: "${userPrompt}"`);
 
-        await QuotaService.recordMessageUsage(globalUserId, 1);
+        await QuotaService.recordImageUsage(globalUserId, 1);
 
     } catch (error) {
         logger.error('IMAGE', 'Error processing image generation:', error);

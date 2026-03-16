@@ -8,6 +8,8 @@ const PERIOD_MS = QUOTA_PERIOD_DAYS * DAY_MS;
 class QuotaService {
   constructor() {
     this.roleLimits = ROLE_LIMITS;
+    const { ROLE_IMAGE_LIMITS } = require('../config/constants.js');
+    this.roleImageLimits = ROLE_IMAGE_LIMITS || { owner: -1, admin: -1, pro: 25, user: 10 };
     this.ownerId = process.env.OWNER_ID?.trim() || null;
   }
 
@@ -18,8 +20,9 @@ class QuotaService {
 
       const role = await RoleService.getUserRole(userId);
       const limitPeriod = this.roleLimits[role] || 600;
+      const imageLimitPeriod = this.roleImageLimits[role] !== undefined ? this.roleImageLimits[role] : 10;
 
-      await QuotaDB.createUserQuota(userId, limitPeriod, Date.now());
+      await QuotaDB.createUserQuota(userId, limitPeriod, imageLimitPeriod, Date.now());
 
       return await QuotaDB.getUserQuota(userId);
     } catch (error) {
@@ -88,6 +91,31 @@ class QuotaService {
   async canUseTokens(userId) {
     return this.canUseMessages(userId, 1);
   }
+  
+  async canUseImages(userId, estimatedImages = 1) {
+    try {
+      const messageData = await this.getUserMessageData(userId);
+      const { imageUsage, limits } = messageData;
+
+      const role = await RoleService.getUserRole(userId);
+
+      if (role === 'owner' || role === 'admin' || limits.imagePeriod === -1) {
+        return { allowed: true, remaining: -1, role, current: imageUsage.current, limit: -1 };
+      }
+
+      const remaining = limits.imagePeriod - imageUsage.current;
+      return {
+        allowed: remaining >= estimatedImages,
+        remaining, role,
+        current: imageUsage.current,
+        limit: limits.imagePeriod,
+        estimated: estimatedImages
+      };
+    } catch (error) {
+      logger.error('QUOTA_SERVICE', `Lỗi khi kiểm tra image quota cho ${userId}:`, error);
+      return { allowed: true, remaining: 0, role: 'user', error: error.message };
+    }
+  }
 
   async recordMessageUsage(userId, messagesUsed = 1) {
     try {
@@ -101,6 +129,16 @@ class QuotaService {
 
   async recordTokenUsage(userId) {
     return await this.recordMessageUsage(userId, 1);
+  }
+  
+  async recordImageUsage(userId, imagesUsed = 1) {
+    try {
+      await QuotaDB.recordImageUsage(userId, imagesUsed, Date.now());
+      return true;
+    } catch (error) {
+      logger.error('QUOTA_SERVICE', `Lỗi khi ghi nhận image usage cho ${userId}:`, error);
+      return false;
+    }
   }
 
   async addQuota(userId, amount) {
@@ -124,9 +162,11 @@ class QuotaService {
       return {
         userId, role,
         usage: { current: messageData.messageUsage.current, total: messageData.messageUsage.total },
-        limits: { period: messageData.limits.period },
+        imageUsage: { current: messageData.imageUsage.current, total: messageData.imageUsage.total },
+        limits: { period: messageData.limits.period, imagePeriod: messageData.limits.imagePeriod },
         remaining: {
           messages: messageData.limits.period === -1 ? -1 : messageData.limits.period - messageData.messageUsage.current,
+          images: messageData.limits.imagePeriod === -1 ? -1 : messageData.limits.imagePeriod - messageData.imageUsage.current,
           days: Math.max(0, Math.ceil(timeRemaining / DAY_MS))
         },
         periodStart: messageData.periodStart,
@@ -151,9 +191,10 @@ class QuotaService {
   async syncQuotaForRole(userId, role) {
     try {
       const newLimit = this.roleLimits[role] ?? 600;
+      const newImageLimit = this.roleImageLimits[role] ?? 10;
       await this.initializeUserMessageData(userId);
-      await QuotaDB.setQuotaLimit(userId, newLimit, Date.now());
-      logger.info('QUOTA_SERVICE', `Đã đồng bộ quota cho ${userId}: role=${role}, limit=${newLimit}`);
+      await QuotaDB.setQuotaLimit(userId, newLimit, newImageLimit, Date.now());
+      logger.info('QUOTA_SERVICE', `Đã đồng bộ quota cho ${userId}: role=${role}, limit=${newLimit}, imageLimit=${newImageLimit}`);
       return true;
     } catch (error) {
       logger.error('QUOTA_SERVICE', `Lỗi khi đồng bộ quota cho ${userId}:`, error);

@@ -29,8 +29,14 @@ module.exports = {
   ROLE_LIMITS: {
     owner: -1,
     admin: -1,
-    pro: 250,
+    pro: 125,
     user: 75
+  },
+  ROLE_IMAGE_LIMITS: {
+    owner: -1,
+    admin: -1,
+    pro: 25,
+    user: 10
   },
   DEFAULT_USER_ID: 'anonymous-user',
   DEFAULT_LANGUAGE: 'vi',
