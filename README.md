@@ -9,7 +9,7 @@
 ## Tổng Quan
 
 Lunaby là bot Discord được hỗ trợ bởi **local offline models**. Bot có tính cách thân thiện và hỗ trợ nhiều tác vụ như trò chuyện, tạo mã nguồn và tạo hình ảnh. Tích hợp hệ thống cấp độ và thành tựu để khuyến khích tương tác người dùng.
-> Lunaby Bot sử dụng **local offline models** với model LLM được build(fine-tune) dựa trên GPT OSS 120B.
+> Lunaby Bot sử dụng **local offline models** với model LLM được build (fine-tuned) dựa trên GPT OSS 120B.
 
 ## Tính Năng Chính
 

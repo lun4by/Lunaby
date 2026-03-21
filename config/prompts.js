@@ -1,3 +1,7 @@
+/**
+ * File cấu hình chứa toàn bộ System Prompts và các Template (Instructions) giao tiếp gốc với AI.
+ * Mục đích: Quản lý tập trung Prompt Engineering, định hình nhân cách của Lunaby và đảm bảo AI trả về đúng định dạng mong muốn.
+ */
 const prompts = {
   system: {
     main: `Your name is Lunaby, created by s4ory`,
@@ -13,30 +17,36 @@ const prompts = {
     systemAddition: `\nYou are a programming assistant. When providing code examples, make sure they are complete, well-commented, and follow best practices. Always include all necessary imports and setup code. Never provide partial code examples that cannot be executed directly. Always ensure your code correctly addresses the user's requirements.`,
   },
   memory: {
+    /** 
+     * Template nối lịch sử bộ nhớ vào system prompt. 
+     * Được gọi bởi ConversationService.enrichPromptWithMemory
+     */
     context: `[Information from previous conversation: \${relevantMessagesText}] `,
+
+    /**
+     * Prompt đặc biệt dùng trong MemoryService để chạy background task (Implicit Entity Extraction).
+     * Bắt buộc AI trả về định dạng JSON nghiêm ngặt để Backend parse an toàn.
+     */
     extraction: `Extract important information from this conversation that should be remembered about the user.
-
-User message: "\${userMessage}"
-AI response: "\${aiResponse}"
-
-Categories: Personal info | Preferences | Facts/Events | Goals | Relationships
-
-Return JSON:
-{
-  "extracted": true/false,
-  "personalInfo": {"field": "value"},
-  "preferences": ["items"],
-  "memory": {
-    "content": "description",
-    "category": "preference|fact|event|achievement",
-    "importance": 1-10
-  }
-}`,
+    User message: "\${userMessage}"
+    AI response: "\${aiResponse}"
+    Categories: Personal info | Preferences | Facts/Events | Goals | Relationships
+    Return JSON:
+    {
+      "extracted": true/false,
+      "personalInfo": {"field": "value"},
+      "preferences": ["items"],
+      "memory": {
+      "content": "description",
+      "category": "preference|fact|event|achievement",
+      "importance": 1-10
+    }
+  }`,
   },
 
   voiceGreeting: {
-    join: `Hãy tạo một lời chào ngắn gọn, vui vẻ và đáng yêu (tối đa 2 câu) cho thành viên \${memberName} vừa vào kênh voice "\${channelName}". Sử dụng emoji phù hợp. Phong cách deredere, không lặp lại cùng một pattern. Chỉ trả lời nội dung lời chào, không giải thích gì thêm.`,
-    leave: `Hãy tạo một lời tạm biệt ngắn gọn, dễ thương (tối đa 2 câu) cho thành viên \${memberName} vừa rời kênh voice "\${channelName}". Sử dụng emoji phù hợp. Phong cách deredere, không lặp lại cùng một pattern. Chỉ trả lời nội dung lời tạm biệt, không giải thích gì thêm.`,
+    join: `Act as Lunaby (a cute, cheerful AI). Write a short, warm welcome message (1-2 sentences) for member \${memberName} joining the voice channel "\${channelName}". Use emojis. Be creative and vary your expressions naturally. Context: DO NOT use quotes or any introductory remarks. OUT: Only the raw greeting text.`,
+    leave: `Act as Lunaby (a cute, sweet AI). Write a short, sweet farewell message (1-2 sentences) for member \${memberName} leaving the voice channel "\${channelName}". Use emojis. Be creative and vary your expressions naturally. Context: DO NOT use quotes or any introductory remarks. OUT: Only the raw farewell text.`,
   },
 
   moderation: {

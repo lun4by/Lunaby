@@ -58,6 +58,14 @@ class ConversationService {
     return base;
   }
 
+  /**
+   * Trộn (Enrich) prompt của người dùng với ngữ cảnh từ MemoryService.
+   * Cấu trúc thông tin tiêm vào sau khi trộn bao gồm:
+   * 1. Hướng dẫn tùy chỉnh (Custom Instructions - do User set).
+   * 2. Tóm tắt thông tin cá nhân và preferences (Memory Context).
+   * 3. Trích xuất trí nhớ từ trò chuyện quá khứ (Conversation Context).
+   * Mục tiêu: Đủ ngữ cảnh để AI hiểu nó đang nói chuyện với ai, trong khi tiết kiệm Tokens.
+   */
   async enrichPromptWithMemory(originalPrompt, userId) {
     try {
       const memory = await MemoryService.getUserMemory(userId);
@@ -234,6 +242,11 @@ class ConversationService {
     return messages;
   }
 
+  /**
+   * Làm sạch (Sanitize) đầu vào trước khi gửi tới LLM.
+   * Đảm bảo message đúng định dạng, loại bỏ khoảng trắng rác, loại bỏ tag bot
+   * để giảm Token dư thừa đi vào quá trình training/prompts.
+   */
   validateAndCleanMessages(messages) {
     const validMessages = Validators.cleanMessages(messages);
     if (validMessages.length === 0) {
@@ -242,6 +255,10 @@ class ConversationService {
     return validMessages;
   }
 
+  /**
+   * Giao tiếp với AI API nhưng áp dụng cơ chế Cầu chì (Circuit Breaker / Timeout).
+   * Để giới hạn 25 giây, ngăn chặn cuộc gọi treo vô thời hạn (VD: model bị hang).
+   */
   async callAIWithTimeout(validMessages, config) {
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('AICore timeout after 25 seconds')), AI_TIMEOUT_MS);
@@ -277,6 +294,16 @@ class ConversationService {
   }
 
 
+  /**
+   * Xử lý luồng chính (Main Pipeline) trả lời từ ChatCompletion.
+   * Đây là một Pipeline theo thiết kế Micro-method (Chia nhỏ tiến trình) đặc trưng của AI-refactor để tái sử dụng mã tốt và gỡ lỗi cô lập.
+   * Trình tự:
+   * 1. Xây dựng prompt nâng cao (`buildEnhancedPrompt`).
+   * 2. Lấy ra lịch sử trò chuyện & đồng bộ (`loadAndPrepareHistory`).
+   * 3. Trích lọc tin nhắn an toàn tiêu thụ (`validateAndCleanMessages`).
+   * 4. Call Model an toàn theo thời gian chờ (`callAIWithTimeout`).
+   * 5. Xử lý lưu cache, lưu Memory ẩn, Update Quota (`handleCompletionResult`).
+   */
   async processChatCompletion(prompt, userId, additionalConfig = {}) {
     try {
       const systemPrompt = additionalConfig.systemPrompt || prompts.system.main;

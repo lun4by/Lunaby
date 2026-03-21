@@ -106,23 +106,13 @@ class MemoryService {
     }
   }
 
-  async updatePrivacySettings(userId, privacyUpdates) {
+  async updatePrivacySettings(userId, privacySettings) {
     try {
-      const collection = await this.getMemoryCollection();
-
-      const setOperations = {};
-      for (const [key, value] of Object.entries(privacyUpdates)) {
-        setOperations[`privacy.${key}`] = value;
+      const updates = {};
+      for (const [key, value] of Object.entries(privacySettings)) {
+        updates[`privacy.${key}`] = value;
       }
-      setOperations.lastUpdated = new Date();
-
-      await collection.updateOne(
-        { userId },
-        { $set: setOperations },
-        { upsert: true }
-      );
-
-      this.memoryCache.delete(userId);
+      await this.updateUserMemory(userId, updates);
       return true;
     } catch (error) {
       logger.error('MEMORY_SERVICE', `Error updating privacy settings for ${userId}:`, error);
@@ -158,6 +148,13 @@ class MemoryService {
     }
   }
 
+  /**
+   * Phân tích cuộc hội thoại và trích xuất trí nhớ ngầm (Implicit Memory).
+   * Cơ chế hoạt động:
+   * 1. Kiểm tra quyền riêng tư (allowPersonalInfoExtraction).
+   * 2. Gửi prompt đặc chứa tin nhắn của User & AI yêu cầu trả về định dạng JSON.
+   * 3. Parse JSON an toàn và merge dữ liệu vào hồ sơ (personalInfo, preferences).
+   */
   async extractMemoryFromConversation(userId, userMessage, aiResponse) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -247,6 +244,10 @@ class MemoryService {
     }
   }
 
+  /**
+   * Đóng gói toàn bộ Context của User (thông tin cá nhân, sở thích, trí nhớ tính điểm cao)
+   * thành một chuỗi văn bản (String) để tiêm thẳng vào System Prompt trước khi gọi AI.
+   */
   async buildMemoryContext(userId, currentMessage) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -344,19 +345,6 @@ class MemoryService {
     }
   }
 
-  async updatePrivacySettings(userId, privacySettings) {
-    try {
-      const updates = {};
-      for (const [key, value] of Object.entries(privacySettings)) {
-        updates[`privacy.${key}`] = value;
-      }
-      await this.updateUserMemory(userId, updates);
-      return true;
-    } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error updating privacy settings for ${userId}:`, error);
-      return false;
-    }
-  }
 }
 
 module.exports = new MemoryService();
