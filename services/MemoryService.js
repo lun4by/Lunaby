@@ -3,12 +3,63 @@ const logger = require('../utils/logger.js');
 const AICore = require('./AICore.js');
 const prompts = require('../config/prompts.js');
 const SecurityUtils = require('../utils/SecurityUtils.js');
+const CryptoUtils = require('../utils/CryptoUtils.js');
 
 const CACHE_EXPIRY = 30 * 60 * 1000;
 
 class MemoryService {
   constructor() {
     this.memoryCache = new Map();
+    this.sensitiveFields = ['name', 'nickname', 'location', 'customInstructions', 'birthday'];
+  }
+
+  /**
+   * Mã hóa các trường nhạy cảm trong đối tượng bộ nhớ trước khi lưu.
+   */
+  _encryptPII(memory) {
+    if (!memory) return memory;
+    const encrypted = JSON.parse(JSON.stringify(memory));
+
+    if (encrypted.personalInfo) {
+      for (const field of this.sensitiveFields) {
+        if (encrypted.personalInfo[field]) {
+          encrypted.personalInfo[field] = CryptoUtils.encrypt(encrypted.personalInfo[field]);
+        }
+      }
+    }
+
+    if (Array.isArray(encrypted.memories)) {
+      encrypted.memories = encrypted.memories.map(m => ({
+        ...m,
+        content: CryptoUtils.encrypt(m.content)
+      }));
+    }
+
+    return encrypted;
+  }
+
+  /**
+   * Giải mã các trường nhạy cảm sau khi lấy dữ liệu từ database.
+   */
+  _decryptPII(memory) {
+    if (!memory) return memory;
+    
+    if (memory.personalInfo) {
+      for (const field of this.sensitiveFields) {
+        if (memory.personalInfo[field]) {
+          memory.personalInfo[field] = CryptoUtils.decrypt(memory.personalInfo[field]);
+        }
+      }
+    }
+
+    if (Array.isArray(memory.memories)) {
+      memory.memories = memory.memories.map(m => ({
+        ...m,
+        content: CryptoUtils.decrypt(m.content)
+      }));
+    }
+
+    return memory;
   }
 
   async getMemoryCollection() {
@@ -80,7 +131,9 @@ class MemoryService {
 
       if (!memory) {
         memory = this.getDefaultMemoryStructure(userId);
-        await collection.insertOne(memory);
+        await collection.insertOne(this._encryptPII(memory));
+      } else {
+        memory = this._decryptPII(memory);
       }
 
       this.memoryCache.set(userId, { data: memory, timestamp: Date.now() });
@@ -94,9 +147,19 @@ class MemoryService {
   async updateUserMemory(userId, updates) {
     try {
       const collection = await this.getMemoryCollection();
+      
+      // Mã hóa các trường nhạy cảm trong updates
+      const encryptedUpdates = { ...updates };
+      for (const key of Object.keys(encryptedUpdates)) {
+        const piiField = this.sensitiveFields.find(f => key === `personalInfo.${f}` || key === f);
+        if (piiField && typeof encryptedUpdates[key] === 'string') {
+          encryptedUpdates[key] = CryptoUtils.encrypt(encryptedUpdates[key]);
+        }
+      }
+
       await collection.updateOne(
         { userId },
-        { $set: { ...updates, lastUpdated: new Date() } },
+        { $set: { ...encryptedUpdates, lastUpdated: new Date() } },
         { upsert: true }
       );
       this.memoryCache.delete(userId);
@@ -137,9 +200,14 @@ class MemoryService {
       };
 
       const collection = await this.getMemoryCollection();
+      const encryptedMemory = {
+        ...newMemory,
+        content: CryptoUtils.encrypt(newMemory.content)
+      };
+
       await collection.updateOne(
         { userId },
-        { $push: { memories: newMemory }, $set: { lastUpdated: new Date() } }
+        { $push: { memories: encryptedMemory }, $set: { lastUpdated: new Date() } }
       );
       this.memoryCache.delete(userId);
       return true;
