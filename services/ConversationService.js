@@ -8,6 +8,7 @@ const QuotaService = require("./QuotaService.js");
 const MemoryService = require("./MemoryService.js");
 const Validators = require("../utils/validators.js");
 const ErrorHandler = require("../utils/ErrorHandler.js");
+const SecurityUtils = require("../utils/SecurityUtils.js");
 const {
   DEFAULT_USER_ID,
   DEFAULT_MODEL,
@@ -68,11 +69,15 @@ class ConversationService {
    */
   async enrichPromptWithMemory(originalPrompt, userId) {
     try {
+      originalPrompt = SecurityUtils.sanitizeInput(originalPrompt);
       const memory = await MemoryService.getUserMemory(userId);
       const memoryContext = await MemoryService.buildMemoryContext(userId, originalPrompt);
 
-      const instructionsContext = memory?.personalInfo?.customInstructions
-        ? `\n[User custom instructions: ${memory.personalInfo.customInstructions}]\n`
+      const customInstructions = memory?.personalInfo?.customInstructions
+        ? SecurityUtils.sanitizeInput(memory.personalInfo.customInstructions)
+        : '';
+      const instructionsContext = customInstructions
+        ? `\n[User custom instructions: ${customInstructions}]\n`
         : '';
 
       let conversationContext = '';
@@ -252,12 +257,15 @@ class ConversationService {
     if (validMessages.length === 0) {
       throw new Error("No valid messages to send");
     }
-    return validMessages;
+    return validMessages.map(msg => ({
+      ...msg,
+      content: SecurityUtils.sanitizeInput(msg.content)
+    }));
   }
 
   /**
    * Giao tiếp với AI API nhưng áp dụng cơ chế Cầu chì (Circuit Breaker / Timeout).
-   * Để giới hạn 25 giây, ngăn chặn cuộc gọi treo vô thời hạn (VD: model bị hang).
+   * Để giới hạn 25 giây, ngăn chặn cuộc gọi treo vô thời hạn (VD: model bị treo).
    */
   async callAIWithTimeout(validMessages, config) {
     const timeoutPromise = new Promise((_, reject) => {
@@ -270,6 +278,12 @@ class ConversationService {
     ]);
   }
 
+  /**
+   * Xử lý kết quả trả về từ cuộc hội thoại.
+   * - Ghi lại mức tiêu thụ quota.
+   * - Thêm tin nhắn của assistant vào lịch sử.
+   * - Kích hoạt tác vụ trích xuất trí nhớ ngầm và cập nhật thống kê tương tác.
+   */
   async handleCompletionResult(userId, prompt, result) {
     const content = result.content;
     const tokenUsage = result.usage;
@@ -293,16 +307,13 @@ class ConversationService {
     return content;
   }
 
-
   /**
-   * Xử lý luồng chính (Main Pipeline) trả lời từ ChatCompletion.
-   * Đây là một Pipeline theo thiết kế Micro-method (Chia nhỏ tiến trình) đặc trưng của AI-refactor để tái sử dụng mã tốt và gỡ lỗi cô lập.
-   * Trình tự:
-   * 1. Xây dựng prompt nâng cao (`buildEnhancedPrompt`).
-   * 2. Lấy ra lịch sử trò chuyện & đồng bộ (`loadAndPrepareHistory`).
-   * 3. Trích lọc tin nhắn an toàn tiêu thụ (`validateAndCleanMessages`).
-   * 4. Call Model an toàn theo thời gian chờ (`callAIWithTimeout`).
-   * 5. Xử lý lưu cache, lưu Memory ẩn, Update Quota (`handleCompletionResult`).
+   * Quy trình xử lý hoàn chỉnh việc tạo phản hồi từ AI (Main Pipeline).
+   * 1. Xây dựng prompt nâng cao.
+   * 2. Chuẩn bị lịch sử hội thoại.
+   * 3. Làm sạch và lọc tin nhắn.
+   * 4. Gọi AI với cơ chế timeout bảo vệ.
+   * 5. Xử lý và lưu trữ kết quả.
    */
   async processChatCompletion(prompt, userId, additionalConfig = {}) {
     try {

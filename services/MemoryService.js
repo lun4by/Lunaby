@@ -2,6 +2,7 @@ const mongoClient = require('./database/mongoClient.js');
 const logger = require('../utils/logger.js');
 const AICore = require('./AICore.js');
 const prompts = require('../config/prompts.js');
+const SecurityUtils = require('../utils/SecurityUtils.js');
 
 const CACHE_EXPIRY = 30 * 60 * 1000;
 
@@ -184,14 +185,23 @@ class MemoryService {
 
       if (extracted.personalInfo) {
         for (const [key, value] of Object.entries(extracted.personalInfo)) {
-          if (value?.trim()) updates[`personalInfo.${key}`] = value;
+          if (typeof value === 'string' && value.trim()) {
+            if (SecurityUtils.validateMemoryContent(value).isValid) {
+              updates[`personalInfo.${key}`] = SecurityUtils.sanitizeInput(value);
+            }
+          }
         }
       }
 
       if (extracted.preferences) {
         for (const [type, items] of Object.entries(extracted.preferences)) {
           if (Array.isArray(items) && items.length > 0) {
-            updates[`preferences.${type}`] = items;
+            const safeItems = items
+              .filter(item => typeof item === 'string' && SecurityUtils.validateMemoryContent(item).isValid)
+              .map(item => SecurityUtils.sanitizeInput(item));
+            if (safeItems.length > 0) {
+              updates[`preferences.${type}`] = safeItems;
+            }
           }
         }
       }
@@ -201,7 +211,13 @@ class MemoryService {
       }
 
       if (extracted.memory?.content) {
-        await this.addMemory(userId, { ...extracted.memory, source: 'auto-extracted' });
+        const validation = SecurityUtils.validateMemoryContent(extracted.memory.content);
+        if (validation.isValid) {
+          extracted.memory.content = SecurityUtils.sanitizeInput(extracted.memory.content);
+          await this.addMemory(userId, { ...extracted.memory, source: 'auto-extracted' });
+        } else {
+          logger.warn('MEMORY_SERVICE', `Memory poisoning prevented. Extracted content rejected: ${validation.reason}`);
+        }
       }
 
       return extracted;
@@ -298,6 +314,10 @@ class MemoryService {
     }
   }
 
+  /**
+   * Lấy bản tóm tắt hồ sơ và trí nhớ của người dùng.
+   * Trình bày dưới dạng JSON dễ tiêu thụ cho các tính năng xem trước hoặc phân tích.
+   */
   async getMemorySummary(userId) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -318,6 +338,9 @@ class MemoryService {
     }
   }
 
+  /**
+   * Xóa một mẩu trí nhớ cụ thể theo ID.
+   */
   async deleteMemory(userId, memoryId) {
     try {
       const collection = await this.getMemoryCollection();
@@ -333,6 +356,9 @@ class MemoryService {
     }
   }
 
+  /**
+   * Xóa toàn bộ hồ sơ trí nhớ của người dùng khỏi database và cache.
+   */
   async clearUserMemories(userId) {
     try {
       const collection = await this.getMemoryCollection();
