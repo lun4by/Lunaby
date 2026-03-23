@@ -67,7 +67,7 @@ async function startbot(client, loadCommands) {
 
     try {
       const commandCount = loadCommands(client);
-      logger.info('SYSTEM', `Đã tải ${commandCount} lệnh`);
+      logger.info('SYSTEM', `Loaded ${commandCount} commands`);
       initSystem.markReady('commands');
     } catch (error) {
       logger.error('SYSTEM', 'Command loading failed:', error.message);
@@ -107,7 +107,7 @@ async function startbot(client, loadCommands) {
       status: 'online'
     });
 
-    logger.info('SYSTEM', `Bot đã sẵn sàng! Đã đăng nhập với tên ${client.user.tag}`);
+    logger.info('SYSTEM', `Bot is ready! Logged in as ${client.user.tag}`);
   });
 }
 

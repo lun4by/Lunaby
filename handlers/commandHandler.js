@@ -61,12 +61,12 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
 const loadCommands = (client) => {
   const commandsPath = path.join(__dirname, '../commands');
   const commandsJson = [];
-  logger.info('COMMAND', 'BẮT ĐẦU TẢI LỆNH');
+  logger.info('COMMAND', 'STARTING COMMAND LOAD');
   client.commands.clear();
   loadCommandsFromDirectory(client, commandsPath, commandsJson);
   commandsJsonCache = commandsJson;
-  logger.info('COMMAND', `ĐÃ TẢI TỔNG CỘNG ${client.commands.size} LỆNH`);
-  if (!commandsJson.length) logger.warn('COMMAND', 'KHÔNG CÓ LỆNH NÀO ĐƯỢC TẢI!');
+  logger.info('COMMAND', `LOADED A TOTAL OF ${client.commands.size} COMMANDS`);
+  if (!commandsJson.length) logger.warn('COMMAND', 'NO COMMANDS WERE LOADED!');
   return client.commands.size;
 };
 

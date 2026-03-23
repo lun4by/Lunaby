@@ -24,11 +24,11 @@ class InitSystem extends EventEmitter {
     }
 
     this.services[service] = true;
-    logger.info("SYSTEM", `Service ${service} đã sẵn sàng`);
+    logger.info("SYSTEM", `Service ${service} is ready`);
 
     if (Object.values(this.services).every(Boolean)) {
       this.initialized = true;
-      logger.info("SYSTEM", "Tất cả services đã sẵn sàng");
+      logger.info("SYSTEM", "All services are ready");
       this.emit("ready");
     }
   }
