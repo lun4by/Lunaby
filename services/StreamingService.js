@@ -1,11 +1,6 @@
 const AICore = require('./AICore');
 const Validators = require('../utils/validators');
-const {
-    STREAM_UPDATE_INTERVAL_MS,
-    STREAM_MIN_CHUNK_SIZE,
-    STREAM_BATCH_UPDATE_SIZE,
-    DISCORD_MESSAGE_MAX_LENGTH
-} = require('../config/constants');
+const { DISCORD_MESSAGE_MAX_LENGTH } = require('../config/constants');
 
 function splitByLength(text, maxLength) {
     const chunks = [];
@@ -29,17 +24,18 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
     const validMessages = Validators.cleanMessages(messages);
     if (!validMessages.length) throw new Error('No valid messages');
 
+    const streamDelay = config.streamDelay || 0;
+
     const stream = await client.chat.createStream(validMessages, {
         max_tokens: config.max_tokens || 2048,
         ...config
     });
 
     let sentMessage = null;
-    let lastUpdate = Date.now();
-    let lastSentLength = 0;
     let isEditing = false;
     let pendingAccumulated = null;
 
+    // Mutex-based display queue — prevents overlapping Discord edits
     const processDisplayQueue = async () => {
         if (isEditing) return;
         isEditing = true;
@@ -58,44 +54,57 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
                 } else if (currentAccum.length <= DISCORD_MESSAGE_MAX_LENGTH) {
                     await sentMessage.edit(textToUpdate);
                 }
-                lastUpdate = Date.now();
-                lastSentLength = currentAccum.length;
             } catch (e) {
                 if (e.code === 10008) sentMessage = null;
             }
 
-            // Khoảng nghỉ nhỏ để tránh bị discord.js throttle gắt khi edit liên tục
-            await new Promise(r => setTimeout(r, 150));
+            // Khoảng nghỉ nhỏ giữa các lần edit để tránh bị Discord throttle
+            await new Promise(r => setTimeout(r, 100));
         }
 
         isEditing = false;
     };
+
+    // Buffered mode: setInterval flushes buffer periodically
+    let bufferInterval = null;
+    if (streamDelay > 0) {
+        bufferInterval = setInterval(() => {
+            if (pendingAccumulated !== null) {
+                processDisplayQueue();
+            }
+        }, streamDelay);
+    }
 
     const typingInterval = setInterval(() => channel.sendTyping().catch(() => { }), 5000);
 
     try {
         const fullContent = await stream.process({
             onContent: async (chunk, accumulated) => {
-                const now = Date.now();
-                const delta = accumulated.length - lastSentLength;
+                if (streamDelay > 0) {
+                    // Buffered mode: chỉ lưu accumulated, để interval tự flush
+                    pendingAccumulated = accumulated;
 
-                // Cập nhật khi thoả mãn kích thước chunk hoặc thời gian delay
-                const shouldUpdate = !sentMessage ||
-                    delta >= STREAM_BATCH_UPDATE_SIZE ||
-                    (now - lastUpdate >= STREAM_UPDATE_INTERVAL_MS && delta >= STREAM_MIN_CHUNK_SIZE);
-
-                if (shouldUpdate) {
+                    // Gửi message đầu tiên ngay lập tức (không đợi interval)
+                    if (!sentMessage) {
+                        processDisplayQueue();
+                    }
+                } else {
+                    // Immediate mode: trigger edit ngay mỗi khi có chunk mới
                     pendingAccumulated = accumulated;
                     processDisplayQueue();
                 }
             }
         });
 
-        // Đợi cho đến khi toàn bộ hàng đợi render Discord hiện tại đã xong
+        // Dọn dẹp buffer interval
+        if (bufferInterval) clearInterval(bufferInterval);
+
+        // Đợi cho đến khi toàn bộ hàng đợi render hiện tại đã xong
         while (isEditing) {
             await new Promise(r => setTimeout(r, 100));
         }
 
+        // --- Final message ---
         const sendOrReply = (text) => replyToMessage ? replyToMessage.reply(text) : channel.send(text);
 
         if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
@@ -117,6 +126,7 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
 
         return fullContent;
     } finally {
+        if (bufferInterval) clearInterval(bufferInterval);
         clearInterval(typingInterval);
     }
 }
