@@ -1,5 +1,26 @@
 # Changelog - Lunaby Bot
 
+## [2.0.0-native] - 2026-03-24
+
+### Highlights
+- **Kiến trúc hệ thống mới**: Tái cấu trúc toàn diện dự án, đưa toàn bộ mã nguồn vào thư mục `src/` để quản lý sạch sẽ và chuyên nghiệp hơn.
+- **Phân tách Services**: Tổ chức lại 16 file dịch vụ (services) gốc tản mác thành các module logic riêng biệt (`ai/`, `user/`, `system/`, `api/`, `web/`, `database/`).
+- **Dual-mode Streaming**: Nâng cấp cốt lõi hệ thống stream tin nhắn AI với 2 chế độ: stream tức thì cực mượt (Immediate) và stream qua bộ đệm (Buffered Mode) để triệt tiêu hoàn toàn lỗi Rate Limit (429) của Discord.
+
+### Added
+- **`commands/Core/about.js`**: Lệnh giới thiệu tiểu sử (lore) lấy cảm hứng từ *Cơ Lãnh Âm* cùng hệ thống hiển thị trạng thái bot.
+- **`commands/Core/ping.js`**: Lệnh đo độ trễ với giao diện tương tác mới, cho phép người dùng click làm mới (refresh) trạng thái liên tục.
+- Cấu hình `DISCORD_STREAM_DELAY_MS` dùng để tinh chỉnh tốc độ tin nhắn của bot.
+
+### Changed
+- **`StreamingService.js`**: Viết lại hoàn toàn logic gửi tin nhắn để hỗ trợ Mutex Queue và `setInterval`.
+- Cập nhật luồng xử lý chat và code (`chatRequestHandler.js`, `codeRequestHandler.js`) để kết nối với engine stream mới.
+
+### Removed
+- Loại bỏ vĩnh viễn hệ thống cấu hình stream cũ (`STREAM_UPDATE_INTERVAL_MS`, `STREAM_MIN_CHUNK_SIZE`, `STREAM_BATCH_UPDATE_SIZE`).
+
+---
+
 ## [1.3.2-native] - 2026-03-04
 
 ### Highlights
