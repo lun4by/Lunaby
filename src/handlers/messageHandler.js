@@ -43,8 +43,23 @@ async function handleMentionMessage(message, client) {
       }
 
       try {
-        const content = message.content.replace(/<@!?\d+>/g, '').trim();
+        let content = message.content;
 
+        // Loại bỏ thẻ tag trực tiếp gọi bot
+        content = content.replace(new RegExp(`<@!?${client.user.id}>`, 'g'), '');
+
+        // Chuyển các thẻ tag user khác thành tên thật (Username) để AI hiểu như một người bình thường
+        if (message.mentions.users.size > 0) {
+          message.mentions.users.forEach(user => {
+            if (user.id !== client.user.id) {
+              const member = message.guild?.members.cache.get(user.id);
+              const displayName = member?.displayName || user.displayName || user.username;
+              content = content.replace(new RegExp(`<@!?${user.id}>`, 'g'), displayName);
+            }
+          });
+        }
+
+        content = content.trim();
         if (!content) {
           await message.reply('Tôi có thể giúp gì cho bạn hôm nay?');
           return;
