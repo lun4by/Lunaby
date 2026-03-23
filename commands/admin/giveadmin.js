@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
 const RoleService = require('../../services/RoleService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
 const { USER_ROLES } = require('../../config/constants');
 const logger = require('../../utils/logger');
 
@@ -28,15 +27,15 @@ module.exports = {
 
     async execute(interaction) {
         const isSlash = interaction.isCommand && interaction.isCommand();
-        
-        const targetUser = isSlash 
-            ? interaction.options.getUser('user') 
+
+        const targetUser = isSlash
+            ? interaction.options.getUser('user')
             : interaction.message?.mentions?.users?.first();
-            
-        let roleRaw = isSlash 
-            ? interaction.options.getString('role') 
+
+        let roleRaw = isSlash
+            ? interaction.options.getString('role')
             : interaction.args?.find(a => !a.match(/^<@!?\d+>$/));
-            
+
         const role = roleRaw?.toLowerCase();
 
         if (!targetUser || !role) {
@@ -61,17 +60,10 @@ module.exports = {
 
             await RoleService.setUserRole(targetUser.id, role);
 
-            const embed = createLunabyEmbed()
-                .setTitle('👑 Cấp quyền thành công')
-                .setColor(0xF1C40F)
-                .setDescription(`Đã thay đổi quyền của <@${targetUser.id}>.`)
-                .addFields(
-                    { name: '👤 Người dùng', value: targetUser.tag, inline: true },
-                    { name: '⭐ Quyền cũ', value: currentRole, inline: true },
-                    { name: '🌟 Quyền mới', value: role, inline: true }
-                );
+            // Tin nhắn text
+            const successMessage = `**Cấp quyền thành công!**\nĐã thay đổi quyền của <@${targetUser.id}> (${targetUser.tag}).\n**Từ:** \`${currentRole}\` **Sang:** \`${role}\``;
 
-            await interaction.reply({ embeds: [embed] });
+            await interaction.reply({ content: successMessage });
         } catch (error) {
             logger.error('ADMIN', 'Error in giveadmin command:', error);
             await interaction.reply({ content: 'Đã xảy ra lỗi khi cập nhật Quyền cho người dùng này.', ephemeral: true });
