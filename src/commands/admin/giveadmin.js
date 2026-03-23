@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const RoleService = require('../../services/RoleService');
+const RoleService = require('../../services/user/RoleService');
 const { USER_ROLES } = require('../../config/constants');
 const logger = require('../../utils/logger');
 

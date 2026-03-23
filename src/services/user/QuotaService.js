@@ -1,14 +1,14 @@
-const logger = require('../utils/logger.js');
-const QuotaDB = require('./database/QuotaDB.js');
+const logger = require('../../utils/logger.js');
+const QuotaDB = require('../database/QuotaDB.js');
 const RoleService = require('./RoleService.js');
-const { ROLE_LIMITS, QUOTA_PERIOD_DAYS } = require('../config/constants.js');
+const { ROLE_LIMITS, QUOTA_PERIOD_DAYS } = require('../../config/constants.js');
 const DAY_MS = 86400000;
 const PERIOD_MS = QUOTA_PERIOD_DAYS * DAY_MS;
 
 class QuotaService {
   constructor() {
     this.roleLimits = ROLE_LIMITS;
-    const { ROLE_IMAGE_LIMITS } = require('../config/constants.js');
+    const { ROLE_IMAGE_LIMITS } = require('../../config/constants.js');
     this.roleImageLimits = ROLE_IMAGE_LIMITS || { owner: -1, admin: -1, pro: 25, user: 10 };
     this.ownerId = process.env.OWNER_ID?.trim() || null;
   }

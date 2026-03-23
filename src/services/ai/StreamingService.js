@@ -1,6 +1,6 @@
 const AICore = require('./AICore');
-const Validators = require('../utils/validators');
-const { DISCORD_MESSAGE_MAX_LENGTH } = require('../config/constants');
+const Validators = require('../../utils/validators');
+const { DISCORD_MESSAGE_MAX_LENGTH } = require('../../config/constants');
 
 function splitByLength(text, maxLength) {
     const chunks = [];

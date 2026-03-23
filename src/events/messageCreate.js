@@ -1,7 +1,7 @@
 const { Events } = require("discord.js");
 const { handleMentionMessage } = require("../handlers/messageHandler");
 const { handlePrefixMessage } = require("../handlers/prefixHandler");
-const XPService = require("../services/XPService");
+const XPService = require("../services/user/XPService");
 const logger = require("../utils/logger.js");
 
 function setupMessageCreateEvent(client) {

@@ -1,13 +1,13 @@
-const AICore = require('../../services/AICore');
+const AICore = require('../../services/ai/AICore');
 const logger = require('../../utils/logger');
-const { sendStreamingMessage } = require('../../services/StreamingService');
+const { sendStreamingMessage } = require('../../services/ai/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 const { DEFAULT_MODEL, DISCORD_STREAM_DELAY_MS } = require('../../config/constants');
 const Validators = require('../../utils/validators');
 const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
 const ErrorHandler = require('../../utils/ErrorHandler');
-const QuotaService = require('../../services/QuotaService');
+const QuotaService = require('../../services/user/QuotaService');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 function formatCodeResponse(text) {

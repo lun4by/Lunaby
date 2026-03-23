@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { PermissionFlagsBits } = require('discord.js');
-const logger = require('../utils/logger.js');
+const logger = require('../../utils/logger.js');
 
 const PERMISSION_FLAGS = {
   [PermissionFlagsBits.Administrator]: 'ADMINISTRATOR',

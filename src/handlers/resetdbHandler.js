@@ -1,4 +1,4 @@
-const storageDB = require('../services/storagedb.js');
+const storageDB = require('../services/database/storagedb.js');
 const ProfileDB = require('../services/database/profiledb.js');
 const logger = require('../utils/logger.js');
 

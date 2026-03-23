@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
-const ConversationService = require('../services/ConversationService');
-const consentService = require('../services/consentService');
+const ConversationService = require('../services/ai/ConversationService');
+const consentService = require('../services/user/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 
 const { handleMemoryRequest, splitMessageIntoChunks } = require('./messageHandlers/memoryRequestHandler');

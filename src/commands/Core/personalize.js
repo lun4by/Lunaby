@@ -10,7 +10,7 @@ const {
     ButtonBuilder,
     ButtonStyle,
 } = require('discord.js');
-const MemoryService = require('../../services/MemoryService.js');
+const MemoryService = require('../../services/ai/MemoryService.js');
 const logger = require('../../utils/logger.js');
 
 const MENU_OPTIONS = [
@@ -346,7 +346,7 @@ async function handleButtonClick(i, userId, interaction) {
         try {
             await MemoryService.clearUserMemories(userId);
 
-            const storageDB = require('../../services/storagedb.js');
+            const storageDB = require('../../services/database/storagedb.js');
             const prompts = require('../../config/prompts.js');
             const { DEFAULT_MODEL } = require('../../config/constants.js');
             await storageDB.clearConversationHistory(interaction.user.id, prompts.system.main, DEFAULT_MODEL);

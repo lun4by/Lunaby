@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const logger = require("../utils/logger.js");
+const logger = require("../../utils/logger.js");
 
 const TEMP_DIR = path.join(process.cwd(), "temp");
 const MB = 1024 * 1024;

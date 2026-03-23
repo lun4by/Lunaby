@@ -1,4 +1,4 @@
-const logger = require("../utils/logger.js");
+const logger = require("../../utils/logger.js");
 
 const MAL_COLOR = 0x2e51a2;
 const FOOTER = { text: "Powered by MyAnimeList API" };

@@ -1,14 +1,14 @@
-const logger = require("../utils/logger.js");
-const storageDB = require("./storagedb.js");
-const conversationManager = require("../handlers/conversationManager.js");
-const prompts = require("../config/prompts.js");
-const textUtils = require("../utils/textUtils.js");
+const logger = require("../../utils/logger.js");
+const storageDB = require("../database/storagedb.js");
+const conversationManager = require("../../handlers/conversationManager.js");
+const prompts = require("../../config/prompts.js");
+const textUtils = require("../../utils/textUtils.js");
 const AICore = require("./AICore.js");
-const QuotaService = require("./QuotaService.js");
+const QuotaService = require("../user/QuotaService.js");
 const MemoryService = require("./MemoryService.js");
-const Validators = require("../utils/validators.js");
-const ErrorHandler = require("../utils/ErrorHandler.js");
-const SecurityUtils = require("../utils/SecurityUtils.js");
+const Validators = require("../../utils/validators.js");
+const ErrorHandler = require("../../utils/ErrorHandler.js");
+const SecurityUtils = require("../../utils/SecurityUtils.js");
 const {
   DEFAULT_USER_ID,
   DEFAULT_MODEL,
@@ -21,7 +21,7 @@ const {
   DEFAULT_MEMORY_DISPLAY_COUNT,
   SUMMARY_MESSAGE_TRUNCATE_LENGTH,
   REQUEST_TYPES
-} = require("../config/constants.js");
+} = require("../../config/constants.js");
 
 const {
   IMAGE_COMMAND_REGEX,
@@ -29,7 +29,7 @@ const {
   CODE_COMMAND_REGEX,
   MEMORY_ANALYSIS_SUMMARY_KEYWORDS,
   MEMORY_ANALYSIS_DETAILED_KEYWORDS
-} = require("../config/patterns.js");
+} = require("../../config/patterns.js");
 
 class ConversationService {
   constructor() {

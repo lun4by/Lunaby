@@ -1,10 +1,10 @@
 const PrefixDB = require('../services/database/PrefixDB');
-const consentService = require('../services/consentService');
+const consentService = require('../services/user/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
 const MariaModDB = require('../services/database/MariaModDB');
-const QuotaService = require('../services/QuotaService');
-const RoleService = require('../services/RoleService');
-const CooldownService = require('../services/CooldownService');
+const QuotaService = require('../services/user/QuotaService');
+const RoleService = require('../services/user/RoleService');
+const CooldownService = require('../services/user/CooldownService');
 const logger = require('../utils/logger');
 
 class PseudoInteraction {

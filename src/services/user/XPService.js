@@ -1,5 +1,5 @@
-const ProfileDB = require('./database/profiledb');
-const logger = require('../utils/logger');
+const ProfileDB = require('../database/profiledb');
+const logger = require('../../utils/logger');
 
 const COOLDOWN_MS = 60000;
 const DEFAULT_SERVER_XP = (guildId) => ({ id: guildId, xp: 0, level: 1 });

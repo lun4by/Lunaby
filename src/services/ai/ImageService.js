@@ -1,4 +1,4 @@
-const storageDB = require("./storagedb.js");
+const storageDB = require("../database/storagedb.js");
 const AICore = require("./AICore.js");
 
 class ImageService {

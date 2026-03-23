@@ -2,8 +2,8 @@ const mongoClient = require('./mongoClient');
 const logger = require('../../utils/logger');
 const ConversationDB = require('./ConversationDB');
 const UserProfileDB = require('./UserProfileDB');
-const MemoryService = require('../MemoryService');
-const QuotaService = require('../QuotaService');
+const MemoryService = require('../ai/MemoryService');
+const QuotaService = require('../user/QuotaService');
 const { COLLECTIONS } = require('../../config/constants');
 
 class DatabaseManager {

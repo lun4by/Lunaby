@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const XPService = require('./../../services/XPService');
-const { ordinalize } = require('./../../utils/string.js');
-const logger = require('./../../utils/logger');
+const XPService = require('../../services/user/XPService');
+const { ordinalize } = require('../../utils/string.js');
+const logger = require('../../utils/logger');
 
 
 function commatize(num) {

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const ConversationService = require('../../services/ConversationService.js');
+const ConversationService = require('../../services/ai/ConversationService.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
 const prompts = require('../../config/prompts.js');

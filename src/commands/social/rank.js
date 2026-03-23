@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const ProfileDB = require('../../services/database/profiledb');
-const XPService = require('./../../services/XPService');
-const generateRankCard = require('./../../services/canvas/rankCanvas.js');
-const { ordinalize } = require('./../../utils/string.js');
-const logger = require('./../../utils/logger');
+const XPService = require('../../services/user/XPService');
+const generateRankCard = require('../../services/canvas/rankCanvas.js');
+const { ordinalize } = require('../../utils/string.js');
+const logger = require('../../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()

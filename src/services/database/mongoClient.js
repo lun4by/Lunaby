@@ -1,5 +1,5 @@
 const { MongoClient } = require("mongodb");
-const initSystem = require("../../services/initSystem.js");
+const initSystem = require("../system/initSystem.js");
 const logger = require("../../utils/logger.js");
 
 class MongoDBClient {

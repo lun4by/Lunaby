@@ -1,8 +1,8 @@
-const ConversationDB = require('./database/ConversationDB');
-const UserProfileDB = require('./database/UserProfileDB');
-const MariaBlacklistDB = require('./database/MariaBlacklistDB');
-const DatabaseManager = require('./database/DatabaseManager');
-const { CONVERSATION_CLEANUP_INTERVAL_MS } = require('../config/constants');
+const ConversationDB = require('./ConversationDB');
+const UserProfileDB = require('./UserProfileDB');
+const MariaBlacklistDB = require('./MariaBlacklistDB');
+const DatabaseManager = require('./DatabaseManager');
+const { CONVERSATION_CLEANUP_INTERVAL_MS } = require('../../config/constants');
 
 class StorageDB {
   constructor() {

@@ -1,9 +1,9 @@
-const mongoClient = require('./database/mongoClient.js');
-const logger = require('../utils/logger.js');
+const mongoClient = require('../database/mongoClient.js');
+const logger = require('../../utils/logger.js');
 const AICore = require('./AICore.js');
-const prompts = require('../config/prompts.js');
-const SecurityUtils = require('../utils/SecurityUtils.js');
-const CryptoUtils = require('../utils/CryptoUtils.js');
+const prompts = require('../../config/prompts.js');
+const SecurityUtils = require('../../utils/SecurityUtils.js');
+const CryptoUtils = require('../../utils/CryptoUtils.js');
 
 const CACHE_EXPIRY = 30 * 60 * 1000;
 

@@ -3,13 +3,13 @@ const mariaClient = require('../services/database/mariaClient.js');
 const MariaBlacklistDB = require('../services/database/MariaBlacklistDB.js');
 const PrefixDB = require('../services/database/PrefixDB.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
-const storageDB = require('../services/storagedb.js');
-const initSystem = require('../services/initSystem.js');
+const storageDB = require('../services/database/storagedb.js');
+const initSystem = require('../services/system/initSystem.js');
 const GuildProfileDB = require('../services/database/guildprofiledb.js');
 const { syncAllGuilds } = require('../handlers/guildHandler');
-const CommandsJSONService = require('../services/CommandsJSONService');
-const QuotaService = require('../services/QuotaService.js');
-const RoleService = require('../services/RoleService.js');
+const CommandsJSONService = require('../services/system/CommandsJSONService');
+const QuotaService = require('../services/user/QuotaService.js');
+const RoleService = require('../services/user/RoleService.js');
 const logger = require('../utils/logger.js');
 
 async function startbot(client, loadCommands) {

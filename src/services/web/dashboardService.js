@@ -1,7 +1,7 @@
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
-const logger = require("../utils/logger.js");
+const logger = require("../../utils/logger.js");
 
 class DashboardService {
   constructor() {

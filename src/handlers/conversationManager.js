@@ -1,4 +1,4 @@
-const storageDB = require('../services/storagedb.js');
+const storageDB = require('../services/database/storagedb.js');
 const logger = require('../utils/logger.js');
 
 const conversationManager = (() => {

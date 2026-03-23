@@ -1,6 +1,6 @@
 const { Events } = require('discord.js');
 const GuildProfileDB = require('../services/database/guildprofiledb.js');
-const AICore = require('../services/AICore.js');
+const AICore = require('../services/ai/AICore.js');
 const prompts = require('../config/prompts.js');
 const logger = require('../utils/logger.js');
 

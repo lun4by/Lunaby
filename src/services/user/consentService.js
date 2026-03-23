@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const ProfileDB = require('./database/profiledb');
-const logger = require('../utils/logger.js');
-const { handlePermissionError, sendEmbedWithFallback, hasPermission } = require('../utils/permissionUtils');
+const ProfileDB = require('../database/profiledb');
+const logger = require('../../utils/logger.js');
+const { handlePermissionError, sendEmbedWithFallback, hasPermission } = require('../../utils/permissionUtils');
 
 class ConsentService {
   async hasUserConsented(userId) {

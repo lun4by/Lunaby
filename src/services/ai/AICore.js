@@ -1,6 +1,6 @@
-const logger = require("../utils/logger.js");
-const prompts = require("../config/prompts.js");
-const initSystem = require("./initSystem.js");
+const logger = require("../../utils/logger.js");
+const prompts = require("../../config/prompts.js");
+const initSystem = require("../system/initSystem.js");
 const { Lunaby } = require("lunaby-sdk");
 
 const MODEL_MAP = { default: "lunaby", pro: "lunaby-pro", image: "lunaby-vision" };

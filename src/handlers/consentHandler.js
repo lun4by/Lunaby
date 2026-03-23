@@ -1,4 +1,4 @@
-const consentService = require('../services/consentService');
+const consentService = require('../services/user/consentService');
 const logger = require('../utils/logger.js');
 
 

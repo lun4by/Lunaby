@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const QuotaService = require('../../services/QuotaService');
+const QuotaService = require('../../services/user/QuotaService');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 const logger = require('../../utils/logger');
 
