@@ -3,91 +3,72 @@
 <div align="center">
   <img src="https://cdn.lunie.dev/Lunaby/avatar.png" alt="Ảnh đại diện bot Lunaby" width="200" height="200" style="border-radius: 50%;">
   <br>
-  <em>Trợ lý AI thông minh cho Discord của bạn</em>
+  <em>Cơ Lãnh Âm hiện thân - Trợ lý AI thanh cao và dịu dàng dành cho Discord của bạn</em>
 </div>
+
+---
 
 ## Tổng Quan
 
-Lunaby là bot Discord được hỗ trợ bởi **local offline models**. Bot có tính cách thân thiện và hỗ trợ nhiều tác vụ như trò chuyện, tạo mã nguồn và tạo hình ảnh. Tích hợp hệ thống cấp độ và thành tựu để khuyến khích tương tác người dùng.
-> Lunaby Bot sử dụng **local offline models** với model LLM được build (fine-tuned) dựa trên GPT OSS 120B.
+**Lunaby** là một bot Discord thông minh được vận hành bởi cục bộ (**local offline models**), với model LLM được tinh chỉnh (fine-tuned) tối ưu dựa trên kiến trúc GPT OSS 120B. 
 
-## Tính Năng Chính
+Lấy cảm hứng từ *Cơ Lãnh Âm*, Lunaby mang trong mình khí chất thanh cao, dịu dàng nhưng cũng vô cùng sâu sắc. Bot không chỉ đơn thuần là một công cụ trả lời tự động, mà còn đóng vai trò như một người bạn đồng hành, hỗ trợ bạn từ việc trò chuyện phím, tạo ảnh nghệ thuật, cho đến hỗ trợ viết mã lập trình phức tạp.
 
-- **Trò chuyện thông minh**: Tương tác tự nhiên với khả năng ghi nhớ ngữ cảnh  
-- **Tạo hình ảnh**: Tạo hình ảnh từ mô tả văn bản đơn giản  
-- **Trợ lý lập trình**: Hỗ trợ lập trình và tạo mã nguồn  
-- **Hệ thống bộ nhớ**: Ghi nhớ ngữ cảnh cuộc trò chuyện cho tương tác tự nhiên  
-- **Quản lý máy chủ**: Tự động triển khai lệnh cho máy chủ mới  
-- **Hệ thống tiến độ**: Hệ thống cấp độ với thành tựu và phần thưởng  
-- **Thẻ hồ sơ**: Hiển thị thông tin người dùng hiện đại  
-- **Đồng bộ dữ liệu**: Lưu trữ dữ liệu người dùng và máy chủ với MongoDB  
-- **Kiến trúc đa nhà cung cấp**: Tự động chuyển đổi API để đảm bảo hoạt động liên tục
-- **Hỗ trợ Prefix Command**: Sử dụng các lệnh qua tiền tố (prefix) linh hoạt kết hợp với Slash command truyền thống
-- **Hệ thống đa cơ sở dữ liệu**: Tích hợp MongoDB và MariaDB để tối ưu hóa việc phân tách và lưu trữ dữ liệu chuyên biệt
+## Tính Năng Nổi Bật
+
+- **Trò chuyện thông minh**: Tương tác tự nhiên, mượt mà với khả năng ghi nhớ ngữ cảnh dài hạn xuất sắc.
+- **Sáng tạo nghệ thuật**: Tạo hình ảnh chất lượng cao chỉ từ những dòng mô tả văn bản đơn giản.
+- **Trợ lý lập trình**: Hỗ trợ giải thích code, debug và viết mã nguồn.
+- **Dual-mode Streaming**: Chế độ stream tin nhắn trực tiếp mượt mà như ChatGPT, kết hợp với bộ đệm (buffer debounce) thông minh chống lỗi Rate Limit (429) của Discord.
+- **Hệ thống tiến trình**: Tích hợp hệ thống phân tích kinh nghiệm (XP), bảng xếp hạng và giao diện thẻ hồ sơ (profile) hiện đại.
+- **Đa cơ sở dữ liệu**: Trải nghiệm sự kết hợp mạnh mẽ giữa MongoDB và MariaDB để tối ưu hóa lưu trữ và trích xuất dữ liệu.
+- **Cơ chế lệnh linh hoạt**: Hỗ trợ đồng thời cả `/slash commands` tiện lợi và `prefix commands` truyền thống.
 
 ## Kiến Trúc Hệ Thống
 
-Lunaby đã được tái cấu trúc hoàn toàn với hệ thống AI cục bộ tối ưu:
+Lunaby vừa được tái cấu trúc theo mô hình hướng dịch vụ (Service-Oriented Architecture), toàn bộ mã nguồn được quy hoạch gọn gàng trong thư mục `src/`, giúp cực kỳ dễ bảo trì và mở rộng:
 
-### **AICore.js** - Trung tâm xử lý AI
-- Xử lý tất cả yêu cầu AI và logic xử lý
-- Tương tác với các local offline models
-- Cấu hình model bảo mật
-- Quản lý resource và tối ưu hiệu suất
+- **`src/services/ai/`**: Trái tim của Lunaby. Nơi chứa `AICore.js` (xử lý LLM), `ConversationService.js` (quản lý ngữ cảnh), `ImageService.js` và `StreamingService.js`.
+- **`src/services/user/`**: Góc quản lý thông tin người dùng với `QuotaService.js`, `RoleService.js`, `XPService.js` và hệ thống hồi chiêu `CooldownService.js`.
+- **`src/services/system/`**: Khởi chạy bot (`initSystem.js`) và bảo trì hệ thống.
+- **`src/services/database/`**: Quản lý kết nối tới MongoDB, MariaDB và các thao tác đồng bộ hoá dữ liệu.
 
-### **ConversationService.js** - Quản lý cuộc trò chuyện
-- Quản lý ngữ cảnh và bộ nhớ
-- Xử lý tương tác người dùng
-- Khả năng ghi nhớ cao
+## Cài Đặt & Vận Hành
 
-### **ImageService.js** - Xử lý hình ảnh
-- Tích hợp local image generation
-- Theo dõi tiến trình tạo hình ảnh
-- Chức năng hình ảnh độc lập
+Khác với các bot sử dụng API Cloud mất phí, việc host Lunaby trên local models mang lại độ tin cậy tuyệt đối, bảo mật quyền riêng tư của dữ liệu và không lo các giới hạn quota khắc nghiệt.
 
-### **SystemService.js** - Tiện ích hệ thống
-- Xác thực môi trường và kiểm tra hệ thống
-- Khởi tạo logging và quản lý
-- Bảo trì định kỳ tự động
+1. **Clone repository:**
+   ```bash
+   git clone https://github.com/Lun4by/Lunaby.git
+   cd Lunaby
+   ```
 
-## Cài Đặt
+2. **Cài đặt dependencies:**
+   ```bash
+   npm install
+   ```
 
-1. Clone repository này
-2. Cài đặt dependencies: `npm install`
-3. Tạo file `.env` từ `example.env`
-4. Cấu hình API keys cho các nhà cung cấp mong muốn
-5. Chạy bot: `npm start` 
+3. **Cấu hình môi trường:**
+   - Sao chép file `example.env` thành `.env`
+   - Điền đầy đủ các thông số cấu hình và khóa bí mật (Discord Token, Database Credentials, v.v.)
 
-## Lợi Ích Kiến Trúc
-
-### **Độ tin cậy cao**
-- Chạy cục bộ mà không phụ thuộc vào API bên ngoài
-- Không bị giới hạn quota từ các nhà cung cấp
-- Kiểm soát hoàn toàn dữ liệu người dùng
-- Hiệu suất ổn định
-
-### **Dễ bảo trì**
-- Kiến trúc dịch vụ modular
-- Sửa lỗi và cập nhật được tách biệt
-- Tổ chức code được cải thiện
-
-### **Khả năng mở rộng**
-- Các dịch vụ có thể mở rộng dễ dàng
-- Dễ dàng thêm tính năng mới
-- Hệ thống logger thay thế console.log
-- Dễ dàng tích hợp các local models khác
+4. **Khởi chạy Bot:**
+   ```bash
+   npm start
+   ```
+   *(Hoặc chạy lệnh `npm run dev` để bật chế độ phát triển với Nodemon tự khởi động lại)*
 
 ## Đóng Góp
 
-Tôi chào đón mọi đóng góp, báo cáo lỗi và yêu cầu tính năng! Bot được thiết kế với kiến trúc modular mới giúp việc mở rộng và tùy chỉnh trở nên cực kỳ dễ dàng.
+Mọi đóng góp, báo cáo lỗi (issues) và tính năng mới (pull requests) đều được hoan nghênh nồng nhiệt! Hãy tuân thủ kiến trúc của dự án bằng cách phân bổ logic vào đúng các thư mục Service tương ứng.
 
-### Hướng Dẫn Phát Triển
-- Sử dụng dịch vụ phù hợp cho từng loại chức năng
-- Tất cả logic AI: `AICore.js`
-- Xử lý logic cuộc trò chuyện: `ConversationService.js`
-- Xử lý hình ảnh: `ImageService.js`
-- Tiện ích hệ thống: `SystemService.js`
+## Giấy Phép & Pháp Lý
 
-## Giấy Phép
+- [Giấy phép MIT](LICENSE)
+- [Điều Khoản Dịch Vụ](./docs/legal/terms-of-service.md)
+- [Chính Sách Bảo Mật](./docs/legal/privacy-policy.md)
 
-[MIT](LICENSE) | [Điều Khoản Dịch Vụ](./docs/legal/terms-of-service.md) | [Chính Sách Bảo Mật](./docs/legal/privacy-policy.md)
+---
+<div align="center">
+  <em>Được phát triển bởi <strong>s4ory</strong></em>
+</div>
