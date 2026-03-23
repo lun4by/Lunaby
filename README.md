@@ -10,7 +10,7 @@
 
 ## Tổng Quan
 
-**Lunaby** là một bot Discord thông minh được vận hành bởi cục bộ (**local offline models**), với model LLM được tinh chỉnh (fine-tuned) tối ưu dựa trên kiến trúc GPT OSS 120B. 
+**Lunaby** là một bot Discord thông minh được vận hành bởi model cục bộ (**local offline models**), với model LLM được tinh chỉnh (fine-tuned) tối ưu dựa trên kiến trúc GPT OSS 120B. 
 
 Lunaby mang trong mình khí chất thanh cao, dịu dàng nhưng cũng vô cùng sâu sắc. Bot không chỉ đơn thuần là một công cụ trả lời tự động, mà còn đóng vai trò như một người bạn đồng hành, hỗ trợ bạn từ việc trò chuyện, tạo ảnh nghệ thuật, cho đến hỗ trợ viết mã lập trình phức tạp.
 
