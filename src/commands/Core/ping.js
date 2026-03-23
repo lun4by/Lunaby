@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
-const packageJson = require('../../package.json');
+const packageJson = require('../../../package.json');
 const { formatUptime } = require('../../utils/string');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 

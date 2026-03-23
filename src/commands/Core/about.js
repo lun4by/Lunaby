@@ -4,7 +4,7 @@ const {
     ActionRowBuilder,
     ButtonStyle,
 } = require('discord.js');
-const packageJson = require('../../package.json');
+const packageJson = require('../../../package.json');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 module.exports = {
