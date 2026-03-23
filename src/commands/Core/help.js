@@ -30,6 +30,9 @@ module.exports = {
             return folder !== 'setting';
         });
 
+        // Thêm mục Trang chủ lên đầu danh sách
+        visibleCategories.unshift('home');
+
         const select = new StringSelectMenuBuilder()
             .setCustomId('category-select')
             .setPlaceholder('Chọn một danh mục')
@@ -72,6 +75,14 @@ module.exports = {
                 return i.reply({
                     content: 'Bạn không có quyền xem danh mục này!',
                     ephemeral: true,
+                });
+            }
+
+            // Nếu người dùng chọn Trang chủ, quay lại embed chào mừng
+            if (category === 'home') {
+                return i.update({
+                    embeds: [welcomeEmbed],
+                    components: [row],
                 });
             }
 
@@ -153,6 +164,7 @@ function buildHelpEmbed(category, visibleCategories, commandsPath) {
 
 function getCategoryMetadata(category) {
     const categoryMap = {
+        'home': { label: 'Trang chủ', description: 'Quay lại menu trợ giúp chính', emoji: '🏠' },
         'AIcore': { label: 'AI Core', description: 'Các lệnh AI nâng cao', emoji: '🤖' },
         'Core': { label: 'Core', description: 'Các lệnh cơ bản của bot', emoji: '⚙️' },
         'moderation': { label: 'Moderation', description: 'Các lệnh quản lý server', emoji: '🛡️' },
