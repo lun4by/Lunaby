@@ -12,7 +12,7 @@
 
 **Lunaby** là một bot Discord thông minh được vận hành bởi cục bộ (**local offline models**), với model LLM được tinh chỉnh (fine-tuned) tối ưu dựa trên kiến trúc GPT OSS 120B. 
 
-Lấy cảm hứng từ *Cơ Lãnh Âm*, Lunaby mang trong mình khí chất thanh cao, dịu dàng nhưng cũng vô cùng sâu sắc. Bot không chỉ đơn thuần là một công cụ trả lời tự động, mà còn đóng vai trò như một người bạn đồng hành, hỗ trợ bạn từ việc trò chuyện phím, tạo ảnh nghệ thuật, cho đến hỗ trợ viết mã lập trình phức tạp.
+Lunaby mang trong mình khí chất thanh cao, dịu dàng nhưng cũng vô cùng sâu sắc. Bot không chỉ đơn thuần là một công cụ trả lời tự động, mà còn đóng vai trò như một người bạn đồng hành, hỗ trợ bạn từ việc trò chuyện, tạo ảnh nghệ thuật, cho đến hỗ trợ viết mã lập trình phức tạp.
 
 ## Tính Năng Nổi Bật
 
@@ -49,13 +49,13 @@ Khác với các bot sử dụng API Cloud mất phí, việc host Lunaby trên 
 
 3. **Cấu hình môi trường:**
    - Sao chép file `example.env` thành `.env`
-   - Điền đầy đủ các thông số cấu hình và khóa bí mật (Discord Token, Database Credentials, v.v.)
+   - Điền đầy đủ các thông số cấu hình
 
 4. **Khởi chạy Bot:**
    ```bash
    npm start
    ```
-   *(Hoặc chạy lệnh `npm run dev` để bật chế độ phát triển với Nodemon tự khởi động lại)*
+   *(Hoặc chạy lệnh `npm run dev` để bật chế độ phát triển với Nodemon)*
 
 ## Đóng Góp
 
