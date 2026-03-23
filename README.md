@@ -19,7 +19,6 @@ Lấy cảm hứng từ *Cơ Lãnh Âm*, Lunaby mang trong mình khí chất tha
 - **Trò chuyện thông minh**: Tương tác tự nhiên, mượt mà với khả năng ghi nhớ ngữ cảnh dài hạn xuất sắc.
 - **Sáng tạo nghệ thuật**: Tạo hình ảnh chất lượng cao chỉ từ những dòng mô tả văn bản đơn giản.
 - **Trợ lý lập trình**: Hỗ trợ giải thích code, debug và viết mã nguồn.
-- **Dual-mode Streaming**: Chế độ stream tin nhắn trực tiếp mượt mà như ChatGPT, kết hợp với bộ đệm (buffer debounce) thông minh chống lỗi Rate Limit (429) của Discord.
 - **Hệ thống tiến trình**: Tích hợp hệ thống phân tích kinh nghiệm (XP), bảng xếp hạng và giao diện thẻ hồ sơ (profile) hiện đại.
 - **Đa cơ sở dữ liệu**: Trải nghiệm sự kết hợp mạnh mẽ giữa MongoDB và MariaDB để tối ưu hóa lưu trữ và trích xuất dữ liệu.
 - **Cơ chế lệnh linh hoạt**: Hỗ trợ đồng thời cả `/slash commands` tiện lợi và `prefix commands` truyền thống.
