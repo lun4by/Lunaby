@@ -67,7 +67,7 @@ class ConsentService {
           `**${interaction.user.username}** đã chấp thuận sử dụng dịch vụ Lunaby AI.\n\n` +
           `**Bây giờ bạn có thể:**\n` +
           `> Trò chuyện với Lunaby bằng cách tag @Lunaby\n` +
-          `> Sử dụng các lệnh AI như \`/think\`\n` +
+          `> Sử dụng các lệnh như \`l.help\`\n` +
           `> Nhận XP và level up khi hoạt động\n\n` +
           `Chúc bạn có những trải nghiệm tuyệt vời!`
         )
