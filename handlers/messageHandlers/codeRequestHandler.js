@@ -2,7 +2,7 @@ const AICore = require('../../services/AICore');
 const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
-const { DEFAULT_MODEL } = require('../../config/constants');
+const { DEFAULT_MODEL, DISCORD_STREAM_DELAY_MS } = require('../../config/constants');
 const Validators = require('../../utils/validators');
 const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
@@ -59,7 +59,9 @@ async function handleCodeRequest(message, content, ConversationService) {
       throw new Error('No valid messages for code request');
     }
 
-    const response = await sendStreamingMessage(message.channel, validMessages);
+    const response = await sendStreamingMessage(message.channel, validMessages, {
+      streamDelay: DISCORD_STREAM_DELAY_MS
+    });
     await conversationManager.addMessage(conversationId, 'assistant', response);
     await QuotaService.recordMessageUsage(globalUserId, 1);
 

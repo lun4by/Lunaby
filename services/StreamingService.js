@@ -35,7 +35,7 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
     let isEditing = false;
     let pendingAccumulated = null;
 
-    // Mutex-based display queue — prevents overlapping Discord edits
+    // Hàng đợi hiển thị dựa trên Mutex, ngăn chặn việc chỉnh sửa tin nhắn Discord chồng chéo
     const processDisplayQueue = async () => {
         if (isEditing) return;
         isEditing = true;
@@ -65,7 +65,7 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
         isEditing = false;
     };
 
-    // Buffered mode: setInterval flushes buffer periodically
+    // Chế độ đệm (Buffered mode): setInterval xả bộ đệm theo chu kỳ
     let bufferInterval = null;
     if (streamDelay > 0) {
         bufferInterval = setInterval(() => {
@@ -81,30 +81,25 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
         const fullContent = await stream.process({
             onContent: async (chunk, accumulated) => {
                 if (streamDelay > 0) {
-                    // Buffered mode: chỉ lưu accumulated, để interval tự flush
                     pendingAccumulated = accumulated;
 
-                    // Gửi message đầu tiên ngay lập tức (không đợi interval)
                     if (!sentMessage) {
                         processDisplayQueue();
                     }
                 } else {
-                    // Immediate mode: trigger edit ngay mỗi khi có chunk mới
                     pendingAccumulated = accumulated;
                     processDisplayQueue();
                 }
             }
         });
 
-        // Dọn dẹp buffer interval
         if (bufferInterval) clearInterval(bufferInterval);
 
-        // Đợi cho đến khi toàn bộ hàng đợi render hiện tại đã xong
+        // Đợi cho đến khi toàn bộ hàng đợi hiển thị (render) hiện tại đã hoàn tất
         while (isEditing) {
             await new Promise(r => setTimeout(r, 100));
         }
 
-        // --- Final message ---
         const sendOrReply = (text) => replyToMessage ? replyToMessage.reply(text) : channel.send(text);
 
         if (fullContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
