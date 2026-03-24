@@ -1,8 +1,7 @@
-const ProfileDB = require('../database/profiledb');
+const MariaModDB = require('../database/MariaModDB');
 const logger = require('../../utils/logger');
 
 const COOLDOWN_MS = 60000;
-const DEFAULT_SERVER_XP = (guildId) => ({ id: guildId, xp: 0, level: 1 });
 
 class XPService {
   constructor() {
@@ -43,34 +42,26 @@ class XPService {
       if (message.content.startsWith('!') || message.content.startsWith('/')) return null;
       if (this.isOnCooldown(message.author.id)) return null;
 
-      const profile = await ProfileDB.getProfile(message.author.id);
-      let serverXP = profile.data.xp.find(x => x.id === message.guild.id);
-
-      if (!serverXP) {
-        serverXP = DEFAULT_SERVER_XP(message.guild.id);
-        profile.data.xp.push(serverXP);
-      }
-
+      const currentXP = await MariaModDB.getUserXP(message.guild.id, message.author.id);
+      
       const xpGained = Math.floor(Math.random() * 10) + 15;
-      const previousLevel = serverXP.level;
-      serverXP.xp += xpGained;
+      const previousLevel = currentXP.level;
+      const newXP = currentXP.xp + xpGained;
 
       const nextLevelXP = this.calculateTotalXPForLevel(previousLevel + 1);
       let leveledUp = false;
-      if (serverXP.xp >= nextLevelXP) {
-        serverXP.level++;
+      let newLevel = previousLevel;
+      
+      if (newXP >= nextLevelXP) {
+        newLevel++;
         leveledUp = true;
       }
 
-      const collection = await ProfileDB.getProfileCollection();
-      await collection.updateOne(
-        { _id: message.author.id },
-        { $set: { 'data.xp': profile.data.xp } }
-      );
-
+      await MariaModDB.setUserXP(message.guild.id, message.author.id, newXP, newLevel);
+      
       this.addCooldown(message.author.id);
 
-      return { xpAdded: true, xpGained, totalXP: serverXP.xp, level: serverXP.level, leveledUp, previousLevel };
+      return { xpAdded: true, xpGained, totalXP: newXP, level: newLevel, leveledUp, previousLevel };
     } catch (error) {
       logger.error('XP', 'Lỗi khi thêm XP:', error);
       return null;
@@ -79,8 +70,7 @@ class XPService {
 
   async getUserXP(guildId, userId) {
     try {
-      const profile = await ProfileDB.getProfile(userId);
-      const serverXP = profile.data.xp.find(x => x.id === guildId) || DEFAULT_SERVER_XP(guildId);
+      const serverXP = await MariaModDB.getUserXP(guildId, userId);
 
       const currentLevelXP = this.calculateCurrentLevelXP(serverXP.xp, serverXP.level);
       const maxLevelXP = this.calculateMaxLevelXP(serverXP.level);
@@ -97,21 +87,9 @@ class XPService {
     }
   }
 
-  async _getGuildProfiles(guildId) {
-    const collection = await ProfileDB.getProfileCollection();
-    return collection.find({ 'data.xp': { $elemMatch: { id: guildId } } }).toArray();
-  }
-
   async getLeaderboard(guildId, limit = 10) {
     try {
-      const profiles = await this._getGuildProfiles(guildId);
-      return profiles
-        .map(p => {
-          const xp = p.data.xp.find(x => x.id === guildId);
-          return { userId: p._id, xp: xp.xp, level: xp.level };
-        })
-        .sort((a, b) => b.xp - a.xp)
-        .slice(0, limit);
+      return await MariaModDB.getGuildLeaderboard(guildId, limit);
     } catch (error) {
       logger.error('XP', 'Lỗi khi lấy leaderboard:', error);
       return [];
@@ -120,16 +98,7 @@ class XPService {
 
   async getUserRank(guildId, userId) {
     try {
-      const profiles = await this._getGuildProfiles(guildId);
-      const sorted = profiles
-        .map(p => {
-          const xp = p.data.xp.find(x => x.id === guildId);
-          return { userId: p._id, xp: xp?.xp || 0 };
-        })
-        .sort((a, b) => b.xp - a.xp);
-
-      const rank = sorted.findIndex(u => u.userId === userId) + 1;
-      return rank || sorted.length + 1;
+        return await MariaModDB.getUserRank(guildId, userId);
     } catch (error) {
       logger.error('XP', 'Lỗi khi lấy rank:', error);
       return 0;

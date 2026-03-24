@@ -86,6 +86,18 @@ class MariaModDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS user_levels (
+          guild_id VARCHAR(32) NOT NULL,
+          user_id VARCHAR(32) NOT NULL,
+          xp INT DEFAULT 0,
+          level INT DEFAULT 1,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (guild_id, user_id),
+          INDEX idx_guild_xp (guild_id, xp DESC)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+
             logger.info('MARIADB', 'All tables ready');
 
             try {
@@ -489,6 +501,65 @@ class MariaModDB {
         } catch (error) {
             logger.error('MARIADB', 'Error checking command status:', error);
             return false;
+        }
+    }
+
+    async getUserXP(guildId, userId) {
+        try {
+            const rows = await mariaClient.query(
+                'SELECT xp, level FROM user_levels WHERE guild_id = ? AND user_id = ?',
+                [guildId, userId]
+            );
+            if (rows.length === 0) return { xp: 0, level: 1 };
+            return { xp: rows[0].xp, level: rows[0].level };
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting user XP:', error);
+            return { xp: 0, level: 1 };
+        }
+    }
+
+    async setUserXP(guildId, userId, xp, level) {
+        try {
+            await mariaClient.query(`
+                INSERT INTO user_levels (guild_id, user_id, xp, level)
+                VALUES (?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                xp = VALUES(xp),
+                level = VALUES(level)
+            `, [guildId, userId, xp, level]);
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error setting user XP:', error);
+            return false;
+        }
+    }
+
+    async getGuildLeaderboard(guildId, limit = 10) {
+        try {
+            const rows = await mariaClient.query(
+                'SELECT user_id as userId, xp, level FROM user_levels WHERE guild_id = ? ORDER BY xp DESC LIMIT ?',
+                [guildId, limit]
+            );
+            return rows;
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting guild leaderboard:', error);
+            return [];
+        }
+    }
+
+    async getUserRank(guildId, userId) {
+        try {
+            const rows = await mariaClient.query('SELECT xp FROM user_levels WHERE guild_id = ? AND user_id = ?', [guildId, userId]);
+            if (rows.length === 0) return 0;
+            
+            const countRows = await mariaClient.query(
+                'SELECT COUNT(*) as count FROM user_levels WHERE guild_id = ? AND xp > ?',
+                [guildId, rows[0].xp]
+            );
+            return Number(countRows[0].count) + 1;
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting user rank:', error);
+            return 0;
         }
     }
 }
