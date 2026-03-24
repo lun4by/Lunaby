@@ -52,7 +52,7 @@ module.exports = {
                 await MariaModDB.updateGuildSettings(guildId, {
                     'greeter.welcome.isEnabled': false
                 });
-                return replyFunc({ content: '✅|Đã tắt tính năng thông báo chào mừng thành viên mới.' });
+                return replyFunc({ content: '✅| Đã tắt tính năng thông báo chào mừng thành viên mới.' });
             }
 
             if (subCommand === 'set') {
@@ -85,11 +85,11 @@ module.exports = {
                     'greeter.welcome.message': message
                 });
 
-                return replyFunc({ content: `✅|Đã thiết lập thành công thông báo chào mừng tại kênh <#${channel.id}>.\nNội dung: \`${message}\`` });
+                return replyFunc({ content: `✅| Đã thiết lập thành công thông báo chào mừng tại kênh <#${channel.id}>.\nNội dung: \`${message}\`` });
             }
         } catch (error) {
             logger.error('SYSTEM', 'Error setting welcome:', error);
-            return replyFunc({ content: '❌|Đã có lỗi xảy ra khi lưu thiết lập chào mừng.', ephemeral: true });
+            return replyFunc({ content: '❌| Đã có lỗi xảy ra khi lưu thiết lập chào mừng.', ephemeral: true });
         }
     }
 };

@@ -1,33 +1,27 @@
 const { AttachmentBuilder } = require('discord.js');
-const { RankCardBuilder, Font } = require('canvacord');
-
-Font.loadDefault();
+const { Rank } = require('lunaby-canvas');
 
 const generateRankCard = async (member, author, level, xp, mlvlcap, maxXPThisLevel, curXPThisLevel, percentage, rank, wreathUrl, profileCustomization = {}) => {
-    // const canvas = Canvas.createCanvas(800, 600);
-    // const ctx = canvas.getContext('2d');
-
     const {
         background = null,
         color = '#ff69b4'
     } = profileCustomization;
 
-    const card = new RankCardBuilder()
+    const rankObj = new Rank()
         .setAvatar(author.displayAvatarURL({ extension: 'png', size: 512 }))
         .setUsername(member.displayName)
-        .setDisplayName(author.tag)
-        .setCurrentXP(curXPThisLevel)
-        .setRequiredXP(maxXPThisLevel)
-        .setLevel(level)
-        .setRank(rank || 0)
-        .setStatus(member.presence?.status || 'offline');
+        .setCurrentXp(curXPThisLevel)
+        .setRequiredXp(maxXPThisLevel)
+        .setLevel(level, "LVL")
+        .setRank(rank || 0, "RANK")
+        .setStatus(member.presence?.status || 'offline')
+        .setBarColor(color);
 
     if (background) {
-        card.setBackground(background);
+        rankObj.setBackground("image", background);
     }
 
-
-    const image = await card.build({ format: 'png' });
+    const image = await rankObj.build();
 
     return new AttachmentBuilder(image, { name: 'rank.png' });
 };

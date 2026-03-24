@@ -1,23 +1,23 @@
 const crypto = require('crypto');
 
 /**
- * Utility for AES-256-CBC encryption and decryption.
- * Used to protect PII (Personally Identifiable Information) in the database.
+ * Tiện ích cho mã hóa và giải mã AES-256-CBC.
+ * Được sử dụng để bảo vệ PII (Thông tin cá nhân có thể nhận dạng) trong cơ sở dữ liệu.
  */
 
 const ALGORITHM = 'aes-256-cbc';
-const IV_LENGTH = 16; // For AES, this is always 16
+const IV_LENGTH = 16; // Đối với AES, giá trị này luôn là 16
 
-// Try to get key from environment, fallback to a derived key if missing (not recommended for production)
-const ENCRYPTION_KEY = process.env.LUNABY_ENCRYPTION_KEY 
-  ? Buffer.from(process.env.LUNABY_ENCRYPTION_KEY, 'hex') 
+// Thử lấy khóa từ biến môi trường, dùng khóa dẫn xuất nếu thiếu (không khuyến nghị cho production)
+const ENCRYPTION_KEY = process.env.LUNABY_ENCRYPTION_KEY
+  ? Buffer.from(process.env.LUNABY_ENCRYPTION_KEY, 'hex')
   : crypto.scryptSync(process.env.LUNABY_API_KEY || 'lunaby-default-salt', 'salt', 32);
 
 class CryptoUtils {
   /**
-   * Encrypts plain text into a colon-separated hex string (iv:encryptedData).
-   * @param {string} text - The text to encrypt.
-   * @returns {string} - The encrypted string format 'iv:data'.
+   * Mã hóa văn bản thuần túy thành chuỗi hex phân tách bằng dấu hai chấm (iv:encryptedData).
+   * @param {string} text - Văn bản cần mã hóa.
+   * @returns {string} - Chuỗi đã mã hóa định dạng 'iv:data'.
    */
   encrypt(text) {
     if (!text) return text;
@@ -29,14 +29,14 @@ class CryptoUtils {
       return iv.toString('hex') + ':' + encrypted.toString('hex');
     } catch (error) {
       console.error('Encryption error:', error);
-      return text; // Fallback to plain text if encryption fails to prevent data loss
+      return text; // Trả về văn bản gốc nếu mã hóa thất bại để tránh mất dữ liệu
     }
   }
 
   /**
-   * Decrypts a colon-separated hex string back to plain text.
-   * @param {string} text - The encrypted string format 'iv:data'.
-   * @returns {string} - The decrypted text.
+   * Giải mã chuỗi hex phân tách bằng dấu hai chấm trở lại văn bản thuần túy.
+   * @param {string} text - Chuỗi đã mã hóa định dạng 'iv:data'.
+   * @returns {string} - Văn bản đã giải mã.
    */
   decrypt(text) {
     if (!text || !text.includes(':')) return text;
@@ -49,13 +49,13 @@ class CryptoUtils {
       decrypted = Buffer.concat([decrypted, decipher.final()]);
       return decrypted.toString();
     } catch (error) {
-      // If decryption fails, it might be plain text or using a different key
-      return text; 
+      // Nếu giải mã thất bại, có thể là văn bản gốc hoặc dùng sai khóa
+      return text;
     }
   }
 
   /**
-   * Checks if a string looks like it's encrypted (iv:hex).
+   * Kiểm tra xem chuỗi có định dạng đã mã hóa hay không (iv:hex).
    */
   isEncrypted(text) {
     if (typeof text !== 'string') return false;
