@@ -162,20 +162,17 @@ async function handlePrefixMessage(message, client) {
     const command = findCommandByPrefix(client, commandName);
     if (!command) return false;
 
-    const aiCommands = ['think', 'reset'];
-    if (aiCommands.includes(command.data?.name || commandName)) {
-        const hasConsented = await consentService.hasUserConsented(message.author.id);
-        if (!hasConsented) {
-            try {
-                const consentData = consentService.createConsentEmbed(message.author);
-                await message.reply(consentData);
-            } catch (error) {
-                if (error.code === 50013 || error.message.includes('permission')) {
-                    await handlePermissionError(message, 'embedLinks', message.author.username, 'reply');
-                }
+    const hasConsented = await consentService.hasUserConsented(message.author.id);
+    if (!hasConsented) {
+        try {
+            const consentData = consentService.createConsentEmbed(message.author);
+            await message.reply(consentData);
+        } catch (error) {
+            if (error.code === 50013 || error.message.includes('permission')) {
+                await handlePermissionError(message, 'embedLinks', message.author.username, 'reply');
             }
-            return true;
         }
+        return true;
     }
 
     if (command.prefix?.adminOnly) {
@@ -220,7 +217,7 @@ async function handlePrefixMessage(message, client) {
         const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
         CooldownService.set(message.author.id, cmdName, cooldownTime);
 
-        logger.info('PREFIX', `${message.author.tag} used ${prefix}${commandName}`);
+        logger.info('COMMAND_USAGE', `[Server: ${message.guild?.name || 'DM'}] [Channel: ${message.channel?.name || 'N/A'}] User ${message.author.tag} (${message.author.id}) used: ${prefix}${commandName}`);
     } catch (error) {
         logger.error('PREFIX', `Error executing prefix command ${commandName}:`, error);
         await message.reply('Đã xảy ra lỗi khi thực thi lệnh này!').catch(() => { });

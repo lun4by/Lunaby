@@ -9,7 +9,6 @@ const CooldownService = require('../services/user/CooldownService');
 const logger = require('../utils/logger.js');
 
 let commandsJsonCache = null;
-const AI_COMMANDS = new Set(['think', 'reset']);
 
 const loadCommandsFromDirectory = (client, dir, commandsJson) => {
   const items = fs.readdirSync(dir, { withFileTypes: true });
@@ -121,22 +120,20 @@ const handleCommand = async (interaction, client) => {
       }
     }
 
-    if (AI_COMMANDS.has(interaction.commandName)) {
-      const hasConsented = await consentService.hasUserConsented(interaction.user.id);
+    const hasConsented = await consentService.hasUserConsented(interaction.user.id);
 
-      if (!hasConsented) {
-        try {
-          const consentData = consentService.createConsentEmbed(interaction.user);
-          await interaction.reply(consentData);
-        } catch (error) {
-          if (error.code === 50013 || (error?.message || '').includes('permission')) {
-            await handlePermissionError(interaction, 'embedLinks', interaction.user.username, 'reply');
-          } else {
-            throw error;
-          }
+    if (!hasConsented) {
+      try {
+        const consentData = consentService.createConsentEmbed(interaction.user);
+        await interaction.reply(consentData);
+      } catch (error) {
+        if (error.code === 50013 || (error?.message || '').includes('permission')) {
+          await handlePermissionError(interaction, 'embedLinks', interaction.user.username, 'reply');
+        } else {
+          throw error;
         }
-        return;
       }
+      return;
     }
 
     await command.execute(interaction);
@@ -144,7 +141,7 @@ const handleCommand = async (interaction, client) => {
     const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
     CooldownService.set(interaction.user.id, interaction.commandName, cooldownTime);
 
-    logger.info('COMMAND', `Người dùng ${interaction.user.tag} đã sử dụng lệnh /${interaction.commandName}`);
+    logger.info('COMMAND_USAGE', `[Server: ${interaction.guild?.name || 'DM'}] [Channel: ${interaction.channel?.name || 'N/A'}] User ${interaction.user.tag} (${interaction.user.id}) used: /${interaction.commandName}`);
   } catch (error) {
     logger.error('COMMAND', `Lỗi khi thực thi lệnh ${interaction.commandName}:`, error);
     const errPayload = { content: 'Đã xảy ra lỗi khi thực thi lệnh này!', ephemeral: true };
