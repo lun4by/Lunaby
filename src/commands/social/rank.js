@@ -37,6 +37,11 @@ module.exports = {
 
       const level = serverXP.level;
       const xp = serverXP.xp;
+
+      const maxXPThisLevel = XPService.calculateMaxLevelXP(level);
+      const curXPThisLevel = XPService.calculateCurrentLevelXP(xp, level);
+      const userRank = await XPService.getUserRank(interaction.guild.id, targetUser.id);
+
       const attachment = await generateRankCard({
         member,
         author: targetUser,
