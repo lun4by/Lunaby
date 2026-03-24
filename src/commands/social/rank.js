@@ -51,7 +51,7 @@ module.exports = {
         requiredXp: maxXPThisLevel
       });
 
-      await interaction.editReply({ files: [attachment] });
+      await interaction.editReply({ content: '', files: [attachment] });
     } catch (error) {
       logger.error('RANK', 'Error in rank command:', error);
       await interaction.editReply({ content: 'Đã xảy ra lỗi khi tạo rank card!', ephemeral: true });

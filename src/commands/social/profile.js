@@ -37,7 +37,7 @@ module.exports = {
         profile: profileData
       });
 
-      await interaction.editReply({ files: [attachment] });
+      await interaction.editReply({ content: '', files: [attachment] });
 
     } catch (error) {
       logger.error('PROFILE', 'Error creating profile card:', error);
