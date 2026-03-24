@@ -37,41 +37,14 @@ module.exports = {
 
       const level = serverXP.level;
       const xp = serverXP.xp;
-      const mlvlcap = 150 * (level * 2);
-      const maxXPThisLevel = XPService.calculateMaxLevelXP(level);
-      const curXPThisLevel = XPService.calculateCurrentLevelXP(xp, level);
-      const percentage = Math.round((curXPThisLevel / maxXPThisLevel) * 100);
-
-      const userRank = await XPService.getUserRank(interaction.guild.id, targetUser.id);
-      const rank = userRank;
-
-      const wreaths = [
-        'https://i.imgur.com/xsZHQcW.png', // 1st
-        'https://i.imgur.com/NmpP8oU.png', // 2nd
-        'https://i.imgur.com/bzhoYpa.png', // 3rd
-        'https://i.imgur.com/NSEbnek.png'  // 4-10
-      ];
-
-      let wreath = null;
-      const indexer = userRank - 1;
-      if (indexer < 3) {
-        wreath = wreaths[indexer];
-      } else if (indexer < 10) {
-        wreath = wreaths[3];
-      }
-
-      const attachment = await generateRankCard(
+      const attachment = await generateRankCard({
         member,
-        targetUser,
+        author: targetUser,
         level,
-        xp,
-        mlvlcap,
-        maxXPThisLevel,
-        curXPThisLevel,
-        percentage,
-        rank,
-        wreath
-      );
+        rank: userRank,
+        currentXp: curXPThisLevel,
+        requiredXp: maxXPThisLevel
+      });
 
       await interaction.editReply({ files: [attachment] });
     } catch (error) {

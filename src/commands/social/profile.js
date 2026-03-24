@@ -31,32 +31,10 @@ module.exports = {
 
       const profile = await ProfileDB.getProfile(targetUser.id);
       const profileData = profile?.data?.profile || {};
-      const economyData = profile?.data?.economy || {};
-      const tipsData = profile?.data?.tips || {};
-
-      let serverXP = await XPService.getUserXP(targetUser.id, interaction.guild.id);
-      if (!serverXP) {
-        serverXP = { xp: 0, level: 1 };
-      }
-
-      const serverRank = await XPService.getUserRank(targetUser.id, interaction.guild.id);
-
-      let globalRank = null;
-      try {
-        globalRank = await XPService.getGlobalUserRank?.(targetUser.id) || null;
-      } catch { }
 
       const attachment = await generateProfileCard({
         user: targetUser,
-        member: member,
-        profile: {
-          ...profileData,
-          economy: economyData,
-          tips: tipsData
-        },
-        xpData: serverXP,
-        serverRank: serverRank,
-        globalRank: globalRank
+        profile: profileData
       });
 
       await interaction.editReply({ files: [attachment] });
