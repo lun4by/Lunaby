@@ -90,6 +90,7 @@ class MariaModDB {
 
             try {
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS voice_toggle_enabled BOOLEAN DEFAULT FALSE`);
+                await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS level_up_channel VARCHAR(32) DEFAULT NULL`);
             } catch (e) {
             }
 
@@ -317,7 +318,7 @@ class MariaModDB {
                 voiceToggle: { isEnabled: !!r.voice_toggle_enabled },
                 roles: { muted: r.muted_role },
                 channels: { suggest: r.suggest_channel },
-                settings: { levelUpNotifications: !!r.level_up_notifications, useEmbeds: !!r.use_embeds },
+                settings: { levelUpNotifications: !!r.level_up_notifications, levelUpChannel: r.level_up_channel, useEmbeds: !!r.use_embeds },
             };
         } catch (error) {
             logger.error('MARIADB', 'Error getting guild settings:', error);
@@ -337,7 +338,7 @@ class MariaModDB {
             voiceToggle: { isEnabled: false },
             roles: { muted: null },
             channels: { suggest: null },
-            settings: { levelUpNotifications: true, useEmbeds: true },
+            settings: { levelUpNotifications: true, levelUpChannel: null, useEmbeds: true },
         };
     }
 
@@ -348,6 +349,7 @@ class MariaModDB {
                 'xp.isActive': 'xp_active',
                 'xp.exceptions': 'xp_exceptions',
                 'settings.levelUpNotifications': 'level_up_notifications',
+                'settings.levelUpChannel': 'level_up_channel',
                 'settings.useEmbeds': 'use_embeds',
                 'greeter.welcome.isEnabled': 'welcome_enabled',
                 'greeter.welcome.channel': 'welcome_channel',

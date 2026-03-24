@@ -13,11 +13,21 @@ function setupMessageCreateEvent(client) {
       const xpResult = await XPService.addXP(message);
       if (xpResult && xpResult.leveledUp) {
         try {
-          const attachment = await generateLevelUpCard(message.author, xpResult.previousLevel, xpResult.level);
-          await message.channel.send({
-            content: `🎉 Chúc mừng ${message.author}! Bạn vừa đạt cấp **${xpResult.level}**!`,
-            files: [attachment]
-          });
+          const MariaModDB = require("../services/database/MariaModDB");
+          const settings = await MariaModDB.getGuildSettings(message.guild.id);
+
+          if (settings?.settings?.levelUpChannel && settings?.settings?.levelUpNotifications) {
+            const targetChannelId = settings.settings.levelUpChannel;
+            const targetChannel = message.guild.channels.cache.get(targetChannelId) || await message.guild.channels.fetch(targetChannelId).catch(() => null);
+
+            if (targetChannel && targetChannel.isTextBased()) {
+              const attachment = await generateLevelUpCard(message.author, xpResult.previousLevel, xpResult.level);
+              await targetChannel.send({
+                content: `🎉 Chúc mừng ${message.author}! Bạn vừa đạt cấp **${xpResult.level}**!`,
+                files: [attachment]
+              });
+            }
+          }
         } catch (err) {
           logger.error('LEVELUP', 'Failed to send level up message:', err);
         }
