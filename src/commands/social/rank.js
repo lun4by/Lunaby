@@ -43,7 +43,7 @@ module.exports = {
       const percentage = Math.round((curXPThisLevel / maxXPThisLevel) * 100);
 
       const userRank = await XPService.getUserRank(interaction.guild.id, targetUser.id);
-      const rank = ordinalize(userRank);
+      const rank = userRank;
 
       const wreaths = [
         'https://i.imgur.com/xsZHQcW.png', // 1st
