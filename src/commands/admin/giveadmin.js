@@ -39,7 +39,9 @@ module.exports = {
         const role = roleRaw?.toLowerCase();
 
         if (!targetUser || !role) {
-            return interaction.reply(`**Cách dùng:** \`e.giveadmin @user <role>\`\nCác role hợp lệ: ${Object.values(USER_ROLES).join(', ')}`);
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return interaction.reply(`**Cách dùng:** \`${prefix}giveadmin @user <role>\`\nCác role hợp lệ: ${Object.values(USER_ROLES).join(', ')}`);
         }
 
         if (!Object.values(USER_ROLES).includes(role)) {

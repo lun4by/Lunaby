@@ -31,7 +31,9 @@ module.exports = {
             : interaction.args?.find(a => !a.match(/^<@!?\d+>$/));
             
         if (!targetUser || amountRaw === undefined || amountRaw === null) {
-            return interaction.reply(`**Cách dùng:** \`e.addquota @user <số_lượng>\``);
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return interaction.reply(`**Cách dùng:** \`${prefix}addquota @user <số_lượng>\``);
         }
 
         const amount = parseInt(amountRaw);

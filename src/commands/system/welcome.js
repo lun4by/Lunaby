@@ -35,7 +35,9 @@ module.exports = {
         const subCommand = interaction.options.getSubcommand();
 
         if (!subCommand) {
-            return (interaction.message || interaction).reply({ content: 'Cách dùng:\n- Bật: `e.welcome set #channel [tin nhắn]`\n- Tắt: `e.welcome disable`' });
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Bật: \`${prefix}welcome set #channel [tin nhắn]\`\n- Tắt: \`${prefix}welcome disable\`` });
         }
 
         if (isSlash && !interaction.deferred && !interaction.replied) {
@@ -72,7 +74,9 @@ module.exports = {
                 }
 
                 if (!channel || !message) {
-                    return replyFunc({ content: 'Vui lòng cung cấp kênh và lời chào mừng hợp lệ.\nVí dụ: `e.welcome set #welcome Chào mừng {user} đến với {server}!`', ephemeral: true });
+                    const PrefixDB = require('../../services/database/PrefixDB');
+                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+                    return replyFunc({ content: `Vui lòng cung cấp kênh và lời chào mừng hợp lệ.\nVí dụ: \`${prefix}welcome set #welcome Chào mừng {user} đến với {server}!\``, ephemeral: true });
                 }
 
                 await MariaModDB.updateGuildSettings(guildId, {

@@ -26,7 +26,9 @@ module.exports = {
             : interaction.message?.mentions?.channels?.first();
 
         if (!logChannel) {
-            return interaction.reply({ content: 'Vui lòng cung cấp hoặc mention một kênh hợp lệ (VD: `e.systemlog #log-channel`).', ephemeral: true });
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return interaction.reply({ content: `Vui lòng cung cấp hoặc mention một kênh hợp lệ (VD: \`${prefix}systemlog #log-channel\`).`, ephemeral: true });
         }
 
         if (isSlash && !interaction.deferred && !interaction.replied) {
