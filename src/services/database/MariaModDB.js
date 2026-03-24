@@ -98,6 +98,15 @@ class MariaModDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS user_consents (
+          user_id VARCHAR(32) PRIMARY KEY,
+          consented BOOLEAN DEFAULT FALSE,
+          version VARCHAR(10) DEFAULT '1.0',
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+
             logger.info('MARIADB', 'All tables ready');
 
             try {

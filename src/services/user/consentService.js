@@ -1,13 +1,13 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const ProfileDB = require('../database/profiledb');
+const mariaClient = require('../database/mariaClient');
 const logger = require('../../utils/logger.js');
 const { handlePermissionError, sendEmbedWithFallback, hasPermission } = require('../../utils/permissionUtils');
 
 class ConsentService {
   async hasUserConsented(userId) {
     try {
-      const profile = await ProfileDB.getProfile(userId);
-      return profile?.data?.consent === true;
+      const rows = await mariaClient.query('SELECT consented FROM user_consents WHERE user_id = ? LIMIT 1', [userId]);
+      return rows.length > 0 ? Boolean(rows[0].consented) : false;
     } catch (error) {
       logger.error('CONSENT', `Lỗi khi kiểm tra consent cho user ${userId}:`, error);
       return false;
@@ -125,12 +125,13 @@ class ConsentService {
 
   async updateUserConsent(userId, consented) {
     try {
-      const profileCollection = await ProfileDB.getProfileCollection();
-      await profileCollection.updateOne(
-        { _id: userId },
-        { $set: { 'data.consent': consented, 'data.consentDate': new Date(), 'data.consentVersion': '1.0' } },
-        { upsert: true }
-      );
+      await mariaClient.query(`
+        INSERT INTO user_consents (user_id, consented, version)
+        VALUES (?, ?, '1.0')
+        ON DUPLICATE KEY UPDATE 
+        consented = VALUES(consented),
+        version = VALUES(version)
+      `, [userId, consented]);
     } catch (error) {
       logger.error('CONSENT', `Lỗi khi cập nhật consent cho user ${userId}:`, error);
       throw error;
