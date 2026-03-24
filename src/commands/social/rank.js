@@ -19,8 +19,6 @@ module.exports = {
   cooldown: 5,
 
   async execute(interaction) {
-    return interaction.reply({ content: '🔧 Lệnh này đang được bảo trì. Vui lòng thử lại sau!', ephemeral: true });
-
     await interaction.deferReply();
 
     const targetUser = interaction.options.getUser('user') || interaction.user;
