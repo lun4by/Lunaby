@@ -12,7 +12,7 @@ module.exports = {
                 .setName('toggle')
                 .setDescription('Bật/tắt chào và tạm biệt khi vào/rời kênh voice')
         ),
-    prefix: { name: 'voicewelcome', aliases: ['vw'], description: 'Cấu hình tính năng voice welcome' },
+    prefix: { name: 'voicewelcome', aliases: ['vwc'], description: 'Cấu hình tính năng voice welcome' },
     cooldown: 5,
 
     async execute(interaction) {

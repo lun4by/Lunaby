@@ -1,5 +1,6 @@
 const { Events } = require('discord.js');
 const GuildProfileDB = require('../services/database/guildprofiledb.js');
+const PrefixDB = require('../services/database/PrefixDB.js');
 const AICore = require('../services/ai/AICore.js');
 const prompts = require('../config/prompts.js');
 const logger = require('../utils/logger.js');
@@ -23,7 +24,9 @@ async function sendVoiceGreeting(eventType, memberName, voiceChannel) {
     const result = await AICore.processChatCompletion(messages, { max_tokens: 256, stream: false });
 
     if (result?.content) {
-        await voiceChannel.send(result.content);
+        const prefix = await PrefixDB.resolvePrefix(null, voiceChannel.guild.id);
+        const footer = `\n-# Sử dụng: \`${prefix}voicewelcome toggle\` hoặc \`/voicewelcome toggle\` để bật/tắt voice welcome`;
+        await voiceChannel.send(result.content + footer);
     }
 
     logger.debug('VOICE_TOGGLE', `${eventType === 'join' ? 'Greeted' : 'Farewell'} ${memberName} in ${voiceChannel.guild.name}/${channelName}`);
