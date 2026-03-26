@@ -33,19 +33,81 @@ class PseudoInteraction {
     _parseOptions(args, message) {
         const options = new Map();
 
+        // Lấy mention user
         const mentionedUser = message.mentions.users.first();
         if (mentionedUser) {
             options.set('user', mentionedUser);
             options.set('target', mentionedUser);
         }
 
+        // Lọc ra các text args (không phải mention)
         const textArgs = args.filter(a => !a.match(/^<@!?\d+>$/));
-        if (textArgs.length > 0) {
-            const text = textArgs.join(' ');
-            options.set('prompt', text);
-            options.set('text', text);
-            options.set('prefix', text);
+
+        // Nếu command có schema slash, parse theo đúng thứ tự option
+        if (this.command?.data) {
+            try {
+                const jsonData = this.command.data.toJSON();
+                const schemaOptions = (jsonData.options || []).filter(opt => opt.type !== 1 && opt.type !== 2);
+                // Discord option types: 3=STRING, 4=INTEGER, 5=BOOLEAN, 6=USER, 7=CHANNEL, 10=NUMBER
+
+                let textIdx = 0;
+                for (const opt of schemaOptions) {
+                    const name = opt.name;
+
+                    // Type 6 = USER → đã xử lý qua mention ở trên
+                    if (opt.type === 6) continue;
+
+                    // Type 4 = INTEGER, Type 10 = NUMBER
+                    if (opt.type === 4 || opt.type === 10) {
+                        if (textIdx < textArgs.length) {
+                            const parsed = parseInt(textArgs[textIdx], 10);
+                            if (!isNaN(parsed)) {
+                                options.set(name, parsed);
+                                textIdx++;
+                            }
+                        }
+                        continue;
+                    }
+
+                    // Type 3 = STRING
+                    if (opt.type === 3) {
+                        // Nếu có choices (like 'all'/'latest'), lấy 1 arg
+                        if (opt.choices && opt.choices.length > 0) {
+                            if (textIdx < textArgs.length) {
+                                options.set(name, textArgs[textIdx]);
+                                textIdx++;
+                            }
+                        } else {
+                            // Gom tất cả text còn lại làm string (reason, prompt...)
+                            if (textIdx < textArgs.length) {
+                                options.set(name, textArgs.slice(textIdx).join(' '));
+                                textIdx = textArgs.length; // hết args
+                            }
+                        }
+                        continue;
+                    }
+                }
+            } catch (e) {
+                // Fallback: parse cũ
+            }
+        }
+
+        // Fallback: nếu chưa có prompt/text, gom text args
+        if (!options.has('prompt') && !options.has('text')) {
+            if (textArgs.length > 0) {
+                const text = textArgs.join(' ');
+                options.set('prompt', text);
+                options.set('text', text);
+            }
+        }
+        // Fallback cho action
+        if (!options.has('action') && textArgs.length > 0) {
             options.set('action', textArgs[0]);
+        }
+
+        // userid cho lệnh unban (trường hợp không có mention mà dùng raw ID)
+        if (!options.has('userid') && textArgs.length > 0 && /^\d{17,19}$/.test(textArgs[0])) {
+            options.set('userid', textArgs[0]);
         }
 
         return options;
