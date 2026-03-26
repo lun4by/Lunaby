@@ -50,13 +50,13 @@ const prompts = {
   },
 
   moderation: {
-    warning: `Create a serious but not overly harsh warning message for member \${username} with reason: "\${reason}". This is their \${warningCount} warning. The message should have the tone of a fair but serious moderator, no more than 3 sentences.`,
-    unmute: `Create a brief, positive message about unmuting member \${username} with reason: "\${reason}". The message should have a friendly moderator tone, no more than 2 sentences.`,
-    ban: `Create a serious but slightly humorous message about banning member \${username} from the server with reason: "\${reason}". The message should have the tone of a fair but firm admin, no more than 3 sentences.`,
-    clearwarnings: `Create a brief, positive message about clearing \${type} for member \${username} with reason: "\${reason}". Cleared \${deletedCount} warnings. The message should have a fair and lenient moderator tone, no more than 2 sentences.`,
-    kick: `Create a brief, professional but slightly humorous message about kicking member \${username} from the server with reason: "\${reason}". The message should have a serious but friendly admin tone, no more than 3 sentences.`,
-    mute: `Create a brief, professional but slightly humorous message about muting member \${username} for \${duration} with reason: "\${reason}". The message should have a serious but friendly moderator tone, no more than 3 sentences.`,
-    unban: `Create a brief, positive message about unbanning user \${username} with reason: "\${reason}". The message should have a fair and lenient admin tone, no more than 2 sentences.`,
+    warning: `Write a serious but not overly harsh warning for member \${username} for reason: "\${reason}". This is their warning #\${warningCount}. Tone: fair but strict moderator. Max 2-3 sentences. Respond in Vietnamese. Do NOT apologize. Do NOT show sympathy for the punished user.`,
+    unmute: `Write a brief, positive announcement about unmuting member \${username} for reason: "\${reason}". Tone: friendly, positive moderator. Max 1-2 sentences. Respond in Vietnamese.`,
+    ban: `Write an announcement about banning member \${username} from the server for reason: "\${reason}". Tone: serious, decisive admin with a hint of humor. Max 2-3 sentences. Respond in Vietnamese. Do NOT apologize. Do NOT show sympathy.`,
+    clearwarnings: `Write a brief announcement about clearing \${type} warnings for member \${username} for reason: "\${reason}". Cleared \${deletedCount} warnings. Tone: fair, lenient moderator. Max 1-2 sentences. Respond in Vietnamese.`,
+    kick: `Write an announcement about kicking member \${username} from the server for reason: "\${reason}". Tone: professional, decisive admin with a hint of humor. Max 2-3 sentences. Respond in Vietnamese. Do NOT apologize. Do NOT show sympathy.`,
+    mute: `Write an announcement about muting member \${username} for \${duration} for reason: "\${reason}". Tone: serious moderator with slight humor. Max 2-3 sentences. Respond in Vietnamese. Do NOT apologize, do NOT say "will unmute soon", do NOT show sympathy for the punished user. Speak from the perspective of the one enforcing the punishment.`,
+    unban: `Write a brief, positive announcement about unbanning user \${username} for reason: "\${reason}". Tone: lenient, positive admin. Max 1-2 sentences. Respond in Vietnamese.`,
   },
 };
 
