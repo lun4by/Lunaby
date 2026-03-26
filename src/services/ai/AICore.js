@@ -88,7 +88,7 @@ class AICore {
     ];
     const result = await this.processChatCompletion(messages, {
       modelType: config.modelType || 'pro',
-      max_tokens: config.max_tokens || 128,
+      max_tokens: config.max_tokens || 256,
       stream: false,
       ...config,
     });
