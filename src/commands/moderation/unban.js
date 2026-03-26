@@ -64,20 +64,6 @@ module.exports = {
 
             const aiResponse = await ConversationService.getCompletion(prompt);
 
-            const unbanEmbed = new EmbedBuilder()
-                .setColor(0x00ff00)
-                .setTitle(`🔓 Đã gỡ cấm thành viên (Unban)`)
-                .setDescription(aiResponse)
-                .addFields(
-                    { name: '👤 Người dùng', value: `${user.tag}`, inline: true },
-                    { name: '🆔 ID', value: user.id, inline: true },
-                    { name: '📝 Lý do', value: reason, inline: false },
-                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
-                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
-                )
-                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
-                .setTimestamp();
-
             await interaction.guild.members.unban(user, reason);
 
             await logModAction({
@@ -88,7 +74,7 @@ module.exports = {
                 reason: reason,
             });
 
-            await interaction.editReply({ embeds: [unbanEmbed] });
+            await interaction.editReply({ content: aiResponse });
 
             const logEmbed = createModActionEmbed({
                 title: `🔓 Đã gỡ cấm thành viên (Unban)`,

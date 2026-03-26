@@ -62,20 +62,6 @@ module.exports = {
 
             const aiResponse = await ConversationService.getCompletion(prompt);
 
-            const kickEmbed = new EmbedBuilder()
-                .setColor(0xffa500)
-                .setTitle('👢 Đã đuổi thành viên (Kick)')
-                .setDescription(aiResponse)
-                .addFields(
-                    { name: '👤 Người dùng', value: targetUser.tag, inline: true },
-                    { name: '🆔 ID', value: targetUser.id, inline: true },
-                    { name: '📝 Lý do', value: reason, inline: false },
-                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
-                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
-                )
-                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
-                .setTimestamp();
-
             await targetMember.kick(reason);
 
             await logModAction({
@@ -86,15 +72,7 @@ module.exports = {
                 reason,
             });
 
-            try {
-                await interaction.editReply({ embeds: [kickEmbed] });
-            } catch (error) {
-                if (error.code === 50013 || error.message.includes('permission')) {
-                    await handlePermissionError(interaction, 'embedLinks', interaction.user.username, 'editReply');
-                } else {
-                    throw error;
-                }
-            }
+            await interaction.editReply({ content: aiResponse });
 
             const logEmbed = createModActionEmbed({
                 title: '👢 Đã đuổi thành viên (Kick)',

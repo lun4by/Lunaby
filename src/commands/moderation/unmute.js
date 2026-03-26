@@ -69,20 +69,6 @@ module.exports = {
 
             const aiResponse = await ConversationService.getCompletion(prompt);
 
-            const unmuteEmbed = new EmbedBuilder()
-                .setColor(0x00ff00)
-                .setTitle(`🔊 Đã gỡ cấm ngôn (Unmute)`)
-                .setDescription(aiResponse)
-                .addFields(
-                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
-                    { name: '🆔 ID', value: targetUser.id, inline: true },
-                    { name: '📝 Lý do', value: reason, inline: false },
-                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
-                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
-                )
-                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
-                .setTimestamp();
-
             await targetMember.timeout(null, reason);
 
             await logModAction({
@@ -93,7 +79,7 @@ module.exports = {
                 reason: reason
             });
 
-            await interaction.editReply({ embeds: [unmuteEmbed] });
+            await interaction.editReply({ content: aiResponse });
 
             const logEmbed = createModActionEmbed({
                 title: `🔊 Đã gỡ cấm ngôn (Unmute)`,

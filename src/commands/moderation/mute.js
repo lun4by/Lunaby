@@ -77,20 +77,6 @@ module.exports = {
 
             const aiResponse = await ConversationService.getCompletion(prompt);
 
-            const muteEmbed = new EmbedBuilder()
-                .setColor(0xffff00)
-                .setTitle(`🔇 Đã cấm ngôn (Mute)`)
-                .setDescription(aiResponse)
-                .addFields(
-                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
-                    { name: '🆔 ID', value: targetUser.id, inline: true },
-                    { name: '⏳ Thời gian phạt', value: formattedDuration, inline: false },
-                    { name: '📅 Kết thúc lúc', value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>`, inline: true },
-                    { name: '📝 Lý do', value: reason, inline: true }
-                )
-                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
-                .setTimestamp();
-
             await targetMember.timeout(durationMs, reason);
 
             await logModAction({
@@ -102,15 +88,7 @@ module.exports = {
                 duration: duration
             });
 
-            try {
-                await interaction.editReply({ embeds: [muteEmbed] });
-            } catch (error) {
-                if (error.code === 50013 || error.message.includes('permission')) {
-                    await handlePermissionError(interaction, 'embedLinks', interaction.user.username, 'editReply');
-                } else {
-                    throw error;
-                }
-            }
+            await interaction.editReply({ content: aiResponse });
 
             const logEmbed = createModActionEmbed({
                 title: `🔇 Đã cấm ngôn (Mute)`,

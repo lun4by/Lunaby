@@ -88,23 +88,7 @@ module.exports = {
 
             const aiResponse = await ConversationService.getCompletion(prompt);
 
-            const clearEmbed = new EmbedBuilder()
-                .setColor(0x00ff00)
-                .setTitle('✅ Đã xóa cảnh cáo (Clear Warn)')
-                .setDescription(aiResponse)
-                .addFields(
-                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
-                    { name: '🆔 ID', value: targetUser.id, inline: true },
-                    { name: '🚨 Số lượng đã xóa', value: `${deletedCount}`, inline: true },
-                    { name: '🗑️ Loại', value: type === 'all' ? 'Tất cả' : 'Mới nhất', inline: true },
-                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
-                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
-                    { name: '📝 Lý do', value: reason, inline: false },
-                )
-                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
-                .setTimestamp();
-
-            await interaction.editReply({ embeds: [clearEmbed] });
+            await interaction.editReply({ content: aiResponse });
 
             try {
                 const dmEmbed = new EmbedBuilder()
