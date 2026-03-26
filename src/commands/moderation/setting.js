@@ -36,10 +36,20 @@ module.exports = {
         let currentPage = 'general';
 
         try {
-            await renderPage(interaction, guildId, currentPage, false);
+            const sentMessage = await renderPage(interaction, guildId, currentPage, false);
 
-            const replyObj = isSlash ? interaction : (interaction.message || interaction);
-            const message = await replyObj.fetchReply();
+            // Lấy message để tạo collector
+            let message;
+            if (isSlash) {
+                message = await interaction.fetchReply();
+            } else {
+                message = sentMessage;
+            }
+
+            if (!message) {
+                logger.error('SETTING', 'Không thể lấy message để tạo collector');
+                return;
+            }
 
             const collector = message.createMessageComponentCollector({
                 filter: i => i.user.id === interaction.user.id,
@@ -47,76 +57,88 @@ module.exports = {
             });
 
             collector.on('collect', async (i) => {
-                if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-                    return i.reply({ content: '❌ Bạn cần quyền **Manage Server**.', ephemeral: true });
-                }
-
-                const { customId } = i;
-
-                if (customId === 'setting_page_select') {
-                    currentPage = i.values[0];
-                    if (currentPage === 'close') {
-                        await i.update({ content: '✅ Đã đóng bảng điều khiển.', embeds: [], components: [] });
-                        return collector.stop('closed');
+                try {
+                    if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+                        return i.reply({ content: '❌ Bạn cần quyền **Manage Server**.', ephemeral: true });
                     }
-                    await renderPage(i, guildId, currentPage, true);
-                } 
-                else if (customId === 'setting_toggle_level') {
-                    const profile = await MariaModDB.getGuildSettings(guildId);
-                    const newStatus = !(profile?.settings?.levelUpNotifications ?? true);
-                    await MariaModDB.updateGuildSettings(guildId, {
-                        'settings.levelUpNotifications': newStatus
-                    });
-                    await renderPage(i, guildId, currentPage, true);
-                }
-                else if (customId === 'setting_toggle_embed') {
-                    const profile = await MariaModDB.getGuildSettings(guildId);
-                    const newStatus = !(profile?.settings?.useEmbeds ?? true);
-                    await MariaModDB.updateGuildSettings(guildId, {
-                        'settings.useEmbeds': newStatus
-                    });
-                    await renderPage(i, guildId, currentPage, true);
-                }
-                else if (customId === 'setting_log_channel') {
-                    const channelId = i.values[0];
-                    const modSettings = await MariaModDB.getSettings(guildId) || {};
-                    await MariaModDB.setSettings(guildId, {
-                        logChannelId: channelId,
-                        modActionLogs: modSettings.modActionLogs !== false,
-                        monitorLogs: modSettings.monitorLogs !== false,
-                        updatedBy: interaction.user.id
-                    });
-                    await renderPage(i, guildId, currentPage, true);
-                }
-                else if (customId === 'setting_toggle_modlog') {
-                    const modSettings = await MariaModDB.getSettings(guildId) || {};
-                    const newStatus = modSettings.modActionLogs === false;
-                    await MariaModDB.setSettings(guildId, {
-                        logChannelId: modSettings.logChannelId || null,
-                        modActionLogs: newStatus,
-                        monitorLogs: modSettings.monitorLogs !== false,
-                        updatedBy: interaction.user.id
-                    });
-                    await renderPage(i, guildId, currentPage, true);
-                }
-                else if (customId === 'setting_toggle_monitor') {
-                    const modSettings = await MariaModDB.getSettings(guildId) || {};
-                    const newStatus = modSettings.monitorLogs === false;
-                    await MariaModDB.setSettings(guildId, {
-                        logChannelId: modSettings.logChannelId || null,
-                        modActionLogs: modSettings.modActionLogs !== false,
-                        monitorLogs: newStatus,
-                        updatedBy: interaction.user.id
-                    });
-                    await renderPage(i, guildId, currentPage, true);
+
+                    const { customId } = i;
+
+                    if (customId === 'setting_page_select') {
+                        currentPage = i.values[0];
+                        if (currentPage === 'close') {
+                            await i.update({ content: '✅ Đã đóng bảng điều khiển.', embeds: [], components: [] });
+                            return collector.stop('closed');
+                        }
+                        await renderPage(i, guildId, currentPage, true);
+                    } 
+                    else if (customId === 'setting_toggle_level') {
+                        const profile = await MariaModDB.getGuildSettings(guildId);
+                        const newStatus = !(profile?.settings?.levelUpNotifications ?? true);
+                        await MariaModDB.updateGuildSettings(guildId, {
+                            'settings.levelUpNotifications': newStatus
+                        });
+                        await renderPage(i, guildId, currentPage, true);
+                    }
+                    else if (customId === 'setting_toggle_embed') {
+                        const profile = await MariaModDB.getGuildSettings(guildId);
+                        const newStatus = !(profile?.settings?.useEmbeds ?? true);
+                        await MariaModDB.updateGuildSettings(guildId, {
+                            'settings.useEmbeds': newStatus
+                        });
+                        await renderPage(i, guildId, currentPage, true);
+                    }
+                    else if (customId === 'setting_log_channel') {
+                        const channelId = i.values[0];
+                        const modSettings = await MariaModDB.getSettings(guildId) || {};
+                        await MariaModDB.setSettings(guildId, {
+                            logChannelId: channelId,
+                            modActionLogs: modSettings.modActionLogs !== false,
+                            monitorLogs: modSettings.monitorLogs !== false,
+                            updatedBy: interaction.user.id
+                        });
+                        await renderPage(i, guildId, currentPage, true);
+                    }
+                    else if (customId === 'setting_toggle_modlog') {
+                        const modSettings = await MariaModDB.getSettings(guildId) || {};
+                        const newStatus = modSettings.modActionLogs === false;
+                        await MariaModDB.setSettings(guildId, {
+                            logChannelId: modSettings.logChannelId || null,
+                            modActionLogs: newStatus,
+                            monitorLogs: modSettings.monitorLogs !== false,
+                            updatedBy: interaction.user.id
+                        });
+                        await renderPage(i, guildId, currentPage, true);
+                    }
+                    else if (customId === 'setting_toggle_monitor') {
+                        const modSettings = await MariaModDB.getSettings(guildId) || {};
+                        const newStatus = modSettings.monitorLogs === false;
+                        await MariaModDB.setSettings(guildId, {
+                            logChannelId: modSettings.logChannelId || null,
+                            modActionLogs: modSettings.modActionLogs !== false,
+                            monitorLogs: newStatus,
+                            updatedBy: interaction.user.id
+                        });
+                        await renderPage(i, guildId, currentPage, true);
+                    }
+                } catch (err) {
+                    logger.error('SETTING', `Collector error: ${err.message}`);
+                    try {
+                        if (!i.replied && !i.deferred) {
+                            await i.reply({ content: '❌ Đã xảy ra lỗi. Vui lòng thử lại.', ephemeral: true });
+                        }
+                    } catch (e) { /* ignore */ }
                 }
             });
 
             collector.on('end', async (_, reason) => {
                 if (reason === 'closed') return;
                 try {
-                    const editFunc = isSlash ? (data) => interaction.editReply(data) : (data) => replyObj.edit(data);
-                    await editFunc({ content: '⏱️ Phiên thao tác đã hết hạn (10 phút).', components: [] });
+                    if (isSlash) {
+                        await interaction.editReply({ content: '⏱️ Phiên thao tác đã hết hạn (10 phút).', components: [], embeds: [] });
+                    } else if (message.editable) {
+                        await message.edit({ content: '⏱️ Phiên thao tác đã hết hạn (10 phút).', components: [], embeds: [] });
+                    }
                 } catch (e) {
                     logger.error('SETTING', `Error removing components on end: ${e.message}`);
                 }
@@ -124,8 +146,13 @@ module.exports = {
 
         } catch (error) {
             logger.error('SETTING', `Execute error: ${error.message}`);
-            const editFunc = isSlash ? (data) => interaction.editReply(data) : (data) => replyObj.edit(data);
-            await editFunc({ content: '❌ Không thể tải bảng cài đặt.', embeds: [], components: [] });
+            try {
+                if (isSlash) {
+                    await interaction.editReply({ content: '❌ Không thể tải bảng cài đặt.', embeds: [], components: [] });
+                } else {
+                    await interaction.reply({ content: '❌ Không thể tải bảng cài đặt.' });
+                }
+            } catch (e) { /* ignore */ }
         }
     }
 };
@@ -215,14 +242,16 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
 
     if (isUpdate) {
         await interactionOrMessage.update({ embeds: [embed], components, content: '' });
+        return null;
     } else {
-        const editFunc = isSlash ? (data) => interactionOrMessage.editReply(data) : (data) => interactionOrMessage.message ? interactionOrMessage.message.reply(data) : interactionOrMessage.reply(data);
-        
-        // Cần đảm bảo rằng khi dùng lệnh Text (không phải isUpdate) ta có thể update
-        if (!isSlash && interactionOrMessage.deferred === undefined) {
-            await interactionOrMessage.reply({ embeds: [embed], components });
-        } else {
+        if (isSlash) {
             await interactionOrMessage.editReply({ embeds: [embed], components, content: '' });
+            return null; // slash command dùng interaction.fetchReply() bên ngoài
+        } else {
+            // Prefix command: reply và trả về message để tạo collector
+            const replyTarget = interactionOrMessage.message || interactionOrMessage;
+            const sent = await replyTarget.reply({ embeds: [embed], components });
+            return sent;
         }
     }
 }
