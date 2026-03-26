@@ -41,6 +41,12 @@ module.exports = {
         const duration = interaction.options.getInteger('duration'); // Thời gian tính bằng phút
         const reason = interaction.options.getString('reason') || 'Không có lý do được cung cấp';
 
+        if (!targetUser || !duration) {
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Mute thành viên: \`${prefix}mute @user [số_phút] [lý do]\`` });
+        }
+
         if (!targetMember) {
             return interaction.reply({
                 content: 'Không thể tìm thấy thành viên này trong server.',

@@ -33,6 +33,12 @@ module.exports = {
         const targetMember = interaction.options.getMember('user');
         const reason = interaction.options.getString('reason') || 'Không có lý do được cung cấp';
 
+        if (!targetUser) {
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Unmute: \`${prefix}unmute @user [lý do]\`` });
+        }
+
         if (!targetMember) {
             return interaction.reply({
                 content: 'Không thể tìm thấy thành viên này trong server.',

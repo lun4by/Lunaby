@@ -31,7 +31,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
             return interaction.reply({
-                content: 'Bạn không có quyền sử dụng lệnh này!',
+                content: '❌ Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true,
             });
         }
@@ -43,9 +43,15 @@ module.exports = {
             'Không có lý do cụ thể';
         const deleteMessageDays = interaction.options.getInteger('days') || 1;
 
+        if (!targetUser) {
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Ban member: \`${prefix}ban @user [lý do] [số_ngày_xóa_tin_nhắn]\`` });
+        }
+
         if (targetMember && !targetMember.bannable) {
             return interaction.reply({
-                content: 'Không thể cấm người dùng này!',
+                content: '❌ Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!',
                 ephemeral: true,
             });
         }
@@ -61,24 +67,14 @@ module.exports = {
 
             const banEmbed = new EmbedBuilder()
                 .setColor(0xff0000)
-                .setTitle('🔨 Cấm thành công')
+                .setTitle('🔨 Đã ban thành viên')
                 .setDescription(aiResponse)
                 .addFields(
-                    {
-                        name: 'Lý do',
-                        value: reason,
-                        inline: true,
-                    },
-                    {
-                        name: 'Xóa tin nhắn',
-                        value: `${deleteMessageDays} ngày`,
-                        inline: true,
-                    },
-                    {
-                        name: 'Moderator',
-                        value: interaction.user.tag,
-                        inline: true,
-                    },
+                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
+                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
                 )
                 .setFooter({
                     text: `Được thực hiện bởi ${interaction.user.tag}`,
@@ -116,40 +112,15 @@ module.exports = {
             }
 
             const logEmbed = createModActionEmbed({
-                title: '🔨 Cấm thành công',
-                description: `Đã cấm ${targetUser.tag} khỏi server.`,
+                title: '🔨 Đã ban thành viên',
+                description: `Đã cấm ${targetUser.tag} khỏi server.\n\n**Xóa tin nhắn:** ${deleteMessageDays} ngày.`,
                 color: 0xff0000,
                 fields: [
-                    {
-                        name: 'Người dùng',
-                        value: `${targetUser.tag}`,
-                        inline: true,
-                    },
-                    {
-                        name: 'ID người dùng',
-                        value: targetUser.id,
-                        inline: true,
-                    },
-                    {
-                        name: 'Moderator',
-                        value: `${interaction.user.tag} (<@${interaction.user.id}>)`,
-                        inline: true,
-                    },
-                    {
-                        name: 'Lý do',
-                        value: reason,
-                        inline: false,
-                    },
-                    {
-                        name: 'Xóa tin nhắn',
-                        value: `${deleteMessageDays} ngày`,
-                        inline: true,
-                    },
-                    {
-                        name: 'Ngày',
-                        value: `<t:${Math.floor(Date.now() / 1000)}:F>`,
-                        inline: false,
-                    },
+                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
                 ],
                 footer: `Server: ${interaction.guild.name}`,
             });
@@ -183,7 +154,7 @@ module.exports = {
                 `Lỗi khi cấm ${targetUser.tag}: ${error.message}`,
             );
             await interaction.editReply({
-                content: `Đã xảy ra lỗi khi cấm ${targetUser.tag}: ${error.message}`,
+                content: `❌ Đã xảy ra lỗi khi cấm người dùng: ${error.message}`,
                 ephemeral: true,
             });
         }

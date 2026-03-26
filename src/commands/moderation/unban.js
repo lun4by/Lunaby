@@ -22,7 +22,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
             return interaction.reply({
-                content: 'Bạn không có quyền unban người dùng!',
+                content: '❌ Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true,
             });
         }
@@ -30,9 +30,15 @@ module.exports = {
         const userId = interaction.options.getString('userid');
         const reason = interaction.options.getString('reason') || 'Không có lý do được cung cấp';
 
+        if (!userId) {
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Gỡ cấm (unban): \`${prefix}unban [id_người_dùng] [lý do]\`` });
+        }
+
         if (!/^\d{17,19}$/.test(userId)) {
             return interaction.reply({
-                content: 'ID người dùng không hợp lệ. ID phải là một chuỗi số từ 17-19 chữ số.',
+                content: '❌ ID người dùng không hợp lệ. ID phải là một chuỗi số từ 17-19 chữ số.',
                 ephemeral: true,
             });
         }
@@ -45,7 +51,7 @@ module.exports = {
 
             if (!bannedUser) {
                 return interaction.editReply({
-                    content: 'Người dùng này không bị ban từ server.',
+                    content: '❌ Không tìm thấy thành viên này trong danh sách bị cấm của server.',
                     ephemeral: true,
                 });
             }
@@ -59,15 +65,17 @@ module.exports = {
             const aiResponse = await ConversationService.getCompletion(prompt);
 
             const unbanEmbed = new EmbedBuilder()
-                .setColor(0x00ffff)
-                .setTitle(`🔓 Người dùng đã được unban`)
+                .setColor(0x00ff00)
+                .setTitle(`🔓 Đã gỡ cấm thành viên (Unban)`)
                 .setDescription(aiResponse)
                 .addFields(
-                    { name: 'Người dùng', value: `${user.tag}`, inline: true },
-                    { name: 'ID', value: user.id, inline: true },
-                    { name: 'Lý do', value: reason, inline: false },
+                    { name: '👤 Người dùng', value: `${user.tag}`, inline: true },
+                    { name: '🆔 ID', value: user.id, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
+                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
                 )
-                .setFooter({ text: `Unbanned by ${interaction.user.tag}` })
+                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
                 .setTimestamp();
 
             await interaction.guild.members.unban(user, reason);
@@ -83,19 +91,15 @@ module.exports = {
             await interaction.editReply({ embeds: [unbanEmbed] });
 
             const logEmbed = createModActionEmbed({
-                title: `🔓 Người dùng đã được unban`,
-                description: `${user.tag} đã được unban khỏi server.`,
-                color: 0x00ffff,
+                title: `🔓 Đã gỡ cấm thành viên (Unban)`,
+                description: `Đã gỡ cấm ${user.tag} khỏi server.`,
+                color: 0x00ff00,
                 fields: [
-                    { name: 'Người dùng', value: `${user.tag}`, inline: true },
-                    { name: 'ID', value: user.id, inline: true },
-                    {
-                        name: 'Người unban',
-                        value: `${interaction.user.tag} (<@${interaction.user.id}>)`,
-                        inline: true,
-                    },
-                    { name: 'Lý do', value: reason, inline: false },
-                    { name: 'Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
+                    { name: '👤 Người dùng', value: `${user.tag}`, inline: true },
+                    { name: '🆔 ID', value: user.id, inline: true },
+                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
                 ],
                 footer: `Server: ${interaction.guild.name}`,
             });
@@ -104,7 +108,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', 'Lỗi khi unban người dùng:', error);
             await interaction.editReply({
-                content: `Đã xảy ra lỗi khi unban người dùng: ${error.message}`,
+                content: `❌ Đã xảy ra lỗi khi gỡ cấm người dùng: ${error.message}`,
                 ephemeral: true,
             });
         }

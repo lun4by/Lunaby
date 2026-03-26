@@ -9,21 +9,21 @@ const prompts = require('../../config/prompts.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('kick')
-        .setDescription('�u?i m?t th�nh vi�n kh?i server')
+        .setDescription('Đuổi một thành viên khỏi server')
         .addUserOption(option =>
-            option.setName('user').setDescription('Th�nh vi�n c?n du?i').setRequired(true)
+            option.setName('user').setDescription('Thành viên cần đuổi').setRequired(true)
         )
         .addStringOption(option =>
-            option.setName('reason').setDescription('L� do du?i').setRequired(false)
+            option.setName('reason').setDescription('Lý do đuổi').setRequired(false)
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
-    prefix: { name: 'kick', aliases: ['c?m'], description: 'C?m ngu?i d�ng' },
+    prefix: { name: 'kick', aliases: [], description: 'Kick thành viên ra khỏi server' },
     cooldown: 5,
 
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.KickMembers)) {
             return interaction.reply({
-                content: 'B?n kh�ng c� quy?n s? d?ng l?nh n�y!',
+                content: 'Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true,
             });
         }
@@ -31,18 +31,24 @@ module.exports = {
         const targetUser = interaction.options.getUser('user');
         const targetMember = interaction.options.getMember('user');
 
+        if (!targetUser) {
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Kick: \`${prefix}kick @user [lý do]\`` });
+        }
+
         if (!targetMember) {
             return interaction.reply({
-                content: 'Kh�ng t�m th?y th�nh vi�n n�y!',
+                content: 'Không tìm thấy thành viên này!',
                 ephemeral: true,
             });
         }
 
-        const reason = interaction.options.getString('reason')?.trim() || 'Kh�ng c� l� do c? th?';
+        const reason = interaction.options.getString('reason')?.trim() || 'Không có lý do cụ thể';
 
         if (!targetMember.kickable) {
             return interaction.reply({
-                content: 'Kh�ng th? du?i th�nh vi�n n�y!',
+                content: 'Không thể kick thành viên này!',
                 ephemeral: true,
             });
         }
@@ -58,16 +64,16 @@ module.exports = {
 
             const kickEmbed = new EmbedBuilder()
                 .setColor(0xffa500)
-                .setTitle('?? �u?i th�nh c�ng')
+                .setTitle('Đã kick thành viên')
                 .setDescription(aiResponse)
                 .addFields(
-                    { name: 'Ngu?i d�ng', value: targetUser.tag, inline: true },
+                    { name: 'User', value: targetUser.tag, inline: true },
                     { name: 'ID', value: targetUser.id, inline: true },
-                    { name: 'L� do', value: reason, inline: false },
+                    { name: 'Reason', value: reason, inline: false },
                     { name: 'Moderator', value: interaction.user.tag, inline: true },
-                    { name: 'Ng�y', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
+                    { name: 'Date', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
                 )
-                .setFooter({ text: `�u?c th?c hi?n b?i ${interaction.user.tag}` })
+                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
                 .setTimestamp();
 
             await targetMember.kick(reason);
@@ -91,24 +97,24 @@ module.exports = {
             }
 
             const logEmbed = createModActionEmbed({
-                title: '?? �u?i th�nh c�ng',
-                description: `�� du?i ${targetUser.tag} kh?i server.`,
+                title: 'Đã kick thành viên',
+                description: ` Đã kick ${targetUser.tag} khỏi server.`,
                 color: 0xffa500,
                 fields: [
-                    { name: 'Ngu?i d�ng', value: targetUser.tag, inline: true },
+                    { name: 'User', value: targetUser.tag, inline: true },
                     { name: 'ID', value: targetUser.id, inline: true },
                     { name: 'Moderator', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                    { name: 'L� do', value: reason, inline: false },
-                    { name: 'Ng�y', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
+                    { name: 'Reason', value: reason, inline: false },
+                    { name: 'Date', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
                 ],
                 footer: `Server: ${interaction.guild.name}`,
             });
 
             await sendModLog(interaction.guild, logEmbed, true);
         } catch (error) {
-            logger.error('MODERATION', `L?i khi du?i ${targetUser.tag}: ${error.message}`);
+            logger.error('MODERATION', `Lỗi khi kick ${targetUser.tag}: ${error.message}`);
             await interaction.editReply({
-                content: `�� x?y ra l?i khi du?i ${targetUser.tag}: ${error.message}`,
+                content: `Xảy ra lỗi khi kick ${targetUser.tag}: ${error.message}`,
             });
         }
     },
