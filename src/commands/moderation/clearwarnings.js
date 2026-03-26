@@ -86,7 +86,7 @@ module.exports = {
                 .replace('${reason}', reason)
                 .replace('${deletedCount}', deletedCount);
 
-            const aiResponse = await ConversationService.getCompletion(prompt);
+            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
 
             await interaction.editReply({ content: aiResponse });
 

@@ -224,6 +224,15 @@ class ConversationService {
     }
   }
 
+  async getOneTimeCompletion(prompt, config = {}) {
+    try {
+      return await AICore.getOneTimeCompletion(prompt, config);
+    } catch (error) {
+      logger.error("CONVERSATION_SERVICE", "Error in getOneTimeCompletion:", error.message);
+      return null;
+    }
+  }
+
   async buildEnhancedPrompt(prompt, conversationHistory) {
     return `
       ${prompts.chat.instructions}

@@ -37,7 +37,7 @@ class AICore {
         aspect_ratio: config.aspect_ratio || '1:1',
         output_format: config.output_format || 'png',
       });
-      
+
       const imageData = response.data.data[0];
       return {
         content: imageData.b64_json,
@@ -76,6 +76,23 @@ class AICore {
       { role: "user", content: enhancedPrompt },
     ];
     return this.processChatCompletion(messages, { max_tokens: 4000 });
+  }
+  /**
+   * Gọi AI một lần duy nhất, KHÔNG lưu history, KHÔNG enrich memory.
+   * Dùng cho mod commands, system tasks, v.v.
+   */
+  async getOneTimeCompletion(prompt, config = {}) {
+    const messages = [
+      { role: "system", content: this.systemPrompt },
+      { role: "user", content: prompt }
+    ];
+    const result = await this.processChatCompletion(messages, {
+      modelType: config.modelType || 'pro',
+      max_tokens: config.max_tokens || 128,
+      stream: false,
+      ...config,
+    });
+    return result.content;
   }
 
   getClient() { return this.client; }

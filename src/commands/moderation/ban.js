@@ -63,7 +63,7 @@ module.exports = {
                 .replace('${username}', targetUser.username)
                 .replace('${reason}', reason);
 
-            const aiResponse = await ConversationService.getCompletion(prompt);
+            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
 
             // Ban the user
             await interaction.guild.members.ban(targetUser, {

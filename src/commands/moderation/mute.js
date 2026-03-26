@@ -75,7 +75,7 @@ module.exports = {
                 .replace('${duration}', formattedDuration)
                 .replace('${reason}', reason);
 
-            const aiResponse = await ConversationService.getCompletion(prompt);
+            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
 
             await targetMember.timeout(durationMs, reason);
 

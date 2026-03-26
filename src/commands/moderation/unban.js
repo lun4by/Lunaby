@@ -62,7 +62,7 @@ module.exports = {
                 .replace('${username}', user.username)
                 .replace('${reason}', reason);
 
-            const aiResponse = await ConversationService.getCompletion(prompt);
+            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
 
             await interaction.guild.members.unban(user, reason);
 
