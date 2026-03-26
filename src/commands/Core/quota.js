@@ -1,6 +1,33 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
+
+const ROLE_BADGES = {
+    owner: '👑 Owner',
+    admin: '⚡ Admin',
+    pro: '💎 Pro',
+    user: '🌙 User'
+};
+
+const ROLE_COLORS = {
+    owner: 0xFFD700,
+    admin: 0xE74C3C,
+    pro: 0x9B59B6,
+    user: 0x7289DA
+};
+
+function createProgressBar(current, max, length = 10) {
+    if (max === -1) return '`' + '▰'.repeat(length) + '` ∞';
+    const ratio = Math.min(current / max, 1);
+    const filled = Math.round(ratio * length);
+    const empty = length - filled;
+    const percent = Math.round(ratio * 100);
+    return '`' + '▰'.repeat(filled) + '▱'.repeat(empty) + '` ' + percent + '%';
+}
+
+function formatQuotaValue(current, max) {
+    if (max === -1) return `**${current}** / ∞`;
+    return `**${current}** / **${max}**`;
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,33 +45,55 @@ module.exports = {
     },
 
     buildQuotaEmbed(user, stats) {
-        const remainingText = stats.limits.period === -1
-            ? 'Vô hạn (Không giới hạn lượt)'
-            : `${stats.remaining.messages} lượt`;
+        const roleBadge = ROLE_BADGES[stats.role] || ROLE_BADGES.user;
+        const roleColor = ROLE_COLORS[stats.role] || ROLE_COLORS.user;
 
-        const limitText = stats.limits.period === -1
-            ? 'Vô hạn'
-            : `${stats.limits.period} lượt`;
+        const msgCurrent = stats.usage.current;
+        const msgMax = stats.limits.period;
+        const msgRemaining = stats.remaining.messages;
 
-        const roleDisplay = stats.role.charAt(0).toUpperCase() + stats.role.slice(1);
+        const imgCurrent = stats.imageUsage.current;
+        const imgMax = stats.limits.imagePeriod;
+        const imgRemaining = stats.remaining.images;
 
-        const embed = createLunabyEmbed()
-            .setAuthor({ name: `Quota của ${user.tag}`, iconURL: user.displayAvatarURL() })
-            .setTitle('📊 Thống kê sử dụng AI')
-            .setDescription('Dưới đây là thông tin về số lượt trò chuyện với Lunaby AI của bạn.')
-            .addFields(
-                { name: '🔑 Cấp bậc', value: `\`${roleDisplay}\``, inline: true },
-                { name: '🔄 Loại giới hạn', value: `30 Ngày`, inline: true },
-                { name: '\u200B', value: '\u200B', inline: true },
-                { name: '📈 Đã sử dụng', value: `**${stats.usage.current}** / ${limitText}`, inline: true },
-                { name: '✅ Còn lại', value: `**${remainingText}**`, inline: true },
-                { name: '\u200B', value: '\u200B', inline: true },
-                { name: '🗓️ Trạng thái chu kỳ', value: `Đã dùng **${stats.usage.total}** lượt kể từ khi tạo tài khoản.\nChu kỳ sẽ làm mới vào: <t:${Math.floor(stats.nextReset / 1000)}:f> (<t:${Math.floor(stats.nextReset / 1000)}:R>)`, inline: false }
-            );
+        const resetTimestamp = Math.floor(stats.nextReset / 1000);
+        const daysLeft = stats.remaining.days;
 
-        if (stats.limits.period !== -1 && stats.remaining.messages <= 10) {
-            embed.setColor(0xE74C3C);
+        // Màu sắc theo tình trạng sử dụng
+        let embedColor = roleColor;
+        if (msgMax !== -1) {
+            const usageRatio = msgCurrent / msgMax;
+            if (usageRatio >= 0.95) embedColor = 0xE74C3C;      // Đỏ - gần hết
+            else if (usageRatio >= 0.75) embedColor = 0xE67E22;  // Cam - cảnh báo
         }
+
+        const msgBar = createProgressBar(msgCurrent, msgMax);
+        const imgBar = createProgressBar(imgCurrent, imgMax);
+
+        const msgRemainingText = msgMax === -1 ? '∞' : `${msgRemaining}`;
+        const imgRemainingText = imgMax === -1 ? '∞' : `${imgRemaining}`;
+
+        const embed = new EmbedBuilder()
+            .setColor(embedColor)
+            .setAuthor({
+                name: user.globalName || user.username,
+                iconURL: user.displayAvatarURL({ size: 64 })
+            })
+            .setDescription(
+                `### ${roleBadge}\n` +
+                `─────────────────────────\n` +
+                `**💬 Tin nhắn AI**\n` +
+                `${msgBar}\n` +
+                `${formatQuotaValue(msgCurrent, msgMax)} · Còn **${msgRemainingText}** lượt\n\n` +
+                `**🎨 Tạo ảnh AI**\n` +
+                `${imgBar}\n` +
+                `${formatQuotaValue(imgCurrent, imgMax)} · Còn **${imgRemainingText}** lượt\n` +
+                `─────────────────────────\n` +
+                `📊 Tổng lượt sử dụng: **${stats.usage.total}** tin nhắn · **${stats.imageUsage.total}** ảnh\n` +
+                `🔄 Làm mới sau **${daysLeft}** ngày · <t:${resetTimestamp}:R>`
+            )
+            .setFooter({ text: 'Lunaby · Quota System' })
+            .setTimestamp();
 
         return embed;
     }
