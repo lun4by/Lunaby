@@ -16,12 +16,18 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: 'Bạn không có quyền xem cảnh cáo của thành viên!',
+                content: '❌ Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true,
             });
         }
 
         const targetUser = interaction.options.getUser('user');
+
+        if (!targetUser) {
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Xem cảnh cáo: \`${prefix}warnings @user\`` });
+        }
 
         await interaction.deferReply();
 
@@ -33,15 +39,15 @@ module.exports = {
 
             if (warnings.length === 0) {
                 return interaction.editReply({
-                    content: `${targetUser.tag} không có cảnh cáo nào trong server này.`,
+                    content: '✅ Người dùng này hiện không có cảnh cáo nào!',
                     ephemeral: false,
                 });
             }
 
             const warningsEmbed = new EmbedBuilder()
                 .setColor(0xffff00)
-                .setTitle(`⚠️ Danh sách cảnh cáo của ${targetUser.tag}`)
-                .setDescription(`Tổng số cảnh cáo: ${warnings.length}`)
+                .setTitle(`⚠️ Danh sách cảnh cáo`)
+                .setDescription(`**👤 Người dùng:** ${targetUser.tag}\n**🚨 Tổng số cảnh cáo:** ${warnings.length}`)
                 .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
                 .setFooter({ text: `ID: ${targetUser.id}` })
                 .setTimestamp();
@@ -71,7 +77,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', 'Lỗi khi xem cảnh cáo của thành viên:', error);
             await interaction.editReply({
-                content: `Đã xảy ra lỗi khi xem cảnh cáo của ${targetUser.tag}: ${error.message}`,
+                content: `❌ Đã xảy ra lỗi khi truy xuất dữ liệu cảnh cáo: ${error.message}`,
                 ephemeral: true,
             });
         }

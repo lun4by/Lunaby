@@ -28,16 +28,20 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: 'Bạn không có quyền để sử dụng lệnh này!',
+                content: '❌ Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true,
             });
         }
 
         const targetUser = interaction.options.getUser('user');
         const type = interaction.options.getString('type');
-        const reason =
-            interaction.options.getString('reason') ||
-            'Không có lý do cụ thể';
+        const reason = interaction.options.getString('reason') || 'Không có lý do cụ thể';
+
+        if (!targetUser || !type) {
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Xóa cảnh cáo: \`${prefix}clearwarnings @user [all|latest]\`` });
+        }
 
         await interaction.deferReply();
 
@@ -49,7 +53,7 @@ module.exports = {
 
             if (warningCount === 0) {
                 return interaction.editReply({
-                    content: `${targetUser.tag} không có cảnh cáo nào.`,
+                    content: '✅ Người dùng này hiện không có cảnh cáo nào!',
                     ephemeral: false,
                 });
             }
@@ -86,41 +90,18 @@ module.exports = {
 
             const clearEmbed = new EmbedBuilder()
                 .setColor(0x00ff00)
-                .setTitle('✅ Xóa cảnh cáo thành công')
+                .setTitle('✅ Đã xóa cảnh cáo (Clear Warn)')
                 .setDescription(aiResponse)
                 .addFields(
-                    {
-                        name: 'Thành viên',
-                        value: `${targetUser.tag}`,
-                        inline: true,
-                    },
-                    {
-                        name: 'ID',
-                        value: targetUser.id,
-                        inline: true,
-                    },
-                    {
-                        name: 'Số lượng đã xóa',
-                        value: `${deletedCount}`,
-                        inline: true,
-                    },
-                    {
-                        name: 'Loại',
-                        value:
-                            type === 'all'
-                                ? 'Tất cả'
-                                : 'Mới nhất',
-                        inline: true,
-                    },
-                    {
-                        name: 'Lý do',
-                        value: reason,
-                        inline: false,
-                    },
+                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '🚨 Số lượng đã xóa', value: `${deletedCount}`, inline: true },
+                    { name: '🗑️ Loại', value: type === 'all' ? 'Tất cả' : 'Mới nhất', inline: true },
+                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
                 )
-                .setFooter({
-                    text: `Được thực hiện bởi ${interaction.user.tag}`,
-                })
+                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
                 .setTimestamp();
 
             await interaction.editReply({ embeds: [clearEmbed] });
@@ -146,7 +127,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', 'Lỗi khi xóa cảnh cáo của thành viên:', error);
             await interaction.editReply({
-                content: `Đã xảy ra lỗi khi xóa cảnh cáo của ${targetUser.tag}: ${error.message}`,
+                content: `❌ Đã xảy ra lỗi khi xóa cảnh cáo: ${error.message}`,
                 ephemeral: true,
             });
         }

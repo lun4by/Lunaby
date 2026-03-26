@@ -39,7 +39,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: 'Bạn không có quyền xem nhật ký moderation!',
+                content: '❌ Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true,
             });
         }
@@ -60,16 +60,16 @@ module.exports = {
 
             if (logs.length === 0) {
                 return interaction.editReply({
-                    content: 'Không tìm thấy nhật ký moderation nào phù hợp với bộ lọc.',
+                    content: '✅ Hệ thống chưa ghi nhận lược sử báo cáo nào phù hợp với bộ lọc!',
                     ephemeral: false,
                 });
             }
 
             const logEmbed = new EmbedBuilder()
-                .setColor(0x3498db)
-                .setTitle('📋 Nhật ký Moderation')
+                .setColor(0x00B0F4)
+                .setTitle('📋 Lược sử Báo cáo Kiểm duyệt')
                 .setDescription(
-                    `Hiển thị ${logs.length} hành động moderation gần nhất${targetUser ? ` cho ${targetUser.tag}` : ''}${actionType ? ` (loại: ${actionType})` : ''}.`,
+                    `Hiển thị **${logs.length}** hành động kiểm duyệt gần nhất${targetUser ? ` đối với <@${targetUser.id}>` : ''}${actionType ? ` (Bộ lọc: \`${actionType}\`)` : ''}.`,
                 )
                 .setFooter({ text: `Server: ${interaction.guild.name}` })
                 .setTimestamp();
@@ -104,7 +104,7 @@ module.exports = {
                         mute: '🔇 Mute',
                         unmute: '🔊 Unmute',
                         warn: '⚠️ Warn',
-                        clearwarnings: '🧹 Clear Warnings',
+                        clearwarnings: '🧹 Clear Warn',
                     }[log.action] || log.action;
 
                 // Thêm thông tin bổ sung dựa trên loại hành động
@@ -117,7 +117,7 @@ module.exports = {
 
                 logEmbed.addFields({
                     name: `${actionName} - ${date} ${time}`,
-                    value: `**Người thực hiện:** ${moderator}\n**Mục tiêu:** ${target}\n**Lý do:** ${log.reason || 'Không có lý do'}${additionalInfo}`,
+                    value: `**👮 Người xử lý:** ${moderator}\n**👤 Người dùng:** ${target}\n**📝 Lý do:** ${log.reason || 'Không có lý do'}${additionalInfo}`,
                 });
             }
 
@@ -125,7 +125,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODLOG', 'Lỗi khi xem nhật ký moderation:', error);
             await interaction.editReply({
-                content: `Đã xảy ra lỗi khi xem nhật ký moderation: ${error.message}`,
+                content: `❌ Đã xảy ra lỗi khi xem lược sử báo cáo: ${error.message}`,
                 ephemeral: true,
             });
         }

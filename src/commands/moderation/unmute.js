@@ -24,7 +24,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: 'Bạn không có quyền unmute thành viên!',
+                content: '❌ Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true
             });
         }
@@ -36,26 +36,26 @@ module.exports = {
         if (!targetUser) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Unmute: \`${prefix}unmute @user [lý do]\`` });
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Gỡ cấm ngôn (unmute): \`${prefix}unmute @user [lý do]\`` });
         }
 
         if (!targetMember) {
             return interaction.reply({
-                content: 'Không thể tìm thấy thành viên này trong server.',
+                content: '❌ Không tìm thấy thành viên này trong server!',
                 ephemeral: true
             });
         }
 
         if (!targetMember.moderatable) {
             return interaction.reply({
-                content: 'Tôi không thể unmute thành viên này. Có thể họ có quyền cao hơn tôi.',
+                content: '❌ Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!',
                 ephemeral: true
             });
         }
 
         if (!targetMember.communicationDisabledUntil) {
             return interaction.reply({
-                content: 'Thành viên này không bị mute.',
+                content: '❌ Người dùng này hiện không bị cấm ngôn!',
                 ephemeral: true
             });
         }
@@ -70,15 +70,17 @@ module.exports = {
             const aiResponse = await ConversationService.getCompletion(prompt);
 
             const unmuteEmbed = new EmbedBuilder()
-                .setColor(0x00FF00)
-                .setTitle(`🔊 Thành viên đã được unmute`)
+                .setColor(0x00ff00)
+                .setTitle(`🔊 Đã gỡ cấm ngôn (Unmute)`)
                 .setDescription(aiResponse)
                 .addFields(
-                    { name: 'Thành viên', value: `${targetUser.tag}`, inline: true },
-                    { name: 'ID', value: targetUser.id, inline: true },
-                    { name: 'Lý do', value: reason, inline: false }
+                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
+                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
                 )
-                .setFooter({ text: `Unmuted by ${interaction.user.tag}` })
+                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
                 .setTimestamp();
 
             await targetMember.timeout(null, reason);
@@ -94,15 +96,15 @@ module.exports = {
             await interaction.editReply({ embeds: [unmuteEmbed] });
 
             const logEmbed = createModActionEmbed({
-                title: `🔊 Thành viên đã được unmute`,
-                description: `${targetUser.tag} đã được unmute trong server.`,
-                color: 0x00FF00,
+                title: `🔊 Đã gỡ cấm ngôn (Unmute)`,
+                description: `Đã gỡ cấm ngôn ${targetUser.tag}.`,
+                color: 0x00ff00,
                 fields: [
-                    { name: 'Thành viên', value: `${targetUser.tag} (<@${targetUser.id}>)`, inline: true },
-                    { name: 'ID', value: targetUser.id, inline: true },
-                    { name: 'Người unmute', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                    { name: 'Lý do', value: reason, inline: false },
-                    { name: 'Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+                    { name: '👤 Người dùng', value: `${targetUser.tag} (<@${targetUser.id}>)`, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
                 ],
                 footer: `Server: ${interaction.guild.name}`
             });
@@ -124,7 +126,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', 'Lỗi khi unmute thành viên:', error);
             await interaction.editReply({
-                content: `Đã xảy ra lỗi khi unmute ${targetUser.tag}: ${error.message}`,
+                content: `❌ Đã xảy ra lỗi khi gỡ cấm ngôn người dùng: ${error.message}`,
                 ephemeral: true
             });
         }

@@ -21,7 +21,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: 'Bạn không có quyền cảnh cáo thành viên!',
+                content: '❌ Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true,
             });
         }
@@ -30,16 +30,22 @@ module.exports = {
         const targetMember = interaction.options.getMember('user');
         const reason = interaction.options.getString('reason');
 
+        if (!targetUser || !reason) {
+            const PrefixDB = require('../../services/database/PrefixDB');
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Cảnh cáo (warn): \`${prefix}warn @user [lý do]\`` });
+        }
+
         if (!targetMember) {
             return interaction.reply({
-                content: 'Không thể tìm thấy thành viên này trong server.',
+                content: '❌ Không tìm thấy thành viên này trong server!',
                 ephemeral: true,
             });
         }
 
         if (targetUser.bot) {
             return interaction.reply({
-                content: 'Không thể cảnh cáo bot.',
+                content: '❌ Không thể cảnh cáo bot!',
                 ephemeral: true,
             });
         }
@@ -49,7 +55,7 @@ module.exports = {
             interaction.user.id !== interaction.guild.ownerId
         ) {
             return interaction.reply({
-                content: 'Bạn không thể cảnh cáo người có vai trò cao hơn hoặc ngang bằng bạn.',
+                content: '❌ Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!',
                 ephemeral: true,
             });
         }
@@ -66,7 +72,7 @@ module.exports = {
 
             if (!success) {
                 return interaction.editReply({
-                    content: 'Đã có lỗi xảy ra khi lưu cảnh cáo vào cơ sở dữ liệu!',
+                    content: '❌ Đã xảy ra lỗi khi lưu cảnh cáo vào cơ sở dữ liệu!',
                     ephemeral: true,
                 });
             }
@@ -94,15 +100,17 @@ module.exports = {
 
             const warnEmbed = new EmbedBuilder()
                 .setColor(0xffff00)
-                .setTitle(`⚠️ Thành viên đã bị cảnh cáo`)
+                .setTitle(`⚠️ Đã cảnh cáo thành viên (Warn)`)
                 .setDescription(aiResponse)
                 .addFields(
-                    { name: 'Thành viên', value: `${targetUser.tag}`, inline: true },
-                    { name: 'ID', value: targetUser.id, inline: true },
-                    { name: 'Số lần cảnh cáo', value: `${warningCount}`, inline: true },
-                    { name: 'Lý do', value: reason, inline: false },
+                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '🚨 Số lần cảnh cáo', value: `${warningCount}`, inline: true },
+                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
                 )
-                .setFooter({ text: `Warned by ${interaction.user.tag}` })
+                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
                 .setTimestamp();
 
             await interaction.editReply({ embeds: [warnEmbed] });
@@ -161,7 +169,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', 'Lỗi khi cảnh cáo thành viên:', error);
             await interaction.editReply({
-                content: `Đã xảy ra lỗi khi cảnh cáo ${targetUser.tag}: ${error.message}`,
+                content: `❌ Đã xảy ra lỗi khi cảnh cáo người dùng: ${error.message}`,
                 ephemeral: true,
             });
         }

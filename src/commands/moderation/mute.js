@@ -31,7 +31,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: 'Bạn không có quyền mute thành viên!',
+                content: '❌ Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true
             });
         }
@@ -44,19 +44,19 @@ module.exports = {
         if (!targetUser || !duration) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Mute thành viên: \`${prefix}mute @user [số_phút] [lý do]\`` });
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Cấm ngôn (mute): \`${prefix}mute @user [số_phút] [lý do]\`` });
         }
 
         if (!targetMember) {
             return interaction.reply({
-                content: 'Không thể tìm thấy thành viên này trong server.',
+                content: '❌ Không tìm thấy thành viên này trong server!',
                 ephemeral: true
             });
         }
 
         if (!targetMember.moderatable) {
             return interaction.reply({
-                content: 'Tôi không thể mute thành viên này. Có thể họ có quyền cao hơn tôi hoặc bạn.',
+                content: '❌ Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!',
                 ephemeral: true
             });
         }
@@ -78,17 +78,17 @@ module.exports = {
             const aiResponse = await ConversationService.getCompletion(prompt);
 
             const muteEmbed = new EmbedBuilder()
-                .setColor(0xFFA500)
-                .setTitle(`🔇 Thành viên đã bị mute`)
+                .setColor(0xffff00)
+                .setTitle(`🔇 Đã cấm ngôn (Mute)`)
                 .setDescription(aiResponse)
                 .addFields(
-                    { name: 'Thành viên', value: `${targetUser.tag}`, inline: true },
-                    { name: 'ID', value: targetUser.id, inline: true },
-                    { name: 'Thời gian', value: formattedDuration, inline: true },
-                    { name: 'Kết thúc lúc', value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>`, inline: true },
-                    { name: 'Lý do', value: reason, inline: false }
+                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '⏳ Thời gian phạt', value: formattedDuration, inline: false },
+                    { name: '📅 Kết thúc lúc', value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>`, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: true }
                 )
-                .setFooter({ text: `Muted by ${interaction.user.tag}` })
+                .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
                 .setTimestamp();
 
             await targetMember.timeout(durationMs, reason);
@@ -113,16 +113,16 @@ module.exports = {
             }
 
             const logEmbed = createModActionEmbed({
-                title: `🔇 Thành viên đã bị mute`,
-                description: `${targetUser.tag} đã bị mute trong ${formattedDuration}.`,
-                color: 0xFFA500,
+                title: `🔇 Đã cấm ngôn (Mute)`,
+                description: `Đã cấm ngôn ${targetUser.tag}.`,
+                color: 0xffff00,
                 fields: [
-                    { name: 'Thành viên', value: `${targetUser.tag} (<@${targetUser.id}>)`, inline: true },
-                    { name: 'ID', value: targetUser.id, inline: true },
-                    { name: 'Người mute', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                    { name: 'Thời gian mute', value: formattedDuration, inline: true },
-                    { name: 'Kết thúc lúc', value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>`, inline: true },
-                    { name: 'Lý do', value: reason, inline: false }
+                    { name: '👤 Người dùng', value: `${targetUser.tag} (<@${targetUser.id}>)`, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: '⏳ Thời gian phạt', value: formattedDuration, inline: true },
+                    { name: '📅 Kết thúc lúc', value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>`, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false }
                 ],
                 footer: `Server: ${interaction.guild.name}`
             });
@@ -145,7 +145,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', 'Lỗi khi mute thành viên:', error);
             await interaction.editReply({
-                content: `Đã xảy ra lỗi khi mute ${targetUser.tag}: ${error.message}`,
+                content: `❌ Đã xảy ra lỗi khi cấm ngôn người dùng: ${error.message}`,
                 ephemeral: true
             });
         }

@@ -23,7 +23,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.KickMembers)) {
             return interaction.reply({
-                content: 'Bạn không có quyền sử dụng lệnh này!',
+                content: '❌ Bạn không có quyền sử dụng lệnh này!',
                 ephemeral: true,
             });
         }
@@ -34,12 +34,12 @@ module.exports = {
         if (!targetUser) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Kick: \`${prefix}kick @user [lý do]\`` });
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Đuổi thành viên (kick): \`${prefix}kick @user [lý do]\`` });
         }
 
         if (!targetMember) {
             return interaction.reply({
-                content: 'Không tìm thấy thành viên này!',
+                content: '❌ Không tìm thấy thành viên này trong server!',
                 ephemeral: true,
             });
         }
@@ -48,7 +48,7 @@ module.exports = {
 
         if (!targetMember.kickable) {
             return interaction.reply({
-                content: 'Không thể kick thành viên này!',
+                content: '❌ Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!',
                 ephemeral: true,
             });
         }
@@ -64,14 +64,14 @@ module.exports = {
 
             const kickEmbed = new EmbedBuilder()
                 .setColor(0xffa500)
-                .setTitle('Đã kick thành viên')
+                .setTitle('👢 Đã đuổi thành viên (Kick)')
                 .setDescription(aiResponse)
                 .addFields(
-                    { name: 'User', value: targetUser.tag, inline: true },
-                    { name: 'ID', value: targetUser.id, inline: true },
-                    { name: 'Reason', value: reason, inline: false },
-                    { name: 'Moderator', value: interaction.user.tag, inline: true },
-                    { name: 'Date', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
+                    { name: '👤 Người dùng', value: targetUser.tag, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
+                    { name: '👮 Người xử lý', value: `<@${interaction.user.id}>`, inline: true },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
                 )
                 .setFooter({ text: `Được thực hiện bởi ${interaction.user.tag}` })
                 .setTimestamp();
@@ -97,15 +97,15 @@ module.exports = {
             }
 
             const logEmbed = createModActionEmbed({
-                title: 'Đã kick thành viên',
-                description: ` Đã kick ${targetUser.tag} khỏi server.`,
+                title: '👢 Đã đuổi thành viên (Kick)',
+                description: `Đã đuổi ${targetUser.tag} khỏi server.`,
                 color: 0xffa500,
                 fields: [
-                    { name: 'User', value: targetUser.tag, inline: true },
-                    { name: 'ID', value: targetUser.id, inline: true },
-                    { name: 'Moderator', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                    { name: 'Reason', value: reason, inline: false },
-                    { name: 'Date', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
+                    { name: '👤 Người dùng', value: targetUser.tag, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false },
+                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
                 ],
                 footer: `Server: ${interaction.guild.name}`,
             });
@@ -114,7 +114,8 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', `Lỗi khi kick ${targetUser.tag}: ${error.message}`);
             await interaction.editReply({
-                content: `Xảy ra lỗi khi kick ${targetUser.tag}: ${error.message}`,
+                content: `❌ Đã xảy ra lỗi khi đuổi người dùng: ${error.message}`,
+                ephemeral: true
             });
         }
     },
