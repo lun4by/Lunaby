@@ -184,7 +184,6 @@ class DatabaseManager {
       COLLECTIONS.CONVERSATIONS,
       COLLECTIONS.CONVERSATION_META,
       'mod_settings',
-      'image_blacklist',
       'monitor_settings',
       'monitor_logs'
     ];

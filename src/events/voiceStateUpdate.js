@@ -1,5 +1,5 @@
 const { Events } = require('discord.js');
-const GuildProfileDB = require('../services/database/guildprofiledb.js');
+const MariaModDB = require('../services/database/MariaModDB.js');
 const PrefixDB = require('../services/database/PrefixDB.js');
 const AICore = require('../services/ai/AICore.js');
 const prompts = require('../config/prompts.js');
@@ -46,7 +46,7 @@ function setupVoiceStateEvent(client) {
 
             if (oldChannel?.id === newChannel?.id) return;
 
-            const settings = await GuildProfileDB.getGuildProfile(guild.id);
+            const settings = await MariaModDB.getGuildSettings(guild.id);
             if (!settings?.voiceToggle?.isEnabled) return;
 
             const memberName = member.displayName || member.user.username;

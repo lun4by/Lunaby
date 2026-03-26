@@ -7,7 +7,7 @@ const {
     PermissionsBitField
 } = require('discord.js');
 
-const guildProfileDB = require('../../services/database/guildprofiledb');
+const MariaModDB = require('../../services/database/MariaModDB');
 const logger = require('../../utils/logger');
 
 const profileCache = new Map();
@@ -39,7 +39,7 @@ module.exports = {
             let profile = profileCache.get(guildId);
             if (!profile || Date.now() - profile.timestamp > CACHE_TTL) {
                 profile = {
-                    data: await guildProfileDB.getGuildProfile(guildId),
+                    data: await MariaModDB.getGuildSettings(guildId),
                     timestamp: Date.now()
                 };
                 profileCache.set(guildId, profile);
@@ -162,7 +162,7 @@ async function handleInteraction(i, guildId, settings, guild) {
 
     if (customId === 'set_toggle_level') {
         settings.levelUpNotifications = !settings.levelUpNotifications;
-        await guildProfileDB.updateGuildProfile(guildId, {
+        await MariaModDB.updateGuildSettings(guildId, {
             'settings.levelUpNotifications': settings.levelUpNotifications
         });
 
@@ -175,7 +175,7 @@ async function handleInteraction(i, guildId, settings, guild) {
 
     if (customId === 'set_toggle_embed') {
         settings.useEmbeds = !settings.useEmbeds;
-        await guildProfileDB.updateGuildProfile(guildId, {
+        await MariaModDB.updateGuildSettings(guildId, {
             'settings.useEmbeds': settings.useEmbeds
         });
 

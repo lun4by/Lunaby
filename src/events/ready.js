@@ -5,7 +5,6 @@ const PrefixDB = require('../services/database/PrefixDB.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 const storageDB = require('../services/database/storagedb.js');
 const initSystem = require('../services/system/initSystem.js');
-const GuildProfileDB = require('../services/database/guildprofiledb.js');
 const { syncAllGuilds } = require('../handlers/guildHandler');
 const CommandsJSONService = require('../services/system/CommandsJSONService');
 const QuotaService = require('../services/user/QuotaService.js');
@@ -56,9 +55,6 @@ async function startbot(client, loadCommands) {
 
     try {
       await storageDB.initializeProfiles();
-      const db = mongoClient.getDb();
-      await db.collection('user_profiles').createIndex({ 'data.global_xp': -1 });
-      await db.collection('user_profiles').createIndex({ 'data.xp.id': 1 });
       initSystem.markReady('profiles');
     } catch (error) {
       logger.error('SYSTEM', 'Profile system init failed:', error.message);
@@ -83,7 +79,7 @@ async function startbot(client, loadCommands) {
     try {
       for (const [guildId, guild] of client.guilds.cache) {
         try {
-          await GuildProfileDB.getGuildProfile(guildId);
+          await MariaModDB.getGuildSettings(guildId);
         } catch (err) {
           logger.error('SYSTEM', `Guild config error ${guild.name}:`, err.message);
         }
