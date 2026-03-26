@@ -4,7 +4,7 @@ const {
     EmbedBuilder,
     ChannelType,
 } = require('discord.js');
-const mongoClient = require('../../services/database/mongoClient.js');
+const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
 
 module.exports = {
@@ -42,27 +42,17 @@ module.exports = {
         await interaction.deferReply();
 
         try {
-            const db = mongoClient.getDb();
-
-            try {
-                await db.createCollection('mod_settings');
-            } catch (error) { }
-
             const logSettings = {
-                guildId: interaction.guild.id,
                 logChannelId: logChannel.id,
                 modActionLogs: modActionLogs,
-                updatedAt: new Date(),
                 updatedBy: interaction.user.id,
             };
 
-            await db
-                .collection('mod_settings')
-                .updateOne({ guildId: interaction.guild.id }, { $set: logSettings }, { upsert: true });
+            await MariaModDB.setSettings(interaction.guild.id, logSettings);
 
             const settingsEmbed = new EmbedBuilder()
                 .setColor(0x00ff00)
-                .setTitle('✅ Đã thiết lập kênh log')
+                .setTitle('✅ | Đã thiết lập kênh log')
                 .setDescription(`Kênh log đã được thiết lập thành công tại ${logChannel}`)
                 .addFields(
                     {
