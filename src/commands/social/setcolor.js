@@ -32,11 +32,8 @@ module.exports = {
         });
       }
 
-      const collection = await ProfileDB.getProfileCollection();
-      await collection.updateOne(
-        { _id: interaction.user.id },
-        { $set: { 'data.profile.color': color } }
-      );
+      const MariaModDB = require('../../services/database/MariaModDB');
+      await MariaModDB.updateUserProfile(interaction.user.id, ['color'], [color]);
 
       if (color) {
         await interaction.editReply({

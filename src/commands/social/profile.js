@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const ProfileDB = require('../../services/database/profiledb');
+const UserProfileDB = require('../../services/database/UserProfileDB');
 const XPService = require('../../services/user/XPService');
 const { generateProfileCard } = require('../../services/canvas/profileCanvas');
 const logger = require('../../utils/logger');
@@ -29,7 +29,7 @@ module.exports = {
         });
       }
 
-      const profile = await ProfileDB.getProfile(targetUser.id);
+      const profile = await UserProfileDB.getUserProfile(targetUser.id);
       const profileData = profile?.data?.profile || {};
 
       const attachment = await generateProfileCard({

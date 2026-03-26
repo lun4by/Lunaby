@@ -107,6 +107,36 @@ class MariaModDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS user_profiles (
+          user_id VARCHAR(32) PRIMARY KEY,
+          global_xp INT DEFAULT 0,
+          global_level INT DEFAULT 1,
+          bio TEXT,
+          color VARCHAR(20),
+          background VARCHAR(255),
+          inventory JSON DEFAULT ('[]'),
+          badges JSON DEFAULT ('[]'),
+          social JSON DEFAULT ('{}'),
+          cosmetics JSON DEFAULT ('{}'),
+          extra_data JSON DEFAULT ('{}'),
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS user_economy (
+          user_id VARCHAR(32) PRIMARY KEY,
+          wallet INT DEFAULT 0,
+          bank INT DEFAULT 0,
+          shards INT DEFAULT 0,
+          streak_current INT DEFAULT 0,
+          streak_alltime INT DEFAULT 0,
+          streak_timestamp BIGINT DEFAULT 0,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+
             logger.info('MARIADB', 'All tables ready');
 
             try {
@@ -569,6 +599,71 @@ class MariaModDB {
         } catch (error) {
             logger.error('MARIADB', 'Error getting user rank:', error);
             return 0;
+        }
+    }
+
+    async getUserProfile(userId) {
+        try {
+            const rows = await mariaClient.query('SELECT * FROM user_profiles WHERE user_id = ?', [userId]);
+            if (rows.length === 0) {
+                await mariaClient.query('INSERT IGNORE INTO user_profiles (user_id) VALUES (?)', [userId]);
+                return { user_id: userId, global_xp: 0, global_level: 1, bio: null, color: null, background: null, inventory: null, badges: null, social: null, cosmetics: null, extra_data: null };
+            }
+            return rows[0];
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting user profile:', error);
+            return null;
+        }
+    }
+
+    async updateUserProfile(userId, updateFields, updateValues) {
+        try {
+            let sets = [];
+            for (const field of updateFields) {
+                sets.push(`${field} = ?`);
+            }
+            if (!sets.length) return true;
+            
+            await mariaClient.query(`INSERT IGNORE INTO user_profiles (user_id) VALUES (?)`, [userId]);
+            
+            updateValues.push(userId);
+            await mariaClient.query(
+                `UPDATE user_profiles SET ${sets.join(', ')} WHERE user_id = ?`,
+                updateValues
+            );
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error updating user profile:', error);
+            return false;
+        }
+    }
+
+    async getUserEconomy(userId) {
+        try {
+            const rows = await mariaClient.query('SELECT * FROM user_economy WHERE user_id = ?', [userId]);
+            if (rows.length === 0) {
+                await mariaClient.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [userId]);
+                return { user_id: userId, wallet: 0, bank: 0, shards: 0, streak_current: 0, streak_alltime: 0, streak_timestamp: 0 };
+            }
+            return rows[0];
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting user economy:', error);
+            return null;
+        }
+    }
+
+    async updateUserEconomyCol(userId, colName, amount, isIncrement = false) {
+        try {
+            await mariaClient.query(`INSERT IGNORE INTO user_economy (user_id) VALUES (?)`, [userId]);
+            let query = `UPDATE user_economy SET ${colName} = ? WHERE user_id = ?`;
+            if (isIncrement) {
+                query = `UPDATE user_economy SET ${colName} = ${colName} + ? WHERE user_id = ?`;
+            }
+            await mariaClient.query(query, [amount, userId]);
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error updating user economy:', error);
+            return false;
         }
     }
 }

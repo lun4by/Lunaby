@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const ProfileDB = require('../../services/database/profiledb');
 const XPService = require('../../services/user/XPService');
 const generateRankCard = require('../../services/canvas/rankCanvas.js');
 const { ordinalize } = require('../../utils/string.js');
@@ -25,8 +24,7 @@ module.exports = {
     const member = await interaction.guild.members.fetch(targetUser.id);
 
     try {
-      const profile = await ProfileDB.getProfile(targetUser.id);
-      const serverXP = profile.data.xp.find(x => x.id === interaction.guild.id);
+      const serverXP = await XPService.getUserXP(interaction.guild.id, targetUser.id);
 
       if (!serverXP || serverXP.xp === 0) {
         const embed = new EmbedBuilder()
@@ -36,10 +34,9 @@ module.exports = {
       }
 
       const level = serverXP.level;
-      const xp = serverXP.xp;
 
-      const maxXPThisLevel = XPService.calculateMaxLevelXP(level);
-      const curXPThisLevel = XPService.calculateCurrentLevelXP(xp, level);
+      const maxXPThisLevel = serverXP.maxLevelXP;
+      const curXPThisLevel = serverXP.currentLevelXP;
       const userRank = await XPService.getUserRank(interaction.guild.id, targetUser.id);
 
       const attachment = await generateRankCard({
