@@ -96,8 +96,6 @@ async function startbot(client, loadCommands) {
       logger.error('SYSTEM', 'Guild sync failed:', error.message);
     }
 
-
-
     client.user.setPresence({
       activities: [{ name: '/help', type: 1 }],
       status: 'online'
