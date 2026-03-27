@@ -120,11 +120,15 @@ async function handleVoiceMasterJoin(newState, member) {
         // Tạo tên kênh từ template
         const channelName = creatorConfig.defaultName.replace('{user}', member.displayName || member.user.username);
 
+        // Lấy category hiện tại của kênh creator (hỗ trợ kéo kênh sang category khác)
+        const creatorChannel = newState.channel;
+        const parentId = creatorChannel?.parentId || creatorConfig.categoryId;
+
         // Tạo kênh voice tạm
         const tempChannel = await guild.channels.create({
             name: channelName,
             type: ChannelType.GuildVoice,
-            parent: creatorConfig.categoryId,
+            parent: parentId,
             userLimit: creatorConfig.defaultLimit,
             bitrate: Math.min(creatorConfig.defaultBitrate, guild.maximumBitrate),
             permissionOverwrites: [

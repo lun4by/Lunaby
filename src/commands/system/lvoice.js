@@ -33,7 +33,18 @@ module.exports = {
             });
         }
 
-        const subcommand = interaction.options.getSubcommand();
+        // Hỗ trợ cả slash và prefix
+        let subcommand;
+        try {
+            subcommand = interaction.options.getSubcommand();
+        } catch {
+            subcommand = null;
+        }
+
+        // Prefix fallback: lấy args[0] làm subcommand
+        if (!subcommand && interaction.args?.length > 0) {
+            subcommand = interaction.args[0]?.toLowerCase();
+        }
 
         if (subcommand === 'setup') {
             await handleSetup(interaction);
@@ -41,6 +52,11 @@ module.exports = {
             await handleDisable(interaction);
         } else if (subcommand === 'config') {
             await handleConfig(interaction);
+        } else {
+            return interaction.reply({
+                content: `${emojis.error} Subcommand không hợp lệ! Dùng: \`/lvoice setup\`, \`/lvoice disable\`, \`/lvoice config\``,
+                ephemeral: true,
+            });
         }
     },
 };
@@ -49,7 +65,9 @@ async function handleSetup(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
     const guild = interaction.guild;
-    const categoryName = interaction.options.getString('name') || 'Tạo Phòng Riêng';
+    const categoryName = interaction.options.getString('name')
+        || (interaction.args?.length > 1 ? interaction.args.slice(1).join(' ') : null)
+        || 'Tạo Phòng Riêng';
 
     // Kiểm tra xem đã setup chưa
     const existing = await MariaModDB.getLVoiceConfig(guild.id);
