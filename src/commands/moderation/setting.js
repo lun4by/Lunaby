@@ -1,7 +1,6 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, PermissionsBitField } = require('discord.js');
 
 const MariaModDB = require('../../services/database/MariaModDB.js');
-const { getDetailedLogs } = require('../../utils/modLogger.js');
 const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger');
 
@@ -63,7 +62,7 @@ module.exports = {
                             return collector.stop('closed');
                         }
                         await renderPage(i, guildId, currentPage, true);
-                    } 
+                    }
                     else if (customId === 'setting_toggle_level') {
                         const profile = await MariaModDB.getGuildSettings(guildId);
                         const newStatus = !(profile?.settings?.levelUpNotifications ?? true);
@@ -181,10 +180,10 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
 
     if (page === 'general') {
         embed.setDescription('**⚙️ Danh mục: Cài đặt Chung**\nĐiều chỉnh cách bot tương tác và gửi thông báo trong máy chủ.')
-             .addFields(
-                 { name: '🔔 Thông báo Level-up', value: levelUp ? `${emojis.success} Đã Bật` : `${emojis.error} Đã Tắt`, inline: true },
-                 { name: '📋 Sử dụng Embed', value: useEmbeds ? `${emojis.success} Đã Bật` : `${emojis.error} Đã Tắt`, inline: true }
-             );
+            .addFields(
+                { name: '🔔 Thông báo Level-up', value: levelUp ? `${emojis.success} Đã Bật` : `${emojis.error} Đã Tắt`, inline: true },
+                { name: '📋 Sử dụng Embed', value: useEmbeds ? `${emojis.success} Đã Bật` : `${emojis.error} Đã Tắt`, inline: true }
+            );
 
         const btnRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -197,21 +196,21 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
                 .setStyle(useEmbeds ? ButtonStyle.Danger : ButtonStyle.Success)
         );
         components.push(btnRow);
-    } 
+    }
     else if (page === 'logging') {
         embed.setDescription('**🛡️ Danh mục: Nhật ký sự kiện (Logs)**\nCho phép bot ghi chép lại các lệnh cấm, đá, hoặc sự kiện quan trọng vào một kênh an toàn.')
-             .addFields(
-                 { name: '📝 Kênh báo cáo (Log Channel)', value: logChannelId ? `<#${logChannelId}>` : 'Chưa thiết lập (Vui lòng chọn ở Menu dưới)', inline: false },
-                 { name: '🔨 Báo cáo Kiểm duyệt (Ban/Kick/Mute)', value: modActionLogs ? `${emojis.success} Bật` : `${emojis.error} Tắt`, inline: true },
-                 { name: '📡 Báo cáo Mở rộng (Sự kiện phụ)', value: monitorLogs ? `${emojis.success} Bật` : `${emojis.error} Tắt`, inline: true }
-             );
+            .addFields(
+                { name: '📝 Kênh báo cáo (Log Channel)', value: logChannelId ? `<#${logChannelId}>` : 'Chưa thiết lập (Vui lòng chọn ở Menu dưới)', inline: false },
+                { name: '🔨 Báo cáo Kiểm duyệt (Ban/Kick/Mute)', value: modActionLogs ? `${emojis.success} Bật` : `${emojis.error} Tắt`, inline: true },
+                { name: '📡 Báo cáo Mở rộng (Sự kiện phụ)', value: monitorLogs ? `${emojis.success} Bật` : `${emojis.error} Tắt`, inline: true }
+            );
 
         // Row 2: Channel Select Menu
         const channelSelect = new ChannelSelectMenuBuilder()
             .setCustomId('setting_log_channel')
             .setPlaceholder(logChannelId ? 'Thay đổi kênh lưu Log...' : 'Thiết lập kênh lưu Log...')
             .addChannelTypes(ChannelType.GuildText);
-        
+
         components.push(new ActionRowBuilder().addComponents(channelSelect));
 
         // Row 3: Buttons

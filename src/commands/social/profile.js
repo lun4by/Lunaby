@@ -1,6 +1,6 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
-const ProfileDB = require('../../services/database/profiledb');
-const { generateProfileCard } = require('../../utils/imageTools/imageGenerator');
+const { SlashCommandBuilder } = require('discord.js');
+const UserProfileDB = require('../../services/database/UserProfileDB');
+const { generateProfileCard } = require('../../services/canvas/profileCanvas');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis');
 
