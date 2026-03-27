@@ -674,6 +674,46 @@ class MariaModDB {
         }
     }
 
+    async getUserCredits(userId) {
+        try {
+            const economy = await this.getUserEconomy(userId);
+            return Number(economy?.wallet || 0);
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting user credits:', error);
+            return 0;
+        }
+    }
+
+    async setUserCredits(userId, amount) {
+        try {
+            const safeAmount = Math.max(0, Math.trunc(Number(amount) || 0));
+            await mariaClient.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [userId]);
+            await mariaClient.query(
+                'UPDATE user_economy SET wallet = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [safeAmount, userId]
+            );
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error setting user credits:', error);
+            return false;
+        }
+    }
+
+    async addUserCredits(userId, amount) {
+        try {
+            const changeAmount = Math.trunc(Number(amount) || 0);
+            await mariaClient.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [userId]);
+            await mariaClient.query(
+                'UPDATE user_economy SET wallet = GREATEST(0, wallet + ?), updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [changeAmount, userId]
+            );
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error adding user credits:', error);
+            return false;
+        }
+    }
+
     async updateUserEconomyCol(userId, colName, amount, isIncrement = false) {
         try {
             await mariaClient.query(`INSERT IGNORE INTO user_economy (user_id) VALUES (?)`, [userId]);

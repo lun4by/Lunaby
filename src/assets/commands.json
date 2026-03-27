@@ -1,5 +1,27 @@
 [
   {
+    "name": "addcredits",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "admin",
+    "description": "Thêm hoặc bớt credits cho một người dùng (Admin Only)",
+    "parameters": [
+      "Người dùng cần thay đổi credits (bắt buộc)",
+      "Số credits muốn cộng thêm, dùng số âm để trừ đi (bắt buộc)"
+    ],
+    "examples": [
+      "/addcredits",
+      "/addcredits <user> <amount>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
     "name": "addquota",
     "aliases": [],
     "clientPermissions": [
@@ -631,6 +653,24 @@
     "examples": [
       "/warnings",
       "/warnings <user>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "credits",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Xem số credits hiện tại của bạn",
+    "parameters": [],
+    "examples": [
+      "/credits"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
