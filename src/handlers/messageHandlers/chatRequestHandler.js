@@ -11,9 +11,10 @@ const QuotaService = require('../../services/user/QuotaService');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 async function handleChatRequest(message, content, ConversationService) {
+  const conversationId = ConversationService.extractUserId(message);
+  const globalUserId = message.author.id;
+
   try {
-    const conversationId = ConversationService.extractUserId(message);
-    const globalUserId = message.author.id;
 
     const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
     if (!quotaCheck.allowed) {

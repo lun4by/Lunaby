@@ -93,6 +93,10 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
             }
         });
 
+        if (!fullContent || fullContent.trim().length === 0) {
+            throw new Error('AI returned empty content');
+        }
+
         if (bufferInterval) clearInterval(bufferInterval);
 
         // Đợi cho đến khi toàn bộ hàng đợi hiển thị (render) hiện tại đã hoàn tất
