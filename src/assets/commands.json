@@ -697,6 +697,50 @@
     "cooldown": 5
   },
   {
+    "name": "buyquota",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Dùng credits để mua thêm lượt chat AI hoặc tạo ảnh AI",
+    "parameters": [
+      "Loại quota muốn mua: chat hoặc image (bắt buộc)",
+      "Số lượt muốn mua (bắt buộc)"
+    ],
+    "examples": [
+      "/buyquota chat <amount>",
+      "/buyquota image <amount>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "give",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Chuyển credits cho người dùng khác",
+    "parameters": [
+      "Người dùng nhận credits (bắt buộc)",
+      "Số credits muốn chuyển (bắt buộc)"
+    ],
+    "examples": [
+      "/give",
+      "/give <user> <amount>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
     "name": "inventory",
     "aliases": [],
     "clientPermissions": [

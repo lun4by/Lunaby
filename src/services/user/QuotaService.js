@@ -4,6 +4,8 @@ const RoleService = require('./RoleService.js');
 const { ROLE_LIMITS, QUOTA_PERIOD_DAYS } = require('../../config/constants.js');
 const DAY_MS = 86400000;
 const PERIOD_MS = QUOTA_PERIOD_DAYS * DAY_MS;
+const LEGACY_ROLE_LIMITS = { user: [10] };
+const LEGACY_ROLE_IMAGE_LIMITS = { user: [10] };
 
 class QuotaService {
   constructor() {
@@ -40,11 +42,45 @@ class QuotaService {
       }
 
       await this.checkAndResetLimits(userId);
-      return await QuotaDB.getUserQuota(userId);
+      messageData = await QuotaDB.getUserQuota(userId);
+      return await this.syncLegacyQuotaIfNeeded(userId, messageData);
     } catch (error) {
       logger.error('QUOTA_SERVICE', `Lỗi khi lấy quota cho ${userId}:`, error);
       throw error;
     }
+  }
+
+  async syncLegacyQuotaIfNeeded(userId, messageData) {
+    if (!messageData) return messageData;
+
+    const role = await RoleService.getUserRole(userId);
+    const expectedLimit = this.roleLimits[role];
+    const expectedImageLimit = this.roleImageLimits[role];
+    const currentLimit = messageData.limits?.period;
+    const currentImageLimit = messageData.limits?.imagePeriod;
+
+    const shouldSyncLimit = expectedLimit !== undefined
+      && currentLimit !== expectedLimit
+      && LEGACY_ROLE_LIMITS[role]?.includes(currentLimit);
+
+    const shouldSyncImageLimit = expectedImageLimit !== undefined
+      && currentImageLimit !== expectedImageLimit
+      && LEGACY_ROLE_IMAGE_LIMITS[role]?.includes(currentImageLimit);
+
+    if (!shouldSyncLimit && !shouldSyncImageLimit) {
+      return messageData;
+    }
+
+    const newLimit = shouldSyncLimit ? expectedLimit : currentLimit;
+    const newImageLimit = shouldSyncImageLimit ? expectedImageLimit : currentImageLimit;
+
+    await QuotaDB.setQuotaLimit(userId, newLimit, newImageLimit, Date.now());
+    logger.info(
+      'QUOTA_SERVICE',
+      `Đã migrate quota cũ cho ${userId}: role=${role}, limit ${currentLimit} -> ${newLimit}, imageLimit ${currentImageLimit} -> ${newImageLimit}`
+    );
+
+    return await QuotaDB.getUserQuota(userId);
   }
 
   async checkAndResetLimits(userId) {

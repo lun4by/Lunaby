@@ -5,10 +5,13 @@ const QuotaService = require('../../services/user/QuotaService');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 const ErrorHandler = require('../../utils/ErrorHandler');
 const conversationManager = require('../conversationManager');
+const emojis = require('../../config/emojis');
 
 async function handleImageRequest(message, content, requestMatch) {
     try {
-        const conversationId = conversationManager.extractUserId ? conversationManager.extractUserId(message) : (message.guildId ? `${message.guildId}-${message.author.id}` : `DM-${message.author.id}`);
+        const conversationId = conversationManager.extractUserId
+            ? conversationManager.extractUserId(message)
+            : (message.guildId ? `${message.guildId}-${message.author.id}` : `DM-${message.author.id}`);
         const globalUserId = message.author.id;
 
         const quotaCheck = await QuotaService.canUseImages(globalUserId, 1);
@@ -23,32 +26,30 @@ async function handleImageRequest(message, content, requestMatch) {
         const userPrompt = requestMatch && requestMatch[1] ? requestMatch[1].trim() : content;
 
         if (!userPrompt || userPrompt.length < 2) {
-            return message.reply("Bạn muốn mình vẽ gì nào? Hãy diễn tả thật chi tiết chút coi!");
+            return message.reply(`${emojis.error} Bạn muốn mình vẽ gì nào? Hãy diễn tả thật chi tiết chút coi!`);
         }
 
-        const waitMsg = await message.reply("✨ Chờ xíu nhaa, Lunaby đang đang vẽ cho bạn nà...");
+        const waitMsg = await message.reply('✨ Chờ xíu nhaa, Lunaby đang đang vẽ cho bạn nà...');
 
         const imageResult = await ImageService.generateImage(userPrompt);
-
         const attachment = new AttachmentBuilder(imageResult.buffer, { name: 'lunaby_art.png' });
 
-        await waitMsg.edit({ content: `✨ Đây là tác phẩm Lunaby vẽ cho bạn nè`, files: [attachment] });
+        await waitMsg.edit({ content: '✨ Đây là tác phẩm Lunaby vẽ cho bạn nè', files: [attachment] });
 
         await conversationManager.addMessage(conversationId, 'user', `[Yêu cầu vẽ ảnh]: ${userPrompt}`);
         await conversationManager.addMessage(conversationId, 'assistant', `[Đã gửi 1 hình ảnh] Của bạn đây! Mình đã vẽ theo yêu cầu: "${userPrompt}"`);
 
         await QuotaService.recordImageUsage(globalUserId, 1);
-
     } catch (error) {
         logger.error('IMAGE', 'Error processing image generation:', error);
 
-        let errorText = "Aaa! Lunaby lỡ tay làm hỏng mất rồi, bạn thử yêu cầu lại được hong";
+        let errorText = 'Aaa! Lunaby lỡ tay làm hỏng mất rồi, bạn thử yêu cầu lại được hong';
         if (error.message.includes('Nội dung không phù hợp') || error.message.includes('blacklist')) {
-            errorText = "Yêu cầu của bạn vi phạm tiêu chuẩn an toàn. Mình không thể vẽ cho bạn được.";
+            errorText = 'Yêu cầu của bạn vi phạm tiêu chuẩn an toàn. Mình không thể vẽ cho bạn được.';
         }
 
         ErrorHandler.logError('IMAGE', 'Image Generation failed', error, 'warn');
-        await message.reply(errorText).catch(() => { });
+        await message.reply(`${emojis.error} ${errorText}`).catch(() => { });
     }
 }
 

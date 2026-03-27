@@ -25,11 +25,11 @@ module.exports = {
     const amount = interaction.options.getInteger('amount');
 
     if (!targetUser || amount === null) {
-      return interaction.reply({ content: 'Vui lòng chọn user và amount hợp lệ.', ephemeral: true });
+      return interaction.reply({ content: `${emojis.error} Vui lòng chọn user và amount hợp lệ.`, ephemeral: true });
     }
 
     if (targetUser.bot) {
-      return interaction.reply({ content: 'Không thể cấp credits cho bot.', ephemeral: true });
+      return interaction.reply({ content: `${emojis.error} Không thể cấp credits cho bot.`, ephemeral: true });
     }
 
     try {
@@ -54,7 +54,7 @@ module.exports = {
     } catch (error) {
       logger.error('ADMIN', 'Error in addcredits command:', error);
       await interaction.reply({
-        content: 'Đã xảy ra lỗi khi cập nhật credits cho người dùng này.',
+        content: `${emojis.error} Đã xảy ra lỗi khi cập nhật credits cho người dùng này.`,
         ephemeral: true
       }).catch(() => { });
     }

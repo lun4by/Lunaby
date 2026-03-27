@@ -60,6 +60,54 @@ class CreditsService {
       throw error;
     }
   }
+
+  async transferCredits(fromUserId, toUserId, amount) {
+    try {
+      Validators.validateUserIdOrThrow(fromUserId, 'transferCredits');
+      Validators.validateUserIdOrThrow(toUserId, 'transferCredits');
+
+      if (fromUserId === toUserId) {
+        throw new Error('Bạn không thể tự chuyển credits cho chính mình.');
+      }
+
+      const normalizedAmount = Math.trunc(Number(amount));
+      if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
+        throw new Error(`Số credits không hợp lệ: ${amount}`);
+      }
+
+      return await MariaModDB.transferUserCredits(fromUserId, toUserId, normalizedAmount);
+    } catch (error) {
+      logger.error('CREDITS_SERVICE', `Lỗi khi chuyển credits từ ${fromUserId} sang ${toUserId}:`, error);
+      throw error;
+    }
+  }
+
+  async purchaseQuotaWithCredits(userId, usageType, quotaAmount, creditCost) {
+    try {
+      Validators.validateUserIdOrThrow(userId, 'purchaseQuotaWithCredits');
+      const normalizedType = String(usageType || '').toLowerCase();
+
+      const normalizedQuota = Math.trunc(Number(quotaAmount));
+      const normalizedCost = Math.trunc(Number(creditCost));
+
+      if (!['chat', 'image'].includes(normalizedType)) {
+        throw new Error(`Loại quota không hợp lệ: ${usageType}`);
+      }
+
+      if (!Number.isFinite(normalizedQuota) || normalizedQuota <= 0) {
+        throw new Error(`Số quota không hợp lệ: ${quotaAmount}`);
+      }
+
+      if (!Number.isFinite(normalizedCost) || normalizedCost <= 0) {
+        throw new Error(`Số credits không hợp lệ: ${creditCost}`);
+      }
+
+      return await MariaModDB.purchaseQuotaWithCredits(userId, normalizedType, normalizedQuota, normalizedCost);
+    } catch (error) {
+      logger.error('CREDITS_SERVICE', `Lỗi khi mua quota bằng credits cho ${userId}:`, error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new CreditsService();

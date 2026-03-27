@@ -34,18 +34,18 @@ module.exports = {
         if (!targetUser || amountRaw === undefined || amountRaw === null) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return interaction.reply(`**Cách dùng:** \`${prefix}addquota @user <số_lượng>\``);
+            return interaction.reply(`${emojis.error} **Cách dùng:** \`${prefix}addquota @user <số_lượng>\``);
         }
 
         const amount = parseInt(amountRaw);
         if (isNaN(amount)) {
-            return interaction.reply('Số lượng phải là một con số hợp lệ.');
+            return interaction.reply(`${emojis.error} Số lượng phải là một con số hợp lệ.`);
         }
 
         try {
             const beforeStats = await QuotaService.getUserMessageStats(targetUser.id);
             if (beforeStats.limits.period === -1) {
-                return interaction.reply({ content: `**${targetUser.tag}** hiện đang có quyền sử dụng vô hạn (Owner/Admin) nên không cần cộng thêm.`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} **${targetUser.tag}** hiện đang có quyền sử dụng vô hạn (Owner/Admin) nên không cần cộng thêm.`, ephemeral: true });
             }
             await QuotaService.addQuota(targetUser.id, amount);
 
@@ -69,7 +69,7 @@ module.exports = {
             await interaction.reply({ embeds: [embed] });
         } catch (error) {
             logger.error('ADMIN', 'Error in addquota command:', error);
-            await interaction.reply({ content: '❌ Đã xảy ra lỗi khi cập nhật Quota cho người dùng này.', ephemeral: true });
+            await interaction.reply({ content: `${emojis.error} Đã xảy ra lỗi khi cập nhật Quota cho người dùng này.`, ephemeral: true });
         }
     }
 };

@@ -7,6 +7,7 @@ const QuotaService = require('../services/user/QuotaService');
 const RoleService = require('../services/user/RoleService');
 const CooldownService = require('../services/user/CooldownService');
 const logger = require('../utils/logger.js');
+const emojis = require('../config/emojis');
 
 let commandsJsonCache = null;
 
@@ -89,7 +90,7 @@ const handleCommand = async (interaction, client) => {
     if (interaction.guildId) {
       const isDisabled = await MariaModDB.isCommandDisabled(interaction.guildId, interaction.channelId, interaction.commandName);
       if (isDisabled) {
-        return interaction.reply({ content: 'Lệnh này đã bị tắt trong kênh này.', ephemeral: true });
+        return interaction.reply({ content: `${emojis.error} Lệnh này đã bị tắt trong kênh này.`, ephemeral: true });
       }
     }
 
@@ -97,13 +98,13 @@ const handleCommand = async (interaction, client) => {
     const isPrivileged = userRole === 'owner' || userRole === 'admin';
 
     if (command.prefix?.adminOnly && !isPrivileged) {
-      return interaction.reply({ content: 'Bạn không có quyền sử dụng lệnh này.', ephemeral: true });
+      return interaction.reply({ content: `${emojis.error} Bạn không có quyền sử dụng lệnh này.`, ephemeral: true });
     }
 
     if (command.data && command.data.default_member_permissions) {
       const requiredPermissions = BigInt(command.data.default_member_permissions);
       if (!interaction.memberPermissions.has(requiredPermissions)) {
-        return interaction.reply({ content: 'Bạn không có đủ quyền trong server để sử dụng lệnh này.', ephemeral: true });
+        return interaction.reply({ content: `${emojis.error} Bạn không có đủ quyền trong server để sử dụng lệnh này.`, ephemeral: true });
       }
     }
 
@@ -144,7 +145,7 @@ const handleCommand = async (interaction, client) => {
     logger.info('COMMAND_USAGE', `[Server: ${interaction.guild?.name || 'DM'}] [Channel: ${interaction.channel?.name || 'N/A'}] User ${interaction.user.tag} (${interaction.user.id}) used: /${interaction.commandName}`);
   } catch (error) {
     logger.error('COMMAND', `Lỗi khi thực thi lệnh ${interaction.commandName}:`, error);
-    const errPayload = { content: 'Đã xảy ra lỗi khi thực thi lệnh này!', ephemeral: true };
+    const errPayload = { content: `${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`, ephemeral: true };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)
       : interaction.reply(errPayload);

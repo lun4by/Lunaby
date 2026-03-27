@@ -8,6 +8,7 @@ const { handleCodeRequest } = require('./messageHandlers/codeRequestHandler');
 const { handleChatRequest } = require('./messageHandlers/chatRequestHandler');
 const { handleImageRequest } = require('./messageHandlers/imageRequestHandler');
 const logger = require('../utils/logger');
+const emojis = require('../config/emojis');
 
 
 
@@ -99,7 +100,7 @@ async function handleMentionMessage(message, client) {
           errorMessage = 'Xin lỗi, tôi đang gặp vấn đề kết nối. Vui lòng thử lại sau hoặc liên hệ quản trị viên để được hỗ trợ.';
         }
 
-        await message.reply(errorMessage).catch(() => { });
+        await message.reply(`${emojis.error} ${errorMessage}`).catch(() => { });
       } finally {
         clearInterval(typingInterval);
       }

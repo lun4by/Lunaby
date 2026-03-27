@@ -6,6 +6,7 @@ const QuotaService = require('../services/user/QuotaService');
 const RoleService = require('../services/user/RoleService');
 const CooldownService = require('../services/user/CooldownService');
 const logger = require('../utils/logger');
+const emojis = require('../config/emojis');
 
 class PseudoInteraction {
     constructor(message, commandName, args, command) {
@@ -242,13 +243,13 @@ async function handlePrefixMessage(message, client) {
     if (command.prefix?.adminOnly) {
         const userRole = await RoleService.getUserRole(message.author.id);
         if (userRole !== 'owner' && userRole !== 'admin') {
-            await message.reply('Bạn không có quyền sử dụng lệnh này.').catch(() => { });
+            await message.reply(`${emojis.error} Bạn không có quyền sử dụng lệnh này.`).catch(() => { });
             return true;
         }
     } else if (command.data?.default_member_permissions) {
         const requiredPermissions = BigInt(command.data.default_member_permissions);
         if (message.member && !message.member.permissions.has(requiredPermissions)) {
-            await message.reply('Bạn không có đủ quyền trong server để sử dụng lệnh này.').catch(() => { });
+            await message.reply(`${emojis.error} Bạn không có đủ quyền trong server để sử dụng lệnh này.`).catch(() => { });
             return true;
         }
     }
@@ -257,7 +258,7 @@ async function handlePrefixMessage(message, client) {
         if (message.guildId) {
             const isDisabled = await MariaModDB.isCommandDisabled(message.guildId, message.channelId, command.data?.name || commandName);
             if (isDisabled) {
-                await message.reply('Lệnh này đã bị tắt trong kênh này.');
+                await message.reply(`${emojis.error} Lệnh này đã bị tắt trong kênh này.`);
                 return true;
             }
         }
@@ -284,7 +285,7 @@ async function handlePrefixMessage(message, client) {
         logger.info('COMMAND_USAGE', `[Server: ${message.guild?.name || 'DM'}] [Channel: ${message.channel?.name || 'N/A'}] User ${message.author.tag} (${message.author.id}) used: ${prefix}${commandName}`);
     } catch (error) {
         logger.error('PREFIX', `Error executing prefix command ${commandName}:`, error);
-        await message.reply('Đã xảy ra lỗi khi thực thi lệnh này!').catch(() => { });
+        await message.reply(`${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`).catch(() => { });
     }
 
     return true;

@@ -25,7 +25,7 @@ module.exports = {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
             const reply = interaction.reply ? interaction.reply.bind(interaction) : interaction.message.reply.bind(interaction.message);
-            return reply({ content: `Vui lòng dùng: \`/voicewelcome toggle\` hoặc \`${prefix}voicewelcome toggle\`` });
+            return reply({ content: `${emojis.error} Vui lòng dùng: \`/voicewelcome toggle\` hoặc \`${prefix}voicewelcome toggle\`` });
         }
     },
 };
@@ -53,7 +53,7 @@ async function handleVoiceToggle(interaction) {
     } catch (error) {
         logger.error('SETUP', 'Error handling voice toggle:', error);
         await interaction.editReply({
-            content: 'Đã xảy ra lỗi khi cập nhật cài đặt. Vui lòng thử lại!',
+            content: `${emojis.error} Đã xảy ra lỗi khi cập nhật cài đặt. Vui lòng thử lại!`,
         });
     }
 }

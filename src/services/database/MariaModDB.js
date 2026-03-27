@@ -714,6 +714,125 @@ class MariaModDB {
         }
     }
 
+    async transferUserCredits(fromUserId, toUserId, amount) {
+        let conn;
+        try {
+            const transferAmount = Math.trunc(Number(amount) || 0);
+            if (transferAmount <= 0) {
+                throw new Error('Số credits chuyển phải lớn hơn 0');
+            }
+
+            await mariaClient.connect();
+            conn = await mariaClient.pool.getConnection();
+            await conn.beginTransaction();
+
+            await conn.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [fromUserId]);
+            await conn.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [toUserId]);
+
+            const senderRows = await conn.query(
+                'SELECT wallet FROM user_economy WHERE user_id = ? FOR UPDATE',
+                [fromUserId]
+            );
+            const receiverRows = await conn.query(
+                'SELECT wallet FROM user_economy WHERE user_id = ? FOR UPDATE',
+                [toUserId]
+            );
+
+            const senderBalance = Number(senderRows[0]?.wallet || 0);
+            const receiverBalance = Number(receiverRows[0]?.wallet || 0);
+
+            if (senderBalance < transferAmount) {
+                throw new Error('Bạn không đủ credits để thực hiện giao dịch này.');
+            }
+
+            await conn.query(
+                'UPDATE user_economy SET wallet = wallet - ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [transferAmount, fromUserId]
+            );
+            await conn.query(
+                'UPDATE user_economy SET wallet = wallet + ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [transferAmount, toUserId]
+            );
+
+            await conn.commit();
+
+            return {
+                fromBalance: senderBalance - transferAmount,
+                toBalance: receiverBalance + transferAmount
+            };
+        } catch (error) {
+            if (conn) {
+                try { await conn.rollback(); } catch { }
+            }
+            logger.error('MARIADB', 'Error transferring user credits:', error);
+            throw error;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
+    async purchaseQuotaWithCredits(userId, usageType, quotaAmount, creditCost) {
+        let conn;
+        try {
+            const normalizedType = String(usageType || '').toLowerCase();
+            const normalizedQuota = Math.trunc(Number(quotaAmount) || 0);
+            const normalizedCost = Math.trunc(Number(creditCost) || 0);
+
+            if (!['chat', 'image'].includes(normalizedType)) {
+                throw new Error('Loại quota không hợp lệ');
+            }
+
+            if (normalizedQuota <= 0 || normalizedCost <= 0) {
+                throw new Error('Số quota hoặc credits không hợp lệ');
+            }
+
+            await mariaClient.connect();
+            conn = await mariaClient.pool.getConnection();
+            await conn.beginTransaction();
+
+            await conn.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [userId]);
+            const walletRows = await conn.query(
+                'SELECT wallet FROM user_economy WHERE user_id = ? FOR UPDATE',
+                [userId]
+            );
+            const currentCredits = Number(walletRows[0]?.wallet || 0);
+
+            if (currentCredits < normalizedCost) {
+                throw new Error('Bạn không đủ credits để mua thêm quota.');
+            }
+
+            await conn.query(
+                `INSERT IGNORE INTO user_quotas (
+                    user_id, current_usage, total_usage, limit_period,
+                    current_image_usage, total_image_usage, image_limit_period,
+                    period_start, created_at, updated_at
+                ) VALUES (?, 0, 0, 600, 0, 0, 10, ?, ?, ?)`,
+                [userId, Date.now(), Date.now(), Date.now()]
+            );
+
+            await conn.query(
+                'UPDATE user_economy SET wallet = wallet - ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [normalizedCost, userId]
+            );
+            const updateQuery = normalizedType === 'image'
+                ? 'UPDATE user_quotas SET image_limit_period = image_limit_period + ?, updated_at = ? WHERE user_id = ? AND image_limit_period != -1'
+                : 'UPDATE user_quotas SET limit_period = limit_period + ?, updated_at = ? WHERE user_id = ? AND limit_period != -1';
+
+            await conn.query(updateQuery, [normalizedQuota, Date.now(), userId]);
+
+            await conn.commit();
+            return true;
+        } catch (error) {
+            if (conn) {
+                try { await conn.rollback(); } catch { }
+            }
+            logger.error('MARIADB', 'Error purchasing quota with credits:', error);
+            throw error;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
     async updateUserEconomyCol(userId, colName, amount, isIncrement = false) {
         try {
             await mariaClient.query(`INSERT IGNORE INTO user_economy (user_id) VALUES (?)`, [userId]);
