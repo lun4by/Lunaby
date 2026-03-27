@@ -1,13 +1,14 @@
-const { SlashCommandBuilder, PermissionsBitField, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
 const enabledUtil = require('../../utils/enabledUtil');
 const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('disable')
         .setDescription('Tắt một lệnh hoặc nhiều lệnh trong kênh')
-        .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageChannels)
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
         .addStringOption(opt => opt.setName('commands').setDescription('Tên lệnh cần tắt (cách nhau bằng dấu phẩy) hoặc "all"').setRequired(true))
         .addChannelOption(opt => opt.setName('channel').setDescription('Kênh (mặc định: kênh hiện tại)').addChannelTypes(ChannelType.GuildText)),
     prefix: { name: 'disable', aliases: ['dis'], description: 'Tắt lệnh' },
@@ -44,7 +45,7 @@ module.exports = {
                 const allCommands = [...interaction.client.commands.keys()].filter(c => c !== 'disable' && c !== 'enable');
                 await MariaModDB.disableAllCommands(guildId, channelId, allCommands, userId);
                 return interaction.reply({
-                    content: `⚙️ | Tất cả lệnh đã bị **tắt** trong <#${channelId}>!`,
+                    content: `${emojis.success} Tất cả lệnh đã bị **tắt** trong <#${channelId}>!`,
                     ephemeral: true
                 });
             }
@@ -58,7 +59,7 @@ module.exports = {
             }
 
             if (validCommands.length === 0) {
-                return interaction.reply({ content: 'Không tìm thấy lệnh hợp lệ nào để tắt.', ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} Không tìm thấy lệnh hợp lệ nào để tắt.`, ephemeral: true });
             }
 
             await MariaModDB.disableAllCommands(guildId, channelId, validCommands, userId);
@@ -68,7 +69,7 @@ module.exports = {
 
         } catch (error) {
             logger.error('COMMAND', 'Error in disable command:', error);
-            return interaction.reply({ content: 'Đã xảy ra lỗi. Vui lòng thử lại.', ephemeral: true });
+            return interaction.reply({ content: `${emojis.error} Đã xảy ra lỗi. Vui lòng thử lại.`, ephemeral: true });
         }
     },
 };

@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const ConversationService = require('../../services/ai/ConversationService.js');
-const { logModAction } = require('../../utils/modUtils.js');
-const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
+const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
+const emojis = require('../../config/emojis.js');
+const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
 const prompts = require('../../config/prompts.js');
 
 module.exports = {
@@ -22,7 +22,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
             return interaction.reply({
-                content: '❌ Bạn không có quyền sử dụng lệnh này!',
+                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
                 ephemeral: true,
             });
         }
@@ -38,7 +38,7 @@ module.exports = {
 
         if (!/^\d{17,19}$/.test(userId)) {
             return interaction.reply({
-                content: '❌ ID người dùng không hợp lệ. ID phải là một chuỗi số từ 17-19 chữ số.',
+                content: `${emojis.error} ID người dùng không hợp lệ. ID phải là một chuỗi số từ 17-19 chữ số.`,
                 ephemeral: true,
             });
         }
@@ -51,7 +51,7 @@ module.exports = {
 
             if (!bannedUser) {
                 return interaction.editReply({
-                    content: '❌ Không tìm thấy thành viên này trong danh sách bị cấm của server.',
+                    content: `${emojis.error} Không tìm thấy thành viên này trong danh sách bị cấm của server.`,
                     ephemeral: true,
                 });
             }
@@ -94,7 +94,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', 'Lỗi khi unban người dùng:', error);
             await interaction.editReply({
-                content: `❌ Đã xảy ra lỗi khi gỡ cấm người dùng: ${error.message}`,
+                content: `${emojis.error} Đã xảy ra lỗi khi gỡ cấm người dùng: ${error.message}`,
                 ephemeral: true,
             });
         }

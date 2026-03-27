@@ -3,6 +3,7 @@ const XPService = require('../../services/user/XPService');
 const generateRankCard = require('../../services/canvas/rankCanvas.js');
 const { ordinalize } = require('../../utils/string.js');
 const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -51,7 +52,7 @@ module.exports = {
       await interaction.editReply({ content: '', files: [attachment] });
     } catch (error) {
       logger.error('RANK', 'Error in rank command:', error);
-      await interaction.editReply({ content: 'Đã xảy ra lỗi khi tạo rank card!', ephemeral: true });
+      await interaction.editReply({ content: `${emojis.error} Đã xảy ra lỗi khi tạo rank card!`, ephemeral: true });
     }
   }
 };

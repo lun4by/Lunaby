@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const ConversationService = require('../../services/ai/ConversationService.js');
-const { logModAction } = require('../../utils/modUtils.js');
+const MariaModDB = require('../../services/database/MariaModDB.js');
+const logger = require('../../utils/logger.js');
+const emojis = require('../../config/emojis.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
 const { handlePermissionError } = require('../../utils/permissionUtils.js');
-const logger = require('../../utils/logger.js');
 const prompts = require('../../config/prompts.js');
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.KickMembers)) {
             return interaction.reply({
-                content: '❌ Bạn không có quyền sử dụng lệnh này!',
+                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
                 ephemeral: true,
             });
         }
@@ -39,7 +39,7 @@ module.exports = {
 
         if (!targetMember) {
             return interaction.reply({
-                content: '❌ Không tìm thấy thành viên này trong server!',
+                content: `${emojis.error} Không tìm thấy thành viên này trong server!`,
                 ephemeral: true,
             });
         }
@@ -48,7 +48,7 @@ module.exports = {
 
         if (!targetMember.kickable) {
             return interaction.reply({
-                content: '❌ Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!',
+                content: `${emojis.error} Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!`,
                 ephemeral: true,
             });
         }
@@ -92,7 +92,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', `Lỗi khi kick ${targetUser.tag}: ${error.message}`);
             await interaction.editReply({
-                content: `❌ Đã xảy ra lỗi khi đuổi người dùng: ${error.message}`,
+                content: `${emojis.error} Đã xảy ra lỗi khi đuổi người dùng: ${error.message}`,
                 ephemeral: true
             });
         }

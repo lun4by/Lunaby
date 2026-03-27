@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const ConversationService = require('../../services/ai/ConversationService.js');
-const { logModAction } = require('../../utils/modUtils.js');
+const MariaModDB = require('../../services/database/MariaModDB.js');
+const logger = require('../../utils/logger.js');
+const emojis = require('../../config/emojis.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
 const { handlePermissionError } = require('../../utils/permissionUtils.js');
 const logger = require('../../utils/logger.js');
@@ -31,7 +32,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
             return interaction.reply({
-                content: '❌ Bạn không có quyền sử dụng lệnh này!',
+                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
                 ephemeral: true,
             });
         }
@@ -51,7 +52,7 @@ module.exports = {
 
         if (targetMember && !targetMember.bannable) {
             return interaction.reply({
-                content: '❌ Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!',
+                content: `${emojis.error} Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!`,
                 ephemeral: true,
             });
         }
@@ -125,7 +126,7 @@ module.exports = {
                 `Lỗi khi cấm ${targetUser.tag}: ${error.message}`,
             );
             await interaction.editReply({
-                content: `❌ Đã xảy ra lỗi khi cấm người dùng: ${error.message}`,
+                content: `${emojis.error} Đã xảy ra lỗi khi cấm người dùng: ${error.message}`,
                 ephemeral: true,
             });
         }

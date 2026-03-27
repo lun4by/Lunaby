@@ -41,7 +41,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: '❌ Bạn không có quyền sử dụng lệnh này!',
+                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
                 ephemeral: true,
             });
         }
@@ -127,7 +127,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODLOG', 'Lỗi khi xem nhật ký moderation:', error);
             await interaction.editReply({
-                content: `❌ Đã xảy ra lỗi khi xem lược sử báo cáo: ${error.message}`,
+                content: `${emojis.error} Đã xảy ra lỗi khi xem lược sử báo cáo: ${error.message}`,
                 ephemeral: true,
             });
         }

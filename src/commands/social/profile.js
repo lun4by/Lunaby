@@ -1,8 +1,8 @@
-const { SlashCommandBuilder } = require('discord.js');
-const UserProfileDB = require('../../services/database/UserProfileDB');
-const XPService = require('../../services/user/XPService');
-const { generateProfileCard } = require('../../services/canvas/profileCanvas');
+const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
+const ProfileDB = require('../../services/database/profiledb');
+const { generateProfileCard } = require('../../utils/imageTools/imageGenerator');
 const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -24,7 +24,7 @@ module.exports = {
 
       if (targetUser.bot) {
         return interaction.editReply({
-          content: 'Bot không có profile!',
+          content: `${emojis.error} Bot không có profile!`,
           ephemeral: true
         });
       }
@@ -42,7 +42,7 @@ module.exports = {
     } catch (error) {
       logger.error('PROFILE', 'Error creating profile card:', error);
       await interaction.editReply({
-        content: 'Có lỗi xảy ra khi tạo profile card!',
+        content: `${emojis.error} Có lỗi xảy ra khi tạo profile card!`,
         ephemeral: true
       });
     }

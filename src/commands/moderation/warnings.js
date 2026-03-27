@@ -17,7 +17,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: '❌ Bạn không có quyền sử dụng lệnh này!',
+                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
                 ephemeral: true,
             });
         }
@@ -78,7 +78,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', 'Lỗi khi xem cảnh cáo của thành viên:', error);
             await interaction.editReply({
-                content: `❌ Đã xảy ra lỗi khi truy xuất dữ liệu cảnh cáo: ${error.message}`,
+                content: `${emojis.error} Đã xảy ra lỗi khi truy xuất dữ liệu cảnh cáo: ${error.message}`,
                 ephemeral: true,
             });
         }

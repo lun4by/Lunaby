@@ -3,6 +3,7 @@ const XPService = require('../../services/user/XPService');
 const { ordinalize } = require('../../utils/string.js');
 const { generateLeaderboardCard } = require('../../services/canvas/leaderboardCanvas');
 const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -30,12 +31,12 @@ module.exports = {
         try {
           user = await interaction.client.users.fetch(leaderboard[i].userId);
         } catch (e) {
-          user = { 
-            tag: `Người dùng ẩn`, 
-            displayAvatarURL: () => 'https://cdn.discordapp.com/embed/avatars/0.png' 
+          user = {
+            tag: `Người dùng ẩn`,
+            displayAvatarURL: () => 'https://cdn.discordapp.com/embed/avatars/0.png'
           };
         }
-        
+
         usersData.push({
           top: i + 1,
           avatar: user.displayAvatarURL({ extension: 'png', size: 128 }),
@@ -45,17 +46,17 @@ module.exports = {
       }
 
       const attachment = await generateLeaderboardCard(usersData);
-      
+
       const userRank = await XPService.getUserRank(interaction.guild.id, interaction.user.id);
-      
-      await interaction.editReply({ 
+
+      await interaction.editReply({
         content: `Cùng vinh danh top 10 thành viên năng động nhất server! 🎉\nBạn đang đứng thứ **${ordinalize(userRank)}** trong bảng xếp hạng.`,
-        files: [attachment] 
+        files: [attachment]
       });
-      
+
     } catch (error) {
       logger.error('LEADERBOARD', 'Error in leaderboard command:', error);
-      await interaction.editReply({ content: 'Đã xảy ra lỗi khi tải bảng xếp hạng!', ephemeral: true });
+      await interaction.editReply({ content: `${emojis.error} Đã xảy ra lỗi khi tải bảng xếp hạng!`, ephemeral: true });
     }
   }
 };

@@ -15,7 +15,7 @@ module.exports = {
 
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-            const replyOptions = { content: '❌ Bạn cần quyền **Manage Server** để sử dụng lệnh này.', ephemeral: true };
+            const replyOptions = { content: `${emojis.error} Bạn cần quyền **Manage Server** để sử dụng lệnh này.`, ephemeral: true };
             return interaction.replied || interaction.deferred ? interaction.editReply(replyOptions) : interaction.reply(replyOptions);
         }
 
@@ -51,7 +51,7 @@ module.exports = {
             collector.on('collect', async (i) => {
                 try {
                     if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-                        return i.reply({ content: '❌ Bạn cần quyền **Manage Server**.', ephemeral: true });
+                        return i.reply({ content: `${emojis.error} Bạn cần quyền **Manage Server**.`, ephemeral: true });
                     }
 
                     const { customId } = i;
@@ -117,7 +117,7 @@ module.exports = {
                     logger.error('SETTING', `Collector error: ${err.message}`);
                     try {
                         if (!i.replied && !i.deferred) {
-                            await i.reply({ content: '❌ Đã xảy ra lỗi. Vui lòng thử lại.', ephemeral: true });
+                            await i.reply({ content: `${emojis.error} Đã xảy ra lỗi. Vui lòng thử lại.`, ephemeral: true });
                         }
                     } catch (e) { /* ignore */ }
                 }
@@ -140,9 +140,9 @@ module.exports = {
             logger.error('SETTING', `Execute error: ${error.message}`);
             try {
                 if (isSlash) {
-                    await interaction.editReply({ content: '❌ Không thể tải bảng cài đặt.', embeds: [], components: [] });
+                    await interaction.editReply({ content: `${emojis.error} Không thể tải bảng cài đặt.`, embeds: [], components: [] });
                 } else {
-                    await interaction.reply({ content: '❌ Không thể tải bảng cài đặt.' });
+                    await interaction.reply({ content: `${emojis.error} Không thể tải bảng cài đặt.` });
                 }
             } catch (e) { /* ignore */ }
         }
