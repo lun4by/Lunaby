@@ -1,7 +1,7 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const QuotaService = require('../../services/QuotaService');
+const { SlashCommandBuilder } = require('discord.js');
+const QuotaService = require('../../services/user/QuotaService');
+const { createLunabyEmbed } = require('../../utils/embedUtils');
 const logger = require('../../utils/logger');
-const prompts = require('../../config/prompts');
 const emojis = require('../../config/emojis.js');
 
 module.exports = {

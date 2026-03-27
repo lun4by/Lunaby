@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, PermissionsBitField } = require('discord.js');
-
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger');

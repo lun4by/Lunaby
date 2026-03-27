@@ -1,8 +1,9 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB.js');
+const ConversationService = require('../../services/ai/ConversationService.js');
+const { logModAction } = require('../../utils/modUtils.js');
+const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
 const logger = require('../../utils/logger.js');
 const emojis = require('../../config/emojis.js');
-const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
 const prompts = require('../../config/prompts.js');
 
 module.exports = {
