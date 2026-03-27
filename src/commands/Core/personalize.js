@@ -11,6 +11,9 @@ const {
     ButtonStyle,
 } = require('discord.js');
 const MemoryService = require('../../services/ai/MemoryService.js');
+const conversationManager = require('../../handlers/conversationManager.js');
+const prompts = require('../../config/prompts.js');
+const { DEFAULT_MODEL } = require('../../config/constants.js');
 const logger = require('../../utils/logger.js');
 
 const MENU_OPTIONS = [
@@ -344,12 +347,12 @@ async function handleClear(i, userId, interaction) {
 async function handleButtonClick(i, userId, interaction) {
     if (i.customId === 'personalize_clear_confirm') {
         try {
-            await MemoryService.clearUserMemories(userId);
+            const memoryCleared = await MemoryService.clearUserMemories(userId);
+            const conversationReset = await conversationManager.resetConversation(userId, prompts.system.main, DEFAULT_MODEL);
 
-            const storageDB = require('../../services/database/storagedb.js');
-            const prompts = require('../../config/prompts.js');
-            const { DEFAULT_MODEL } = require('../../config/constants.js');
-            await storageDB.clearConversationHistory(interaction.user.id, prompts.system.main, DEFAULT_MODEL);
+            if (!memoryCleared || !conversationReset) {
+                throw new Error('Không thể xóa toàn bộ dữ liệu người dùng');
+            }
 
             const successEmbed = new EmbedBuilder()
                 .setColor(0x2ECC71)
