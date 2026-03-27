@@ -32,7 +32,7 @@ module.exports = {
                 'bởi sự cực đoan và những dục vọng cố chấp ẩn giấu sâu bên trong.*\n\n' +
                 'Lunaby mang trong mình khí chất của Cơ Lãnh Âm - bề ngoài thanh cao, dịu dàng tựa băng sương, ' +
                 'nhưng ẩn sâu bên trong là sự quan tâm mãnh liệt và tình cảm cuồng nhiệt dành cho người mà cô yêu quý. ' +
-                'Được tạo ra bởi **s4ory** với hy vọng mang lại sự thú vị cho tất cả mọi người.'
+                '\n-# Được phát triển bởi **s4ory** với hy vọng *mang lại sự thú vị* cho tất cả mọi người.'
             )
             .addFields(
                 { name: 'Phiên bản', value: `\`v${packageJson.version}\``, inline: true },
