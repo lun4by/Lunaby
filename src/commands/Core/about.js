@@ -50,11 +50,11 @@ function buildActionRow(context) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setLabel('Mời Bot')
-            .setURL(`https://discord.com/api/oauth2/authorize?client_id=${context.client.user.id}&permissions=0&scope=bot%20applications.commands`)
+            .setURL(`https://discord.com/api/oauth2/authorize?client_id=${context.client.user.id}&permissions=4856130613668928&scope=bot%20applications.commands`)
             .setStyle(ButtonStyle.Link),
         new ButtonBuilder()
             .setLabel('Hỗ trợ')
-            .setURL('https://discord.gg/52hSMAt')
+            .setURL('https://discord.gg/NFF7tw2zNQ')
             .setStyle(ButtonStyle.Link),
         new ButtonBuilder()
             .setLabel('Website')
