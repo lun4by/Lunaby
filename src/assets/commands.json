@@ -151,6 +151,24 @@
     "cooldown": 5
   },
   {
+    "name": "donate",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "Core",
+    "description": "Hiển thị mã QR để ủng hộ Lunaby",
+    "parameters": [],
+    "examples": [
+      "/donate"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
     "name": "cyrene",
     "aliases": [],
     "clientPermissions": [
