@@ -156,7 +156,9 @@ class PseudoInteraction {
             },
             getInteger(name) {
                 const val = self._options.get(name);
-                return val ? parseInt(val) : null;
+                if (val === undefined || val === null) return null;
+                const parsed = parseInt(val, 10);
+                return Number.isNaN(parsed) ? null : parsed;
             },
             getSubcommandGroup() {
                 return subGroupName;

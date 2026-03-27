@@ -368,14 +368,26 @@ class MemoryService {
 
   async updateInteractionStats(userId, topic = null) {
     try {
-      const updates = {
-        'interactionStats.totalMessages': { $inc: 1 },
-        'interactionStats.lastInteraction': new Date()
+      await this.getUserMemory(userId);
+
+      const incUpdates = {
+        'interactionStats.totalMessages': 1
       };
-      if (topic) updates[`interactionStats.favoriteTopics.${topic}`] = { $inc: 1 };
+      if (topic) {
+        incUpdates[`interactionStats.favoriteTopics.${topic}`] = 1;
+      }
 
       const collection = await this.getMemoryCollection();
-      await collection.updateOne({ userId }, updates);
+      await collection.updateOne(
+        { userId },
+        {
+          $inc: incUpdates,
+          $set: {
+            'interactionStats.lastInteraction': new Date(),
+            lastUpdated: new Date()
+          }
+        }
+      );
       this.memoryCache.delete(userId);
     } catch (error) {
       logger.error('MEMORY_SERVICE', `Error updating interaction stats for ${userId}:`, error);

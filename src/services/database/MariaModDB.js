@@ -729,6 +729,36 @@ class MariaModDB {
         }
     }
 
+    async resetAllUserProfileData() {
+        try {
+            const tables = [
+                'user_profiles',
+                'user_levels',
+                'user_economy',
+                'user_consents'
+            ];
+
+            const deleted = {};
+            for (const table of tables) {
+                const result = await mariaClient.query(`DELETE FROM ${table}`);
+                deleted[table] = Number(result?.affectedRows || 0);
+            }
+
+            return {
+                success: true,
+                deleted,
+                totalDeleted: Object.values(deleted).reduce((sum, count) => sum + count, 0)
+            };
+        } catch (error) {
+            logger.error('MARIADB', 'Error resetting user profile data:', error);
+            return {
+                success: false,
+                deleted: {},
+                totalDeleted: 0
+            };
+        }
+    }
+
     async getLVoiceConfig(guildId) {
         try {
             const rows = await mariaClient.query('SELECT * FROM lvoice_config WHERE guild_id = ?', [guildId]);

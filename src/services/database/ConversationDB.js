@@ -13,6 +13,16 @@ class ConversationDB {
     this.maxConversationAge = MAX_CONVERSATION_AGE_MS;
   }
 
+  async getNextMessageIndex(db, userId) {
+    const lastMessage = await db.collection(COLLECTIONS.CONVERSATIONS)
+      .find({ userId }, { projection: { messageIndex: 1 } })
+      .sort({ messageIndex: -1 })
+      .limit(1)
+      .toArray();
+
+    return lastMessage.length > 0 ? Number(lastMessage[0].messageIndex) + 1 : 0;
+  }
+
   async getConversationHistory(userId, systemPrompt, modelName) {
     try {
       Validators.validateUserIdOrThrow(userId, 'getConversationHistory');
@@ -87,49 +97,34 @@ class ConversationDB {
         { upsert: true }
       );
 
-      const count = await db.collection(COLLECTIONS.CONVERSATIONS).countDocuments({ userId: validUserId });
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const messageIndex = await this.getNextMessageIndex(db, validUserId);
 
-      try {
-        await db.collection(COLLECTIONS.CONVERSATIONS).insertOne({
-          userId: validUserId,
-          messageIndex: count,
-          role,
-          content,
-          timestamp: Date.now()
-        });
+        try {
+          await db.collection(COLLECTIONS.CONVERSATIONS).insertOne({
+            userId: validUserId,
+            messageIndex,
+            role,
+            content,
+            timestamp: Date.now()
+          });
 
-        logger.debug('DATABASE', `Added message (${role}) for userId: ${validUserId}, messageIndex: ${count}`);
-        await this.pruneOldMessages(validUserId);
-        return true;
-      } catch (insertError) {
-        if (insertError.code === 11000) {
-          logger.warn('DATABASE', `Duplicate key detected for userId ${validUserId}, attempting repair...`);
-
-          try {
-            await db.collection(COLLECTIONS.CONVERSATIONS).deleteOne({
-              userId: validUserId,
-              messageIndex: count
-            });
-
-            await db.collection(COLLECTIONS.CONVERSATIONS).insertOne({
-              userId: validUserId,
-              messageIndex: count,
-              role,
-              content,
-              timestamp: Date.now()
-            });
-
-            logger.info('DATABASE', `Repaired and added message for userId: ${validUserId}`);
-            return true;
-          } catch (retryError) {
-            logger.error('DATABASE', `Failed to repair duplicate for userId: ${validUserId}`, retryError);
-            return false;
+          logger.debug('DATABASE', `Added message (${role}) for userId: ${validUserId}, messageIndex: ${messageIndex}`);
+          await this.pruneOldMessages(validUserId);
+          return true;
+        } catch (insertError) {
+          if (insertError.code === 11000) {
+            logger.warn('DATABASE', `Duplicate key detected for userId ${validUserId}, retrying with a fresh messageIndex...`);
+            continue;
           }
-        } else {
+
           logger.error('DATABASE', `Error adding message for userId: ${validUserId}`, insertError);
           return false;
         }
       }
+
+      logger.error('DATABASE', `Failed to add message for userId ${validUserId} after multiple retries`);
+      return false;
     } catch (error) {
       logger.error('DATABASE', 'Error adding message to MongoDB:', error);
       return false;

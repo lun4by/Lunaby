@@ -1,5 +1,6 @@
 const storageDB = require('../services/database/storagedb.js');
 const ProfileDB = require('../services/database/profiledb.js');
+const MariaModDB = require('../services/database/MariaModDB.js');
 const logger = require('../utils/logger.js');
 
 
@@ -68,20 +69,35 @@ async function handleResetdbInteraction(interaction) {
 
 
       try {
-        const profileCollection = await ProfileDB.getProfileCollection();
-        const result = await profileCollection.deleteMany({});
+        const mariaResult = await MariaModDB.resetAllUserProfileData();
+        if (!mariaResult.success) {
+          throw new Error('Không thể reset dữ liệu user trong MariaDB');
+        }
+
+        let legacyDeletedCount = 0;
+        try {
+          const profileCollection = await ProfileDB.getProfileCollection();
+          const legacyResult = await profileCollection.deleteMany({});
+          legacyDeletedCount = Number(legacyResult?.deletedCount || 0);
+        } catch (legacyError) {
+          logger.warn('RESET', 'Không thể xóa legacy Mongo user profiles:', legacyError);
+        }
 
         await interaction.editReply({
           content:
             '**Đã reset user profiles thành công!**\n\n' +
-            `> Đã xóa ${result.deletedCount} user profiles\n` +
-            '> Tất cả XP, level, achievements đã bị xóa\n' +
+            `> User profiles MariaDB: ${mariaResult.deleted.user_profiles || 0}\n` +
+            `> User levels MariaDB: ${mariaResult.deleted.user_levels || 0}\n` +
+            `> User economy MariaDB: ${mariaResult.deleted.user_economy || 0}\n` +
+            `> User consents MariaDB: ${mariaResult.deleted.user_consents || 0}\n` +
+            `> Legacy Mongo user profiles: ${legacyDeletedCount}\n` +
+            '> Tất cả XP, level, achievements và consent đã bị xóa\n' +
             '> Users sẽ phải đồng ý consent lại\n' +
             '> Hệ thống đã sẵn sàng cho users mới\n\n' +
             '**User profiles đã được reset hoàn toàn!**',
         });
 
-        logger.info('RESET', `Đã xóa ${result.deletedCount} user profiles`);
+        logger.info('RESET', `Đã reset user profile data: ${JSON.stringify(mariaResult.deleted)}, legacyMongo=${legacyDeletedCount}`);
       } catch (error) {
         await interaction.editReply({
           content:

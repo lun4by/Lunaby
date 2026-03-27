@@ -20,7 +20,7 @@ const PERMISSION_FLAGS = {
 };
 class CommandsJSONService {
   constructor() {
-    this.outputDir = path.join(__dirname, '../assets');
+    this.outputDir = path.join(__dirname, '../../assets');
     this.outputPath = path.join(this.outputDir, 'commands.json');
   }
 
@@ -42,7 +42,7 @@ class CommandsJSONService {
 
   async scanCommands() {
     const commands = [];
-    const commandsDir = path.join(__dirname, '../commands');
+    const commandsDir = path.join(__dirname, '../../commands');
 
     try {
       const categories = await fs.readdir(commandsDir, { withFileTypes: true });
