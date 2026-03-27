@@ -16,14 +16,14 @@ function formatNumber(value) {
 function getUsageConfig(type) {
   if (type === 'image') {
     return {
-      label: 'tạo ảnh AI',
+      productName: 'Lunaby Vision',
       quotaField: 'imagePeriod',
       costPerUnit: QUOTA_COST_CREDITS_PER_IMAGE,
     };
   }
 
   return {
-    label: 'chat AI',
+    productName: 'Lunaby Pro',
     quotaField: 'period',
     costPerUnit: QUOTA_COST_CREDITS_PER_MESSAGE,
   };
@@ -32,28 +32,28 @@ function getUsageConfig(type) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('buyquota')
-    .setDescription('Dùng credits để mua thêm lượt sử dụng AI')
+    .setDescription('Dùng credits để mua thêm lượt sử dụng Lunaby Pro hoặc Lunaby Vision')
     .addSubcommand((subcommand) =>
       subcommand
         .setName('chat')
-        .setDescription('Mua thêm lượt chat AI')
+        .setDescription('Mua thêm lượt sử dụng Lunaby Pro')
         .addIntegerOption((option) =>
           option.setName('amount')
-            .setDescription('Số lượt chat AI muốn mua')
+            .setDescription('Số lượt sử dụng Lunaby Pro muốn mua')
             .setRequired(true)))
     .addSubcommand((subcommand) =>
       subcommand
         .setName('image')
-        .setDescription('Mua thêm lượt tạo ảnh AI')
+        .setDescription('Mua thêm lượt sử dụng Lunaby Vision')
         .addIntegerOption((option) =>
           option.setName('amount')
-            .setDescription('Số lượt tạo ảnh AI muốn mua')
+            .setDescription('Số lượt sử dụng Lunaby Vision muốn mua')
             .setRequired(true))),
 
   prefix: {
     name: 'buyquota',
     aliases: ['muaturn', 'buyturn', 'muquota'],
-    description: 'Mua thêm lượt chat hoặc image bằng credits',
+    description: 'Mua thêm lượt sử dụng Lunaby Pro hoặc Lunaby Vision bằng credits',
   },
   cooldown: 5,
 
@@ -89,7 +89,7 @@ module.exports = {
 
       if (currentLimit === -1) {
         return interaction.reply({
-          content: `${emojis.error} Tài khoản của bạn đang có lượt ${usageConfig.label} không giới hạn, không cần mua thêm quota.`,
+          content: `${emojis.error} Tài khoản của bạn đang có lượt sử dụng ${usageConfig.productName} không giới hạn, không cần mua thêm quota.`,
           ephemeral: true
         });
       }
@@ -99,7 +99,7 @@ module.exports = {
 
       if (creditsBefore.credits < totalCost) {
         return interaction.reply({
-          content: `${emojis.error} Bạn không đủ credits. Cần **${formatNumber(totalCost)}** credits để mua **${formatNumber(amount)}** lượt ${usageConfig.label}.`,
+          content: `${emojis.error} Bạn không đủ credits. Cần **${formatNumber(totalCost)}** credits để mua **${formatNumber(amount)}** lượt sử dụng ${usageConfig.productName}.`,
           ephemeral: true
         });
       }
@@ -114,9 +114,10 @@ module.exports = {
         .setTitle(`${emojis.success} Mua quota thành công`)
         .setColor(0x2ECC71)
         .setDescription(
-          `Bạn đã dùng **${formatNumber(totalCost)}** credits để mua **${formatNumber(amount)}** lượt ${usageConfig.label}.`
+          `Bạn đã dùng **${formatNumber(totalCost)}** credits để mua **${formatNumber(amount)}** lượt sử dụng ${usageConfig.productName}.`
         )
         .addFields(
+          { name: 'Gói mua', value: usageConfig.productName, inline: true },
           { name: 'Giá', value: `1 lượt = ${formatNumber(usageConfig.costPerUnit)} credits`, inline: true },
           { name: 'Credits còn lại', value: `${formatNumber(creditsAfter.credits)}`, inline: true },
           { name: 'Quota mới', value: `${formatNumber(newLimit)} lượt`, inline: true }

@@ -7,14 +7,14 @@ const emojis = require('../../config/emojis.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('addquota')
-        .setDescription('Thêm hoặc bớt lượt sử dụng AI cho một người dùng (Admin Only)')
+        .setDescription('Thêm hoặc bớt lượt sử dụng Lunaby Pro cho một người dùng (Admin Only)')
         .addUserOption(option =>
             option.setName('user')
-                .setDescription('Người dùng cần thay đổi lượt')
+                .setDescription('Người dùng cần thay đổi lượt Lunaby Pro')
                 .setRequired(true))
         .addIntegerOption(option =>
             option.setName('amount')
-                .setDescription('Số lượt muốn cộng thêm (dùng số âm để trừ đi)')
+                .setDescription('Số lượt Lunaby Pro muốn cộng thêm (dùng số âm để trừ đi)')
                 .setRequired(true)),
 
     prefix: { name: 'addquota', aliases: ['givequota', 'setquota'], description: 'Thêm/bớt quota cho user', adminOnly: true },

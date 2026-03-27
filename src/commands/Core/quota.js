@@ -32,8 +32,8 @@ function formatQuotaValue(current, max) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('quota')
-        .setDescription('Kiểm tra số lượt trò chuyện với AI còn lại của bạn'),
-    prefix: { name: 'quota', aliases: ['limit', 'usage'], description: 'Kiểm tra giới hạn sử dụng AI' },
+        .setDescription('Kiểm tra số lượt sử dụng Lunaby Pro và Lunaby Vision còn lại của bạn'),
+    prefix: { name: 'quota', aliases: ['limit', 'usage'], description: 'Kiểm tra lượt sử dụng Lunaby Pro và Lunaby Vision' },
     cooldown: 5,
 
     async execute(interaction) {
@@ -82,14 +82,14 @@ module.exports = {
             .setDescription(
                 `### ${roleBadge}\n` +
                 `─────────────────────────\n` +
-                `**💬 Tin nhắn AI**\n` +
+                `**💬 Lunaby Pro**\n` +
                 `${msgBar}\n` +
                 `${formatQuotaValue(msgCurrent, msgMax)} · Còn **${msgRemainingText}** lượt\n\n` +
-                `**🎨 Tạo ảnh AI**\n` +
+                `**🎨 Lunaby Vision**\n` +
                 `${imgBar}\n` +
                 `${formatQuotaValue(imgCurrent, imgMax)} · Còn **${imgRemainingText}** lượt\n` +
                 `─────────────────────────\n` +
-                `📊 Tổng lượt sử dụng: **${stats.usage.total}** tin nhắn · **${stats.imageUsage.total}** ảnh\n` +
+                `📊 Tổng lượt sử dụng: **${stats.usage.total}** lượt Lunaby Pro · **${stats.imageUsage.total}** lượt Lunaby Vision\n` +
                 `🔄 Làm mới sau **${daysLeft}** ngày · <t:${resetTimestamp}:R>`
             )
             .setFooter({ text: 'Lunaby · Quota System' })
