@@ -96,12 +96,18 @@ async function startbot(client, loadCommands) {
       logger.error('SYSTEM', 'Guild sync failed:', error.message);
     }
 
+    const shardId = client.shard?.ids[0] ?? 0;
+
     client.user.setPresence({
-      activities: [{ name: '/help', type: 1 }],
+      activities: [{
+        name: 'api.lunie.dev',
+        type: 3,
+        state: `Shard ${shardId}`,
+      }],
       status: 'online'
     });
 
-    logger.info('SYSTEM', `Bot is ready! Logged in as ${client.user.tag}`);
+    logger.info('SYSTEM', `Bot is ready! Logged in as ${client.user.tag} | Shard ${shardId}`);
   });
 }
 

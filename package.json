@@ -4,7 +4,7 @@
   "description": "Bot Discord hỗ trợ trò chuyện AI và tạo hình ảnh, phiên bản native chỉ dùng cho model Lunaby",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node shard.js",
     "dev": "nodemon src/index.js"
   },
   "author": {
