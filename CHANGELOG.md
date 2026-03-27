@@ -1,5 +1,69 @@
 # Changelog - Lunaby Bot
 
+## [2.1.0-native] - 2026-03-28
+
+### Highlights
+- **Hệ thống Canvas mới (lunaby-canvas)**: Tách toàn bộ engine vẽ canvas ra package riêng `lunaby-canvas`, thay thế hoàn toàn các social command cũ bằng render hình ảnh chuyên nghiệp.
+- **Level-up & Leaderboard hình ảnh**: Thông báo lên cấp bằng canvas đẹp mắt và bảng xếp hạng render dưới dạng image card.
+- **Hệ thống Credits & AI Quota**: Giới thiệu hệ thống kinh tế nội bộ (credits) kèm quota sử dụng AI, cho phép người dùng mua thêm lượt dùng.
+- **LVoice — Kênh thoại tạm thời**: Hệ thống tạo kênh voice tạm thời tự động khi người dùng tham gia.
+- **Di chuyển dữ liệu sang MariaDB**: Chuyển profiles, economy, XP/levels, consent, guild settings sang MariaDB để tối ưu hiệu suất.
+- **Sharding**: Hỗ trợ ShardingManager để mở rộng bot ra nhiều shard.
+
+### Added
+- **`lunaby-canvas` package**: Tách canvas engine ra package độc lập, hỗ trợ render rank card, profile card, level-up card, và leaderboard card.
+- **Level-up System (`levelupsetting`, `levelcanvas`)**: Thông báo lên cấp với canvas tùy chỉnh, cài đặt kênh thông báo level-up cho từng server.
+- **Leaderboard Image**: Lệnh `/leaderboard` giờ render bảng xếp hạng dưới dạng image card thay vì embed text.
+- **`commands/social/avatar.js`**: Lệnh xem avatar người dùng với thông tin nickname, ID, màu accent.
+- **`commands/social/banner.js`**: Lệnh xem banner profile của người dùng.
+- **`commands.json`**: File metadata quản lý thông tin lệnh tập trung.
+- **Credits System (`credits`, `givecredits`)**: Hệ thống kinh tế credits với các lệnh xem, chuyển và quản trị.
+- **AI Quota System (`buyquota`)**: Hệ thống giới hạn lượt sử dụng AI (chat, code, image) với lệnh mua thêm quota bằng credits.
+- **`donate` command**: Lệnh hiển thị thông tin ủng hộ dự án.
+- **LVoice (`lvoice`)**: Hệ thống kênh voice tạm thời — tự tạo khi join, tự xóa khi rời.
+- **ShardingManager (`shard.js`)**: Hỗ trợ chạy bot trên nhiều shard với presence đồng bộ.
+- **Emoji Config (`config/emojis.js`)**: Hệ thống emoji tập trung, thống nhất icon feedback trên toàn bộ lệnh.
+- **`getOneTimeCompletion()`**: Hàm gọi AI một lần (one-shot) phục vụ các lệnh moderation.
+- **`home` option trong Help menu**: Thêm nút quay về trang chủ trong menu `/help`.
+
+### Changed
+- **Database Migration**: Chuyển user profiles, economy, XP/levels, consent, và guild settings từ MongoDB sang MariaDB (`MariaModDB`, `user_levels` table).
+- **Rank/Profile cards**: Cập nhật luồng dữ liệu rank/profile card để dùng `lunaby-canvas` API, truyền numeric rank và populate dữ liệu chính xác.
+- **Moderation commands**: Cải thiện toàn diện giao diện và UX các lệnh moderation (embeds, messages, imports).
+- **Prefix Handler**: Sửa lỗi prefix và hỗ trợ dynamic prefix trong usage/help messages.
+- **Image Handler**: Tin nhắn "đang tạo ảnh" giờ được chỉnh sửa để đính kèm ảnh trực tiếp thay vì gửi tin nhắn mới.
+- **VoiceWelcome**: Thêm alias và footer chào mừng cho voice welcome.
+- **About embed**: Cập nhật giao diện embed lệnh `/about`.
+- **Command Usage Logging**: Nâng cấp hệ thống ghi log sử dụng lệnh.
+- **Prompts**: Cập nhật và tinh chỉnh prompt AI.
+- **`lunaby-sdk`**: Bump lên phiên bản `2.1.1`.
+- **GIF Source**: Refactor nguồn GIF và hỗ trợ parse mention.
+- **Consent Service**: Chuyển lưu trữ consent sang MariaDB.
+
+### Fixed
+- Sửa lỗi `reset_history` không hoạt động đúng.
+- Sửa lỗi chat handler thiếu `try/catch` gây crash.
+- Sửa lỗi social commands gửi attachment thiếu `content` rỗng.
+- Sửa lỗi XP metrics và rank không hiển thị đúng.
+- Sửa lỗi đường dẫn (path) trong error handler.
+- Sửa lỗi prefix command không hoạt động với subcommand.
+- Sửa lỗi setting handler thiếu error handling.
+- Sửa lỗi help banner link.
+
+### Removed
+- Loại bỏ các social commands cũ (thay thế bằng `lunaby-canvas`).
+- Xóa `GuildProfileDB` cũ (thay bằng `MariaModDB`).
+- Xóa `system/dashboard`.
+- Xóa `Lunaby_Help.jpg` (không còn dùng).
+
+### Migration Notes
+- Chạy `npm install` để cài `lunaby-canvas` và cập nhật `lunaby-sdk`.
+- Cấu hình MariaDB cho các bảng mới: `user_levels`, profiles, economy, consent.
+- Thêm `ENCRYPTION_KEY` vào `.env` (bắt buộc validate khi khởi động).
+- Cấu hình `shard.js` nếu muốn chạy multi-shard.
+
+---
+
 ## [2.0.0-native] - 2026-03-24
 
 ### Highlights

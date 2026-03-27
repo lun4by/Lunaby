@@ -28,7 +28,7 @@ Lunaby mang trong mình khí chất thanh cao, dịu dàng nhưng cũng vô cùn
 Lunaby vừa được tái cấu trúc theo mô hình hướng dịch vụ (Service-Oriented Architecture), toàn bộ mã nguồn được quy hoạch gọn gàng trong thư mục `src/`, giúp cực kỳ dễ bảo trì và mở rộng:
 
 - **`src/services/ai/`**: Trái tim của Lunaby. Nơi chứa `AICore.js` (xử lý LLM), `ConversationService.js` (quản lý ngữ cảnh), `ImageService.js` và `StreamingService.js`.
-- **`src/services/user/`**: Góc quản lý thông tin người dùng với `QuotaService.js`, `RoleService.js`, `XPService.js` và hệ thống hồi chiêu `CooldownService.js`.
+- **`src/services/user/`**: Góc quản lý thông tin người dùng với `QuotaService.js`, `RoleService.js`, `XPService.js` và `CooldownService.js`.
 - **`src/services/system/`**: Khởi chạy bot (`initSystem.js`) và bảo trì hệ thống.
 - **`src/services/database/`**: Quản lý kết nối tới MongoDB, MariaDB và các thao tác đồng bộ hoá dữ liệu.
 
