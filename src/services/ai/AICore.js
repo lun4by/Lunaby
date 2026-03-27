@@ -1,6 +1,5 @@
 const logger = require("../../utils/logger.js");
 const prompts = require("../../config/prompts.js");
-const initSystem = require("../system/initSystem.js");
 const { Lunaby } = require("lunaby-sdk");
 
 const MODEL_MAP = { default: "lunaby", pro: "lunaby-pro", image: "lunaby-vision" };
@@ -17,12 +16,6 @@ class AICore {
       this.client = new Lunaby({ apiKey });
       logger.debug("AI_CORE", "Lunaby client initialized");
     }
-  }
-
-  async waitForProviders() {
-    await initSystem.waitForReady();
-    logger.info("AI_CORE", "Ready");
-    return this;
   }
 
   async processChatCompletion(messages, config = {}) {
