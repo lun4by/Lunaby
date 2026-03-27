@@ -17,6 +17,18 @@ function buildAvatarActionRow(url) {
   );
 }
 
+function resolveNickname(member, user) {
+  return member?.nickname || user.globalName || user.username;
+}
+
+function resolveRoleColor(member) {
+  if (!member || !member.displayHexColor || member.displayHexColor === '#000000') {
+    return 'Không có';
+  }
+
+  return member.displayHexColor;
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('avatar')
@@ -43,13 +55,21 @@ module.exports = {
       const avatarUrl = member
         ? member.displayAvatarURL({ size: 4096 })
         : targetUser.displayAvatarURL({ size: 4096 });
+      const nickname = resolveNickname(member, targetUser);
+      const roleColor = resolveRoleColor(member);
 
       const embed = createLunabyEmbed()
         .setAuthor({
           name: `Avatar của ${targetUser.tag}`,
           iconURL: targetUser.displayAvatarURL({ size: 256 }),
         })
-        .setDescription(`[Nhấn vào đây để mở ảnh gốc](${avatarUrl})`)
+        .setDescription(
+          [
+            `\`Nickname:\` ${nickname}`,
+            `\`ID:\` ${targetUser.id}`,
+            `\`RoleColor:\` ${roleColor}`,
+          ].join('\n')
+        )
         .setImage(avatarUrl);
 
       await interaction.reply({
