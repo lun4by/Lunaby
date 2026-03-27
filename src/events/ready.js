@@ -9,6 +9,7 @@ const { syncAllGuilds } = require('../handlers/guildHandler');
 const CommandsJSONService = require('../services/system/CommandsJSONService');
 const QuotaService = require('../services/user/QuotaService.js');
 const RoleService = require('../services/user/RoleService.js');
+const { loadLVoiceCache, cleanupZombieChannels } = require('./voiceStateUpdate.js');
 const logger = require('../utils/logger.js');
 
 async function startbot(client, loadCommands) {
@@ -94,6 +95,13 @@ async function startbot(client, loadCommands) {
       await syncAllGuilds(client);
     } catch (error) {
       logger.error('SYSTEM', 'Guild sync failed:', error.message);
+    }
+
+    try {
+      await loadLVoiceCache();
+      await cleanupZombieChannels(client);
+    } catch (error) {
+      logger.error('SYSTEM', 'lvoice cache load failed:', error.message);
     }
 
     const shardId = client.shard?.ids[0] ?? 0;

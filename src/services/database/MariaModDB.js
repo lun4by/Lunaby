@@ -137,6 +137,28 @@ class MariaModDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS lvoice_config (
+          guild_id VARCHAR(32) PRIMARY KEY,
+          creator_channel_id VARCHAR(32),
+          category_id VARCHAR(32),
+          default_name VARCHAR(100) DEFAULT '{user}',
+          default_limit INT DEFAULT 0,
+          default_bitrate INT DEFAULT 64000,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS lvoice_active (
+          channel_id VARCHAR(32) PRIMARY KEY,
+          guild_id VARCHAR(32) NOT NULL,
+          owner_id VARCHAR(32) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_guild (guild_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+
             logger.info('MARIADB', 'All tables ready');
 
             try {
@@ -590,7 +612,7 @@ class MariaModDB {
         try {
             const rows = await mariaClient.query('SELECT xp FROM user_levels WHERE guild_id = ? AND user_id = ?', [guildId, userId]);
             if (rows.length === 0) return 0;
-            
+
             const countRows = await mariaClient.query(
                 'SELECT COUNT(*) as count FROM user_levels WHERE guild_id = ? AND xp > ?',
                 [guildId, rows[0].xp]
@@ -623,9 +645,9 @@ class MariaModDB {
                 sets.push(`${field} = ?`);
             }
             if (!sets.length) return true;
-            
+
             await mariaClient.query(`INSERT IGNORE INTO user_profiles (user_id) VALUES (?)`, [userId]);
-            
+
             updateValues.push(userId);
             await mariaClient.query(
                 `UPDATE user_profiles SET ${sets.join(', ')} WHERE user_id = ?`,
@@ -664,6 +686,118 @@ class MariaModDB {
         } catch (error) {
             logger.error('MARIADB', 'Error updating user economy:', error);
             return false;
+        }
+    }
+
+    async getLVoiceConfig(guildId) {
+        try {
+            const rows = await mariaClient.query('SELECT * FROM lvoice_config WHERE guild_id = ?', [guildId]);
+            if (rows.length === 0) return null;
+            const r = rows[0];
+            return {
+                guildId: r.guild_id,
+                creatorChannelId: r.creator_channel_id,
+                categoryId: r.category_id,
+                defaultName: r.default_name || '{user}',
+                defaultLimit: r.default_limit || 0,
+                defaultBitrate: r.default_bitrate || 64000,
+            };
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting LVoice config:', error);
+            return null;
+        }
+    }
+
+    async setLVoiceConfig(guildId, config) {
+        try {
+            const { creatorChannelId, categoryId, defaultName = '{user}', defaultLimit = 0, defaultBitrate = 64000 } = config;
+            await mariaClient.query(`
+                INSERT INTO lvoice_config (guild_id, creator_channel_id, category_id, default_name, default_limit, default_bitrate)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                creator_channel_id = VALUES(creator_channel_id),
+                category_id = VALUES(category_id),
+                default_name = VALUES(default_name),
+                default_limit = VALUES(default_limit),
+                default_bitrate = VALUES(default_bitrate)
+            `, [guildId, creatorChannelId, categoryId, defaultName, defaultLimit, defaultBitrate]);
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error setting LVoice config:', error);
+            return false;
+        }
+    }
+
+    async deleteLVoiceConfig(guildId) {
+        try {
+            await mariaClient.query('DELETE FROM lvoice_config WHERE guild_id = ?', [guildId]);
+            await mariaClient.query('DELETE FROM lvoice_active WHERE guild_id = ?', [guildId]);
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error deleting LVoice config:', error);
+            return false;
+        }
+    }
+
+    async addActiveVoice(channelId, guildId, ownerId) {
+        try {
+            await mariaClient.query(
+                'INSERT IGNORE INTO lvoice_active (channel_id, guild_id, owner_id) VALUES (?, ?, ?)',
+                [channelId, guildId, ownerId]
+            );
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error adding active voice:', error);
+            return false;
+        }
+    }
+
+    async removeActiveVoice(channelId) {
+        try {
+            await mariaClient.query('DELETE FROM lvoice_active WHERE channel_id = ?', [channelId]);
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', 'Error removing active voice:', error);
+            return false;
+        }
+    }
+
+    async getActiveVoice(channelId) {
+        try {
+            const rows = await mariaClient.query('SELECT * FROM lvoice_active WHERE channel_id = ?', [channelId]);
+            if (rows.length === 0) return null;
+            const r = rows[0];
+            return { channelId: r.channel_id, guildId: r.guild_id, ownerId: r.owner_id };
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting active voice:', error);
+            return null;
+        }
+    }
+
+    async getAllActiveVoices() {
+        try {
+            const rows = await mariaClient.query('SELECT * FROM lvoice_active');
+            return rows.map(r => ({ channelId: r.channel_id, guildId: r.guild_id, ownerId: r.owner_id }));
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting all active voices:', error);
+            return [];
+        }
+    }
+
+    async getAllLVoiceConfigs() {
+        try {
+            const rows = await mariaClient.query('SELECT * FROM lvoice_config');
+            return rows.map(r => ({
+                guildId: r.guild_id,
+                creatorChannelId: r.creator_channel_id,
+                categoryId: r.category_id,
+                defaultName: r.default_name || '{user}',
+                defaultLimit: r.default_limit || 0,
+                defaultBitrate: r.default_bitrate || 64000,
+            }));
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting all VoiceMaster configs:', error);
+            return [];
         }
     }
 }
