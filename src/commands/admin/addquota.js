@@ -1,7 +1,8 @@
-const { SlashCommandBuilder } = require('discord.js');
-const QuotaService = require('../../services/user/QuotaService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const QuotaService = require('../../services/QuotaService');
 const logger = require('../../utils/logger');
+const prompts = require('../../config/prompts');
+const emojis = require('../../config/emojis.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -62,7 +63,7 @@ module.exports = {
                     { name: '📊 Lượt cũ', value: `${beforeStats.limits.period} lượt`, inline: true },
                     { name: '📈 Lượt mới', value: `${afterStats.limits.period} lượt`, inline: true },
                     { name: '📉 Đã dùng', value: `${afterStats.usage.current} lượt`, inline: true },
-                    { name: '✅ Còn lại', value: `${afterStats.remaining.messages} lượt`, inline: true }
+                    { name: `${emojis.success} Còn lại`, value: `${afterStats.remaining.messages} lượt`, inline: true }
                 );
 
             await interaction.reply({ embeds: [embed] });

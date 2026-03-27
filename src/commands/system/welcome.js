@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -52,7 +53,7 @@ module.exports = {
                 await MariaModDB.updateGuildSettings(guildId, {
                     'greeter.welcome.isEnabled': false
                 });
-                return replyFunc({ content: '✅| Đã tắt tính năng thông báo chào mừng thành viên mới.' });
+                return replyFunc({ content: `${emojis.success} Đã tắt tính năng thông báo chào mừng thành viên mới.` });
             }
 
             if (subCommand === 'set') {
@@ -85,11 +86,11 @@ module.exports = {
                     'greeter.welcome.message': message
                 });
 
-                return replyFunc({ content: `✅| Đã thiết lập thành công thông báo chào mừng tại kênh <#${channel.id}>.\nNội dung: \`${message}\`` });
+                return replyFunc({ content: `${emojis.success} Đã thiết lập thành công thông báo chào mừng tại kênh <#${channel.id}>.\nNội dung: \`${message}\`` });
             }
         } catch (error) {
             logger.error('SYSTEM', 'Error setting welcome:', error);
-            return replyFunc({ content: '❌| Đã có lỗi xảy ra khi lưu thiết lập chào mừng.', ephemeral: true });
+            return replyFunc({ content: `${emojis.error} Đã có lỗi xảy ra khi lưu thiết lập chào mừng.`, ephemeral: true });
         }
     }
 };

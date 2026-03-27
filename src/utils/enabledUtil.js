@@ -1,8 +1,9 @@
 const { EmbedBuilder } = require('discord.js');
 const MariaModDB = require('../services/database/MariaModDB');
+const emojis = require('../config/emojis.js');
 
-const CHECK = '✅';
-const CROSS = '❎';
+const CHECK = emojis.success;
+const CROSS = emojis.error;
 
 exports.createEmbed = async function (interaction, channel, guildId, channelId) {
     const disabledCommands = await MariaModDB.getDisabledCommands(guildId, channelId);

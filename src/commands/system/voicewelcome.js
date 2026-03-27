@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
+const emojis = require('../../config/emojis.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -43,8 +44,8 @@ async function handleVoiceToggle(interaction) {
         });
 
         const message = newEnabled
-            ? '**Voice Toggle đã bật!**\nLunaby sẽ chào/tạm biệt thành viên khi vào/rời kênh voice.'
-            : '**Voice Toggle đã tắt!**\nLunaby sẽ không còn chào/tạm biệt khi vào/rời kênh voice nữa.';
+            ? `${emojis.success} **Voice Toggle đã bật!**\nLunaby sẽ chào/tạm biệt thành viên khi vào/rời kênh voice.`
+            : `${emojis.success} **Voice Toggle đã tắt!**\nLunaby sẽ không còn chào/tạm biệt khi vào/rời kênh voice nữa.`;
 
         await interaction.editReply({ content: message });
 

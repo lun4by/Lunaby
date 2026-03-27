@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -54,7 +55,7 @@ module.exports = {
                     'settings.levelUpNotifications': false,
                     'settings.levelUpChannel': null
                 });
-                return replyFunc({ content: '✅| Đã tắt chức năng thông báo chúc mừng thăng cấp.' });
+                return replyFunc({ content: `${emojis.success} Đã tắt chức năng thông báo chúc mừng thăng cấp.` });
             }
 
             if (subCommand === 'set') {
@@ -83,11 +84,11 @@ module.exports = {
                     'settings.levelUpChannel': channel.id
                 });
 
-                return replyFunc({ content: `✅| Đã thiết lập thông báo chúc mừng thăng cấp tại kênh <#${channel.id}>.` });
+                return replyFunc({ content: `${emojis.success} Đã thiết lập thông báo chúc mừng thăng cấp tại kênh <#${channel.id}>.` });
             }
         } catch (error) {
             logger.error('SYSTEM', 'Error setting levelup:', error);
-            return replyFunc({ content: '❌| Đã có lỗi xảy ra khi lưu thiết lập.', ephemeral: true });
+            return replyFunc({ content: `${emojis.error} Đã có lỗi xảy ra khi lưu thiết lập.`, ephemeral: true });
         }
     }
 };

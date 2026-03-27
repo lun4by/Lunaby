@@ -1,7 +1,9 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB.js');
+const MariaModDB = require('../../services/database/MariaModDB');
+const ErrorHandler = require('../../utils/ErrorHandler');
 const ConversationService = require('../../services/ai/ConversationService.js');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
 
 module.exports = {
@@ -53,7 +55,7 @@ module.exports = {
 
             if (warningCount === 0) {
                 return interaction.editReply({
-                    content: '✅ Người dùng này hiện không có cảnh cáo nào!',
+                    content: `${emojis.success} Người dùng này hiện không có cảnh cáo nào!`,
                     ephemeral: false,
                 });
             }

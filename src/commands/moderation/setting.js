@@ -1,16 +1,8 @@
-const {
-    SlashCommandBuilder,
-    EmbedBuilder,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    StringSelectMenuBuilder,
-    ChannelSelectMenuBuilder,
-    ChannelType,
-    PermissionsBitField,
-} = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require('discord.js');
 
-const MariaModDB = require('../../services/database/MariaModDB');
+const MariaModDB = require('../../services/database/MariaModDB.js');
+const { getDetailedLogs } = require('../../utils/modLogger.js');
+const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger');
 
 module.exports = {
@@ -67,7 +59,7 @@ module.exports = {
                     if (customId === 'setting_page_select') {
                         currentPage = i.values[0];
                         if (currentPage === 'close') {
-                            await i.update({ content: '✅ Đã đóng bảng điều khiển.', embeds: [], components: [] });
+                            await i.update({ content: `${emojis.success} Đã đóng bảng điều khiển.`, embeds: [], components: [] });
                             return collector.stop('closed');
                         }
                         await renderPage(i, guildId, currentPage, true);
@@ -190,8 +182,8 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
     if (page === 'general') {
         embed.setDescription('**⚙️ Danh mục: Cài đặt Chung**\nĐiều chỉnh cách bot tương tác và gửi thông báo trong máy chủ.')
              .addFields(
-                 { name: '🔔 Thông báo Level-up', value: levelUp ? '✅ Đã Bật' : '❌ Đã Tắt', inline: true },
-                 { name: '📋 Sử dụng Embed', value: useEmbeds ? '✅ Đã Bật' : '❌ Đã Tắt', inline: true }
+                 { name: '🔔 Thông báo Level-up', value: levelUp ? `${emojis.success} Đã Bật` : `${emojis.error} Đã Tắt`, inline: true },
+                 { name: '📋 Sử dụng Embed', value: useEmbeds ? `${emojis.success} Đã Bật` : `${emojis.error} Đã Tắt`, inline: true }
              );
 
         const btnRow = new ActionRowBuilder().addComponents(
@@ -210,8 +202,8 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
         embed.setDescription('**🛡️ Danh mục: Nhật ký sự kiện (Logs)**\nCho phép bot ghi chép lại các lệnh cấm, đá, hoặc sự kiện quan trọng vào một kênh an toàn.')
              .addFields(
                  { name: '📝 Kênh báo cáo (Log Channel)', value: logChannelId ? `<#${logChannelId}>` : 'Chưa thiết lập (Vui lòng chọn ở Menu dưới)', inline: false },
-                 { name: '🔨 Báo cáo Kiểm duyệt (Ban/Kick/Mute)', value: modActionLogs ? '✅ Bật' : '❌ Tắt', inline: true },
-                 { name: '📡 Báo cáo Mở rộng (Sự kiện phụ)', value: monitorLogs ? '✅ Bật' : '❌ Tắt', inline: true }
+                 { name: '🔨 Báo cáo Kiểm duyệt (Ban/Kick/Mute)', value: modActionLogs ? `${emojis.success} Bật` : `${emojis.error} Tắt`, inline: true },
+                 { name: '📡 Báo cáo Mở rộng (Sự kiện phụ)', value: monitorLogs ? `${emojis.success} Bật` : `${emojis.error} Tắt`, inline: true }
              );
 
         // Row 2: Channel Select Menu

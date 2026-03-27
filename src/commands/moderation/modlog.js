@@ -1,6 +1,8 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const MariaModDB = require('../../services/database/MariaModDB');
+const { formatDuration } = require('../../utils/timeUtil');
 const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -60,7 +62,7 @@ module.exports = {
 
             if (logs.length === 0) {
                 return interaction.editReply({
-                    content: '✅ Hệ thống chưa ghi nhận lược sử báo cáo nào phù hợp với bộ lọc!',
+                    content: `${emojis.success} Hệ thống chưa ghi nhận lược sử báo cáo nào phù hợp với bộ lọc!`,
                     ephemeral: false,
                 });
             }

@@ -1,6 +1,7 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
+const emojis = require('../../config/emojis.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -39,7 +40,7 @@ module.exports = {
 
             if (warnings.length === 0) {
                 return interaction.editReply({
-                    content: '✅ Người dùng này hiện không có cảnh cáo nào!',
+                    content: `${emojis.success} Người dùng này hiện không có cảnh cáo nào!`,
                     ephemeral: false,
                 });
             }

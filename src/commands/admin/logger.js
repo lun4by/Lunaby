@@ -1,5 +1,7 @@
-const { SlashCommandBuilder } = require('discord.js');
-const logger = require('../../utils/logger.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const logger = require('../../utils/logger');
+const fs = require('fs');
+const emojis = require('../../config/emojis.js');
 
 const OWNER_ID = process.env.OWNER_ID;
 
@@ -45,12 +47,12 @@ module.exports = {
 
         if (sub === 'status') {
             const config = logger.getConfig();
-            const cats = Object.entries(config.categories).map(([k, v]) => `${k}: ${v ? '✅' : '❌'}`).join('\n');
+            const cats = Object.entries(config.categories).map(([k, v]) => `${k}: ${v ? emojis.success : emojis.error}`).join('\n');
             return reply(interaction,
                 `**Trạng thái hệ thống ghi log:**\n` +
                 `Trạng thái: ${config.enabled ? 'Đang bật' : 'Đã tắt'}\n` +
                 `Mức độ: ${config.level.toUpperCase()}\n` +
-                `Hiển thị thời gian: ${config.showTimestamp ? '✅' : '❌'}\n\n` +
+                `Hiển thị thời gian: ${config.showTimestamp ? emojis.success : emojis.error}\n\n` +
                 `**Danh mục:**\n${cats}`
             );
         }

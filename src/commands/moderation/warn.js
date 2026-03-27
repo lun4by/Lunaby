@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('disc
 const ConversationService = require('../../services/ai/ConversationService.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
+const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
 
 module.exports = {
@@ -21,7 +22,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: '❌ Bạn không có quyền sử dụng lệnh này!',
+                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
                 ephemeral: true,
             });
         }
@@ -38,14 +39,14 @@ module.exports = {
 
         if (!targetMember) {
             return interaction.reply({
-                content: '❌ Không tìm thấy thành viên này trong server!',
+                content: `${emojis.error} Không tìm thấy thành viên này trong server!`,
                 ephemeral: true,
             });
         }
 
         if (targetUser.bot) {
             return interaction.reply({
-                content: '❌ Không thể cảnh cáo bot!',
+                content: `${emojis.error} Không thể cảnh cáo bot!`,
                 ephemeral: true,
             });
         }
@@ -55,7 +56,7 @@ module.exports = {
             interaction.user.id !== interaction.guild.ownerId
         ) {
             return interaction.reply({
-                content: '❌ Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!',
+                content: `${emojis.error} Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!`,
                 ephemeral: true,
             });
         }
@@ -72,7 +73,7 @@ module.exports = {
 
             if (!success) {
                 return interaction.editReply({
-                    content: '❌ Đã xảy ra lỗi khi lưu cảnh cáo vào cơ sở dữ liệu!',
+                    content: `${emojis.error} Đã xảy ra lỗi khi lưu cảnh cáo vào cơ sở dữ liệu!`,
                     ephemeral: true,
                 });
             }
@@ -154,7 +155,7 @@ module.exports = {
         } catch (error) {
             logger.error('MODERATION', 'Lỗi khi cảnh cáo thành viên:', error);
             await interaction.editReply({
-                content: `❌ Đã xảy ra lỗi khi cảnh cáo người dùng: ${error.message}`,
+                content: `${emojis.error} Đã xảy ra lỗi khi cảnh cáo người dùng: ${error.message}`,
                 ephemeral: true,
             });
         }
