@@ -1,0 +1,71 @@
+const {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require('discord.js');
+const { createLunabyEmbed } = require('../../utils/embedUtils');
+const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis');
+
+function buildAvatarActionRow(url) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setLabel('Mở ảnh gốc')
+      .setStyle(ButtonStyle.Link)
+      .setURL(url),
+  );
+}
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('avatar')
+    .setDescription('Xem avatar của bạn hoặc người dùng khác')
+    .addUserOption((option) =>
+      option
+        .setName('user')
+        .setDescription('Người dùng mà bạn muốn xem avatar')
+        .setRequired(false)),
+  prefix: {
+    name: 'avatar',
+    aliases: ['avt', 'av'],
+    description: 'Xem avatar của bạn hoặc người dùng khác',
+  },
+  cooldown: 5,
+
+  async execute(interaction) {
+    try {
+      const targetUser = interaction.options.getUser('user') || interaction.user;
+      const member = interaction.guild
+        ? await interaction.guild.members.fetch(targetUser.id).catch(() => null)
+        : null;
+
+      const avatarUrl = member
+        ? member.displayAvatarURL({ size: 4096 })
+        : targetUser.displayAvatarURL({ size: 4096 });
+
+      const embed = createLunabyEmbed()
+        .setAuthor({
+          name: `Avatar của ${targetUser.tag}`,
+          iconURL: targetUser.displayAvatarURL({ size: 256 }),
+        })
+        .setDescription(`[Nhấn vào đây để mở ảnh gốc](${avatarUrl})`)
+        .setImage(avatarUrl);
+
+      await interaction.reply({
+        embeds: [embed],
+        components: [buildAvatarActionRow(avatarUrl)],
+      });
+    } catch (error) {
+      logger.error('AVATAR', 'Error in avatar command:', error);
+      const payload = {
+        content: `${emojis.error} Đã xảy ra lỗi khi tải avatar!`,
+        ephemeral: true,
+      };
+      const respond = interaction.replied || interaction.deferred
+        ? interaction.followUp(payload)
+        : interaction.reply(payload);
+      await respond.catch(() => { });
+    }
+  },
+};
