@@ -17,13 +17,15 @@ async function getTotalGuilds(client) {
   return counts.reduce((sum, count) => sum + count, 0);
 }
 
-async function getTotalUsers(client) {
+async function getTotalMembers(client) {
   if (!client.shard) {
-    return client.users.cache.size;
+    return client.guilds.cache.reduce((sum, guild) => sum + (guild.memberCount || 0), 0);
   }
 
-  const shardUserIds = await client.shard.broadcastEval((shardClient) => [...shardClient.users.cache.keys()]);
-  return new Set(shardUserIds.flat()).size;
+  const counts = await client.shard.broadcastEval((shardClient) =>
+    shardClient.guilds.cache.reduce((sum, guild) => sum + (guild.memberCount || 0), 0)
+  );
+  return counts.reduce((sum, count) => sum + count, 0);
 }
 
 module.exports = {
@@ -40,9 +42,9 @@ module.exports = {
 
   async execute(interaction) {
     try {
-      const [totalGuilds, totalUsers, blacklistedUsers, blacklistedGuilds] = await Promise.all([
+      const [totalGuilds, totalMembers, blacklistedUsers, blacklistedGuilds] = await Promise.all([
         getTotalGuilds(interaction.client),
-        getTotalUsers(interaction.client),
+        getTotalMembers(interaction.client),
         BlacklistService.getUsers(1000),
         BlacklistService.getGuilds(1000),
       ]);
@@ -51,7 +53,7 @@ module.exports = {
         .setTitle('Thống kê tổng quan của bot')
         .addFields(
           { name: 'Tổng server', value: `\`${formatNumber(totalGuilds)}\``, inline: true },
-          { name: 'Tổng users', value: `\`${formatNumber(totalUsers)}\``, inline: true },
+          { name: 'Tổng user', value: `\`${formatNumber(totalMembers)}\``, inline: true },
           { name: 'Shards', value: `\`${interaction.client.shard?.count || 1}\``, inline: true },
           { name: 'User blacklist', value: `\`${formatNumber(blacklistedUsers.length)}\``, inline: true },
           { name: 'Server blacklist', value: `\`${formatNumber(blacklistedGuilds.length)}\``, inline: true },
