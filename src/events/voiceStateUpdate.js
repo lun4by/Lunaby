@@ -84,6 +84,10 @@ async function cleanupZombieChannels(client) {
 }
 
 async function sendVoiceGreeting(eventType, memberName, voiceChannel) {
+    if (!voiceChannel || !voiceChannel.isTextBased?.()) {
+        return;
+    }
+
     const channelName = voiceChannel.name;
 
     const promptTemplate = eventType === 'join'
@@ -191,12 +195,15 @@ function setupVoiceStateEvent(client) {
             if (!guild) return;
 
             const oldChannel = oldState.channel;
-            const newChannel = newState.channel;
+            let newChannel = newState.channel;
 
             if (oldChannel?.id === newChannel?.id) return;
 
             if (newChannel && creatorChannels.has(newChannel.id)) {
                 await handleVoiceMasterJoin(newState, member);
+                // Sau khi user vào creator channel, LVoice sẽ move họ sang kênh tạm.
+                // Cần đọc lại channel hiện tại để voicewelcome gửi đúng vào kênh vừa tạo.
+                newChannel = member.voice?.channel || newChannel;
             }
 
             if (oldChannel && activeVoiceChannels.has(oldChannel.id)) {
