@@ -17,6 +17,24 @@ class MariaBlacklistDB {
           INDEX idx_keyword (keyword)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS user_blacklist (
+          user_id VARCHAR(32) NOT NULL PRIMARY KEY,
+          reason TEXT,
+          created_by VARCHAR(32),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_created_at (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+            await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS guild_blacklist (
+          guild_id VARCHAR(32) NOT NULL PRIMARY KEY,
+          reason TEXT,
+          created_by VARCHAR(32),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_created_at (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
             logger.info('MARIADB', 'image_blacklist table ready');
             return true;
         } catch (error) {
@@ -171,6 +189,108 @@ class MariaBlacklistDB {
         } catch (error) {
             logger.error('MARIADB', 'Error initializing default blacklist:', error);
             return false;
+        }
+    }
+
+    async isUserBlacklisted(userId) {
+        try {
+            const rows = await mariaClient.query(
+                'SELECT user_id, reason, created_at, created_by FROM user_blacklist WHERE user_id = ? LIMIT 1',
+                [userId]
+            );
+            return rows[0] || null;
+        } catch (error) {
+            logger.error('MARIADB', 'Error checking user blacklist:', error);
+            return null;
+        }
+    }
+
+    async addUserBlacklist(userId, reason = null, createdBy = null) {
+        try {
+            const result = await mariaClient.query(
+                'INSERT INTO user_blacklist (user_id, reason, created_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE reason = VALUES(reason), created_by = VALUES(created_by), created_at = CURRENT_TIMESTAMP',
+                [userId, reason, createdBy]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            logger.error('MARIADB', 'Error adding user blacklist:', error);
+            return false;
+        }
+    }
+
+    async removeUserBlacklist(userId) {
+        try {
+            const result = await mariaClient.query(
+                'DELETE FROM user_blacklist WHERE user_id = ?',
+                [userId]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            logger.error('MARIADB', 'Error removing user blacklist:', error);
+            return false;
+        }
+    }
+
+    async getUserBlacklist(limit = 100) {
+        try {
+            return await mariaClient.query(
+                'SELECT user_id, reason, created_by, created_at FROM user_blacklist ORDER BY created_at DESC LIMIT ?',
+                [limit]
+            );
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting user blacklist:', error);
+            return [];
+        }
+    }
+
+    async isGuildBlacklisted(guildId) {
+        try {
+            const rows = await mariaClient.query(
+                'SELECT guild_id, reason, created_at, created_by FROM guild_blacklist WHERE guild_id = ? LIMIT 1',
+                [guildId]
+            );
+            return rows[0] || null;
+        } catch (error) {
+            logger.error('MARIADB', 'Error checking guild blacklist:', error);
+            return null;
+        }
+    }
+
+    async addGuildBlacklist(guildId, reason = null, createdBy = null) {
+        try {
+            const result = await mariaClient.query(
+                'INSERT INTO guild_blacklist (guild_id, reason, created_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE reason = VALUES(reason), created_by = VALUES(created_by), created_at = CURRENT_TIMESTAMP',
+                [guildId, reason, createdBy]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            logger.error('MARIADB', 'Error adding guild blacklist:', error);
+            return false;
+        }
+    }
+
+    async removeGuildBlacklist(guildId) {
+        try {
+            const result = await mariaClient.query(
+                'DELETE FROM guild_blacklist WHERE guild_id = ?',
+                [guildId]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            logger.error('MARIADB', 'Error removing guild blacklist:', error);
+            return false;
+        }
+    }
+
+    async getGuildBlacklist(limit = 100) {
+        try {
+            return await mariaClient.query(
+                'SELECT guild_id, reason, created_by, created_at FROM guild_blacklist ORDER BY created_at DESC LIMIT ?',
+                [limit]
+            );
+        } catch (error) {
+            logger.error('MARIADB', 'Error getting guild blacklist:', error);
+            return [];
         }
     }
 }

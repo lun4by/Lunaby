@@ -1,6 +1,8 @@
 const { REST, Routes } = require('discord.js');
 const mongoClient = require('../services/database/mongoClient.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
+const BlacklistService = require('../services/user/BlacklistService');
+const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
 const logger = require('../utils/logger.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 
@@ -160,6 +162,12 @@ async function handleGuildJoin(guild, commands) {
   await sendGlobalLog(guild.client, `Bot tham gia guild mới: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
 
   try {
+    const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
+    if (blacklistEntry) {
+      await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+      return;
+    }
+
     await storeGuildInDB(guild);
 
     const commandsToRegister = commands?.length ? commands : getCommandsJson(guild.client);
@@ -211,6 +219,12 @@ async function syncAllGuilds(client, commands = null) {
     let deployErrors = 0;
 
     for (const guild of guilds.values()) {
+      const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
+      if (blacklistEntry) {
+        await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+        continue;
+      }
+
       try {
         await storeGuildInDB(guild);
         syncCount++;

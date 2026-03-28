@@ -3,12 +3,30 @@ const { handleMentionMessage } = require("../handlers/messageHandler");
 const { handlePrefixMessage } = require("../handlers/prefixHandler");
 const XPService = require("../services/user/XPService");
 const { generateLevelUpCard } = require("../services/canvas/levelUpCanvas");
+const {
+  notifyBlacklistedGuildAndLeave,
+  notifyBlacklistedUser,
+  shouldBlockGuild,
+  shouldBlockUser,
+} = require("../utils/blacklistUtils");
 const logger = require("../utils/logger.js");
 
 function setupMessageCreateEvent(client) {
   client.on(Events.MessageCreate, async (message) => {
     try {
       if (message.author.bot) return;
+
+      const blockedGuild = message.guild ? await shouldBlockGuild(message.guild) : null;
+      if (blockedGuild) {
+        await notifyBlacklistedGuildAndLeave(message.guild, blockedGuild.reason);
+        return;
+      }
+
+      const blockedUser = await shouldBlockUser(message.author);
+      if (blockedUser) {
+        await notifyBlacklistedUser(message.author, blockedUser.reason);
+        return;
+      }
 
       const xpResult = await XPService.addXP(message);
       if (xpResult && xpResult.leveledUp) {

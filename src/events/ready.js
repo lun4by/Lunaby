@@ -9,6 +9,8 @@ const { syncAllGuilds } = require('../handlers/guildHandler');
 const CommandsJSONService = require('../services/system/CommandsJSONService');
 const QuotaService = require('../services/user/QuotaService.js');
 const RoleService = require('../services/user/RoleService.js');
+const BlacklistService = require('../services/user/BlacklistService.js');
+const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
 const { loadLVoiceCache, cleanupZombieChannels } = require('./voiceStateUpdate.js');
 const logger = require('../utils/logger.js');
 
@@ -95,6 +97,17 @@ async function startbot(client, loadCommands) {
       await syncAllGuilds(client);
     } catch (error) {
       logger.error('SYSTEM', 'Guild sync failed:', error.message);
+    }
+
+    try {
+      for (const guild of client.guilds.cache.values()) {
+        const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
+        if (blacklistEntry) {
+          await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+        }
+      }
+    } catch (error) {
+      logger.error('SYSTEM', 'Blacklisted guild cleanup failed:', error.message);
     }
 
     try {

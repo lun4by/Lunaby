@@ -44,6 +44,48 @@
     "cooldown": 5
   },
   {
+    "name": "blacklist",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "admin",
+    "description": "Quản lý blacklist user và server của bot (Admin Only)",
+    "parameters": [
+      "User add/remove: thêm hoặc gỡ user khỏi blacklist",
+      "Server add/remove: thêm hoặc gỡ server khỏi blacklist",
+      "List: xem danh sách blacklist hiện tại"
+    ],
+    "examples": [
+      "/blacklist user add <user>",
+      "/blacklist server add <server_id>",
+      "/blacklist list all"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "botstats",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "admin",
+    "description": "Xem tổng số server và users hiện tại của bot (Admin Only)",
+    "parameters": [],
+    "examples": [
+      "/botstats"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
     "name": "giveadmin",
     "aliases": [],
     "clientPermissions": [
@@ -671,6 +713,48 @@
     "examples": [
       "/warnings",
       "/warnings <user>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "avatar",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Xem avatar của bạn hoặc người dùng khác",
+    "parameters": [
+      "Người dùng mà bạn muốn xem avatar (tùy chọn)"
+    ],
+    "examples": [
+      "/avatar",
+      "/avatar <user>"
+    ],
+    "guildOnly": false,
+    "requiresDatabase": false,
+    "rankcommand": false,
+    "nsfw": false,
+    "cooldown": 5
+  },
+  {
+    "name": "banner",
+    "aliases": [],
+    "clientPermissions": [
+      "EMBED_LINKS"
+    ],
+    "group": "social",
+    "description": "Xem banner của bạn hoặc người dùng khác",
+    "parameters": [
+      "Người dùng mà bạn muốn xem banner (tùy chọn)"
+    ],
+    "examples": [
+      "/banner",
+      "/banner <user>"
     ],
     "guildOnly": false,
     "requiresDatabase": false,
