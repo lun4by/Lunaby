@@ -3,6 +3,7 @@ const MariaModDB = require('../../services/database/MariaModDB.js');
 const { creatorChannels } = require('../../events/voiceStateUpdate.js');
 const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger.js');
+const { COLORS } = require('../../utils/embedUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -112,7 +113,7 @@ async function handleSetup(interaction) {
         });
 
         const embed = new EmbedBuilder()
-            .setColor(0x9B59B6)
+            .setColor(COLORS.LUNABY)
             .setTitle('🎙️ LVoice đã được thiết lập!')
             .setDescription(`Thành viên có thể vào kênh <#${creatorChannel.id}> để tự tạo kênh voice riêng.`)
             .addFields(
@@ -192,7 +193,7 @@ async function handleConfig(interaction) {
     }
 
     const embed = new EmbedBuilder()
-        .setColor(0x9B59B6)
+        .setColor(COLORS.LUNABY)
         .setTitle('🎙️ Cấu hình LVoice')
         .addFields(
             { name: '🔊 Kênh tạo', value: `<#${config.creatorChannelId}>`, inline: true },

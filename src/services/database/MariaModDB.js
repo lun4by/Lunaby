@@ -1,5 +1,10 @@
 const mariaClient = require('./mariaClient');
 const logger = require('../../utils/logger');
+const { ROLE_LIMITS, ROLE_IMAGE_LIMITS, USER_ROLES } = require('../../config/constants');
+
+const DEFAULT_QUOTA_ROLE = USER_ROLES.USER;
+const DEFAULT_LIMIT_PERIOD = ROLE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
+const DEFAULT_IMAGE_LIMIT_PERIOD = ROLE_IMAGE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
 
 class MariaModDB {
     async initTables() {
@@ -806,7 +811,7 @@ class MariaModDB {
                     user_id, current_usage, total_usage, limit_period,
                     current_image_usage, total_image_usage, image_limit_period,
                     period_start, created_at, updated_at
-                ) VALUES (?, 0, 0, 600, 0, 0, 10, ?, ?, ?)`,
+                ) VALUES (?, 0, 0, ${DEFAULT_LIMIT_PERIOD}, 0, 0, ${DEFAULT_IMAGE_LIMIT_PERIOD}, ?, ?, ?)`,
                 [userId, Date.now(), Date.now(), Date.now()]
             );
 

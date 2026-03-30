@@ -1,6 +1,10 @@
 const mariaClient = require('./mariaClient');
 const logger = require('../../utils/logger');
-const { DEFAULT_QUOTA_ROLES, PERIOD_MS } = require('../../config/constants');
+const { ROLE_LIMITS, ROLE_IMAGE_LIMITS, USER_ROLES } = require('../../config/constants');
+
+const DEFAULT_QUOTA_ROLE = USER_ROLES.USER;
+const DEFAULT_LIMIT_PERIOD = ROLE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
+const DEFAULT_IMAGE_LIMIT_PERIOD = ROLE_IMAGE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
 
 class QuotaDB {
     async initTables() {
@@ -10,10 +14,10 @@ class QuotaDB {
           user_id VARCHAR(32) PRIMARY KEY,
           current_usage INT DEFAULT 0,
           total_usage INT DEFAULT 0,
-          limit_period INT DEFAULT 600,
+          limit_period INT DEFAULT ${DEFAULT_LIMIT_PERIOD},
           current_image_usage INT DEFAULT 0,
           total_image_usage INT DEFAULT 0,
-          image_limit_period INT DEFAULT 10,
+          image_limit_period INT DEFAULT ${DEFAULT_IMAGE_LIMIT_PERIOD},
           period_start BIGINT,
           created_at BIGINT,
           updated_at BIGINT,
@@ -27,7 +31,7 @@ class QuotaDB {
                     ALTER TABLE user_quotas 
                     ADD COLUMN IF NOT EXISTS current_image_usage INT DEFAULT 0, 
                     ADD COLUMN IF NOT EXISTS total_image_usage INT DEFAULT 0, 
-                    ADD COLUMN IF NOT EXISTS image_limit_period INT DEFAULT 10
+                    ADD COLUMN IF NOT EXISTS image_limit_period INT DEFAULT ${DEFAULT_IMAGE_LIMIT_PERIOD}
                 `);
             } catch(e) { /* Ignore error if columns already exist (some MariaDB versions don't support IF NOT EXISTS on ALTER) */ }
             
@@ -52,7 +56,10 @@ class QuotaDB {
                 userId: row.user_id,
                 messageUsage: { current: row.current_usage, total: row.total_usage },
                 imageUsage: { current: row.current_image_usage || 0, total: row.total_image_usage || 0 },
-                limits: { period: row.limit_period, imagePeriod: row.image_limit_period !== undefined ? row.image_limit_period : 10 },
+                limits: {
+                    period: row.limit_period !== undefined ? row.limit_period : DEFAULT_LIMIT_PERIOD,
+                    imagePeriod: row.image_limit_period !== undefined ? row.image_limit_period : DEFAULT_IMAGE_LIMIT_PERIOD
+                },
                 periodStart: Number(row.period_start),
                 createdAt: Number(row.created_at),
                 updatedAt: Number(row.updated_at)

@@ -1,17 +1,19 @@
 const logger = require('../../utils/logger.js');
 const QuotaDB = require('../database/QuotaDB.js');
 const RoleService = require('./RoleService.js');
-const { ROLE_LIMITS, QUOTA_PERIOD_DAYS } = require('../../config/constants.js');
+const { ROLE_LIMITS, ROLE_IMAGE_LIMITS, QUOTA_PERIOD_DAYS, USER_ROLES } = require('../../config/constants.js');
 const DAY_MS = 86400000;
 const PERIOD_MS = QUOTA_PERIOD_DAYS * DAY_MS;
+const DEFAULT_ROLE = USER_ROLES.USER;
+const DEFAULT_MESSAGE_LIMIT = ROLE_LIMITS[DEFAULT_ROLE] ?? 0;
+const DEFAULT_IMAGE_LIMIT = ROLE_IMAGE_LIMITS[DEFAULT_ROLE] ?? 0;
 const LEGACY_ROLE_LIMITS = { user: [10] };
-const LEGACY_ROLE_IMAGE_LIMITS = { user: [10] };
+const LEGACY_ROLE_IMAGE_LIMITS = { pro: [25], user: [10] };
 
 class QuotaService {
   constructor() {
-    this.roleLimits = ROLE_LIMITS;
-    const { ROLE_IMAGE_LIMITS } = require('../../config/constants.js');
-    this.roleImageLimits = ROLE_IMAGE_LIMITS || { owner: -1, admin: -1, pro: 25, user: 10 };
+    this.roleLimits = ROLE_LIMITS || {};
+    this.roleImageLimits = ROLE_IMAGE_LIMITS || {};
     this.ownerId = process.env.OWNER_ID?.trim() || null;
   }
 
@@ -21,8 +23,8 @@ class QuotaService {
       if (existing) return existing;
 
       const role = await RoleService.getUserRole(userId);
-      const limitPeriod = this.roleLimits[role] || 600;
-      const imageLimitPeriod = this.roleImageLimits[role] !== undefined ? this.roleImageLimits[role] : 10;
+      const limitPeriod = this.roleLimits[role] ?? DEFAULT_MESSAGE_LIMIT;
+      const imageLimitPeriod = this.roleImageLimits[role] ?? DEFAULT_IMAGE_LIMIT;
 
       await QuotaDB.createUserQuota(userId, limitPeriod, imageLimitPeriod, Date.now());
 
@@ -226,8 +228,8 @@ class QuotaService {
 
   async syncQuotaForRole(userId, role) {
     try {
-      const newLimit = this.roleLimits[role] ?? 600;
-      const newImageLimit = this.roleImageLimits[role] ?? 10;
+      const newLimit = this.roleLimits[role] ?? DEFAULT_MESSAGE_LIMIT;
+      const newImageLimit = this.roleImageLimits[role] ?? DEFAULT_IMAGE_LIMIT;
       await this.initializeUserMessageData(userId);
       await QuotaDB.setQuotaLimit(userId, newLimit, newImageLimit, Date.now());
       logger.info('QUOTA_SERVICE', `Đã đồng bộ quota cho ${userId}: role=${role}, limit=${newLimit}, imageLimit=${newImageLimit}`);

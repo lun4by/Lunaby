@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBui
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger');
+const { COLORS } = require('../../utils/embedUtils');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -160,7 +161,7 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
 
     const embed = new EmbedBuilder()
         .setTitle('⚙️ Bảng Điều Khiển Server (Dashboard)')
-        .setColor(0x9B59B6)
+        .setColor(COLORS.LUNABY)
         .setTimestamp()
         .setFooter({ text: `Tự động đóng sau 10 phút.` });
 

@@ -6,7 +6,7 @@ const COLORS = {
     SUCCESS: 0x57F287,
     WARNING: 0xFEE75C,
     INFO: 0x5865F2,
-    LUNABY: 0x7289da,
+    LUNABY: 0x1ABC9C,
 };
 
 const STATUS_MAPS = {

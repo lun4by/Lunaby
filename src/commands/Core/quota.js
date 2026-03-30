@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
+const { COLORS } = require('../../utils/embedUtils');
 
 const ROLE_BADGES = {
     owner: '👑 Owner',
@@ -11,8 +12,8 @@ const ROLE_BADGES = {
 const ROLE_COLORS = {
     owner: 0xFFD700,
     admin: 0xE74C3C,
-    pro: 0x9B59B6,
-    user: 0x7289DA
+    pro: COLORS.LUNABY,
+    user: COLORS.LUNABY
 };
 
 function createProgressBar(current, max, length = 10) {
@@ -81,16 +82,14 @@ module.exports = {
             })
             .setDescription(
                 `### ${roleBadge}\n` +
-                `─────────────────────────\n` +
                 `**💬 Lunaby Pro**\n` +
                 `${msgBar}\n` +
                 `${formatQuotaValue(msgCurrent, msgMax)} · Còn **${msgRemainingText}** lượt\n\n` +
                 `**🎨 Lunaby Vision**\n` +
                 `${imgBar}\n` +
                 `${formatQuotaValue(imgCurrent, imgMax)} · Còn **${imgRemainingText}** lượt\n` +
-                `─────────────────────────\n` +
-                `📊 Tổng lượt sử dụng: **${stats.usage.total}** lượt Lunaby Pro · **${stats.imageUsage.total}** lượt Lunaby Vision\n` +
-                `🔄 Làm mới sau **${daysLeft}** ngày · <t:${resetTimestamp}:R>`
+                `Tổng lượt sử dụng: **${stats.usage.total}** lượt Lunaby Pro · **${stats.imageUsage.total}** lượt Lunaby Vision\n` +
+                `Làm mới sau **${daysLeft}** ngày · <t:${resetTimestamp}:R>`
             )
             .setFooter({ text: 'Lunaby · Quota System' })
             .setTimestamp();

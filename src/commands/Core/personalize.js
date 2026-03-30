@@ -15,6 +15,7 @@ const conversationManager = require('../../handlers/conversationManager.js');
 const prompts = require('../../config/prompts.js');
 const { DEFAULT_MODEL } = require('../../config/constants.js');
 const logger = require('../../utils/logger.js');
+const { COLORS } = require('../../utils/embedUtils.js');
 
 const MENU_OPTIONS = [
     { value: 'personal_info', label: 'Personal info & Instructions', description: 'Nghề nghiệp & hướng dẫn tùy chỉnh', emoji: '✏️' },
@@ -102,7 +103,7 @@ function buildMainEmbed(memory) {
     const savedMemory = memory?.privacy?.allowMemoryStorage !== false;
 
     return new EmbedBuilder()
-        .setColor(0x9B59B6)
+        .setColor(COLORS.LUNABY)
         .setTitle('⚙️ Personalization')
         .setDescription('Tùy chỉnh cách Lunaby tương tác với bạn.\nChọn một mục từ menu bên dưới.')
         .addFields(

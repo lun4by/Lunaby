@@ -9,6 +9,7 @@ const {
 const fs = require('fs');
 const path = require('path');
 const logger = require('../../utils/logger');
+const { COLORS } = require('../../utils/embedUtils');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -42,7 +43,7 @@ module.exports = {
         const banner = 'https://cdn.lunie.dev/Lunaby/Lunaby_Help.jpg';
 
         const welcomeEmbed = new EmbedBuilder()
-            .setColor(0x9B59B6)
+            .setColor(COLORS.LUNABY)
             .setTitle('📚 Trợ Giúp - Lunaby')
             .setDescription('Chào mừng bạn đến với hệ thống trợ giúp!\n\n> Chọn một danh mục từ menu bên dưới để xem chi tiết các lệnh.')
             .setImage(banner)
@@ -136,7 +137,7 @@ function buildSelectOptions(categories) {
 
 function buildHelpEmbed(category, visibleCategories, commandsPath) {
     const embed = new EmbedBuilder()
-        .setColor(0x9B59B6)
+        .setColor(COLORS.LUNABY)
         .setTimestamp();
 
     const metadata = getCategoryMetadata(category);

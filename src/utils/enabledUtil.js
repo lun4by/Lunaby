@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const MariaModDB = require('../services/database/MariaModDB');
 const emojis = require('../config/emojis.js');
+const { COLORS } = require('./embedUtils');
 
 const CHECK = emojis.success;
 const CROSS = emojis.error;
@@ -11,7 +12,7 @@ exports.createEmbed = async function (interaction, channel, guildId, channelId) 
 
     const embed = new EmbedBuilder()
         .setAuthor({ name: `Lệnh đang hoạt động tại #${channel.name}` })
-        .setColor(0x9B59B6);
+        .setColor(COLORS.LUNABY);
 
     const allCommands = [...interaction.client.commands.values()].filter(c => c.data.name !== 'disable' && c.data.name !== 'enable');
     const groups = {};

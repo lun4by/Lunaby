@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const PrefixDB = require('../../services/database/PrefixDB');
 const { DEFAULT_PREFIX } = require('../../config/constants');
+const { COLORS } = require('../../utils/embedUtils');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -53,7 +54,7 @@ async function handleView(interaction) {
     const activePrefix = await PrefixDB.resolvePrefix(userId, guildId);
 
     const embed = new EmbedBuilder()
-        .setColor(0x9B59B6)
+        .setColor(COLORS.LUNABY)
         .setTitle('🔧 Cấu hình Prefix')
         .addFields(
             { name: 'Prefix mặc định', value: `\`${DEFAULT_PREFIX}\``, inline: true },

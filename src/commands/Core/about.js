@@ -16,7 +16,6 @@ module.exports = {
 
     async execute(interaction) {
         const embed = createLunabyEmbed()
-            .setColor(0x9B59B6)
             .setAuthor({
                 name: 'Lunaby',
                 iconURL: interaction.client.user.displayAvatarURL(),
