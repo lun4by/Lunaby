@@ -217,7 +217,9 @@ class ConversationService {
         logger.warn("CONVERSATION_SERVICE", "Cannot determine userId, using default");
       }
       const enhancedPrompt = await this.enrichPromptWithMemory(prompt, userId);
-      return await this.processChatCompletion(enhancedPrompt, userId);
+      return await this.processChatCompletion(enhancedPrompt, userId, {
+        clientType: 'discord',
+      });
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error in getCompletion:", error.message);
       return 'Xin lỗi, hệ thống xảy ra lỗi khi xử lý cuộc trò chuyện. Vui lòng thử lại sau.';
@@ -226,7 +228,10 @@ class ConversationService {
 
   async getOneTimeCompletion(prompt, config = {}) {
     try {
-      return await AICore.getOneTimeCompletion(prompt, config);
+      return await AICore.getOneTimeCompletion(prompt, {
+        clientType: 'discord',
+        ...config,
+      });
     } catch (error) {
       logger.error("CONVERSATION_SERVICE", "Error in getOneTimeCompletion:", error.message);
       return null;

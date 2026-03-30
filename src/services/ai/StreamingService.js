@@ -26,10 +26,14 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
 
     const validMessages = Validators.cleanMessages(messages);
     if (!validMessages.length) throw new Error('No valid messages');
+    const requestConfig = { ...config };
+    const clientType = requestConfig.clientType || 'discord';
+    delete requestConfig.clientType;
+    const requestMessages = AICore.prepareMessagesForClient(validMessages, clientType);
 
-    const stream = await client.chat.createStream(validMessages, {
-        max_tokens: config.max_tokens || 2048,
-        ...config
+    const stream = await client.chat.createStream(requestMessages, {
+        max_tokens: requestConfig.max_tokens || 2048,
+        ...requestConfig
     });
 
     let sentMessage = null;

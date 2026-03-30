@@ -103,7 +103,11 @@ async function sendVoiceGreeting(eventType, memberName, voiceChannel) {
         { role: 'user', content: prompt },
     ];
 
-    const result = await AICore.processChatCompletion(messages, { max_tokens: 256, stream: false });
+    const result = await AICore.processChatCompletion(messages, {
+        clientType: 'discord',
+        max_tokens: 256,
+        stream: false,
+    });
 
     if (result?.content) {
         const prefix = await PrefixDB.resolvePrefix(null, voiceChannel.guild.id);

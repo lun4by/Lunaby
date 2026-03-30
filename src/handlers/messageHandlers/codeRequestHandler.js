@@ -67,7 +67,7 @@ async function handleCodeRequest(message, content, ConversationService) {
     ErrorHandler.logError('CODE', 'Code streaming failed, falling back to non-streaming', streamError, 'warn');
 
     try {
-      const result = await AICore.getCodeCompletion(content, message);
+      const result = await AICore.getCodeCompletion(content, { clientType: 'discord' });
       let formattedResponse = result.content || result;
 
       if (!formattedResponse.includes('```')) {
