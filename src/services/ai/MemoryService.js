@@ -43,7 +43,7 @@ class MemoryService {
    */
   _decryptPII(memory) {
     if (!memory) return memory;
-    
+
     if (memory.personalInfo) {
       for (const field of this.sensitiveFields) {
         if (memory.personalInfo[field]) {
@@ -147,7 +147,7 @@ class MemoryService {
   async updateUserMemory(userId, updates) {
     try {
       const collection = await this.getMemoryCollection();
-      
+
       // Mã hóa các trường nhạy cảm trong updates
       const encryptedUpdates = { ...updates };
       for (const key of Object.keys(encryptedUpdates)) {
