@@ -5,15 +5,18 @@ const { DISCORD_MESSAGE_MAX_LENGTH } = require('../../config/constants');
 function splitByLength(text, maxLength) {
     const chunks = [];
     let start = 0;
+
     while (start < text.length) {
         let end = Math.min(start + maxLength, text.length);
         if (end < text.length) {
             while (end > start && text[end] !== ' ' && text[end] !== '\n') end--;
             if (end === start) end = start + maxLength;
         }
+
         chunks.push(text.substring(start, end));
         start = end + (text[end] === ' ' || text[end] === '\n' ? 1 : 0);
     }
+
     return chunks;
 }
 
@@ -24,8 +27,6 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
     const validMessages = Validators.cleanMessages(messages);
     if (!validMessages.length) throw new Error('No valid messages');
 
-    const streamDelay = config.streamDelay || 0;
-
     const stream = await client.chat.createStream(validMessages, {
         max_tokens: config.max_tokens || 2048,
         ...config
@@ -35,7 +36,6 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
     let isEditing = false;
     let pendingAccumulated = null;
 
-    // Hàng đợi hiển thị dựa trên Mutex, ngăn chặn việc chỉnh sửa tin nhắn Discord chồng chéo
     const processDisplayQueue = async () => {
         if (isEditing) return;
         isEditing = true;
@@ -57,39 +57,18 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
             } catch (e) {
                 if (e.code === 10008) sentMessage = null;
             }
-
-            // Khoảng nghỉ nhỏ giữa các lần edit để tránh bị Discord throttle
-            await new Promise(r => setTimeout(r, 100));
         }
 
         isEditing = false;
     };
 
-    // Chế độ đệm (Buffered mode): setInterval xả bộ đệm theo chu kỳ
-    let bufferInterval = null;
-    if (streamDelay > 0) {
-        bufferInterval = setInterval(() => {
-            if (pendingAccumulated !== null) {
-                processDisplayQueue();
-            }
-        }, streamDelay);
-    }
-
     const typingInterval = setInterval(() => channel.sendTyping().catch(() => { }), 5000);
 
     try {
         const fullContent = await stream.process({
-            onContent: async (chunk, accumulated) => {
-                if (streamDelay > 0) {
-                    pendingAccumulated = accumulated;
-
-                    if (!sentMessage) {
-                        processDisplayQueue();
-                    }
-                } else {
-                    pendingAccumulated = accumulated;
-                    processDisplayQueue();
-                }
+            onContent: async (_chunk, accumulated) => {
+                pendingAccumulated = accumulated;
+                processDisplayQueue();
             }
         });
 
@@ -97,11 +76,8 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
             throw new Error('AI returned empty content');
         }
 
-        if (bufferInterval) clearInterval(bufferInterval);
-
-        // Đợi cho đến khi toàn bộ hàng đợi hiển thị (render) hiện tại đã hoàn tất
         while (isEditing) {
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise((resolve) => setImmediate(resolve));
         }
 
         const sendOrReply = (text) => replyToMessage ? replyToMessage.reply(text) : channel.send(text);
@@ -119,13 +95,11 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
 
             for (const chunk of splitByLength(fullContent.substring(DISCORD_MESSAGE_MAX_LENGTH), DISCORD_MESSAGE_MAX_LENGTH)) {
                 await channel.send(chunk);
-                await new Promise(r => setTimeout(r, 100));
             }
         }
 
         return fullContent;
     } finally {
-        if (bufferInterval) clearInterval(bufferInterval);
         clearInterval(typingInterval);
     }
 }

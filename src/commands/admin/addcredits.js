@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
 
@@ -35,22 +34,15 @@ module.exports = {
     try {
       const before = await CreditsService.getUserCredits(targetUser.id);
       const after = await CreditsService.addCredits(targetUser.id, amount);
-
       const actionWord = amount >= 0 ? 'Cộng thêm' : 'Trừ đi';
-      const color = amount >= 0 ? 0x2ECC71 : 0xE74C3C;
 
-      const embed = createLunabyEmbed()
-        .setTitle('Cập nhật Credits thành công')
-        .setColor(color)
-        .setDescription(`${actionWord} **${Math.abs(amount)}** credits cho <@${targetUser.id}>.`)
-        .addFields(
-          { name: 'Người dùng', value: targetUser.tag, inline: true },
-          { name: 'Credits cũ', value: `${before.credits}`, inline: true },
-          { name: 'Credits mới', value: `${after.credits}`, inline: true },
-          { name: `${emojis.success} Thay đổi`, value: `${amount >= 0 ? '+' : ''}${amount}`, inline: true }
-        );
-
-      await interaction.reply({ embeds: [embed] });
+      await interaction.reply(
+        `${emojis.success} ${actionWord} **${Math.abs(amount)}** credits cho <@${targetUser.id}>.\n` +
+        `Người dùng: **${targetUser.tag}**\n` +
+        `Credits cũ: **${before.credits}**\n` +
+        `Credits mới: **${after.credits}**\n` +
+        `Thay đổi: **${amount >= 0 ? '+' : ''}${amount}**`
+      );
     } catch (error) {
       logger.error('ADMIN', 'Error in addcredits command:', error);
       await interaction.reply({

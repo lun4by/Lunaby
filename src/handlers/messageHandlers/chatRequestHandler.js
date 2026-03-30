@@ -2,7 +2,7 @@ const AICore = require('../../services/ai/AICore');
 const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/ai/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
-const { DEFAULT_MODEL, DISCORD_STREAM_DELAY_MS } = require('../../config/constants');
+const { DEFAULT_MODEL } = require('../../config/constants');
 const Validators = require('../../utils/validators');
 const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
@@ -45,9 +45,7 @@ async function handleChatRequest(message, content, ConversationService) {
     }
 
     const replyTarget = message.guild ? message : null;
-    const response = await sendStreamingMessage(message.channel, validMessages, {
-      streamDelay: DISCORD_STREAM_DELAY_MS
-    }, replyTarget);
+    const response = await sendStreamingMessage(message.channel, validMessages, {}, replyTarget);
 
     await conversationManager.addMessage(conversationId, 'assistant', response);
     await QuotaService.recordMessageUsage(globalUserId, 1);
