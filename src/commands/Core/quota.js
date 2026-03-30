@@ -3,10 +3,10 @@ const QuotaService = require('../../services/user/QuotaService');
 const { COLORS } = require('../../utils/embedUtils');
 
 const ROLE_BADGES = {
-    owner: '👑 Owner',
-    admin: '⚡ Admin',
-    pro: '💎 Pro',
-    user: '🌙 User'
+    owner: 'Owner',
+    admin: 'Admin',
+    pro: 'Pro',
+    user: 'User'
 };
 
 const ROLE_COLORS = {
