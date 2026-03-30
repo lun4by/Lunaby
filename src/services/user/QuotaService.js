@@ -17,6 +17,10 @@ class QuotaService {
     this.ownerId = process.env.OWNER_ID?.trim() || null;
   }
 
+  isPrivilegedRole(role) {
+    return role === USER_ROLES.OWNER || role === USER_ROLES.ADMIN;
+  }
+
   async initializeUserMessageData(userId) {
     try {
       const existing = await QuotaDB.getUserQuota(userId);
@@ -60,6 +64,8 @@ class QuotaService {
     const expectedImageLimit = this.roleImageLimits[role];
     const currentLimit = messageData.limits?.period;
     const currentImageLimit = messageData.limits?.imagePeriod;
+    const shouldForceUnlimitedLimit = expectedLimit === -1 && currentLimit !== -1;
+    const shouldForceUnlimitedImageLimit = expectedImageLimit === -1 && currentImageLimit !== -1;
 
     const shouldSyncLimit = expectedLimit !== undefined
       && currentLimit !== expectedLimit
@@ -69,12 +75,12 @@ class QuotaService {
       && currentImageLimit !== expectedImageLimit
       && LEGACY_ROLE_IMAGE_LIMITS[role]?.includes(currentImageLimit);
 
-    if (!shouldSyncLimit && !shouldSyncImageLimit) {
+    if (!shouldSyncLimit && !shouldSyncImageLimit && !shouldForceUnlimitedLimit && !shouldForceUnlimitedImageLimit) {
       return messageData;
     }
 
-    const newLimit = shouldSyncLimit ? expectedLimit : currentLimit;
-    const newImageLimit = shouldSyncImageLimit ? expectedImageLimit : currentImageLimit;
+    const newLimit = (shouldSyncLimit || shouldForceUnlimitedLimit) ? expectedLimit : currentLimit;
+    const newImageLimit = (shouldSyncImageLimit || shouldForceUnlimitedImageLimit) ? expectedImageLimit : currentImageLimit;
 
     await QuotaDB.setQuotaLimit(userId, newLimit, newImageLimit, Date.now());
     logger.info(
@@ -108,7 +114,7 @@ class QuotaService {
 
       const role = await RoleService.getUserRole(userId);
 
-      if (role === 'owner' || role === 'admin' || limits.period === -1) {
+      if (this.isPrivilegedRole(role) || limits.period === -1) {
         return { allowed: true, remaining: -1, role, current: messageUsage.current, limit: -1 };
       }
 
@@ -137,7 +143,7 @@ class QuotaService {
 
       const role = await RoleService.getUserRole(userId);
 
-      if (role === 'owner' || role === 'admin' || limits.imagePeriod === -1) {
+      if (this.isPrivilegedRole(role) || limits.imagePeriod === -1) {
         return { allowed: true, remaining: -1, role, current: imageUsage.current, limit: -1 };
       }
 
@@ -157,6 +163,11 @@ class QuotaService {
 
   async recordMessageUsage(userId, messagesUsed = 1) {
     try {
+      const role = await RoleService.getUserRole(userId);
+      if (this.isPrivilegedRole(role)) {
+        return true;
+      }
+
       await QuotaDB.recordUsage(userId, messagesUsed, Date.now());
       return true;
     } catch (error) {
@@ -171,6 +182,11 @@ class QuotaService {
   
   async recordImageUsage(userId, imagesUsed = 1) {
     try {
+      const role = await RoleService.getUserRole(userId);
+      if (this.isPrivilegedRole(role)) {
+        return true;
+      }
+
       await QuotaDB.recordImageUsage(userId, imagesUsed, Date.now());
       return true;
     } catch (error) {
@@ -196,15 +212,18 @@ class QuotaService {
       const role = await RoleService.getUserRole(userId);
       const periodStart = messageData.periodStart || messageData.createdAt;
       const timeRemaining = PERIOD_MS - (Date.now() - periodStart);
+      const isPrivileged = this.isPrivilegedRole(role);
+      const messageLimit = isPrivileged ? -1 : messageData.limits.period;
+      const imageLimit = isPrivileged ? -1 : messageData.limits.imagePeriod;
 
       return {
         userId, role,
         usage: { current: messageData.messageUsage.current, total: messageData.messageUsage.total },
         imageUsage: { current: messageData.imageUsage.current, total: messageData.imageUsage.total },
-        limits: { period: messageData.limits.period, imagePeriod: messageData.limits.imagePeriod },
+        limits: { period: messageLimit, imagePeriod: imageLimit },
         remaining: {
-          messages: messageData.limits.period === -1 ? -1 : messageData.limits.period - messageData.messageUsage.current,
-          images: messageData.limits.imagePeriod === -1 ? -1 : messageData.limits.imagePeriod - messageData.imageUsage.current,
+          messages: messageLimit === -1 ? -1 : messageLimit - messageData.messageUsage.current,
+          images: imageLimit === -1 ? -1 : imageLimit - messageData.imageUsage.current,
           days: Math.max(0, Math.ceil(timeRemaining / DAY_MS))
         },
         periodStart: messageData.periodStart,
