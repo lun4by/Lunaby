@@ -14,12 +14,20 @@ type DashboardClientProps = {
   initialData: DashboardStats;
 };
 
-const fetcher = (url: string) => fetch(url).then((res) => {
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  const body = await res.json().catch(() => null);
+
   if (!res.ok) {
-    throw new Error("Không thể tải dữ liệu dashboard");
+    throw new Error(
+      body?.message
+      || body?.error
+      || "Không thể tải dữ liệu dashboard"
+    );
   }
-  return res.json();
-});
+
+  return body;
+};
 
 export function DashboardClient({ initialData }: DashboardClientProps) {
   const { data, isValidating, mutate } = useSWR<DashboardStats>("/api/stats", fetcher, {

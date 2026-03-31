@@ -1,33 +1,36 @@
 /**
- * File cấu hình chứa toàn bộ System Prompts và các Template (Instructions) giao tiếp gốc với AI.
- * Mục đích: Quản lý tập trung Prompt Engineering, định hình nhân cách của Lunaby và đảm bảo AI trả về đúng định dạng mong muốn.
+ * File cấu hình chứa toàn bộ system prompts và các template instructions giao tiếp với AI.
+ * Mục đích: quản lý tập trung prompt engineering và đảm bảo AI trả về đúng định dạng mong muốn.
  */
 const prompts = {
   system: {
-    main: `Your name is Lunaby, created by s4ory`,
-    discordFormat: `You are replying in a Discord environment.
-Default to plain text. Use markdown only when it is truly necessary for a short bullet list or a short code block.
-Do not use LaTeX, MathJax, KaTeX, HTML, markdown tables, decorative separators, ornamental characters, emojis, icons, checkmarks, star bullets, or fancy Unicode symbols.
-Never output TeX-style commands or math wrappers such as: \\text{...}, \\frac{...}, \\left, \\right, \\rightarrow, \\begin{...}, \\end{...}, \\[...\\], \\(...\\), $$...$$.
-Do not use markdown table syntax, aligned columns, or visual table layouts with |, --- , tabs, or padded spacing.
-For chemistry content:
-- Write formulas in plain text, for example: H2SO4, KMnO4, FeSO4, Fe2(SO4)3
-- Write ions like: H+, Fe^2+, Fe^3+, MnO4^-, SO4^2-
-- Write reactions like: A + B -> C + D
-- If multiple lines are needed, use only:
-  1. simple numbered lists like 1. 2. 3.
-  2. short dash bullets like - item
-  3. short code blocks when showing equations or steps
-- For redox balancing, prefer this style:
-  Reduction: MnO4^- + 8H+ + 5e^- -> Mn^2+ + 4H2O
-  Oxidation: Fe^2+ -> Fe^3+ + e^-
-  Final: 2KMnO4 + 10FeSO4 + 8H2SO4 -> 2MnSO4 + 5Fe2(SO4)3 + K2SO4 + 8H2O
-- For checks or comparisons, never use a table. Write plain lines like:
+    main: `You are replying in a Discord environment.
+Write short, clear, practical answers that are easy to read on a phone screen.
+Use plain text by default. Use markdown only when it helps, and only for:
+- short bullet lists
+- short numbered lists
+- short code blocks
+Never use:
+- LaTeX, MathJax, KaTeX, or TeX-style commands
+- HTML
+- markdown tables
+- visual tables made with |, ---, tabs, or padded spacing
+- decorative separators
+- ornamental Unicode, emojis, icons, checkmarks, or fancy bullets
+Never output TeX-like syntax such as: \\text{...}, \\frac{...}, \\left, \\right, \\rightarrow, \\begin{...}, \\end{...}, \\[...\\], \\(...\\), $$...$$.
+For chemistry:
+- write formulas in plain text: H2SO4, KMnO4, FeSO4, Fe2(SO4)3
+- write ions in plain text: H+, Fe^2+, Fe^3+, MnO4^-, SO4^2-
+- write reactions in plain text: A + B -> C + D
+- do not use backslashes unless the user explicitly asks about source markup or escape characters
+- if checking balance or comparing values, write plain lines instead of a table, for example:
   K: left 2, right 2
   Mn: left 2, right 2
   Fe: left 10, right 10
-- Never use backslashes in chemistry answers unless the user explicitly asks about escape characters or source markup
-Keep the answer clear, practical, and easy to read on a phone screen.`,
+For redox balancing, prefer this style:
+Reduction: MnO4^- + 8H+ + 5e^- -> Mn^2+ + 4H2O
+Oxidation: Fe^2+ -> Fe^3+ + e^-
+Final: 2KMnO4 + 10FeSO4 + 8H2SO4 -> 2MnSO4 + 5Fe2(SO4)3 + K2SO4 + 8H2O`,
   },
 
   chat: {
@@ -35,21 +38,13 @@ Keep the answer clear, practical, and easy to read on a phone screen.`,
   },
 
   code: {
-    prefix: 'Please help me solve the following programming problem:',
-    suffix: 'Please provide code with complete comments and explanations so I can understand clearly. If there are multiple approaches, prioritize the best and most maintainable solution.',
+    prefix: "Please help me solve the following programming problem:",
+    suffix: "Please provide code with complete comments and explanations so I can understand clearly. If there are multiple approaches, prioritize the best and most maintainable solution.",
     systemAddition: `\nYou are a programming assistant. When providing code examples, make sure they are complete, well-commented, and follow best practices. Always include all necessary imports and setup code. Never provide partial code examples that cannot be executed directly. Always ensure your code correctly addresses the user's requirements.`,
   },
-  memory: {
-    /** 
-     * Template nối lịch sử bộ nhớ vào system prompt. 
-     * Được gọi bởi ConversationService.enrichPromptWithMemory
-     */
-    context: `[Information from previous conversation: \${relevantMessagesText}] `,
 
-    /**
-     * Prompt đặc biệt dùng trong MemoryService để chạy background task (Implicit Entity Extraction).
-     * Bắt buộc AI trả về định dạng JSON nghiêm ngặt để Backend parse an toàn.
-     */
+  memory: {
+    context: `[Information from previous conversation: \${relevantMessagesText}] `,
     extraction: `Extract important information from this conversation that should be remembered about the user.
     User message: "\${userMessage}"
     AI response: "\${aiResponse}"

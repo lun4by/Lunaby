@@ -31,11 +31,6 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
     delete requestConfig.clientType;
     const requestMessages = AICore.prepareMessagesForClient(validMessages, clientType);
 
-    const stream = await client.chat.createStream(requestMessages, {
-        max_tokens: requestConfig.max_tokens || 2048,
-        ...requestConfig
-    });
-
     let sentMessage = null;
     let isEditing = false;
     let pendingAccumulated = null;
@@ -69,12 +64,23 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
     const typingInterval = setInterval(() => channel.sendTyping().catch(() => { }), 5000);
 
     try {
-        const fullContent = await stream.process({
-            onContent: async (_chunk, accumulated) => {
-                pendingAccumulated = accumulated;
-                processDisplayQueue();
-            }
-        });
+        let fullContent = '';
+
+        try {
+            const stream = await client.chat.createStream(requestMessages, {
+                max_tokens: requestConfig.max_tokens || 2048,
+                ...requestConfig
+            });
+
+            fullContent = await stream.process({
+                onContent: async (_chunk, accumulated) => {
+                    pendingAccumulated = accumulated;
+                    processDisplayQueue();
+                }
+            });
+        } catch (error) {
+            throw AICore.normalizeApiError(error);
+        }
 
         if (!fullContent || fullContent.trim().length === 0) {
             throw new Error('AI returned empty content');
