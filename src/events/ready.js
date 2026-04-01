@@ -13,6 +13,19 @@ const BlacklistService = require('../services/user/BlacklistService.js');
 const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
 const { loadLVoiceCache, cleanupZombieChannels } = require('./voiceStateUpdate.js');
 const logger = require('../utils/logger.js');
+const { getSystemMetrics } = require('../utils/systemMetrics.js');
+
+function updatePresence(client, shardId) {
+  const { cpu, ram } = getSystemMetrics();
+
+  client.user.setPresence({
+    activities: [{
+      name: `CPU ${cpu}% | RAM ${ram}% | Shard ${shardId}`,
+      type: 3,
+    }],
+    status: 'online'
+  });
+}
 
 async function startbot(client, loadCommands) {
   client.once('ready', async () => {
@@ -119,14 +132,8 @@ async function startbot(client, loadCommands) {
 
     const shardId = client.shard?.ids[0] ?? 0;
 
-    client.user.setPresence({
-      activities: [{
-        name: 'api.lunie.dev',
-        type: 3,
-        state: `Shard ${shardId}`,
-      }],
-      status: 'online'
-    });
+    updatePresence(client, shardId);
+    setInterval(() => updatePresence(client, shardId), 30000);
 
     logger.info('SYSTEM', `Bot is ready! Logged in as ${client.user.tag} | Shard ${shardId}`);
   });

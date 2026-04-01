@@ -1,7 +1,8 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+﻿const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const packageJson = require('../../../package.json');
 const { formatUptime } = require('../../utils/string');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
+const { getSystemMetrics } = require('../../utils/systemMetrics');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -47,6 +48,7 @@ module.exports = {
 
 function createStatusEmbed({ ping, ws }, client) {
     const color = ping < 200 ? 0x57F287 : ping < 400 ? 0xFEE75C : 0xED4245;
+    const { cpu, ram } = getSystemMetrics();
 
     return createLunabyEmbed()
         .setColor(color)
@@ -54,7 +56,10 @@ function createStatusEmbed({ ping, ws }, client) {
             name: 'Lunaby',
             iconURL: client.user.displayAvatarURL(),
         })
-        .addFields({ name: 'Trạng thái hệ thống', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false })
+        .addFields(
+            { name: 'Trạng thái hệ thống', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false },
+            { name: 'Tài nguyên', value: `> **CPU**: \`${cpu}%\`\n> **RAM**: \`${ram}%\``, inline: false },
+        )
         .setFooter({ text: `Lunaby v${packageJson.version} - ${formatUptime(process.uptime())}` });
 }
 
