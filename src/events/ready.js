@@ -1,3 +1,4 @@
+const { ActivityType } = require('discord.js');
 const mongoClient = require('../services/database/mongoClient.js');
 const mariaClient = require('../services/database/mariaClient.js');
 const MariaBlacklistDB = require('../services/database/MariaBlacklistDB.js');
@@ -15,16 +16,26 @@ const { loadLVoiceCache, cleanupZombieChannels } = require('./voiceStateUpdate.j
 const logger = require('../utils/logger.js');
 const { getSystemMetrics } = require('../utils/systemMetrics.js');
 
-function updatePresence(client, shardId) {
-  const { cpu, ram } = getSystemMetrics();
+async function updatePresence(client, shardId) {
+  if (!client?.isReady?.() || !client.user) {
+    logger.warn('SYSTEM', `Skipped presence update because client is not ready yet | Shard ${shardId}`);
+    return;
+  }
 
-  client.user.setPresence({
-    activities: [{
-      name: `CPU ${cpu}% | RAM ${ram}% | Shard ${shardId}`,
-      type: 3,
-    }],
-    status: 'online'
-  });
+  try {
+    const { cpu, ram } = getSystemMetrics();
+
+    await client.user.setPresence({
+      activities: [{
+        name: `CPU ${cpu}% | RAM ${ram}% | Shard ${shardId}`,
+        type: ActivityType.Watching,
+      }],
+      status: 'online',
+      afk: false,
+    });
+  } catch (error) {
+    logger.error('SYSTEM', `Presence update failed on shard ${shardId}:`, error.message);
+  }
 }
 
 async function startbot(client, loadCommands) {
@@ -37,6 +48,13 @@ async function startbot(client, loadCommands) {
     ███████╗╚██████╔╝██║ ╚████║██║  ██║██████╔╝   ██║   
     ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═════╝    ╚═╝   
     `);
+
+    const shardId = client.shard?.ids[0] ?? 0;
+
+    await updatePresence(client, shardId);
+    setInterval(() => {
+      void updatePresence(client, shardId);
+    }, 30000);
 
     try {
       await mongoClient.connect();
@@ -129,11 +147,6 @@ async function startbot(client, loadCommands) {
     } catch (error) {
       logger.error('SYSTEM', 'lvoice cache load failed:', error.message);
     }
-
-    const shardId = client.shard?.ids[0] ?? 0;
-
-    updatePresence(client, shardId);
-    setInterval(() => updatePresence(client, shardId), 30000);
 
     logger.info('SYSTEM', `Bot is ready! Logged in as ${client.user.tag} | Shard ${shardId}`);
   });
