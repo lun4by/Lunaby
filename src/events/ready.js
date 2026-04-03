@@ -16,6 +16,21 @@ const { loadLVoiceCache, cleanupZombieChannels } = require('./voiceStateUpdate.j
 const logger = require('../utils/logger.js');
 const { getSystemMetrics } = require('../utils/systemMetrics.js');
 
+const presenceIntervalMs = 10 * 1000;
+
+async function runStartupStep(label, task, readyKey = null) {
+  try {
+    return await task();
+  } catch (error) {
+    logger.error('SYSTEM', `${label} failed:`, error.message);
+    return null;
+  } finally {
+    if (readyKey) {
+      initSystem.markReady(readyKey);
+    }
+  }
+}
+
 async function updatePresence(client, shardId) {
   if (!client?.isReady?.() || !client.user) {
     logger.warn('SYSTEM', `Skipped presence update because client is not ready yet | Shard ${shardId}`);
@@ -38,6 +53,82 @@ async function updatePresence(client, shardId) {
   }
 }
 
+function startPresenceUpdater(client, shardId) {
+  void updatePresence(client, shardId);
+
+  const timer = setInterval(() => {
+    void updatePresence(client, shardId);
+  }, presenceIntervalMs);
+
+  timer.unref?.();
+}
+
+async function initializeMongo() {
+  await mongoClient.connect();
+  await storageDB.setupCollections();
+}
+
+async function initializeMaria() {
+  await mariaClient.connect();
+
+  await Promise.all([
+    MariaBlacklistDB.initTables(),
+    PrefixDB.initTables(),
+    MariaModDB.initTables(),
+    QuotaService.initializeCollection(),
+    RoleService.initializeCollection(),
+  ]);
+
+  await MariaBlacklistDB.initializeDefaultBlacklist();
+}
+
+async function loadBotCommands(client, loadCommands) {
+  const commandCount = await loadCommands(client);
+  logger.info('SYSTEM', `Loaded ${commandCount} commands`);
+}
+
+async function warmGuildProfiles(client) {
+  for (const [guildId, guild] of client.guilds.cache) {
+    try {
+      await MariaModDB.getGuildSettings(guildId);
+    } catch (error) {
+      logger.error('SYSTEM', `Guild config error ${guild.name}:`, error.message);
+    }
+  }
+}
+
+async function cleanupBlacklistedGuilds(client) {
+  for (const guild of client.guilds.cache.values()) {
+    const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
+    if (blacklistEntry) {
+      await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+    }
+  }
+}
+
+async function initializeReadyState(client, loadCommands) {
+  await Promise.all([
+    runStartupStep('MongoDB init', initializeMongo, 'mongodb'),
+    runStartupStep('MariaDB init', initializeMaria, 'mariadb'),
+    runStartupStep('Command loading', () => loadBotCommands(client, loadCommands), 'commands'),
+  ]);
+
+  await runStartupStep('JSON generation', () => CommandsJSONService.generateCommandsJSON());
+
+  await Promise.all([
+    runStartupStep('Conversation history init', () => storageDB.initializeConversationHistory(), 'conversationHistory'),
+    runStartupStep('Profile system init', () => storageDB.initializeProfiles(), 'profiles'),
+    runStartupStep('Guild profiles init', () => warmGuildProfiles(client), 'guildProfiles'),
+  ]);
+
+  await runStartupStep('Guild sync', () => syncAllGuilds(client));
+  await runStartupStep('Blacklisted guild cleanup', () => cleanupBlacklistedGuilds(client));
+  await runStartupStep('lvoice cache load', async () => {
+    await loadLVoiceCache();
+    await cleanupZombieChannels(client);
+  });
+}
+
 async function startbot(client, loadCommands) {
   client.once('ready', async () => {
     console.log(`
@@ -51,102 +142,9 @@ async function startbot(client, loadCommands) {
 
     const shardId = client.shard?.ids[0] ?? 0;
 
-    await updatePresence(client, shardId);
-    setInterval(() => {
-      void updatePresence(client, shardId);
-    }, 30000);
+    startPresenceUpdater(client, shardId);
 
-    try {
-      await mongoClient.connect();
-      await storageDB.setupCollections();
-      initSystem.markReady('mongodb');
-    } catch (error) {
-      logger.error('SYSTEM', 'MongoDB init failed:', error.message);
-      initSystem.markReady('mongodb');
-    }
-
-    try {
-      await mariaClient.connect();
-      await MariaBlacklistDB.initTables();
-      await MariaBlacklistDB.initializeDefaultBlacklist();
-      await PrefixDB.initTables();
-      await MariaModDB.initTables();
-      await QuotaService.initializeCollection();
-      await RoleService.initializeCollection();
-      initSystem.markReady('mariadb');
-    } catch (error) {
-      logger.error('SYSTEM', 'MariaDB init failed:', error.message);
-      initSystem.markReady('mariadb');
-    }
-
-    try {
-      await storageDB.initializeConversationHistory();
-      initSystem.markReady('conversationHistory');
-    } catch (error) {
-      logger.error('SYSTEM', 'Conversation history init failed:', error.message);
-      initSystem.markReady('conversationHistory');
-    }
-
-    try {
-      await storageDB.initializeProfiles();
-      initSystem.markReady('profiles');
-    } catch (error) {
-      logger.error('SYSTEM', 'Profile system init failed:', error.message);
-      initSystem.markReady('profiles');
-    }
-
-    try {
-      const commandCount = loadCommands(client);
-      logger.info('SYSTEM', `Loaded ${commandCount} commands`);
-      initSystem.markReady('commands');
-    } catch (error) {
-      logger.error('SYSTEM', 'Command loading failed:', error.message);
-      initSystem.markReady('commands');
-    }
-
-    try {
-      await CommandsJSONService.generateCommandsJSON();
-    } catch (error) {
-      logger.error('SYSTEM', 'JSON generation failed:', error.message);
-    }
-
-    try {
-      for (const [guildId, guild] of client.guilds.cache) {
-        try {
-          await MariaModDB.getGuildSettings(guildId);
-        } catch (err) {
-          logger.error('SYSTEM', `Guild config error ${guild.name}:`, err.message);
-        }
-      }
-      initSystem.markReady('guildProfiles');
-    } catch (error) {
-      logger.error('SYSTEM', 'Guild profiles init failed:', error.message);
-      initSystem.markReady('guildProfiles');
-    }
-
-    try {
-      await syncAllGuilds(client);
-    } catch (error) {
-      logger.error('SYSTEM', 'Guild sync failed:', error.message);
-    }
-
-    try {
-      for (const guild of client.guilds.cache.values()) {
-        const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
-        if (blacklistEntry) {
-          await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
-        }
-      }
-    } catch (error) {
-      logger.error('SYSTEM', 'Blacklisted guild cleanup failed:', error.message);
-    }
-
-    try {
-      await loadLVoiceCache();
-      await cleanupZombieChannels(client);
-    } catch (error) {
-      logger.error('SYSTEM', 'lvoice cache load failed:', error.message);
-    }
+    await initializeReadyState(client, loadCommands);
 
     logger.info('SYSTEM', `Bot is ready! Logged in as ${client.user.tag} | Shard ${shardId}`);
   });
