@@ -18,14 +18,15 @@ async function handleChatRequest(message, content, ConversationService) {
 
     const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
     if (!quotaCheck.allowed) {
-      const embed = createLunabyEmbed()
-        .setTitle(`Hết quyền sử dụng`)
-        .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** Lunaby Pro trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
-        .setColor(0xE74C3C);
-      return message.reply({ embeds: [embed] }).catch(() => { });
+      if (message.t) {
+        return message.reply(message.t('system.quota_exceeded', { limit: quotaCheck.limit })).catch(() => {});
+      }
+      return message.reply(`Hết quyền sử dụng. Bạn đã đạt giới hạn ${quotaCheck.limit} lượt.`).catch(() => {});
     }
 
-    await conversationManager.loadConversationHistory(conversationId, prompts.system.main, DEFAULT_MODEL);
+    const langKey = message.t ? message.t('system.lang_name') : 'Vietnamese';
+    const systemPrompt = prompts.system.main.replace(/\$\{language\}/g, langKey);
+    await conversationManager.loadConversationHistory(conversationId, systemPrompt, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(conversationId);
 
     const enhancedPrompt = `
@@ -58,7 +59,8 @@ async function handleChatRequest(message, content, ConversationService) {
 
       if (!response) {
         logger.error('CHAT', 'ConversationService returned null/undefined');
-        await message.reply('Xin lỗi, tôi không thể xử lý tin nhắn của bạn lúc này.').catch(() => { });
+        const errStr = message.t ? message.t('system.error_occurred') : 'Xin lỗi, tôi không thể xử lý tin nhắn của bạn lúc này.';
+        await message.reply(errStr).catch(() => { });
         return;
       }
 

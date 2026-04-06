@@ -1,10 +1,12 @@
 {
   "system": {
+    "lang_name": "English",
     "language_changed": "Server language has been changed to **English**",
     "language_changed_user": "Personal language has been changed to **English**",
     "no_permission": "You do not have permission to use this command.",
     "error_occurred": "An error occurred while processing the command.",
-    "only_caller_can_use": "Only the user who invoked the command can use these options."
+    "only_caller_can_use": "Only the user who invoked the command can use these options.",
+    "quota_exceeded": "❌ **Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for the current billing cycle.\n> Please upgrade your account or wait for the next cycle to continue using the service."
   },
   "commands": {
     "ping": {
