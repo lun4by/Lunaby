@@ -110,8 +110,7 @@ async function sendVoiceGreeting(eventType, memberName, voiceChannel) {
     });
 
     if (result?.content) {
-        const prefix = await PrefixDB.resolvePrefix(null, voiceChannel.guild.id);
-        const footer = `\n-# Sử dụng: \`${prefix}voicewelcome toggle\` hoặc \`/voicewelcome toggle\` để bật/tắt voice welcome`;
+        const footer = `\n-# Sử dụng: \`/voicewelcome toggle\` để bật/tắt voice welcome`;
         await voiceChannel.send(result.content + footer);
     }
 
