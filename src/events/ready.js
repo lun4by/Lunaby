@@ -112,6 +112,7 @@ async function initializeReadyState(client, loadCommands) {
     runStartupStep('MongoDB init', initializeMongo, 'mongodb'),
     runStartupStep('MariaDB init', initializeMaria, 'mariadb'),
     runStartupStep('Command loading', () => loadBotCommands(client, loadCommands), 'commands'),
+    runStartupStep('i18n init', () => require('../services/i18n/i18nManager').init(), 'i18n'),
   ]);
 
   await runStartupStep('JSON generation', () => CommandsJSONService.generateCommandsJSON());

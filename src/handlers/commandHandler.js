@@ -8,6 +8,7 @@ const RoleService = require('../services/user/RoleService');
 const CooldownService = require('../services/user/CooldownService');
 const logger = require('../utils/logger.js');
 const emojis = require('../config/emojis');
+const i18nManager = require('../services/i18n/i18nManager');
 
 let commandsJsonCache = null;
 
@@ -87,6 +88,18 @@ const handleCommand = async (interaction, client) => {
   }
 
   try {
+    let locale = 'vi';
+    if (interaction.guildId) {
+        const gSettings = await MariaModDB.getGuildSettings(interaction.guildId);
+        locale = gSettings?.language || 'vi';
+    }
+    const uProfile = await MariaModDB.getUserProfile(interaction.user.id);
+    if (uProfile && uProfile.language) {
+        locale = uProfile.language;
+    }
+
+    interaction.t = (key, options) => i18nManager.t(key, locale, options);
+
     if (interaction.guildId) {
       const isDisabled = await MariaModDB.isCommandDisabled(interaction.guildId, interaction.channelId, interaction.commandName);
       if (isDisabled) {

@@ -65,6 +65,7 @@ class MariaModDB {
           level_up_notifications BOOLEAN DEFAULT TRUE,
           use_embeds BOOLEAN DEFAULT TRUE,
           voice_toggle_enabled BOOLEAN DEFAULT FALSE,
+          language VARCHAR(10) DEFAULT 'vi',
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
@@ -125,6 +126,7 @@ class MariaModDB {
           social JSON DEFAULT ('{}'),
           cosmetics JSON DEFAULT ('{}'),
           extra_data JSON DEFAULT ('{}'),
+          language VARCHAR(10) DEFAULT NULL,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
@@ -170,6 +172,8 @@ class MariaModDB {
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS voice_toggle_enabled BOOLEAN DEFAULT FALSE`);
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS level_up_channel VARCHAR(32) DEFAULT NULL`);
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS vote_log_channel VARCHAR(32) DEFAULT NULL`);
+                await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT 'vi'`);
+                await mariaClient.query(`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT NULL`);
             } catch (e) {
             }
 
@@ -398,6 +402,7 @@ class MariaModDB {
                 roles: { muted: r.muted_role },
                 channels: { suggest: r.suggest_channel, voteLog: r.vote_log_channel },
                 settings: { levelUpNotifications: !!r.level_up_notifications, levelUpChannel: r.level_up_channel, useEmbeds: !!r.use_embeds },
+                language: r.language || 'vi',
             };
         } catch (error) {
             logger.error('MARIADB', 'Error getting guild settings:', error);
@@ -418,6 +423,7 @@ class MariaModDB {
             roles: { muted: null },
             channels: { suggest: null, voteLog: null },
             settings: { levelUpNotifications: true, levelUpChannel: null, useEmbeds: true },
+            language: 'vi',
         };
     }
 
@@ -440,6 +446,7 @@ class MariaModDB {
                 'roles.muted': 'muted_role',
                 'channels.suggest': 'suggest_channel',
                 'channels.voteLog': 'vote_log_channel',
+                'language': 'language',
             };
 
             const sets = [];
@@ -636,7 +643,7 @@ class MariaModDB {
             const rows = await mariaClient.query('SELECT * FROM user_profiles WHERE user_id = ?', [userId]);
             if (rows.length === 0) {
                 await mariaClient.query('INSERT IGNORE INTO user_profiles (user_id) VALUES (?)', [userId]);
-                return { user_id: userId, global_xp: 0, global_level: 1, bio: null, color: null, background: null, inventory: null, badges: null, social: null, cosmetics: null, extra_data: null };
+                return { user_id: userId, global_xp: 0, global_level: 1, bio: null, color: null, background: null, inventory: null, badges: null, social: null, cosmetics: null, extra_data: null, language: null };
             }
             return rows[0];
         } catch (error) {

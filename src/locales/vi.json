@@ -1,0 +1,17 @@
+{
+  "system": {
+    "language_changed": "Đã đổi ngôn ngữ máy chủ thành **Tiếng Việt**",
+    "language_changed_user": "Đã đổi ngôn ngữ cá nhân thành **Tiếng Việt**",
+    "no_permission": "Bạn không có quyền sử dụng lệnh này.",
+    "error_occurred": "Đã xảy ra lỗi trong quá trình xử lý lệnh.",
+    "only_caller_can_use": "Chỉ người đã gọi lệnh mới được sử dụng tùy chọn này."
+  },
+  "commands": {
+    "ping": {
+      "desc": "Kiểm tra độ trễ và trạng thái kết nối của bot",
+      "system_status": "Trạng thái hệ thống",
+      "resources": "Tài nguyên",
+      "refresh": "Làm mới"
+    }
+  }
+}

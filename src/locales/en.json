@@ -1,0 +1,17 @@
+{
+  "system": {
+    "language_changed": "Server language has been changed to **English**",
+    "language_changed_user": "Personal language has been changed to **English**",
+    "no_permission": "You do not have permission to use this command.",
+    "error_occurred": "An error occurred while processing the command.",
+    "only_caller_can_use": "Only the user who invoked the command can use these options."
+  },
+  "commands": {
+    "ping": {
+      "desc": "Check latency and connection status of the bot",
+      "system_status": "System Status",
+      "resources": "Resources",
+      "refresh": "Refresh"
+    }
+  }
+}

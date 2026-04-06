@@ -10,11 +10,24 @@ const {
   shouldBlockUser,
 } = require("../utils/blacklistUtils");
 const logger = require("../utils/logger.js");
+const i18nManager = require('../services/i18n/i18nManager');
+const MariaModDB = require("../services/database/MariaModDB");
 
 function setupMessageCreateEvent(client) {
   client.on(Events.MessageCreate, async (message) => {
     try {
       if (message.author.bot) return;
+
+      let locale = 'vi';
+      if (message.guildId) {
+          const gSettings = await MariaModDB.getGuildSettings(message.guildId);
+          locale = gSettings?.language || 'vi';
+      }
+      const uProfile = await MariaModDB.getUserProfile(message.author.id);
+      if (uProfile && uProfile.language) {
+          locale = uProfile.language;
+      }
+      message.t = (key, options) => i18nManager.t(key, locale, options);
 
       const blockedGuild = message.guild ? await shouldBlockGuild(message.guild) : null;
       if (blockedGuild) {
@@ -31,7 +44,6 @@ function setupMessageCreateEvent(client) {
       const xpResult = await XPService.addXP(message);
       if (xpResult && xpResult.leveledUp) {
         try {
-          const MariaModDB = require("../services/database/MariaModDB");
           const settings = await MariaModDB.getGuildSettings(message.guild.id);
 
           if (settings?.settings?.levelUpChannel && settings?.settings?.levelUpNotifications) {
