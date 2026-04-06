@@ -20,7 +20,7 @@
     "discord.js": "^14.26.2",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
-    "lunaby-canvas": "file:../lunaby-canvas",
+    "lunaby-canvas": "file:../Lunaby-canvas",
     "lunaby-sdk": "^2.1.1",
     "mariadb": "^3.5.1",
     "mongodb": "^7.1.0",
