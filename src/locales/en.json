@@ -60,6 +60,24 @@
       "remaining": "**{{count}}** uses left",
       "total_usage": "Total usage:",
       "reset_in": "Resets in **{{days}}** days"
+    },
+    "prefix": {
+      "desc": "Manage bot prefix",
+      "title": "🔧 Prefix Configuration",
+      "default": "Default prefix",
+      "server": "Server prefix",
+      "personal": "Personal prefix",
+      "active": "Currently active",
+      "not_set": "*Not set*",
+      "priority": "Priority: Personal > Server > Default",
+      "need_manage_server": "You need **Manage Server** permission to change server prefix!",
+      "server_only": "This command can only be used in a server! Use `/prefix user` to set a personal default.",
+      "max_length": "Prefix cannot exceed 10 characters!",
+      "save_error": "Could not save prefix. Please try again later.",
+      "server_changed": "Server prefix has been changed to `{{prefix}}`",
+      "personal_changed": "Your personal prefix has been changed to `{{prefix}}`",
+      "reset_all": "Reset server and personal prefix to default `{{prefix}}`",
+      "reset_personal": "Reset personal prefix to default `{{prefix}}`"
     }
   }
 }

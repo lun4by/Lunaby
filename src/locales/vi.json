@@ -60,6 +60,24 @@
       "remaining": "Còn **{{count}}** lượt",
       "total_usage": "Tổng lượt sử dụng:",
       "reset_in": "Làm mới sau **{{days}}** ngày"
+    },
+    "prefix": {
+      "desc": "Quản lý prefix",
+      "title": "🔧 Cấu hình Prefix",
+      "default": "Prefix mặc định",
+      "server": "Prefix server",
+      "personal": "Prefix cá nhân",
+      "active": "Đang sử dụng",
+      "not_set": "*Chưa đặt*",
+      "priority": "Ưu tiên: Cá nhân > Server > Mặc định",
+      "need_manage_server": "Bạn cần quyền **Manage Server** để đổi prefix server!",
+      "server_only": "Lệnh này chỉ dùng được trong server! Dùng `/prefix user` để đặt prefix cá nhân.",
+      "max_length": "Prefix không được dài quá 10 ký tự!",
+      "save_error": "Không thể lưu prefix. Vui lòng thử lại sau.",
+      "server_changed": "Prefix server đã được đổi thành `{{prefix}}`",
+      "personal_changed": "Prefix cá nhân của bạn đã được đổi thành `{{prefix}}`",
+      "reset_all": "Đã reset prefix server và cá nhân về mặc định `{{prefix}}`",
+      "reset_personal": "Đã reset prefix cá nhân về mặc định `{{prefix}}`"
     }
   }
 }
