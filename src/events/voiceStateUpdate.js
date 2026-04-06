@@ -7,6 +7,7 @@ const logger = require('../utils/logger.js');
 
 const creatorChannels = new Map();
 const activeVoiceChannels = new Map();
+const userVoiceCooldowns = new Map();
 
 /**
  * Load cache từ DB khi bot khởi động
@@ -122,6 +123,30 @@ async function handleVoiceMasterJoin(newState, member) {
     if (!creatorConfig) return;
 
     const guild = newState.guild;
+    const now = Date.now();
+    const COOLDOWN_MS = 3000;
+    const lastCreated = userVoiceCooldowns.get(member.id) || 0;
+
+    if (now - lastCreated < COOLDOWN_MS) {
+        const timeLeft = COOLDOWN_MS - (now - lastCreated);
+        try {
+            await member.send({
+                content: `⏳ Bạn thao tác quá nhanh! Vui lòng giữ nguyên ở kênh Voice trong **${(timeLeft / 1000).toFixed(1)}s** nữa, hệ thống sẽ tự động tạo phòng cho bạn.`
+            }).catch(() => {}); // Bỏ qua lỗi nếu user chặn tin nhắn rác (DMs)
+            
+            await new Promise(resolve => setTimeout(resolve, timeLeft));
+
+            const currentChannelId = member.voice?.channelId;
+            if (currentChannelId !== newState.channelId) {
+                return; // User escaped before cooldown finished
+            }
+        } catch (error) {
+            await new Promise(resolve => setTimeout(resolve, timeLeft));
+            if (member.voice?.channelId !== newState.channelId) return;
+        }
+    }
+
+    userVoiceCooldowns.set(member.id, Date.now());
 
     try {
         // Tạo tên kênh từ template
