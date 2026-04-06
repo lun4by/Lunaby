@@ -75,9 +75,71 @@
       "max_length": "Prefix cannot exceed 10 characters!",
       "save_error": "Could not save prefix. Please try again later.",
       "server_changed": "Server prefix has been changed to `{{prefix}}`",
-      "personal_changed": "Your personal prefix has been changed to `{{prefix}}`",
       "reset_all": "Reset server and personal prefix to default `{{prefix}}`",
       "reset_personal": "Reset personal prefix to default `{{prefix}}`"
+    },
+    "disable": {
+      "desc": "Disable commands in channel",
+      "all_success": "All commands have been **disabled** in <#{{channelId}}>!",
+      "invalid_cmds": "No valid commands found to disable."
+    },
+    "enable": {
+      "desc": "Enable commands in channel",
+      "all_success": "All commands have been **enabled** in <#{{channelId}}>!",
+      "invalid_cmds": "No valid commands found to enable."
+    },
+    "enabledUtil": {
+      "title": "Active commands in #{{channelName}}",
+      "other_cmds": "Other Commands"
+    },
+    "levelup": {
+      "desc": "Setup user level up notifications",
+      "usage": "Usage:\n- Enable: `{{prefix}}levelup set #channel`\n- Disable: `{{prefix}}levelup disable`",
+      "disable_success": "Level up notifications have been disabled.",
+      "no_channel": "Please mention a valid channel.\nExample: `{{prefix}}levelup set #bot-chat`",
+      "setup_success": "Level up notifications have been set up in <#{{channelId}}>."
+    },
+    "voicewelcome": {
+      "desc": "Configure voice channel greeting/goodbye toggle",
+      "usage": "Please use: `/voicewelcome toggle` or `{{prefix}}voicewelcome toggle`",
+      "enabled": "**Voice Toggle is now enabled!**\nLunaby will greet/say goodbye when members join/leave voice channels.",
+      "disabled": "**Voice Toggle is now disabled!**\nLunaby will no longer announce voice channel joins/leaves."
+    },
+    "lvoice": {
+      "desc": "Manage temporary voice channel system (LunabyVC)",
+      "need_perm": "You need **Manage Channels** permission to use this command!",
+      "invalid_subcmd": "Invalid subcommand! Use: `/lvoice setup`, `/lvoice disable`, `/lvoice config`",
+      "already_setup": "LVoice is already set up! Use `/lvoice disable` to turn it off before setting up again.",
+      "setup_title": "🎙️ LVoice has been set up!",
+      "setup_desc": "Members can join <#{{creatorId}}> to dynamically create their own voice channels.",
+      "category_field": "📁 Category",
+      "creator_field": "🔊 Creator Channel",
+      "template_field": "📝 Name Template",
+      "setup_footer": "Channels will be automatically deleted when empty.",
+      "setup_error": "An error occurred while setting up LVoice: {{error}}",
+      "not_setup": "LVoice has not been set up in this server!",
+      "disable_success": "Successfully disabled LVoice!",
+      "disable_error": "An error occurred while disabling LVoice: {{error}}",
+      "config_title": "🎙️ LVoice Configuration",
+      "limit_field": "👥 User Limit",
+      "bitrate_field": "🔈 Bitrate",
+      "no_limit": "Unlimited"
+    },
+    "votelog": {
+      "desc": "Setup Top.gg vote notification channel",
+      "usage": "Usage:\n- Setup: `{{prefix}}votelog set #channel`\n- Disable: `{{prefix}}votelog disable`\n- Status: `{{prefix}}votelog status`",
+      "disable_success": "Top.gg vote notifications have been disabled.",
+      "status_setup": "Vote logs are being sent to <#{{channelId}}>",
+      "status_not_setup": "Vote log has not been set up.",
+      "no_channel": "Please mention a valid channel.\nExample: `{{prefix}}votelog set #vote-logs`",
+      "setup_success": "Vote notification channel has been set to <#{{channelId}}>."
+    },
+    "welcome": {
+      "desc": "Setup welcome notifications",
+      "usage": "Usage:\n- Setup: `{{prefix}}welcome set #channel [message]`\n- Disable: `{{prefix}}welcome disable`",
+      "disable_success": "Welcome notifications have been disabled.",
+      "no_channel": "Please provide a valid channel and message.\nExample: `{{prefix}}welcome set #welcome Welcome {user} to {server}!`",
+      "setup_success": "Welcome notification channel set to <#{{channelId}}>.\nMessage: `{{message}}`"
     }
   }
 }

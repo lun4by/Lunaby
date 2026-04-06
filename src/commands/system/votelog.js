@@ -37,9 +37,9 @@ module.exports = {
 
         if (!subCommand) {
             const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
             return (interaction.message || interaction).reply({
-                content: `Cách dùng:\n- Bật: \`${prefix}votelog set #channel\`\n- Tắt: \`${prefix}votelog disable\`\n- Xem trạng thái: \`${prefix}votelog status\``
+                content: interaction.t('commands.votelog.usage', { prefix })
             });
         }
 
@@ -55,7 +55,7 @@ module.exports = {
                 await MariaModDB.updateGuildSettings(guildId, {
                     'channels.voteLog': null
                 });
-                return replyFunc({ content: `${emojis.success} Đã tắt thông báo vote Top.gg.` });
+                return replyFunc({ content: `${emojis.success} ${interaction.t('commands.votelog.disable_success')}` });
             }
 
             if (subCommand === 'status') {
@@ -63,9 +63,9 @@ module.exports = {
                 const channelId = settings.channels?.voteLog;
 
                 if (channelId) {
-                    return replyFunc({ content: `${emojis.info} Vote log đang được gửi tại <#${channelId}>` });
+                    return replyFunc({ content: `${emojis.info} ${interaction.t('commands.votelog.status_setup', { channelId })}` });
                 } else {
-                    return replyFunc({ content: `${emojis.info} Vote log chưa được thiết lập.` });
+                    return replyFunc({ content: `${emojis.info} ${interaction.t('commands.votelog.status_not_setup')}` });
                 }
             }
 
@@ -80,9 +80,9 @@ module.exports = {
 
                 if (!channel) {
                     const PrefixDB = require('../../services/database/PrefixDB');
-                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
                     return replyFunc({
-                        content: `Vui lòng cung cấp kênh hợp lệ.\nVí dụ: \`${prefix}votelog set #vote-logs\``,
+                        content: interaction.t('commands.votelog.no_channel', { prefix }),
                         ephemeral: true
                     });
                 }
@@ -92,12 +92,12 @@ module.exports = {
                 });
 
                 return replyFunc({
-                    content: `${emojis.success} Đã thiết lập kênh thông báo vote tại <#${channel.id}>.`
+                    content: `${emojis.success} ${interaction.t('commands.votelog.setup_success', { channelId: channel.id })}`
                 });
             }
         } catch (error) {
             logger.error('SYSTEM', 'Error setting vote log:', error);
-            return replyFunc({ content: `${emojis.error} Đã có lỗi xảy ra khi lưu thiết lập vote log.`, ephemeral: true });
+            return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     }
 };

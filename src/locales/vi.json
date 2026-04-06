@@ -75,9 +75,71 @@
       "max_length": "Prefix không được dài quá 10 ký tự!",
       "save_error": "Không thể lưu prefix. Vui lòng thử lại sau.",
       "server_changed": "Prefix server đã được đổi thành `{{prefix}}`",
-      "personal_changed": "Prefix cá nhân của bạn đã được đổi thành `{{prefix}}`",
       "reset_all": "Đã reset prefix server và cá nhân về mặc định `{{prefix}}`",
       "reset_personal": "Đã reset prefix cá nhân về mặc định `{{prefix}}`"
+    },
+    "disable": {
+      "desc": "Tắt lệnh trong kênh",
+      "all_success": "Tất cả lệnh đã bị **tắt** trong <#{{channelId}}>!",
+      "invalid_cmds": "Không tìm thấy lệnh hợp lệ nào để tắt."
+    },
+    "enable": {
+      "desc": "Bật lệnh trong kênh",
+      "all_success": "Tất cả lệnh đã được **bật** trong <#{{channelId}}>!",
+      "invalid_cmds": "Không tìm thấy lệnh hợp lệ nào để bật."
+    },
+    "enabledUtil": {
+      "title": "Lệnh đang hoạt động tại #{{channelName}}",
+      "other_cmds": "Các Lệnh Khác"
+    },
+    "levelup": {
+      "desc": "Cài đặt thông báo người dùng thăng cấp (Level Up)",
+      "usage": "Cách dùng:\n- Bật hiện kênh: `{{prefix}}levelup set #channel`\n- Tắt thông báo: `{{prefix}}levelup disable`",
+      "disable_success": "Đã tắt chức năng thông báo chúc mừng thăng cấp.",
+      "no_channel": "Vui lòng tag kênh hợp lệ.\nVí dụ: `{{prefix}}levelup set #bot-chat`",
+      "setup_success": "Đã thiết lập thông báo chúc mừng thăng cấp tại kênh <#{{channelId}}>."
+    },
+    "voicewelcome": {
+      "desc": "Cấu hình tính năng chào/tạm biệt khi vào/rời kênh voice",
+      "usage": "Vui lòng dùng: `/voicewelcome toggle` hoặc `{{prefix}}voicewelcome toggle`",
+      "enabled": "**Voice Toggle đã bật!**\nLunaby sẽ chào/tạm biệt thành viên khi vào/rời kênh voice.",
+      "disabled": "**Voice Toggle đã tắt!**\nLunaby sẽ không còn chào/tạm biệt khi vào/rời kênh voice nữa."
+    },
+    "lvoice": {
+      "desc": "Quản lý hệ thống kênh voice tạm (LunabyVC)",
+      "need_perm": "Bạn cần quyền **Manage Channels** để sử dụng lệnh này!",
+      "invalid_subcmd": "Subcommand không hợp lệ! Dùng: `/lvoice setup`, `/lvoice disable`, `/lvoice config`",
+      "already_setup": "LVoice đã được thiết lập rồi! Dùng `/lvoice disable` để tắt trước khi setup lại.",
+      "setup_title": "🎙️ LVoice đã được thiết lập!",
+      "setup_desc": "Thành viên có thể vào kênh <#{{creatorId}}> để tự tạo kênh voice riêng.",
+      "category_field": "📁 Category",
+      "creator_field": "🔊 Kênh tạo",
+      "template_field": "📝 Template tên",
+      "setup_footer": "Kênh sẽ tự xóa khi không còn ai bên trong.",
+      "setup_error": "Đã xảy ra lỗi khi thiết lập LVoice: {{error}}",
+      "not_setup": "LVoice chưa được thiết lập trong server này!",
+      "disable_success": "Đã tắt LVoice thành công!",
+      "disable_error": "Đã xảy ra lỗi khi tắt LVoice: {{error}}",
+      "config_title": "🎙️ Cấu hình LVoice",
+      "limit_field": "👥 Giới hạn",
+      "bitrate_field": "🔈 Bitrate",
+      "no_limit": "Không giới hạn"
+    },
+    "votelog": {
+      "desc": "Cài đặt kênh thông báo khi có người vote bot trên Top.gg",
+      "usage": "Cách dùng:\n- Bật: `{{prefix}}votelog set #channel`\n- Tắt: `{{prefix}}votelog disable`\n- Xem trạng thái: `{{prefix}}votelog status`",
+      "disable_success": "Đã tắt thông báo vote Top.gg.",
+      "status_setup": "Vote log đang được gửi tại <#{{channelId}}>",
+      "status_not_setup": "Vote log chưa được thiết lập.",
+      "no_channel": "Vui lòng cung cấp kênh hợp lệ.\nVí dụ: `{{prefix}}votelog set #vote-logs`",
+      "setup_success": "Đã thiết lập kênh thông báo vote tại <#{{channelId}}>."
+    },
+    "welcome": {
+      "desc": "Cài đặt thông báo chào mừng",
+      "usage": "Cách dùng:\n- Bật: `{{prefix}}welcome set #channel [tin nhắn]`\n- Tắt: `{{prefix}}welcome disable`",
+      "disable_success": "Đã tắt tính năng thông báo chào mừng thành viên mới.",
+      "no_channel": "Vui lòng cung cấp kênh và lời chào mừng hợp lệ.\nVí dụ: `{{prefix}}welcome set #welcome Chào mừng {user} đến với {server}!`",
+      "setup_success": "Đã thiết lập thành công thông báo chào mừng tại kênh <#{{channelId}}>.\nNội dung: `{{message}}`"
     }
   }
 }
