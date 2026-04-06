@@ -6,16 +6,30 @@ async function handleConsentInteraction(interaction) {
   if (!interaction.isButton()) return;
 
   const { customId, user } = interaction;
-  const userId = user.id;
+
+  // Lấy userId từ customId: consent_accept_{userId} hoặc consent_decline_{userId}
+  const parts = customId.split('_');
+  const targetUserId = parts[2]; // userId được nhúng trong customId
+  const action = parts[1]; // accept hoặc decline
+
+  if (!targetUserId) return;
+
+  // Chặn người khác bấm consent của người khác
+  if (user.id !== targetUserId) {
+    return interaction.reply({
+      content: '❌ Bạn không thể thao tác consent của người khác.',
+      ephemeral: true
+    });
+  }
 
   try {
-    if (customId === 'consent_accept') {
-      await consentService.handleConsentAccept(interaction, userId);
-    } else if (customId === 'consent_decline') {
-      await consentService.handleConsentDecline(interaction, userId);
+    if (action === 'accept') {
+      await consentService.handleConsentAccept(interaction, targetUserId);
+    } else if (action === 'decline') {
+      await consentService.handleConsentDecline(interaction, targetUserId);
     }
   } catch (error) {
-    logger.error('CONSENT_HANDLER', `Lỗi khi xử lý consent interaction cho user ${userId}:`, error);
+    logger.error('CONSENT_HANDLER', `Lỗi khi xử lý consent interaction cho user ${targetUserId}:`, error);
     const errPayload = { content: 'Có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại sau!', ephemeral: true };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)

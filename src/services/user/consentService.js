@@ -38,11 +38,11 @@ class ConsentService {
     const row = new ActionRowBuilder()
       .addComponents(
         new ButtonBuilder()
-          .setCustomId('consent_accept')
+          .setCustomId(`consent_accept_${user.id}`)
           .setLabel('Chấp thuận')
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
-          .setCustomId('consent_decline')
+          .setCustomId(`consent_decline_${user.id}`)
           .setLabel('Từ chối')
           .setStyle(ButtonStyle.Danger)
       );

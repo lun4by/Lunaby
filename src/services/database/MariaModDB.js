@@ -169,6 +169,7 @@ class MariaModDB {
             try {
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS voice_toggle_enabled BOOLEAN DEFAULT FALSE`);
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS level_up_channel VARCHAR(32) DEFAULT NULL`);
+                await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS vote_log_channel VARCHAR(32) DEFAULT NULL`);
             } catch (e) {
             }
 
@@ -395,7 +396,7 @@ class MariaModDB {
                 },
                 voiceToggle: { isEnabled: !!r.voice_toggle_enabled },
                 roles: { muted: r.muted_role },
-                channels: { suggest: r.suggest_channel },
+                channels: { suggest: r.suggest_channel, voteLog: r.vote_log_channel },
                 settings: { levelUpNotifications: !!r.level_up_notifications, levelUpChannel: r.level_up_channel, useEmbeds: !!r.use_embeds },
             };
         } catch (error) {
@@ -415,7 +416,7 @@ class MariaModDB {
             },
             voiceToggle: { isEnabled: false },
             roles: { muted: null },
-            channels: { suggest: null },
+            channels: { suggest: null, voteLog: null },
             settings: { levelUpNotifications: true, levelUpChannel: null, useEmbeds: true },
         };
     }
@@ -438,6 +439,7 @@ class MariaModDB {
                 'voiceToggle.isEnabled': 'voice_toggle_enabled',
                 'roles.muted': 'muted_role',
                 'channels.suggest': 'suggest_channel',
+                'channels.voteLog': 'vote_log_channel',
             };
 
             const sets = [];

@@ -15,6 +15,7 @@ const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
 const { loadLVoiceCache, cleanupZombieChannels } = require('./voiceStateUpdate.js');
 const logger = require('../utils/logger.js');
 const { getSystemMetrics } = require('../utils/systemMetrics.js');
+const { initializeTopgg } = require('../services/api/topggService.js');
 
 const presenceIntervalMs = 10 * 1000;
 
@@ -127,6 +128,7 @@ async function initializeReadyState(client, loadCommands) {
     await loadLVoiceCache();
     await cleanupZombieChannels(client);
   });
+  await runStartupStep('Top.gg init', () => initializeTopgg(client));
 }
 
 async function startbot(client, loadCommands) {

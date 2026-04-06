@@ -39,6 +39,9 @@ temp/
 .DS_Store
 Thumbs.db
 
+# SSL certificates
+ssl/
+
 # Thêm MAL Client ID vào gitignore
 mal_config.json
 
