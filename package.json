@@ -1,6 +1,6 @@
 {
   "name": "lunaby",
-  "version": "2.1.10-native",
+  "version": "2.1.12-native",
   "description": "Bot Discord hỗ trợ trò chuyện AI và tạo hình ảnh, phiên bản native chỉ dùng cho model Lunaby",
   "main": "src/index.js",
   "scripts": {
@@ -16,12 +16,15 @@
   },
   "dependencies": {
     "@gradio/client": "^2.1.0",
-    "discord.js": "^14.25.1",
+    "@top-gg/sdk": "^3.1.6",
+    "discord.js": "^14.26.2",
     "dotenv": "^17.3.1",
+    "express": "^5.2.1",
     "lunaby-canvas": "file:../lunaby-canvas",
     "lunaby-sdk": "^2.1.1",
     "mariadb": "^3.5.1",
-    "mongodb": "^7.1.0"
+    "mongodb": "^7.1.0",
+    "topgg-autoposter": "^2.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
