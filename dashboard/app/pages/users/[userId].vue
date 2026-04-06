@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 const route = useRoute()
 const dashboardStore = useDashboardStore()
 const { userPersonalization, saving, loading } = storeToRefs(dashboardStore)
+const description = computed(() => `user_profiles.extra_data.personalInfo and privacy for userId: ${route.params.userId}`)
 
 const form = reactive({
   occupation: '',
@@ -47,7 +48,7 @@ async function save() {
   <div class="space-y-6">
     <SectionCard
       title="User personalization"
-      :description="`user_profiles.extra_data.personalInfo` và `privacy` cho userId: `${route.params.userId}`"
+      :description="description"
       tone="hero"
     >
       <div v-if="loading" class="text-sm text-stone-600">Loading user data...</div>

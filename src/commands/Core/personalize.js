@@ -18,11 +18,11 @@ const logger = require('../../utils/logger.js');
 const { COLORS } = require('../../utils/embedUtils.js');
 
 const MENU_OPTIONS = [
-    { value: 'personal_info', label: 'Personal info & Instructions', description: 'Nghề nghiệp & hướng dẫn tùy chỉnh', emoji: '✏️' },
-    { value: 'toggle_search', label: 'Reference search history', description: 'Bật/tắt tham chiếu lịch sử tìm kiếm', emoji: '🔍' },
-    { value: 'toggle_memory', label: 'Reference saved memories', description: 'Bật/tắt lưu trữ và sử dụng trí nhớ', emoji: '🧠' },
-    { value: 'manage', label: 'Manage your saved memories', description: 'Xem trí nhớ Lunaby đã lưu về bạn', emoji: '📋' },
-    { value: 'clear', label: 'Clear', description: 'Xóa toàn bộ lịch sử và trí nhớ', emoji: '🗑️' },
+    { value: 'personal_info', labelKey: 'commands.personalize.menu_info', descriptionKey: 'commands.personalize.menu_info_desc', emoji: '✏️' },
+    { value: 'toggle_search', labelKey: 'commands.personalize.menu_search', descriptionKey: 'commands.personalize.menu_search_desc', emoji: '🔍' },
+    { value: 'toggle_memory', labelKey: 'commands.personalize.menu_memory', descriptionKey: 'commands.personalize.menu_memory_desc', emoji: '🧠' },
+    { value: 'manage', labelKey: 'commands.personalize.menu_manage', descriptionKey: 'commands.personalize.menu_manage_desc', emoji: '📋' },
+    { value: 'clear', labelKey: 'commands.personalize.menu_clear', descriptionKey: 'commands.personalize.menu_clear_desc', emoji: '🗑️' },
 ];
 
 module.exports = {
@@ -39,8 +39,8 @@ module.exports = {
 
         const memory = await MemoryService.getUserMemory(userId);
 
-        const mainEmbed = buildMainEmbed(memory);
-        const row = buildSelectMenuRow();
+        const mainEmbed = buildMainEmbed(memory, interaction);
+        const row = buildSelectMenuRow(interaction);
 
         await interaction.reply({
             embeds: [mainEmbed],
@@ -57,7 +57,7 @@ module.exports = {
         collector.on('collect', async (i) => {
             if (i.user.id !== interaction.user.id) {
                 return i.reply({
-                    content: 'Chỉ người dùng gọi lệnh mới có thể sử dụng menu này!',
+                    content: interaction.t('system.only_caller_can_use'),
                     ephemeral: true,
                 });
             }
@@ -72,7 +72,7 @@ module.exports = {
                 }
             } catch (error) {
                 logger.error('PERSONALIZE', 'Error handling interaction:', error);
-                const errMsg = 'Đã xảy ra lỗi. Vui lòng thử lại.';
+                const errMsg = interaction.t('commands.personalize.error_occurred');
                 if (i.deferred || i.replied) {
                     await i.followUp({ content: errMsg, ephemeral: true }).catch(() => { });
                 } else {
@@ -86,9 +86,9 @@ module.exports = {
                 const disabledRow = new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
                         .setCustomId('personalize-select')
-                        .setPlaceholder('Menu đã hết hạn')
+                        .setPlaceholder(interaction.t('commands.personalize.menu_expired'))
                         .setDisabled(true)
-                        .addOptions(new StringSelectMenuOptionBuilder().setLabel('Hết hạn').setValue('expired'))
+                        .addOptions(new StringSelectMenuOptionBuilder().setLabel(interaction.t('commands.personalize.menu_expired_label')).setValue('expired'))
                 );
                 await interaction.editReply({ components: [disabledRow] });
             } catch { }
@@ -96,36 +96,36 @@ module.exports = {
     },
 };
 
-function buildMainEmbed(memory) {
-    const occupation = memory?.personalInfo?.occupation || '_Chưa thiết lập_';
-    const instructions = memory?.personalInfo?.customInstructions || '_Chưa thiết lập_';
+function buildMainEmbed(memory, interaction) {
+    const occupation = memory?.personalInfo?.occupation || interaction.t('commands.personalize.not_set');
+    const instructions = memory?.personalInfo?.customInstructions || interaction.t('commands.personalize.not_set');
     const searchHistory = memory?.privacy?.allowSearchHistoryReference !== false;
     const savedMemory = memory?.privacy?.allowMemoryStorage !== false;
 
     return new EmbedBuilder()
         .setColor(COLORS.LUNABY)
-        .setTitle('⚙️ Personalization')
-        .setDescription('Tùy chỉnh cách Lunaby tương tác với bạn.\nChọn một mục từ menu bên dưới.')
+        .setTitle(interaction.t('commands.personalize.embed_title'))
+        .setDescription(interaction.t('commands.personalize.embed_desc'))
         .addFields(
-            { name: '✏️ Your occupation', value: occupation, inline: true },
-            { name: '📝 Custom instructions', value: instructions.length > 80 ? instructions.substring(0, 80) + '...' : instructions, inline: true },
+            { name: interaction.t('commands.personalize.field_occupation'), value: occupation, inline: true },
+            { name: interaction.t('commands.personalize.field_instructions'), value: instructions.length > 80 ? instructions.substring(0, 80) + '...' : instructions, inline: true },
             { name: '\u200B', value: '\u200B' },
-            { name: '🔍 Reference search history', value: searchHistory ? '`🟢 Bật`' : '`🔴 Tắt`', inline: true },
-            { name: '🧠 Reference saved memories', value: savedMemory ? '`🟢 Bật`' : '`🔴 Tắt`', inline: true },
+            { name: interaction.t('commands.personalize.field_search'), value: searchHistory ? interaction.t('commands.personalize.status_on') : interaction.t('commands.personalize.status_off'), inline: true },
+            { name: interaction.t('commands.personalize.field_memory'), value: savedMemory ? interaction.t('commands.personalize.status_on') : interaction.t('commands.personalize.status_off'), inline: true },
         )
         .setTimestamp();
 }
 
-function buildSelectMenuRow() {
+function buildSelectMenuRow(interaction) {
     const select = new StringSelectMenuBuilder()
         .setCustomId('personalize-select')
-        .setPlaceholder('Chọn một tùy chọn');
+        .setPlaceholder(interaction.t('commands.personalize.select_ph'));
 
     for (const opt of MENU_OPTIONS) {
         select.addOptions(
             new StringSelectMenuOptionBuilder()
-                .setLabel(opt.label)
-                .setDescription(opt.description)
+                .setLabel(interaction.t(opt.labelKey))
+                .setDescription(interaction.t(opt.descriptionKey))
                 .setValue(opt.value)
                 .setEmoji(opt.emoji)
         );
@@ -139,39 +139,39 @@ async function handleMenuSelection(i, userId, interaction) {
 
     switch (selected) {
         case 'personal_info':
-            return showPersonalInfoModal(i, userId);
+            return showPersonalInfoModal(i, userId, interaction);
         case 'toggle_search':
             return handleToggleSearch(i, userId, interaction);
         case 'toggle_memory':
             return handleToggleMemory(i, userId, interaction);
         case 'manage':
-            return handleManageMemories(i, userId);
+            return handleManageMemories(i, userId, interaction);
         case 'clear':
             return handleClear(i, userId, interaction);
     }
 }
 
-async function showPersonalInfoModal(i, userId) {
+async function showPersonalInfoModal(i, userId, interaction) {
     const memory = await MemoryService.getUserMemory(userId);
     const currentOccupation = memory?.personalInfo?.occupation || '';
     const currentInstructions = memory?.personalInfo?.customInstructions || '';
 
     const modal = new ModalBuilder()
         .setCustomId(`personalize_personal_info_${userId}`)
-        .setTitle('Personal info & Instructions');
+        .setTitle(interaction.t('commands.personalize.modal_title_info'));
 
     const occupationInput = new TextInputBuilder()
         .setCustomId('occupation_input')
-        .setLabel('✏️ Nghề nghiệp')
-        .setPlaceholder('Engineer, student, designer...')
+        .setLabel(interaction.t('commands.personalize.modal_occupation_label'))
+        .setPlaceholder(interaction.t('commands.personalize.modal_occupation_ph'))
         .setStyle(TextInputStyle.Short)
         .setMaxLength(100)
         .setRequired(false);
 
     const instructionsInput = new TextInputBuilder()
         .setCustomId('instructions_input')
-        .setLabel('📝 Hướng dẫn tùy chỉnh')
-        .setPlaceholder('Sở thích, phong cách trả lời mong muốn...')
+        .setLabel(interaction.t('commands.personalize.modal_instruction_label'))
+        .setPlaceholder(interaction.t('commands.personalize.modal_instruction_ph'))
         .setStyle(TextInputStyle.Paragraph)
         .setMaxLength(500)
         .setRequired(false);
@@ -201,8 +201,8 @@ async function showPersonalInfoModal(i, userId) {
 
         const updatedMemory = await MemoryService.getUserMemory(userId);
         await modalInteraction.update({
-            embeds: [buildMainEmbed(updatedMemory)],
-            components: [buildSelectMenuRow()],
+            embeds: [buildMainEmbed(updatedMemory, interaction)],
+            components: [buildSelectMenuRow(interaction)],
         });
     } catch { }
 }
@@ -216,8 +216,8 @@ async function handleToggleSearch(i, userId, interaction) {
 
     const updatedMemory = await MemoryService.getUserMemory(userId);
     const statusText = newValue
-        ? '🟢 **Đã bật** Reference search history\nLunaby sẽ truy cập và sử dụng trí nhớ đã lưu để trả lời bạn.'
-        : '🔴 **Đã tắt** Reference search history\nLunaby sẽ không tham chiếu bất kỳ thông tin nào trong quá khứ.';
+        ? interaction.t('commands.personalize.search_on')
+        : interaction.t('commands.personalize.search_off');
 
     const embed = new EmbedBuilder()
         .setColor(newValue ? 0x2ECC71 : 0xE74C3C)
@@ -225,11 +225,11 @@ async function handleToggleSearch(i, userId, interaction) {
         .setTimestamp();
 
     await i.update({
-        embeds: [buildMainEmbed(updatedMemory), embed],
-        components: [buildSelectMenuRow()],
+        embeds: [buildMainEmbed(updatedMemory, interaction), embed],
+        components: [buildSelectMenuRow(interaction)],
     });
 
-    autoRemoveNotification(i, updatedMemory);
+    autoRemoveNotification(i, updatedMemory, interaction);
 }
 
 async function handleToggleMemory(i, userId, interaction) {
@@ -241,8 +241,8 @@ async function handleToggleMemory(i, userId, interaction) {
 
     const updatedMemory = await MemoryService.getUserMemory(userId);
     const statusText = newValue
-        ? '🟢 **Đã bật** Reference saved memories\nLunaby sẽ lưu trữ và sử dụng trí nhớ về bạn.'
-        : '🔴 **Đã tắt** Reference saved memories\nLunaby sẽ không lưu trữ trí nhớ về cuộc trò chuyện.';
+        ? interaction.t('commands.personalize.memory_on')
+        : interaction.t('commands.personalize.memory_off');
 
     const embed = new EmbedBuilder()
         .setColor(newValue ? 0x2ECC71 : 0xE74C3C)
@@ -250,47 +250,47 @@ async function handleToggleMemory(i, userId, interaction) {
         .setTimestamp();
 
     await i.update({
-        embeds: [buildMainEmbed(updatedMemory), embed],
-        components: [buildSelectMenuRow()],
+        embeds: [buildMainEmbed(updatedMemory, interaction), embed],
+        components: [buildSelectMenuRow(interaction)],
     });
 
-    autoRemoveNotification(i, updatedMemory);
+    autoRemoveNotification(i, updatedMemory, interaction);
 }
 
-async function handleManageMemories(i, userId) {
+async function handleManageMemories(i, userId, interaction) {
     const summary = await MemoryService.getMemorySummary(userId);
 
     if (!summary) {
         return i.update({
-            embeds: [buildMainEmbed(await MemoryService.getUserMemory(userId)),
-            new EmbedBuilder().setColor(0xE74C3C).setDescription('Không thể lấy thông tin trí nhớ.')],
-            components: [buildSelectMenuRow()],
+            embeds: [buildMainEmbed(await MemoryService.getUserMemory(userId), interaction),
+            new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.manage_error'))],
+            components: [buildSelectMenuRow(interaction)],
         });
     }
 
     const embed = new EmbedBuilder()
         .setColor(0x3498DB)
-        .setTitle('📋 Trí nhớ đã lưu')
+        .setTitle(interaction.t('commands.personalize.manage_title'))
         .setTimestamp();
 
     const personalInfo = [];
-    if (summary.personalInfo.name) personalInfo.push(`**Tên:** ${summary.personalInfo.name}`);
-    if (summary.personalInfo.nickname) personalInfo.push(`**Nickname:** ${summary.personalInfo.nickname}`);
-    if (summary.personalInfo.age) personalInfo.push(`**Tuổi:** ${summary.personalInfo.age}`);
-    if (summary.personalInfo.location) personalInfo.push(`**Vị trí:** ${summary.personalInfo.location}`);
-    if (summary.personalInfo.occupation) personalInfo.push(`**Nghề nghiệp:** ${summary.personalInfo.occupation}`);
+    if (summary.personalInfo.name) personalInfo.push(interaction.t('commands.personalize.manage_pi_name', { value: summary.personalInfo.name }));
+    if (summary.personalInfo.nickname) personalInfo.push(interaction.t('commands.personalize.manage_pi_nickname', { value: summary.personalInfo.nickname }));
+    if (summary.personalInfo.age) personalInfo.push(interaction.t('commands.personalize.manage_pi_age', { value: summary.personalInfo.age }));
+    if (summary.personalInfo.location) personalInfo.push(interaction.t('commands.personalize.manage_pi_location', { value: summary.personalInfo.location }));
+    if (summary.personalInfo.occupation) personalInfo.push(interaction.t('commands.personalize.manage_pi_occupation', { value: summary.personalInfo.occupation }));
 
     if (personalInfo.length > 0) {
-        embed.addFields({ name: '👤 Thông tin cá nhân', value: personalInfo.join('\n'), inline: false });
+        embed.addFields({ name: interaction.t('commands.personalize.manage_field_pi'), value: personalInfo.join('\n'), inline: false });
     }
 
     const preferences = [];
-    if (summary.preferences.likes.length > 0) preferences.push(`**Thích:** ${summary.preferences.likes.slice(0, 5).join(', ')}`);
-    if (summary.preferences.hobbies.length > 0) preferences.push(`**Sở thích:** ${summary.preferences.hobbies.slice(0, 5).join(', ')}`);
-    if (summary.preferences.topics.length > 0) preferences.push(`**Chủ đề:** ${summary.preferences.topics.slice(0, 5).join(', ')}`);
+    if (summary.preferences.likes.length > 0) preferences.push(interaction.t('commands.personalize.manage_pref_likes', { value: summary.preferences.likes.slice(0, 5).join(', ') }));
+    if (summary.preferences.hobbies.length > 0) preferences.push(interaction.t('commands.personalize.manage_pref_hobbies', { value: summary.preferences.hobbies.slice(0, 5).join(', ') }));
+    if (summary.preferences.topics.length > 0) preferences.push(interaction.t('commands.personalize.manage_pref_topics', { value: summary.preferences.topics.slice(0, 5).join(', ') }));
 
     if (preferences.length > 0) {
-        embed.addFields({ name: '❤️ Sở thích', value: preferences.join('\n'), inline: false });
+        embed.addFields({ name: interaction.t('commands.personalize.manage_field_pref'), value: preferences.join('\n'), inline: false });
     }
 
     if (summary.importantMemories.length > 0) {
@@ -298,44 +298,44 @@ async function handleManageMemories(i, userId) {
             .slice(0, 5)
             .map((mem, idx) => `${idx + 1}. ${mem.content} (⭐ ${mem.importance}/10)`)
             .join('\n');
-        embed.addFields({ name: '💭 Trí nhớ quan trọng', value: memoryList, inline: false });
+        embed.addFields({ name: interaction.t('commands.personalize.manage_field_imp'), value: memoryList, inline: false });
     }
 
     embed.addFields({
-        name: '📊 Thống kê',
+        name: interaction.t('commands.personalize.manage_stats'),
         value: [
-            `**Tổng trí nhớ:** ${summary.totalMemories}`,
-            `**Tổng tin nhắn:** ${summary.interactionStats.totalMessages}`,
-            `**Lần đầu:** <t:${Math.floor(new Date(summary.interactionStats.firstInteraction).getTime() / 1000)}:R>`,
+            interaction.t('commands.personalize.manage_stats_total', { total: summary.totalMemories }),
+            interaction.t('commands.personalize.manage_stats_msgs', { msgs: summary.interactionStats.totalMessages }),
+            interaction.t('commands.personalize.manage_stats_first', { time: Math.floor(new Date(summary.interactionStats.firstInteraction).getTime() / 1000) }),
         ].join('\n'),
         inline: false,
     });
 
     if (summary.totalMemories === 0 && personalInfo.length === 0 && preferences.length === 0) {
-        embed.setDescription('Chưa có trí nhớ nào được lưu. Hãy bắt đầu trò chuyện với Lunaby!');
+        embed.setDescription(interaction.t('commands.personalize.manage_no_data'));
     }
 
     await i.update({
-        embeds: [buildMainEmbed(await MemoryService.getUserMemory(userId)), embed],
-        components: [buildSelectMenuRow()],
+        embeds: [buildMainEmbed(await MemoryService.getUserMemory(userId), interaction), embed],
+        components: [buildSelectMenuRow(interaction)],
     });
 }
 
 async function handleClear(i, userId, interaction) {
     const confirmEmbed = new EmbedBuilder()
         .setColor(0xE74C3C)
-        .setTitle('Xác nhận xóa dữ liệu')
-        .setDescription('Bạn có chắc chắn muốn xóa **toàn bộ** lịch sử trò chuyện và trí nhớ?\n\n**Hành động này không thể hoàn tác!**')
+        .setTitle(interaction.t('commands.personalize.clear_confirm_title'))
+        .setDescription(interaction.t('commands.personalize.clear_confirm_desc'))
         .setTimestamp();
 
     const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId('personalize_clear_confirm')
-            .setLabel('Xóa toàn bộ')
+            .setLabel(interaction.t('commands.personalize.clear_btn_confirm'))
             .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
             .setCustomId('personalize_clear_cancel')
-            .setLabel('Hủy')
+            .setLabel(interaction.t('commands.personalize.clear_btn_cancel'))
             .setStyle(ButtonStyle.Secondary),
     );
 
@@ -357,41 +357,41 @@ async function handleButtonClick(i, userId, interaction) {
 
             const successEmbed = new EmbedBuilder()
                 .setColor(0x2ECC71)
-                .setTitle('Đã xóa dữ liệu')
-                .setDescription('Toàn bộ lịch sử trò chuyện và trí nhớ đã được xóa.\nChúng ta có thể bắt đầu lại từ đầu! 💫')
+                .setTitle(interaction.t('commands.personalize.clear_success_title'))
+                .setDescription(interaction.t('commands.personalize.clear_success_desc'))
                 .setTimestamp();
 
             const updatedMemory = await MemoryService.getUserMemory(userId);
             await i.update({
-                embeds: [buildMainEmbed(updatedMemory), successEmbed],
-                components: [buildSelectMenuRow()],
+                embeds: [buildMainEmbed(updatedMemory, interaction), successEmbed],
+                components: [buildSelectMenuRow(interaction)],
             });
 
-            autoRemoveNotification(i, updatedMemory);
+            autoRemoveNotification(i, updatedMemory, interaction);
 
             logger.info('PERSONALIZE', `User ${interaction.user.tag} cleared all data`);
         } catch (error) {
             logger.error('PERSONALIZE', 'Error clearing data:', error);
             await i.update({
-                embeds: [new EmbedBuilder().setColor(0xE74C3C).setDescription('Không thể xóa dữ liệu. Vui lòng thử lại sau.')],
-                components: [buildSelectMenuRow()],
+                embeds: [new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.clear_error'))],
+                components: [buildSelectMenuRow(interaction)],
             });
         }
     } else if (i.customId === 'personalize_clear_cancel') {
         const updatedMemory = await MemoryService.getUserMemory(userId);
         await i.update({
-            embeds: [buildMainEmbed(updatedMemory)],
-            components: [buildSelectMenuRow()],
+            embeds: [buildMainEmbed(updatedMemory, interaction)],
+            components: [buildSelectMenuRow(interaction)],
         });
     }
 }
 
-function autoRemoveNotification(i, memory) {
+function autoRemoveNotification(i, memory, interaction) {
     setTimeout(async () => {
         try {
             await i.editReply({
-                embeds: [buildMainEmbed(memory)],
-                components: [buildSelectMenuRow()],
+                embeds: [buildMainEmbed(memory, interaction)],
+                components: [buildSelectMenuRow(interaction)],
             });
         } catch { }
     }, 5000);

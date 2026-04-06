@@ -2,7 +2,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-04-07',
   devtools: { enabled: true },
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
-  css: ['~/app/assets/css/tailwind.css'],
+  css: ['~/assets/css/tailwind.css'],
   app: {
     head: {
       title: 'Lunaby Dashboard',
