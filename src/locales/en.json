@@ -10,6 +10,26 @@
     "quota_exceeded_image": "❌ **Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Vision in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue."
   },
   "commands": {
+    "fun": {
+      "desc_pat": "Pat someone",
+      "desc_hug": "Hug someone",
+      "desc_slap": "Slap someone",
+      "desc_punch": "Punch someone",
+      "desc_kiss": "Kiss someone",
+      "desc_poke": "Poke someone",
+      "self_pat": "**{{sender}}** patted themselves!",
+      "self_hug": "**{{sender}}** hugged themselves!",
+      "self_slap": "**{{sender}}** slapped themselves!",
+      "self_punch": "**{{sender}}** punched themselves!",
+      "self_kiss": "**{{sender}}** blew a kiss!",
+      "self_poke": "**{{sender}}** poked themselves!",
+      "target_pat": "**{{sender}}** patted **{{target}}**!",
+      "target_hug": "**{{sender}}** hugged **{{target}}**!",
+      "target_slap": "**{{sender}}** slapped **{{target}}**!",
+      "target_punch": "**{{sender}}** punched **{{target}}**!",
+      "target_kiss": "**{{sender}}** kissed **{{target}}**!",
+      "target_poke": "**{{sender}}** poked **{{target}}**!"
+    },
     "ping": {
       "desc": "Check latency and connection status of the bot",
       "system_status": "System Status",

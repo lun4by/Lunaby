@@ -21,8 +21,8 @@ const guildLinks = computed(() => {
 </script>
 
 <template>
-  <aside class="mb-4 w-full rounded-[32px] border border-white/60 bg-white/70 p-4 shadow-panel backdrop-blur lg:mb-0 lg:w-[300px]">
-    <div class="rounded-[28px] bg-gradient-to-br from-white to-blush/60 p-5">
+  <aside class="mb-4 w-full rounded-[32px] border border-line bg-white p-4 lg:mb-0 lg:w-[300px]">
+    <div class="rounded-[28px] border border-line bg-white p-5">
       <p class="font-display text-2xl font-bold text-ink">Lunaby</p>
       <p class="mt-2 text-sm text-stone-600">Nuxt dashboard dùng MariaDB làm nguồn cấu hình chính.</p>
     </div>

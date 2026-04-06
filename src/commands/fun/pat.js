@@ -11,7 +11,7 @@ module.exports = {
 
     async execute(interaction) {
         const target = interaction.options.getUser('user');
-        const embed = buildActionEmbed('pat', interaction.user, target);
+        const embed = buildActionEmbed('pat', interaction.user, target, interaction);
         await interaction.reply({ embeds: [embed] });
     }
 };

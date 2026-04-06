@@ -10,6 +10,26 @@
     "quota_exceeded_image": "❌ **Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Vision trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng."
   },
   "commands": {
+    "fun": {
+      "desc_pat": "Xoa đầu ai đó",
+      "desc_hug": "Ôm ai đó",
+      "desc_slap": "Tát ai đó",
+      "desc_punch": "Đấm ai đó",
+      "desc_kiss": "Hôn ai đó",
+      "desc_poke": "Chọc ai đó",
+      "self_pat": "**{{sender}}** tự xoa đầu mình!",
+      "self_hug": "**{{sender}}** tự ôm mình!",
+      "self_slap": "**{{sender}}** tự tát mình!",
+      "self_punch": "**{{sender}}** tự đấm mình!",
+      "self_kiss": "**{{sender}}** hôn gió!",
+      "self_poke": "**{{sender}}** tự chọc mình!",
+      "target_pat": "**{{sender}}** đã xoa đầu **{{target}}**!",
+      "target_hug": "**{{sender}}** đã ôm **{{target}}**!",
+      "target_slap": "**{{sender}}** đã tát **{{target}}**!",
+      "target_punch": "**{{sender}}** đã đấm **{{target}}**!",
+      "target_kiss": "**{{sender}}** đã hôn **{{target}}**!",
+      "target_poke": "**{{sender}}** đã chọc **{{target}}**!"
+    },
     "ping": {
       "desc": "Kiểm tra độ trễ và trạng thái kết nối của bot",
       "system_status": "Trạng thái hệ thống",

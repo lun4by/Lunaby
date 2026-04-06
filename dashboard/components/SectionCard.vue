@@ -18,7 +18,7 @@ const styles = useEmotionClasses()
     class="rounded-[30px] border p-5 sm:p-6"
     :class="[
       tone === 'hero' ? styles.heroPanel : styles.glassPanel,
-      tone === 'hero' ? 'border-white/70' : 'border-line bg-white/75',
+      'border-line',
     ]"
   >
     <div class="mb-5">

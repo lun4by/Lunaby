@@ -3,6 +3,30 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
   css: ['~/assets/css/tailwind.css'],
+  hooks: {
+    'pages:extend'(pages) {
+      const allowedGroups = ['/(main)/', '/(platform)/', '/(auth)/']
+
+      const filterPages = (routes: any[]) => {
+        for (let index = routes.length - 1; index >= 0; index -= 1) {
+          const route = routes[index]
+          if (route.children?.length) {
+            filterPages(route.children)
+          }
+
+          if (route.file && route.file.includes('/app/pages/')) {
+            const normalized = route.file.replaceAll('\\', '/')
+            const isGrouped = allowedGroups.some(group => normalized.includes(group))
+            if (!isGrouped) {
+              routes.splice(index, 1)
+            }
+          }
+        }
+      }
+
+      filterPages(pages)
+    },
+  },
   app: {
     head: {
       title: 'Lunaby Dashboard',
