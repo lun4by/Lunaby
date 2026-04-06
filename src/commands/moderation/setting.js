@@ -174,7 +174,7 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
         .addOptions([
             { label: '⚙️ Cài đặt chung', description: 'Các tùy chọn về hiển thị, bot hoạt động', value: 'general', default: page === 'general' },
             { label: '🛡️ Cài đặt nhật ký (Logs)', description: 'Thiết lập Kênh ghi log và Kiểm duyệt', value: 'logging', default: page === 'logging' },
-            { label: '✖️ Đóng', description: 'Thoát bảng điều khiển', value: 'close' }
+            { label: 'Đóng', description: 'Thoát bảng điều khiển', value: 'close', emoji: emojis.error }
         ]);
     components.push(new ActionRowBuilder().addComponents(selectMenu));
 

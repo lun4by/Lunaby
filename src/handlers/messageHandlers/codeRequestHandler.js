@@ -30,10 +30,12 @@ async function handleCodeRequest(message, content, ConversationService) {
     const conversationId = ConversationService.extractUserId(message);
     const globalUserId = message.author.id;
 
+    const emojis = require('../../config/emojis');
+
     const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
     if (!quotaCheck.allowed) {
       const embed = createLunabyEmbed()
-        .setTitle('🚫 Hết quyền sử dụng')
+        .setTitle(`Hết quyền sử dụng`)
         .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** Lunaby Pro trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
         .setColor(0xE74C3C);
       return message.reply({ embeds: [embed] }).catch(() => { });

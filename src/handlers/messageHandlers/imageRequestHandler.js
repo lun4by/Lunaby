@@ -17,7 +17,7 @@ async function handleImageRequest(message, content, requestMatch) {
     const quotaCheck = await QuotaService.canUseImages(globalUserId, 1);
     if (!quotaCheck.allowed) {
       const embed = createLunabyEmbed()
-        .setTitle("Hết quyền sử dụng")
+        .setTitle(`Hết quyền sử dụng`)
         .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** Lunaby Vision trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
         .setColor(0xE74C3C);
 

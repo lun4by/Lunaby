@@ -1,5 +1,6 @@
 const consentService = require('../services/user/consentService');
 const logger = require('../utils/logger.js');
+const emojis = require('../config/emojis.js');
 
 
 async function handleConsentInteraction(interaction) {
@@ -17,7 +18,7 @@ async function handleConsentInteraction(interaction) {
   // Chặn người khác bấm consent của người khác
   if (user.id !== targetUserId) {
     return interaction.reply({
-      content: '❌ Bạn không thể thao tác consent của người khác.',
+      content: `${emojis.error} Bạn không thể thao tác consent của người khác.`,
       ephemeral: true
     });
   }
