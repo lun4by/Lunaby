@@ -92,6 +92,9 @@
       "title": "Active commands in #{{channelName}}",
       "other_cmds": "Other Commands"
     },
+    "language": {
+      "usage": "Usage: `{{prefix}}language <personal/server> <vi/en>`"
+    },
     "levelup": {
       "desc": "Setup user level up notifications",
       "usage": "Usage:\n- Enable: `{{prefix}}levelup set #channel`\n- Disable: `{{prefix}}levelup disable`",
@@ -172,6 +175,30 @@
       "no_self": "You cannot give credits to yourself.",
       "success": "You transferred **{{amount}}** credits to <@{{targetId}}>.\nYour remaining balance: **{{balance}}** credits.",
       "error": "An error occurred while transferring credits."
+    },
+    "leaderboard": {
+      "desc": "Display the server's XP leaderboard",
+      "no_data": "No XP data available in this server yet!",
+      "hidden_user": "Hidden User",
+      "success": "Let's honor the top 10 most active members! 🎉\nYou are currently ranked **{{rank}}** on the leaderboard.",
+      "error": "An error occurred while loading the leaderboard!"
+    },
+    "profile": {
+      "desc": "Display your profile card with XP, level, rank and personal info",
+      "no_bot": "Bots do not have a profile!",
+      "error": "An error occurred while creating the profile card!"
+    },
+    "rank": {
+      "desc": "Display a user's rank, level, and XP",
+      "no_xp": "{{user}} does not have any experience points in this server yet!",
+      "error": "An error occurred while creating the rank card!"
+    },
+    "setcolor": {
+      "desc": "Set the primary color for your profile card",
+      "invalid_color": "Invalid color code!\n\nPlease enter a valid hex code (e.g., #FF0000) or \"default\" to reset.",
+      "success": "**Profile card color has been set to:** `{{color}}`",
+      "reset_success": "Profile card color has been reset to default!",
+      "error": "An error occurred while updating the color!"
     }
   }
 }

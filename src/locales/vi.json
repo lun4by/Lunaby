@@ -92,6 +92,9 @@
       "title": "Lệnh đang hoạt động tại #{{channelName}}",
       "other_cmds": "Các Lệnh Khác"
     },
+    "language": {
+      "usage": "Cú pháp: `{{prefix}}language <personal/server> <vi/en>`"
+    },
     "levelup": {
       "desc": "Cài đặt thông báo người dùng thăng cấp (Level Up)",
       "usage": "Cách dùng:\n- Bật hiện kênh: `{{prefix}}levelup set #channel`\n- Tắt thông báo: `{{prefix}}levelup disable`",
