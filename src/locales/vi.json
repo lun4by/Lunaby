@@ -172,6 +172,30 @@
       "no_self": "Bạn không thể tự chuyển credits cho chính mình.",
       "success": "Bạn đã chuyển **{{amount}}** credits cho <@{{targetId}}>.\nSố dư của bạn: **{{balance}}** credits.",
       "error": "Đã xảy ra lỗi khi chuyển credits."
+    },
+    "leaderboard": {
+      "desc": "Hiển thị bảng xếp hạng XP của server",
+      "no_data": "Chưa có dữ liệu XP trong server này!",
+      "hidden_user": "Người dùng ẩn",
+      "success": "Cùng vinh danh top 10 thành viên năng động nhất server! 🎉\nBạn đang đứng thứ **{{rank}}** trong bảng xếp hạng.",
+      "error": "Đã xảy ra lỗi khi tải bảng xếp hạng!"
+    },
+    "profile": {
+      "desc": "Hiển thị profile card với XP, level, rank và thông tin cá nhân",
+      "no_bot": "Bot không có profile!",
+      "error": "Có lỗi xảy ra khi tạo profile card!"
+    },
+    "rank": {
+      "desc": "Hiển thị rank, level và XP của người dùng",
+      "no_xp": "{{user}} chưa có điểm kinh nghiệm nào trong server này!",
+      "error": "Đã xảy ra lỗi khi tạo rank card!"
+    },
+    "setcolor": {
+      "desc": "Đặt màu chủ đạo cho profile card",
+      "invalid_color": "Mã màu không hợp lệ!\n\nVui lòng nhập mã hex hợp lệ (ví dụ: #FF0000) hoặc \"default\" để reset.",
+      "success": "**Màu profile card đã được đặt thành:** `{{color}}`",
+      "reset_success": "Màu profile card đã được reset về mặc định!",
+      "error": "Có lỗi xảy ra khi cập nhật màu!"
     }
   }
 }
