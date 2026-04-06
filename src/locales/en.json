@@ -140,6 +140,38 @@
       "disable_success": "Welcome notifications have been disabled.",
       "no_channel": "Please provide a valid channel and message.\nExample: `{{prefix}}welcome set #welcome Welcome {user} to {server}!`",
       "setup_success": "Welcome notification channel set to <#{{channelId}}>.\nMessage: `{{message}}`"
+    },
+    "avatar": {
+      "desc": "View your own or another user's avatar",
+      "open_original": "Open Original",
+      "none": "None",
+      "title": "{{tag}}'s Avatar",
+      "nickname": "`Nickname:`",
+      "id": "`ID:`",
+      "role_color": "`RoleColor:`",
+      "error": "Failed to load an avatar!"
+    },
+    "banner": {
+      "desc": "View your own or another user's banner",
+      "open_original": "Open Original",
+      "no_banner": "{{user}} does not have a banner set.",
+      "title": "{{tag}}'s Banner",
+      "click_to_open": "[Click here to open the original image]({{url}})",
+      "error": "Failed to load a banner!"
+    },
+    "credits": {
+      "desc": "Check your current credits balance",
+      "balance": "You have **{{amount}}** credits.",
+      "error": "Failed to load credits balance!"
+    },
+    "give": {
+      "desc": "Transfer credits to another user",
+      "invalid_input": "Please provide a valid recipient and credit amount.",
+      "must_be_positive": "The credit amount must be a positive integer.",
+      "no_bot": "You cannot give credits to a bot.",
+      "no_self": "You cannot give credits to yourself.",
+      "success": "You transferred **{{amount}}** credits to <@{{targetId}}>.\nYour remaining balance: **{{balance}}** credits.",
+      "error": "An error occurred while transferring credits."
     }
   }
 }

@@ -140,6 +140,38 @@
       "disable_success": "Đã tắt tính năng thông báo chào mừng thành viên mới.",
       "no_channel": "Vui lòng cung cấp kênh và lời chào mừng hợp lệ.\nVí dụ: `{{prefix}}welcome set #welcome Chào mừng {user} đến với {server}!`",
       "setup_success": "Đã thiết lập thành công thông báo chào mừng tại kênh <#{{channelId}}>.\nNội dung: `{{message}}`"
+    },
+    "avatar": {
+      "desc": "Xem avatar của bạn hoặc người dùng khác",
+      "open_original": "Mở ảnh gốc",
+      "none": "Không có",
+      "title": "Avatar của {{tag}}",
+      "nickname": "`Nickname:`",
+      "id": "`ID:`",
+      "role_color": "`RoleColor:`",
+      "error": "Đã xảy ra lỗi khi tải avatar!"
+    },
+    "banner": {
+      "desc": "Xem banner của bạn hoặc người dùng khác",
+      "open_original": "Mở ảnh gốc",
+      "no_banner": "{{user}} chưa cài banner.",
+      "title": "Banner của {{tag}}",
+      "click_to_open": "[Nhấn vào đây để mở ảnh gốc]({{url}})",
+      "error": "Đã xảy ra lỗi khi tải banner!"
+    },
+    "credits": {
+      "desc": "Xem số credits hiện tại của bạn",
+      "balance": "Bạn có **{{amount}}** credits.",
+      "error": "Đã xảy ra lỗi khi tải số dư credits!"
+    },
+    "give": {
+      "desc": "Chuyển credits cho người dùng khác",
+      "invalid_input": "Vui lòng chọn người nhận và nhập số credits hợp lệ.",
+      "must_be_positive": "Số credits muốn chuyển phải là một số nguyên dương.",
+      "no_bot": "Bạn không thể chuyển credits cho bot.",
+      "no_self": "Bạn không thể tự chuyển credits cho chính mình.",
+      "success": "Bạn đã chuyển **{{amount}}** credits cho <@{{targetId}}>.\nSố dư của bạn: **{{balance}}** credits.",
+      "error": "Đã xảy ra lỗi khi chuyển credits."
     }
   }
 }
