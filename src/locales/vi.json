@@ -25,6 +25,41 @@
       "invite_btn": "Mời Bot",
       "support_btn": "Hỗ trợ",
       "website_btn": "Website"
+    },
+    "donate": {
+      "desc": "Hiển thị mã QR để ủng hộ Lunaby project",
+      "open_qr": "Mở mã QR",
+      "title": "Ủng hộ Lunaby project",
+      "scan_qr": "Quét mã để chuyển khoản",
+      "description": "Cảm ơn bạn đã muốn ủng hộ dự án Lunaby.\n**Ngân hàng:** {{bank}}\n**Số tài khoản:** `{{account}}`\n**Nội dung chuyển khoản:** `{{note}}`",
+      "footer": "Bạn có thể quét QR hoặc bấm nút bên dưới để mở ảnh mã QR."
+    },
+    "help": {
+      "desc": "Hiển thị danh sách lệnh và thông tin trợ giúp",
+      "select_placeholder": "Chọn một danh mục",
+      "embed_title": "📚 Trợ Giúp - Lunaby",
+      "embed_desc": "Chào mừng bạn đến với hệ thống trợ giúp!\n\n> Chọn một danh mục từ menu bên dưới để xem chi tiết các lệnh.",
+      "no_view_permission": "Bạn không có quyền xem danh mục này!",
+      "menu_expired": "⏱️ Menu trợ giúp đã hết hạn!",
+      "category_details": "Chi tiết các lệnh trong danh mục **{{category}}**:",
+      "no_description": "Không có mô tả",
+      "no_commands": "Không có lệnh nào",
+      "categories": {
+        "home": { "label": "Trang chủ", "desc": "Quay lại menu trợ giúp chính" },
+        "AIcore": { "label": "AI Core", "desc": "Các lệnh AI nâng cao" },
+        "Core": { "label": "Core", "desc": "Các lệnh cơ bản của bot" },
+        "moderation": { "label": "Moderation", "desc": "Các lệnh quản lý server" },
+        "social": { "label": "Social", "desc": "Các lệnh tương tác xã hội" },
+        "system": { "label": "System", "desc": "Các lệnh quản lý hệ thống" },
+        "fun": { "label": "Fun", "desc": "Các lệnh giải trí" },
+        "default": { "label": "Danh mục", "desc": "Danh mục" }
+      }
+    },
+    "quota": {
+      "desc": "Kiểm tra số lượt sử dụng",
+      "remaining": "Còn **{{count}}** lượt",
+      "total_usage": "Tổng lượt sử dụng:",
+      "reset_in": "Làm mới sau **{{days}}** ngày"
     }
   }
 }

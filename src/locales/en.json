@@ -25,6 +25,41 @@
       "invite_btn": "Invite Bot",
       "support_btn": "Support",
       "website_btn": "Website"
+    },
+    "donate": {
+      "desc": "Show QR code to donate to Lunaby project",
+      "open_qr": "Open QR Code",
+      "title": "Donate to Lunaby project",
+      "scan_qr": "Scan to transfer",
+      "description": "Thank you for supporting the Lunaby project.\n**Bank:** {{bank}}\n**Account:** `{{account}}`\n**Note:** `{{note}}`",
+      "footer": "You can scan the QR code or click the button below to open the QR image."
+    },
+    "help": {
+      "desc": "Displays the command list and help information",
+      "select_placeholder": "Select a category",
+      "embed_title": "📚 Help - Lunaby",
+      "embed_desc": "Welcome to the help system!\n\n> Select a category from the menu below to view detailed commands.",
+      "no_view_permission": "You don't have permission to view this category!",
+      "menu_expired": "⏱️ Help menu has expired!",
+      "category_details": "Commands in **{{category}}**:",
+      "no_description": "No description",
+      "no_commands": "No commands available",
+      "categories": {
+        "home": { "label": "Home", "desc": "Back to main menu" },
+        "AIcore": { "label": "AI Core", "desc": "Advanced AI commands" },
+        "Core": { "label": "Core", "desc": "Basic bot commands" },
+        "moderation": { "label": "Moderation", "desc": "Server management commands" },
+        "social": { "label": "Social", "desc": "Social interaction commands" },
+        "system": { "label": "System", "desc": "System management commands" },
+        "fun": { "label": "Fun", "desc": "Entertainment commands" },
+        "default": { "label": "Category", "desc": "Category" }
+      }
+    },
+    "quota": {
+      "desc": "Check remaining usage",
+      "remaining": "**{{count}}** uses left",
+      "total_usage": "Total usage:",
+      "reset_in": "Resets in **{{days}}** days"
     }
   }
 }
