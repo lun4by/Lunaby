@@ -35,9 +35,9 @@ async function handleCodeRequest(message, content, ConversationService) {
     const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
     if (!quotaCheck.allowed) {
       if (message.t) {
-        return message.reply(message.t('system.quota_exceeded', { limit: quotaCheck.limit })).catch(() => {});
+        return message.reply(message.t('system.quota_exceeded', { limit: quotaCheck.limit })).catch(() => { });
       }
-      return message.reply(`Hết quyền sử dụng. Bạn đã đạt giới hạn ${quotaCheck.limit} lượt.`).catch(() => {});
+      return message.reply(`Hết quyền sử dụng. Bạn đã đạt giới hạn ${quotaCheck.limit} lượt.`).catch(() => { });
     }
 
     const langKey = message.t ? message.t('system.lang_name') : 'Vietnamese';

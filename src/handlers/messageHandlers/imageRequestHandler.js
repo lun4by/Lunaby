@@ -17,9 +17,9 @@ async function handleImageRequest(message, content, requestMatch) {
     const quotaCheck = await QuotaService.canUseImages(globalUserId, 1);
     if (!quotaCheck.allowed) {
       if (message.t) {
-        return message.reply(message.t('system.quota_exceeded_image', { limit: quotaCheck.limit })).catch(() => {});
+        return message.reply(message.t('system.quota_exceeded_image', { limit: quotaCheck.limit })).catch(() => { });
       }
-      return message.reply(`Hết quyền sử dụng. Bạn đã đạt giới hạn ${quotaCheck.limit} lượt Lunaby Vision.`).catch(() => {});
+      return message.reply(`Hết quyền sử dụng. Bạn đã đạt giới hạn ${quotaCheck.limit} lượt Lunaby Vision.`).catch(() => { });
     }
 
     const userPrompt = requestMatch && requestMatch[1] ? requestMatch[1].trim() : content;
