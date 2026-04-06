@@ -6,7 +6,8 @@
     "no_permission": "Bạn không có quyền sử dụng lệnh này.",
     "error_occurred": "Đã xảy ra lỗi trong quá trình xử lý lệnh.",
     "only_caller_can_use": "Chỉ người đã gọi lệnh mới được sử dụng tùy chọn này.",
-    "quota_exceeded": "❌ **Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng."
+    "quota_exceeded": "❌ **Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Pro trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.",
+    "quota_exceeded_image": "❌ **Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Vision trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng."
   },
   "commands": {
     "ping": {
@@ -14,6 +15,16 @@
       "system_status": "Trạng thái hệ thống",
       "resources": "Tài nguyên",
       "refresh": "Làm mới"
+    },
+    "about": {
+      "desc": "Hiển thị thông tin về Lunaby",
+      "about_text": "Lunaby là bot AI được xây dựng... (viết gọn trên UI)",
+      "version": "Phiên bản",
+      "servers": "Số server",
+      "developer": "Nhà phát triển",
+      "invite_btn": "Mời Bot",
+      "support_btn": "Hỗ trợ",
+      "website_btn": "Website"
     }
   }
 }
