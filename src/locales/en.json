@@ -10,6 +10,67 @@
     "quota_exceeded_image": "❌ **Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Vision in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue."
   },
   "commands": {
+    "moderation_common": {
+      "no_reason": "No specific reason",
+      "cant_action_higher_role": "Cannot perform this action because the user has a higher or equal role!",
+      "audit_log_reason": "{{reason}} - By {{user}}",
+      "log_field_user": "👤 User",
+      "log_field_id": "🆔 ID",
+      "log_field_mod": "👮 Moderator",
+      "log_field_reason": "📝 Reason",
+      "log_field_time": "📅 Time",
+      "log_footer": "Server: {{guild}}",
+      "dm_reason": "Reason: {{reason}}",
+      "user_not_found": "Could not find this member in the server!",
+      "log_field_duration": "⏳ Duration",
+      "log_field_endtime": "📅 Ends at",
+      "auto_system": "Auto System"
+    },
+    "ban": {
+      "usage": "Usage:\n- Ban member: `{{prefix}}ban @user [reason] [days_to_delete_messages]`",
+      "log_title": "🔨 Member Banned",
+      "log_desc": "Banned {{tag}} from the server.\n\n**Delete messages:** {{days}} days.",
+      "dm_title": "You have been banned from {{guild}}",
+      "dm_footer": "If you believe this is a mistake, please contact the server administrators.",
+      "error_ban": "An error occurred while banning the user: {{error}}"
+    },
+    "kick": {
+      "usage": "Usage:\n- Kick member: `{{prefix}}kick @user [reason]`",
+      "log_title": "👢 Member Kicked",
+      "log_desc": "Kicked {{tag}} from the server.",
+      "error_kick": "An error occurred while kicking the user: {{error}}"
+    },
+    "mute": {
+      "usage": "Usage:\n- Mute member: `{{prefix}}mute @user [minutes] [reason]`",
+      "log_title": "🔇 Member Muted",
+      "log_desc": "Muted {{tag}}.",
+      "dm_title": "You have been muted in {{guild}}",
+      "dm_desc": "**Reason:** {{reason}}\n**Duration:** {{duration}}\n**Ends at:** {{time}}",
+      "dm_footer": "While muted, you cannot send messages or join voice chats.",
+      "error_mute": "An error occurred while muting the user: {{error}}"
+    },
+    "unmute": {
+      "usage": "Usage:\n- Unmute member: `{{prefix}}unmute @user [reason]`",
+      "not_muted": "This user is not currently muted!",
+      "log_title": "🔊 Member Unmuted",
+      "log_desc": "Unmuted {{tag}}.",
+      "dm_title": "You have been unmuted in {{guild}}",
+      "dm_desc": "**Reason:** {{reason}}\n\nYou can now send messages and join voice chats again.",
+      "error_unmute": "An error occurred while unmuting the user: {{error}}"
+    },
+    "warn": {
+      "usage": "Usage:\n- Warn member: `{{prefix}}warn @user [reason]`",
+      "cannot_warn_bot": "Cannot warn bots!",
+      "db_error": "An error occurred while saving the warning to the database!",
+      "dm_title": "You have been warned in {{guild}}",
+      "dm_desc": "**Reason:** {{reason}}\n**Warnings:** {{warningCount}}",
+      "dm_footer": "If you continue breaking rules, you may be muted or banned.",
+      "auto_mute_title": "🔇 Member auto-muted",
+      "auto_mute_desc": "{{tag}} was auto-muted for 1 hour after {{count}} warnings.",
+      "auto_kick_title": "👢 Member auto-kicked",
+      "auto_kick_desc": "{{tag}} was auto-kicked after {{count}} warnings.",
+      "error_warn": "An error occurred while warning the user: {{error}}"
+    },
     "fun": {
       "desc_pat": "Pat someone",
       "desc_hug": "Hug someone",

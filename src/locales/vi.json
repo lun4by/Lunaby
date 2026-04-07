@@ -10,6 +10,67 @@
     "quota_exceeded_image": "❌ **Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Vision trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng."
   },
   "commands": {
+    "moderation_common": {
+      "no_reason": "Không có lý do cụ thể",
+      "cant_action_higher_role": "Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!",
+      "audit_log_reason": "{{reason}} - Bởi {{user}}",
+      "log_field_user": "👤 Người dùng",
+      "log_field_id": "🆔 ID",
+      "log_field_mod": "👮 Người xử lý",
+      "log_field_reason": "📝 Lý do",
+      "log_field_time": "📅 Thời gian",
+      "log_footer": "Server: {{guild}}",
+      "dm_reason": "Lý do: {{reason}}",
+      "user_not_found": "Không tìm thấy thành viên này trong server!",
+      "log_field_duration": "⏳ Thời gian phạt",
+      "log_field_endtime": "📅 Kết thúc lúc",
+      "auto_system": "Hệ thống tự động"
+    },
+    "ban": {
+      "usage": "Cách dùng:\n- Ban member: `{{prefix}}ban @user [lý do] [số_ngày_xóa_tin_nhắn]`",
+      "log_title": "🔨 Đã ban thành viên",
+      "log_desc": "Đã cấm {{tag}} khỏi server.\n\n**Xóa tin nhắn:** {{days}} ngày.",
+      "dm_title": "Bạn đã bị cấm tại {{guild}}",
+      "dm_footer": "Nếu bạn cho rằng đây là sai lầm, hãy liên hệ ban quản trị server.",
+      "error_ban": "Đã xảy ra lỗi khi cấm người dùng: {{error}}"
+    },
+    "kick": {
+      "usage": "Cách dùng:\n- Đuổi thành viên (kick): `{{prefix}}kick @user [lý do]`",
+      "log_title": "👢 Đã đuổi thành viên (Kick)",
+      "log_desc": "Đã đuổi {{tag}} khỏi server.",
+      "error_kick": "Đã xảy ra lỗi khi đuổi người dùng: {{error}}"
+    },
+    "mute": {
+      "usage": "Cách dùng:\n- Cấm ngôn (mute): `{{prefix}}mute @user [số_phút] [lý do]`",
+      "log_title": "🔇 Đã cấm ngôn (Mute)",
+      "log_desc": "Đã cấm ngôn {{tag}}.",
+      "dm_title": "Bạn đã bị mute trong {{guild}}",
+      "dm_desc": "**Lý do:** {{reason}}\n**Thời gian:** {{duration}}\n**Kết thúc lúc:** {{time}}",
+      "dm_footer": "Trong thời gian mute, bạn không thể gửi tin nhắn hoặc tham gia voice chat.",
+      "error_mute": "Đã xảy ra lỗi khi cấm ngôn người dùng: {{error}}"
+    },
+    "unmute": {
+      "usage": "Cách dùng:\n- Gỡ cấm ngôn (unmute): `{{prefix}}unmute @user [lý do]`",
+      "not_muted": "Người dùng này hiện không bị cấm ngôn!",
+      "log_title": "🔊 Đã gỡ cấm ngôn (Unmute)",
+      "log_desc": "Đã gỡ cấm ngôn {{tag}}.",
+      "dm_title": "Bạn đã được unmute trong {{guild}}",
+      "dm_desc": "**Lý do:** {{reason}}\n\nBạn đã có thể gửi tin nhắn và tham gia voice chat trở lại.",
+      "error_unmute": "Đã xảy ra lỗi khi gỡ cấm ngôn người dùng: {{error}}"
+    },
+    "warn": {
+      "usage": "Cách dùng:\n- Cảnh cáo (warn): `{{prefix}}warn @user [lý do]`",
+      "cannot_warn_bot": "Không thể cảnh cáo bot!",
+      "db_error": "Đã xảy ra lỗi khi lưu cảnh cáo vào cơ sở dữ liệu!",
+      "dm_title": "Bạn đã bị cảnh cáo trong {{guild}}",
+      "dm_desc": "**Lý do:** {{reason}}\n**Số lần cảnh cáo:** {{warningCount}}",
+      "dm_footer": "Nếu bạn tiếp tục vi phạm quy tắc, bạn có thể bị mute hoặc ban.",
+      "auto_mute_title": "🔇 Thành viên đã bị tự động mute",
+      "auto_mute_desc": "{{tag}} đã bị tự động mute trong 1 giờ sau {{count}} lần cảnh cáo.",
+      "auto_kick_title": "👢 Thành viên đã bị tự động kick",
+      "auto_kick_desc": "{{tag}} đã bị tự động kick sau {{count}} lần cảnh cáo.",
+      "error_warn": "Đã xảy ra lỗi khi cảnh cáo người dùng: {{error}}"
+    },
     "fun": {
       "desc_pat": "Xoa đầu ai đó",
       "desc_hug": "Ôm ai đó",
