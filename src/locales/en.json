@@ -24,7 +24,9 @@
       "user_not_found": "Could not find this member in the server!",
       "log_field_duration": "⏳ Duration",
       "log_field_endtime": "📅 Ends at",
-      "auto_system": "Auto System"
+      "auto_system": "Auto System",
+      "no_warnings": "This user does not have any warnings!",
+      "unknown_user": "Unknown"
     },
     "ban": {
       "usage": "Usage:\n- Ban member: `{{prefix}}ban @user [reason] [days_to_delete_messages]`",
@@ -70,6 +72,49 @@
       "auto_kick_title": "👢 Member auto-kicked",
       "auto_kick_desc": "{{tag}} was auto-kicked after {{count}} warnings.",
       "error_warn": "An error occurred while warning the user: {{error}}"
+    },
+    "warnings": {
+      "usage": "Usage:\n- View warnings: `{{prefix}}warnings @user`",
+      "embed_title": "⚠️ Warning List",
+      "embed_desc": "**👤 User:** {{tag}}\n**🚨 Total warnings:** {{count}}",
+      "embed_footer": "ID: {{id}}",
+      "field_name": "Warning #{{index}} - {{date}} {{time}}",
+      "field_value": "**Reason:** {{reason}}\n**Moderator:** {{moderator}}",
+      "note_title": "Note",
+      "note_desc": "Only showing the latest 10/{{total}} warnings.",
+      "error_warnings": "An error occurred while retrieving warning data: {{error}}"
+    },
+    "clearwarnings": {
+      "usage": "Usage:\n- Clear warnings: `{{prefix}}clearwarnings @user [all|latest]`",
+      "type_all": "all",
+      "type_latest": "latest warning",
+      "type_all_cap": "All",
+      "type_latest_cap": "Latest warning",
+      "dm_title": "Your warnings have been cleared in {{guild}}",
+      "dm_desc": "{{typeCap}} ({{count}}) of your warnings have been cleared.\nReason: {{reason}}",
+      "dm_footer": "By {{user}}",
+      "error_clearwarnings": "An error occurred while clearing warnings: {{error}}"
+    },
+    "unban": {
+      "usage": "Usage:\n- Unban user: `{{prefix}}unban [user_id] [reason]`",
+      "invalid_id": "Invalid user ID. The ID must be a 17-19 digit number.",
+      "not_banned": "Could not find this member in the server's ban list.",
+      "log_title": "🔓 Member Unbanned",
+      "log_desc": "Unbanned {{tag}} from the server.",
+      "error_unban": "An error occurred while unbanning the user: {{error}}"
+    },
+    "modlog": {
+      "usage": "Usage:\n- View mod log: `{{prefix}}modlog [user] [action]`",
+      "no_logs": "The system has not recorded any moderation logs matching the filter!",
+      "embed_title": "📋 Moderation Log",
+      "embed_desc": "Displaying the last **{{count}}** moderation actions{{userText}}{{actionText}}.",
+      "filter_user": " for <@{{id}}>",
+      "filter_action": " (Filter: `{{action}}`)",
+      "unknown_id": "Unknown (ID: {{id}})",
+      "field_duration": "\n**Duration:** {{duration}} minutes",
+      "field_clear_count": "\n**Warnings cleared:** {{count}}",
+      "field_value": "**👮 Moderator:** {{moderator}}\n**👤 User:** {{target}}\n**📝 Reason:** {{reason}}{{additional}}",
+      "error_modlog": "An error occurred while viewing moderation logs: {{error}}"
     },
     "fun": {
       "desc_pat": "Pat someone",

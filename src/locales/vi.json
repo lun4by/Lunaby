@@ -24,7 +24,9 @@
       "user_not_found": "Không tìm thấy thành viên này trong server!",
       "log_field_duration": "⏳ Thời gian phạt",
       "log_field_endtime": "📅 Kết thúc lúc",
-      "auto_system": "Hệ thống tự động"
+      "auto_system": "Hệ thống tự động",
+      "no_warnings": "Người dùng này hiện không có cảnh cáo nào!",
+      "unknown_user": "Không rõ"
     },
     "ban": {
       "usage": "Cách dùng:\n- Ban member: `{{prefix}}ban @user [lý do] [số_ngày_xóa_tin_nhắn]`",
@@ -70,6 +72,49 @@
       "auto_kick_title": "👢 Thành viên đã bị tự động kick",
       "auto_kick_desc": "{{tag}} đã bị tự động kick sau {{count}} lần cảnh cáo.",
       "error_warn": "Đã xảy ra lỗi khi cảnh cáo người dùng: {{error}}"
+    },
+    "warnings": {
+      "usage": "Cách dùng:\n- Xem cảnh cáo: `{{prefix}}warnings @user`",
+      "embed_title": "⚠️ Danh sách cảnh cáo",
+      "embed_desc": "**👤 Người dùng:** {{tag}}\n**🚨 Tổng số cảnh cáo:** {{count}}",
+      "embed_footer": "ID: {{id}}",
+      "field_name": "Cảnh cáo #{{index}} - {{date}} {{time}}",
+      "field_value": "**Lý do:** {{reason}}\n**Người cảnh cáo:** {{moderator}}",
+      "note_title": "Lưu ý",
+      "note_desc": "Chỉ hiển thị 10/{{total}} cảnh cáo gần nhất.",
+      "error_warnings": "Đã xảy ra lỗi khi truy xuất dữ liệu cảnh cáo: {{error}}"
+    },
+    "clearwarnings": {
+      "usage": "Cách dùng:\n- Xóa cảnh cáo: `{{prefix}}clearwarnings @user [all|latest]`",
+      "type_all": "tất cả",
+      "type_latest": "cảnh cáo mới nhất",
+      "type_all_cap": "Tất cả",
+      "type_latest_cap": "Cảnh cáo mới nhất",
+      "dm_title": "Cảnh cáo của bạn đã được xóa tại {{guild}}",
+      "dm_desc": "{{typeCap}} ({{count}}) cảnh cáo của bạn đã được xóa.\nLý do: {{reason}}",
+      "dm_footer": "Bởi {{user}}",
+      "error_clearwarnings": "Đã xảy ra lỗi khi xóa cảnh cáo: {{error}}"
+    },
+    "unban": {
+      "usage": "Cách dùng:\n- Gỡ cấm (unban): `{{prefix}}unban [id_người_dùng] [lý do]`",
+      "invalid_id": "ID người dùng không hợp lệ. ID phải là một chuỗi số từ 17-19 chữ số.",
+      "not_banned": "Không tìm thấy thành viên này trong danh sách bị cấm của server.",
+      "log_title": "🔓 Đã gỡ cấm thành viên (Unban)",
+      "log_desc": "Đã gỡ cấm {{tag}} khỏi server.",
+      "error_unban": "Đã xảy ra lỗi khi gỡ cấm người dùng: {{error}}"
+    },
+    "modlog": {
+      "usage": "Cách dùng:\n- Xem log: `{{prefix}}modlog [user] [action]`",
+      "no_logs": "Hệ thống chưa ghi nhận lược sử báo cáo nào phù hợp với bộ lọc!",
+      "embed_title": "📋 Lược sử Báo cáo Kiểm duyệt",
+      "embed_desc": "Hiển thị **{{count}}** hành động kiểm duyệt gần nhất{{userText}}{{actionText}}.",
+      "filter_user": " đối với <@{{id}}>",
+      "filter_action": " (Bộ lọc: `{{action}}`)",
+      "unknown_id": "Không rõ (ID: {{id}})",
+      "field_duration": "\n**Thời gian:** {{duration}} phút",
+      "field_clear_count": "\n**Số cảnh cáo đã xóa:** {{count}}",
+      "field_value": "**👮 Người xử lý:** {{moderator}}\n**👤 Người dùng:** {{target}}\n**📝 Lý do:** {{reason}}{{additional}}",
+      "error_modlog": "Đã xảy ra lỗi khi xem lược sử báo cáo: {{error}}"
     },
     "fun": {
       "desc_pat": "Xoa đầu ai đó",
