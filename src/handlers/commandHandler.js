@@ -168,6 +168,21 @@ const handleCommand = async (interaction, client) => {
 
     logger.info('COMMAND_USAGE', `[Server: ${interaction.guild?.name || 'DM'}] [Channel: ${interaction.channel?.name || 'N/A'}] User ${interaction.user.tag} (${interaction.user.id}) used: /${interaction.commandName}`);
   } catch (error) {
+    // TEMP DEBUG: hard console logging to bypass logger filters; remove after root cause is identified.
+    console.error('[TEMP COMMAND ERROR]', {
+      commandName: interaction.commandName,
+      userId: interaction.user?.id,
+      userTag: interaction.user?.tag,
+      guildId: interaction.guildId,
+      guildName: interaction.guild?.name,
+      channelId: interaction.channelId,
+      channelName: interaction.channel?.name,
+      replied: interaction.replied,
+      deferred: interaction.deferred,
+      i18nInitialized: Boolean(i18nManager.isInitialized),
+    });
+    console.error(error?.stack || error);
+
     logger.error(
       'COMMAND',
       `Error executing command ${interaction.commandName} | replied=${interaction.replied} | deferred=${interaction.deferred} | localeBound=${typeof interaction.t === 'function'}`,

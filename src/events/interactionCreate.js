@@ -35,6 +35,20 @@ function setupInteractionCreateEvent(client) {
         }
       }
     } catch (error) {
+      // TEMP DEBUG: hard console logging to bypass logger filters; remove after interaction bug is identified.
+      console.error('[TEMP INTERACTION ERROR]', {
+        type: interaction.type,
+        isChatInputCommand: interaction.isChatInputCommand?.() ?? false,
+        isButton: interaction.isButton?.() ?? false,
+        commandName: interaction.commandName,
+        customId: interaction.customId,
+        userId: interaction.user?.id,
+        userTag: interaction.user?.tag,
+        guildId: interaction.guildId,
+        channelId: interaction.channelId,
+      });
+      console.error(error?.stack || error);
+
       logger.error("INTERACTION_EVENT", "Error handling interaction:", error);
     }
   });
