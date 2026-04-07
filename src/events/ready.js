@@ -1,4 +1,7 @@
 const { ActivityType } = require('discord.js');
+const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 const mongoClient = require('../services/database/mongoClient.js');
 const mariaClient = require('../services/database/mariaClient.js');
 const MariaBlacklistDB = require('../services/database/MariaBlacklistDB.js');
@@ -107,6 +110,51 @@ async function cleanupBlacklistedGuilds(client) {
   }
 }
 
+function initializeDashboard() {
+  const dashboardDir = path.join(__dirname, '../../dashboard');
+
+  if (!fs.existsSync(dashboardDir)) {
+    logger.warn('DASHBOARD', 'Dashboard directory not found, skipping');
+    return;
+  }
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  const command = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+  const args = isProduction ? ['nuxi', 'preview'] : ['nuxi', 'dev'];
+  const port = process.env.DASHBOARD_PORT || '3000';
+
+  const dashboard = spawn(command, args, {
+    cwd: dashboardDir,
+    stdio: 'pipe',
+    env: { ...process.env, PORT: port, NUXT_PORT: port },
+  });
+
+  dashboard.stdout.on('data', (data) => {
+    const output = data.toString().trim();
+    if (output) logger.info('DASHBOARD', output);
+  });
+
+  dashboard.stderr.on('data', (data) => {
+    const output = data.toString().trim();
+    if (output) logger.warn('DASHBOARD', output);
+  });
+
+  dashboard.on('error', (error) => {
+    logger.error('DASHBOARD', `Failed to start dashboard: ${error.message}`);
+  });
+
+  dashboard.on('close', (code) => {
+    if (code !== 0 && code !== null) {
+      logger.error('DASHBOARD', `Dashboard process exited with code ${code}`);
+    }
+  });
+
+  // Unref so the bot process can exit even if dashboard is still running
+  dashboard.unref();
+
+  logger.info('DASHBOARD', `Starting dashboard on port ${port} (${isProduction ? 'production' : 'development'})`);
+}
+
 async function initializeReadyState(client, loadCommands) {
   await Promise.all([
     runStartupStep('MongoDB init', initializeMongo, 'mongodb'),
@@ -130,6 +178,7 @@ async function initializeReadyState(client, loadCommands) {
     await cleanupZombieChannels(client);
   });
   await runStartupStep('Top.gg init', () => initializeTopgg(client));
+  await runStartupStep('Dashboard init', () => initializeDashboard(), 'dashboard');
 }
 
 async function startbot(client, loadCommands) {

@@ -9,7 +9,7 @@ class InitSystem extends EventEmitter {
       mongodb: false,
       mariadb: false,
       commands: false,
-      providers: false,
+      i18n: false,
       profiles: false,
       conversationHistory: false,
       guildProfiles: false,
