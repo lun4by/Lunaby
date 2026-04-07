@@ -116,6 +116,120 @@
       "field_value": "**👮 Moderator:** {{moderator}}\n**👤 User:** {{target}}\n**📝 Reason:** {{reason}}{{additional}}",
       "error_modlog": "An error occurred while viewing moderation logs: {{error}}"
     },
+    "setting": {
+      "need_manage_server": "You need the **Manage Server** permission to use this command.",
+      "session_expired": "⏱️ The session has expired (10 minutes).",
+      "load_error": "Could not load the settings panel.",
+      "general_error": "An error occurred. Please try again.",
+      "closed": "Dashboard closed.",
+      "embed_title": "⚙️ Server Dashboard",
+      "embed_footer": "Automatically closes after 10 minutes.",
+      "menu_placeholder": "Select a configuration category...",
+      "menu_general": "⚙️ General Settings",
+      "menu_general_desc": "Display options and bot activity",
+      "menu_logging": "🛡️ Logging Settings",
+      "menu_logging_desc": "Set up Log Channel and Moderation Logs",
+      "menu_close": "Close",
+      "menu_close_desc": "Exit the dashboard",
+      "cat_general_desc": "**⚙️ Category: General Settings**\nAdjust how the bot interacts and sends notifications in the server.",
+      "field_levelup": "🔔 Level-up Notifications",
+      "field_embed": "📋 Use Embeds",
+      "status_on": "Enabled",
+      "status_off": "Disabled",
+      "btn_on_levelup": "Enable Level-up",
+      "btn_off_levelup": "Disable Level-up",
+      "btn_on_embed": "Enable Embeds",
+      "btn_off_embed": "Disable Embeds",
+      "cat_logging_desc": "**🛡️ Category: Event Logging**\nAllow the bot to safely record bans, kicks, and major events into a channel.",
+      "field_log_channel": "📝 Log Channel",
+      "no_channel_set": "Not set (Please select from the menu below)",
+      "field_modlog": "🔨 Moderation Logs (Ban/Kick/Mute)",
+      "field_monitor": "📡 Extended Logs (Minor events)",
+      "short_on": "On",
+      "short_off": "Off",
+      "channel_placeholder_set": "Set Log Channel...",
+      "channel_placeholder_change": "Change Log Channel...",
+      "btn_on_modlog": "Enable Mod Logs",
+      "btn_off_modlog": "Disable Mod Logs",
+      "btn_on_monitor": "Enable Extended Logs",
+      "btn_off_monitor": "Disable Extended Logs"
+    },
+    "admin": {
+      "addcredits": {
+        "invalid_args": "Please provide a valid user and amount.",
+        "cannot_add_bot": "Cannot give credits to a bot.",
+        "success_add": "Added",
+        "success_sub": "Removed",
+        "success_msg": "{{action}} **{{amount}}** credits for <@{{userId}}>.\nUser: **{{userTag}}**\nOld Credits: **{{before}}**\nNew Credits: **{{after}}**\nChange: **{{sign}}{{amount}}**",
+        "error": "An error occurred while updating user credits."
+      },
+      "addquota": {
+        "usage": "**Usage:** `{{prefix}}addquota @user <amount>`",
+        "invalid_amount": "Amount must be a valid number.",
+        "unlimited_owner": "**{{tag}}** currently has unlimited usage (Owner/Admin) and does not need quota additions.",
+        "success_add": "Added",
+        "success_sub": "Removed",
+        "success_msg": "{{action}} **{{amount}} limits** for <@{{userId}}>.\nUser: **{{userTag}}**\nOld Limit: **{{oldLimit}}**\nNew Limit: **{{newLimit}}**\nUsed: **{{usage}}**\nRemaining: **{{remaining}}**",
+        "error": "An error occurred while updating user quota."
+      },
+      "blacklist": {
+        "add_user_success": "Added user `{{id}}` to the blacklist.",
+        "invalid_user_id": "Invalid user ID.",
+        "remove_user_success": "Removed user `{{id}}` from the blacklist.",
+        "user_not_found": "User `{{id}}` is not in the blacklist.",
+        "invalid_server_id": "Please provide a valid server ID or run the command directly in the server.",
+        "add_server_success": "Added server `{{id}}` to the blacklist.",
+        "remove_server_success": "Removed server `{{id}}` from the blacklist.",
+        "server_not_found": "Server `{{id}}` is not in the blacklist.",
+        "user_list_title": "**User blacklist ({{count}})**",
+        "server_list_title": "**Server blacklist ({{count}})**",
+        "no_data": "No data available.",
+        "mention_user": "Please mention a user or provide a valid user ID.",
+        "invalid_syntax": "Invalid syntax. Usage: `blacklist user add/remove`, `blacklist server add/remove`, or `blacklist list [all|user|server]`.",
+        "error": "{{message}}"
+      },
+      "botstats": {
+        "title": "Bot Overview Statistics",
+        "total_guilds": "Total Servers",
+        "total_users": "Total Users",
+        "shards": "Shards",
+        "user_blacklist": "User Blacklist",
+        "server_blacklist": "Server Blacklist",
+        "error": "An error occurred while loading bot statistics!"
+      },
+      "giveadmin": {
+        "usage": "**Usage:** `{{prefix}}giveadmin @user <role>`\nValid roles: {{roles}}",
+        "invalid_role": "Invalid role! Please use one of the following: {{roles}}",
+        "owner_only": "This command is restricted to the Bot Owner!",
+        "already_has_role": "User **{{tag}}** already has the **{{role}}** role.",
+        "success": "**Role assigned successfully!**\nUpdated role for <@{{id}}> ({{tag}}).\n**From:** `{{oldRole}}` **To:** `{{newRole}}`",
+        "error": "An error occurred while updating the role for this user."
+      },
+      "logger": {
+        "owner_only": "You do not have permission to use this command!",
+        "status_title": "**Logger System Status:**\nStatus: {{status}}\nLevel: {{level}}\nShow Timestamp: {{time}}\n\n**Categories:**\n{{categories}}",
+        "enabled_status": "Enabled",
+        "disabled_status": "Disabled",
+        "enabled": "Logger system has been enabled",
+        "disabled": "Logger system has been disabled",
+        "set_level": "Set logger level to: {{level}}",
+        "set_category_on": "Enabled logging for category: {{category}}",
+        "set_category_off": "Disabled logging for category: {{category}}",
+        "reset": "Reset logger configuration to defaults"
+      },
+      "reset": {
+        "owner_only": "You do not have permission to use this command!",
+        "confirm_btn": "Confirm",
+        "cancel_btn": "Cancel",
+        "warn_database": "**CONFIRM DATABASE RESET**\n\nAre you sure you want to delete and recreate the entire database?\n\n**Warning:**\n> All data will be permanently deleted\n> Cannot be restored after reset\n> The bot will lose all previous conversations\n> Conversations and settings will be wiped\n\n**This action cannot be undone!**",
+        "warn_users": "**CONFIRM USER PROFILES RESET**\n\nAre you sure you want to delete all user profiles?\n\n**Warning:**\n> All user profiles will be permanently deleted\n> Cannot be restored after reset\n> All XP, levels, and achievements will be lost\n> Users will have to accept the consent agreement again\n\n**This action cannot be undone!**"
+      },
+      "systemlog": {
+        "invalid_channel": "Please provide or mention a valid channel (e.g. `{{prefix}}systemlog #log-channel`).",
+        "success": "Global log channel successfully set to <#{{id}}>.",
+        "error": "An error occurred while saving the log channel to the database."
+      }
+    },
     "fun": {
       "desc_pat": "Pat someone",
       "desc_hug": "Hug someone",
@@ -201,6 +315,7 @@
       "max_length": "Prefix cannot exceed 10 characters!",
       "save_error": "Could not save prefix. Please try again later.",
       "server_changed": "Server prefix has been changed to `{{prefix}}`",
+      "personal_changed": "Successfully changed your personal prefix to: `{{prefix}}`",
       "reset_all": "Reset server and personal prefix to default `{{prefix}}`",
       "reset_personal": "Reset personal prefix to default `{{prefix}}`"
     },
@@ -360,6 +475,7 @@
     },
     "personalize": {
       "desc": "Customize your AI experience",
+      "error_occurred": "An error occurred while saving the info. Please try again later.",
       "menu_info": "Personal info & Instructions",
       "menu_info_desc": "Occupation & custom instructions",
       "menu_search": "Reference search history",

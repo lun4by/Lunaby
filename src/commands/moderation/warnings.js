@@ -76,7 +76,7 @@ module.exports = {
 
             await interaction.editReply({ embeds: [warningsEmbed] });
         } catch (error) {
-            logger.error('MODERATION', 'Lỗi khi xem cảnh cáo của thành viên:', error);
+            logger.error('MODERATION', 'Error viewing member warnings:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.warnings.error_warnings', { error: error.message })}`,
                 ephemeral: true,

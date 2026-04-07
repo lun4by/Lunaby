@@ -46,7 +46,7 @@ module.exports = {
       }
 
     } catch (error) {
-      logger.error('SET_COLOR', 'Lỗi khi set color:', error);
+      logger.error('SET_COLOR', 'Error setting color:', error);
       await interaction.editReply({
         content: `${emojis.error} ${interaction.t('commands.setcolor.error')}`
       });

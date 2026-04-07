@@ -19,7 +19,7 @@ class InitSystem extends EventEmitter {
 
   markReady(service) {
     if (!(service in this.services)) {
-      logger.warn("SYSTEM", `Không nhận dạng được service: ${service}`);
+      logger.warn("SYSTEM", `Unrecognized service: ${service}`);
       return;
     }
 

@@ -44,7 +44,7 @@ const getProfile = async (userId) => {
             }
         } catch (error) {
             if (!error.message.includes('duplicate key')) {
-                logger.error("DATABASE", `Lỗi khi tạo profile cho ${userId}:`, error);
+                logger.error("DATABASE", `Error khi tạo profile cho ${userId}:`, error);
             }
         }
         profile = await collection.findOne({ _id: userId });

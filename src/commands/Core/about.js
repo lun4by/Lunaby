@@ -6,6 +6,10 @@ const {
 } = require('discord.js');
 const packageJson = require('../../../package.json');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
+const { SUPPORT_SERVER_URL } = require('../../utils/blacklistUtils');
+
+const DISCORD_BOT_PERMISSIONS = process.env.DISCORD_BOT_PERMISSIONS || '0';
+const WEBSITE_URL = process.env.WEBSITE_URL || 'https://lunaby.tech';
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -38,15 +42,15 @@ function buildActionRow(interaction) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setLabel(interaction.t('commands.about.invite_btn'))
-            .setURL(`https://discord.com/api/oauth2/authorize?client_id=${interaction.client.user.id}&permissions=4856130613668928&scope=bot%20applications.commands`)
+            .setURL(`https://discord.com/api/oauth2/authorize?client_id=${interaction.client.user.id}&permissions=${DISCORD_BOT_PERMISSIONS}&scope=bot%20applications.commands`)
             .setStyle(ButtonStyle.Link),
         new ButtonBuilder()
             .setLabel(interaction.t('commands.about.support_btn'))
-            .setURL('https://discord.gg/NFF7tw2zNQ')
+            .setURL(SUPPORT_SERVER_URL)
             .setStyle(ButtonStyle.Link),
         new ButtonBuilder()
             .setLabel(interaction.t('commands.about.website_btn'))
-            .setURL('https://lunaby.tech')
+            .setURL(WEBSITE_URL)
             .setStyle(ButtonStyle.Link),
     );
 }

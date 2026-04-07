@@ -35,11 +35,11 @@ function setupInteractionCreateEvent(client) {
         }
       }
     } catch (error) {
-      logger.error("INTERACTION_EVENT", "Lỗi khi xử lý interaction:", error);
+      logger.error("INTERACTION_EVENT", "Error handling interaction:", error);
     }
   });
 
-  logger.info("EVENTS", "Đã đăng ký event: InteractionCreate");
+  logger.info("EVENTS", "Registered event: InteractionCreate");
 }
 
 module.exports = { setupInteractionCreateEvent };

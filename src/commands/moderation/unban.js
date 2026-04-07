@@ -93,7 +93,7 @@ module.exports = {
 
             await sendModLog(interaction.guild, logEmbed, true);
         } catch (error) {
-            logger.error('MODERATION', 'Lỗi khi unban người dùng:', error);
+            logger.error('MODERATION', 'Error unbanning user:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.unban.error_unban', { error: error.message })}`,
                 ephemeral: true,

@@ -41,7 +41,7 @@ setupGuildMemberAddEvent(client);
 startbot(client, () => loadCommands(client));
 
 process.on("unhandledRejection", (error) => {
-	logger.error("SYSTEM", "Lỗi không được xử lý:", error);
+	logger.error("SYSTEM", "Error không được xử lý:", error);
 });
 
 client.login(process.env.DISCORD_TOKEN);

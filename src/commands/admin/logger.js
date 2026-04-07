@@ -40,7 +40,7 @@ module.exports = {
 
     async execute(interaction) {
         if (interaction.user.id !== OWNER_ID) {
-            return reply(interaction, 'Bạn không có quyền sử dụng lệnh này!');
+            return reply(interaction, interaction.t('commands.admin.logger.owner_only'));
         }
 
         const sub = interaction.options.getSubcommand();
@@ -48,31 +48,34 @@ module.exports = {
         if (sub === 'status') {
             const config = logger.getConfig();
             const cats = Object.entries(config.categories).map(([k, v]) => `${k}: ${v ? emojis.success : emojis.error}`).join('\n');
-            return reply(interaction,
-                `**Trạng thái hệ thống ghi log:**\n` +
-                `Trạng thái: ${config.enabled ? 'Đang bật' : 'Đã tắt'}\n` +
-                `Mức độ: ${config.level.toUpperCase()}\n` +
-                `Hiển thị thời gian: ${config.showTimestamp ? emojis.success : emojis.error}\n\n` +
-                `**Danh mục:**\n${cats}`
-            );
+            const statusText = config.enabled ? interaction.t('commands.admin.logger.enabled_status') : interaction.t('commands.admin.logger.disabled_status');
+            const timeText = config.showTimestamp ? emojis.success : emojis.error;
+
+            return reply(interaction, interaction.t('commands.admin.logger.status_title', {
+                status: statusText,
+                level: config.level.toUpperCase(),
+                time: timeText,
+                categories: cats
+            }));
         }
 
-        if (sub === 'enable') { logger.setEnabled(true); return reply(interaction, 'Đã bật hệ thống ghi log'); }
-        if (sub === 'disable') { logger.setEnabled(false); return reply(interaction, 'Đã tắt hệ thống ghi log'); }
+        if (sub === 'enable') { logger.setEnabled(true); return reply(interaction, interaction.t('commands.admin.logger.enabled')); }
+        if (sub === 'disable') { logger.setEnabled(false); return reply(interaction, interaction.t('commands.admin.logger.disabled')); }
 
         if (sub === 'level') {
             const level = interaction.options.getString('level');
             logger.setLevel(level);
-            return reply(interaction, `Đã đặt mức độ ghi log thành: ${level.toUpperCase()}`);
+            return reply(interaction, interaction.t('commands.admin.logger.set_level', { level: level.toUpperCase() }));
         }
 
         if (sub === 'category') {
             const category = interaction.options.getString('category');
             const enabled = interaction.options.getBoolean('enabled');
             logger.setCategoryEnabled(category, enabled);
-            return reply(interaction, `Đã ${enabled ? 'bật' : 'tắt'} ghi log cho danh mục: ${category}`);
+            const msg = enabled ? interaction.t('commands.admin.logger.set_category_on', { category }) : interaction.t('commands.admin.logger.set_category_off', { category });
+            return reply(interaction, msg);
         }
 
-        if (sub === 'reset') { logger.resetConfig(); return reply(interaction, 'Đã khôi phục cài đặt ghi log về mặc định'); }
+        if (sub === 'reset') { logger.resetConfig(); return reply(interaction, interaction.t('commands.admin.logger.reset')); }
     },
 };

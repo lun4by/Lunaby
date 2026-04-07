@@ -257,7 +257,7 @@ function setupVoiceStateEvent(client) {
         }
     });
 
-    logger.info('EVENTS', 'Đã đăng ký event: VoiceStateUpdate');
+    logger.info('EVENTS', 'Registered event: VoiceStateUpdate');
 }
 
 module.exports = {

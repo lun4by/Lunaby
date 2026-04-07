@@ -111,7 +111,7 @@ module.exports = {
 
                 await targetUser.send({ embeds: [dmEmbed] });
             } catch (error) {
-                logger.error('MODERATION', `Không thể gửi DM cho ${targetUser.tag}`);
+                logger.error('MODERATION', `Failed to send DM to ${targetUser.tag}`);
             }
 
             if (warningCount >= 3 && warningCount < 5) {
@@ -130,7 +130,7 @@ module.exports = {
 
                     await interaction.followUp({ embeds: [autoMuteEmbed] });
                 } catch (error) {
-                    logger.error('MODERATION', 'Không thể tự động mute thành viên:', error);
+                    logger.error('MODERATION', 'Failed to auto-mute member:', error);
                 }
             } else if (warningCount >= 5) {
                 try {
@@ -145,11 +145,11 @@ module.exports = {
 
                     await interaction.followUp({ embeds: [autoKickEmbed] });
                 } catch (error) {
-                    logger.error('MODERATION', 'Không thể tự động kick thành viên:', error);
+                    logger.error('MODERATION', 'Failed to auto-kick member:', error);
                 }
             }
         } catch (error) {
-            logger.error('MODERATION', 'Lỗi khi cảnh cáo thành viên:', error);
+            logger.error('MODERATION', 'Error warning member:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.warn.error_warn', { error: error.message })}`,
                 ephemeral: true,

@@ -150,7 +150,7 @@ module.exports = {
 
           await BlacklistService.addUser(targetUser.id, reason, interaction.user.id);
           return reply(interaction, {
-            content: `${emojis.success} Đã thêm user \`${targetUser.id}\` vào blacklist.`,
+            content: `${emojis.success} ${interaction.t('commands.admin.blacklist.add_user_success', { id: targetUser.id })}`,
             ephemeral: true,
           });
         }
@@ -159,7 +159,7 @@ module.exports = {
           const userId = interaction.options.getString('user_id');
           if (!isSnowflake(userId)) {
             return reply(interaction, {
-              content: `${emojis.error} ID user không hợp lệ.`,
+              content: `${emojis.error} ${interaction.t('commands.admin.blacklist.invalid_user_id')}`,
               ephemeral: true,
             });
           }
@@ -167,8 +167,8 @@ module.exports = {
           const removed = await BlacklistService.removeUser(userId);
           return reply(interaction, {
             content: removed
-              ? `${emojis.success} Đã gỡ user \`${userId}\` khỏi blacklist.`
-              : `${emojis.error} User \`${userId}\` không nằm trong blacklist.`,
+              ? `${emojis.success} ${interaction.t('commands.admin.blacklist.remove_user_success', { id: userId })}`
+              : `${emojis.error} ${interaction.t('commands.admin.blacklist.user_not_found', { id: userId })}`,
             ephemeral: true,
           });
         }
@@ -179,14 +179,14 @@ module.exports = {
 
           if (!isSnowflake(guildId)) {
             return reply(interaction, {
-              content: `${emojis.error} Vui lòng cung cấp ID server hợp lệ hoặc dùng lệnh ngay trong server muốn blacklist.`,
+              content: `${emojis.error} ${interaction.t('commands.admin.blacklist.invalid_server_id')}`,
               ephemeral: true,
             });
           }
 
           await BlacklistService.addGuild(guildId, reason, interaction.user.id);
           await reply(interaction, {
-            content: `${emojis.success} Đã thêm server \`${guildId}\` vào blacklist.`,
+            content: `${emojis.success} ${interaction.t('commands.admin.blacklist.add_server_success', { id: guildId })}`,
             ephemeral: true,
           });
 
@@ -201,7 +201,7 @@ module.exports = {
           const guildId = interaction.options.getString('server_id');
           if (!isSnowflake(guildId)) {
             return reply(interaction, {
-              content: `${emojis.error} ID server không hợp lệ.`,
+              content: `${emojis.error} ${interaction.t('commands.admin.blacklist.invalid_server_id')}`,
               ephemeral: true,
             });
           }
@@ -209,8 +209,8 @@ module.exports = {
           const removed = await BlacklistService.removeGuild(guildId);
           return reply(interaction, {
             content: removed
-              ? `${emojis.success} Đã gỡ server \`${guildId}\` khỏi blacklist.`
-              : `${emojis.error} Server \`${guildId}\` không nằm trong blacklist.`,
+              ? `${emojis.success} ${interaction.t('commands.admin.blacklist.remove_server_success', { id: guildId })}`
+              : `${emojis.error} ${interaction.t('commands.admin.blacklist.server_not_found', { id: guildId })}`,
             ephemeral: true,
           });
         }
@@ -222,10 +222,10 @@ module.exports = {
 
           const blocks = [];
           if (type !== 'server') {
-            blocks.push(`**User blacklist (${users.length})**\n${users.length ? users.map((entry) => formatListLine(entry, 'user')).join('\n') : 'Không có dữ liệu.'}`);
+            blocks.push(`${interaction.t('commands.admin.blacklist.user_list_title', { count: users.length })}\n${users.length ? users.map((entry) => formatListLine(entry, 'user')).join('\n') : interaction.t('commands.admin.blacklist.no_data')}`);
           }
           if (type !== 'user') {
-            blocks.push(`**Server blacklist (${guilds.length})**\n${guilds.length ? guilds.map((entry) => formatListLine(entry, 'server')).join('\n') : 'Không có dữ liệu.'}`);
+            blocks.push(`${interaction.t('commands.admin.blacklist.server_list_title', { count: guilds.length })}\n${guilds.length ? guilds.map((entry) => formatListLine(entry, 'server')).join('\n') : interaction.t('commands.admin.blacklist.no_data')}`);
           }
 
           return reply(interaction, {
@@ -244,10 +244,10 @@ module.exports = {
         const parts = [];
 
         if (type !== 'server') {
-          parts.push(`User blacklist (${users.length})\n${users.length ? users.map((entry) => formatListLine(entry, 'user')).join('\n') : 'Không có dữ liệu.'}`);
+          parts.push(`${interaction.t('commands.admin.blacklist.user_list_title', { count: users.length })}\n${users.length ? users.map((entry) => formatListLine(entry, 'user')).join('\n') : interaction.t('commands.admin.blacklist.no_data')}`);
         }
         if (type !== 'user') {
-          parts.push(`Server blacklist (${guilds.length})\n${guilds.length ? guilds.map((entry) => formatListLine(entry, 'server')).join('\n') : 'Không có dữ liệu.'}`);
+          parts.push(`${interaction.t('commands.admin.blacklist.server_list_title', { count: guilds.length })}\n${guilds.length ? guilds.map((entry) => formatListLine(entry, 'server')).join('\n') : interaction.t('commands.admin.blacklist.no_data')}`);
         }
 
         return interaction.reply(parts.join('\n\n'));
@@ -256,20 +256,20 @@ module.exports = {
       if (scope === 'user') {
         const { userId, reason } = extractUserTargetFromPrefix(interaction, restArgs);
         if (!userId) {
-          return interaction.reply(`${emojis.error} Vui lòng mention user hoặc nhập ID user hợp lệ.`);
+          return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.blacklist.mention_user')}`);
         }
 
         if (action === 'add') {
           await BlacklistService.addUser(userId, reason, interaction.user.id);
-          return interaction.reply(`${emojis.success} Đã thêm user \`${userId}\` vào blacklist.`);
+          return interaction.reply(`${emojis.success} ${interaction.t('commands.admin.blacklist.add_user_success', { id: userId })}`);
         }
 
         if (action === 'remove') {
           const removed = await BlacklistService.removeUser(userId);
           return interaction.reply(
             removed
-              ? `${emojis.success} Đã gỡ user \`${userId}\` khỏi blacklist.`
-              : `${emojis.error} User \`${userId}\` không nằm trong blacklist.`
+              ? `${emojis.success} ${interaction.t('commands.admin.blacklist.remove_user_success', { id: userId })}`
+              : `${emojis.error} ${interaction.t('commands.admin.blacklist.user_not_found', { id: userId })}`
           );
         }
       }
@@ -277,12 +277,12 @@ module.exports = {
       if (scope === 'server') {
         const { guildId, reason } = extractGuildTargetFromPrefix(interaction, restArgs, action);
         if (!guildId) {
-          return interaction.reply(`${emojis.error} Vui lòng nhập ID server hợp lệ hoặc dùng lệnh trong server cần blacklist.`);
+          return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.blacklist.invalid_server_id')}`);
         }
 
         if (action === 'add') {
           await BlacklistService.addGuild(guildId, reason, interaction.user.id);
-          await interaction.reply(`${emojis.success} Đã thêm server \`${guildId}\` vào blacklist.`);
+          await interaction.reply(`${emojis.success} ${interaction.t('commands.admin.blacklist.add_server_success', { id: guildId })}`);
 
           const liveGuild = interaction.client.guilds.cache.get(guildId);
           if (liveGuild) {
@@ -295,19 +295,19 @@ module.exports = {
           const removed = await BlacklistService.removeGuild(guildId);
           return interaction.reply(
             removed
-              ? `${emojis.success} Đã gỡ server \`${guildId}\` khỏi blacklist.`
-              : `${emojis.error} Server \`${guildId}\` không nằm trong blacklist.`
+              ? `${emojis.success} ${interaction.t('commands.admin.blacklist.remove_server_success', { id: guildId })}`
+              : `${emojis.error} ${interaction.t('commands.admin.blacklist.server_not_found', { id: guildId })}`
           );
         }
       }
 
       return interaction.reply(
-        `${emojis.error} Cú pháp không hợp lệ. Dùng: \`blacklist user add/remove\`, \`blacklist server add/remove\`, hoặc \`blacklist list [all|user|server]\`.`
+        `${emojis.error} ${interaction.t('commands.admin.blacklist.invalid_syntax')}`
       );
     } catch (error) {
       logger.error('BLACKLIST', 'Error in blacklist command:', error);
       return reply(interaction, {
-        content: `${emojis.error} ${error.message || 'Đã xảy ra lỗi khi xử lý blacklist.'}`,
+        content: `${emojis.error} ${interaction.t('commands.admin.blacklist.error', { message: error.message || '' })}`,
         ephemeral: true,
       }).catch(() => { });
     }

@@ -34,7 +34,7 @@ function cleanup() {
         }
     }
     if (cleaned > 0) {
-        logger.debug('COOLDOWN', `Đã dọn dẹp ${cleaned} cooldown hết hạn`);
+        logger.debug('COOLDOWN', `Cleaned up ${cleaned} expired cooldowns`);
     }
 }
 

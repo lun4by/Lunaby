@@ -68,11 +68,11 @@ function setupMessageCreateEvent(client) {
 
       await handleMentionMessage(message, client);
     } catch (error) {
-      logger.error("MESSAGE_EVENT", "Lỗi khi xử lý message:", error);
+      logger.error("MESSAGE_EVENT", "Error handling message:", error);
     }
   });
 
-  logger.info("EVENTS", "Đã đăng ký event: MessageCreate");
+  logger.info("EVENTS", "Registered event: MessageCreate");
 }
 
 module.exports = { setupMessageCreateEvent };

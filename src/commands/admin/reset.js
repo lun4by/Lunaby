@@ -2,24 +2,10 @@ const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = re
 
 const OWNER_ID = process.env.OWNER_ID;
 
-const WARNINGS = {
-    database: `**XÁC NHẬN RESET DATABASE**\n\n` +
-        `Bạn có chắc chắn muốn xóa và tạo lại toàn bộ cơ sở dữ liệu không?\n\n` +
-        `**Cảnh báo:**\n` +
-        `> Tất cả dữ liệu sẽ bị xóa vĩnh viễn\n` +
-        `> Không thể khôi phục sau khi reset\n` +
-        `> Bot sẽ mất tất cả cuộc trò chuyện trước đây\n` +
-        `> Conversations, settings sẽ bị xóa\n\n` +
-        `**Hành động này không thể hoàn tác!**`,
-    users: `**XÁC NHẬN RESET USER PROFILES**\n\n` +
-        `Bạn có chắc chắn muốn xóa tất cả user profiles không?\n\n` +
-        `**Cảnh báo:**\n` +
-        `> Tất cả user profiles sẽ bị xóa vĩnh viễn\n` +
-        `> Không thể khôi phục sau khi reset\n` +
-        `> Tất cả XP, level, achievements sẽ mất\n` +
-        `> Users sẽ phải đồng ý consent lại\n\n` +
-        `**Hành động này không thể hoàn tác!**`,
-};
+const WARNINGS = (t) => ({
+    database: t('admin.reset.warn_database'),
+    users: t('admin.reset.warn_users'),
+});
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -35,16 +21,16 @@ module.exports = {
 
     async execute(interaction) {
         if (interaction.user.id !== OWNER_ID) {
-            return interaction.reply({ content: 'Bạn không có quyền sử dụng lệnh này!', ephemeral: true });
+            return interaction.reply({ content: interaction.t('commands.admin.reset.owner_only'), ephemeral: true });
         }
 
         const type = interaction.options.getString('type');
 
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId(`reset_${type}_confirm`).setLabel('Đồng ý').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId(`reset_${type}_cancel`).setLabel('Từ chối').setStyle(ButtonStyle.Danger),
+            new ButtonBuilder().setCustomId(`reset_${type}_confirm`).setLabel(interaction.t('commands.admin.reset.confirm_btn')).setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`reset_${type}_cancel`).setLabel(interaction.t('commands.admin.reset.cancel_btn')).setStyle(ButtonStyle.Danger),
         );
 
-        await interaction.reply({ content: WARNINGS[type], components: [row], ephemeral: true });
+        await interaction.reply({ content: WARNINGS(interaction.t)[type], components: [row], ephemeral: true });
     },
 };

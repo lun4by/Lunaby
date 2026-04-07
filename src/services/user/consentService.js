@@ -9,7 +9,7 @@ class ConsentService {
       const rows = await mariaClient.query('SELECT consented FROM user_consents WHERE user_id = ? LIMIT 1', [userId]);
       return rows.length > 0 ? Boolean(rows[0].consented) : false;
     } catch (error) {
-      logger.error('CONSENT', `Lỗi khi kiểm tra consent cho user ${userId}:`, error);
+      logger.error('CONSENT', `Error khi kiểm tra consent cho user ${userId}:`, error);
       return false;
     }
   }
@@ -80,10 +80,10 @@ class ConsentService {
       const success = await sendEmbedWithFallback(interaction, embedData, interaction.user.username, 'embedLinks', 'update');
 
       if (success) {
-        logger.info('CONSENT', `User ${interaction.user.tag} (${userId}) đã chấp thuận sử dụng dịch vụ`);
+        logger.info('CONSENT', `User ${interaction.user.tag} (${userId}) accepted Terms of Service`);
       }
     } catch (error) {
-      logger.error('CONSENT', `Lỗi khi xử lý consent accept cho user ${userId}:`, error);
+      logger.error('CONSENT', `Error khi xử lý consent accept cho user ${userId}:`, error);
       await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
     }
   }
@@ -114,10 +114,10 @@ class ConsentService {
       const success = await sendEmbedWithFallback(interaction, embedData, interaction.user.username, 'embedLinks', 'update');
 
       if (success) {
-        logger.info('CONSENT', `User ${interaction.user.tag} (${userId}) đã từ chối sử dụng dịch vụ`);
+        logger.info('CONSENT', `User ${interaction.user.tag} (${userId}) declined Terms of Service`);
       }
     } catch (error) {
-      logger.error('CONSENT', `Lỗi khi xử lý consent decline cho user ${userId}:`, error);
+      logger.error('CONSENT', `Error khi xử lý consent decline cho user ${userId}:`, error);
       await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
     }
   }
@@ -133,7 +133,7 @@ class ConsentService {
         version = VALUES(version)
       `, [userId, consented]);
     } catch (error) {
-      logger.error('CONSENT', `Lỗi khi cập nhật consent cho user ${userId}:`, error);
+      logger.error('CONSENT', `Error khi cập nhật consent cho user ${userId}:`, error);
       throw error;
     }
   }

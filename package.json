@@ -4,8 +4,8 @@
   "description": "Bot Discord hỗ trợ trò chuyện AI và tạo hình ảnh, phiên bản native chỉ dùng cho model Lunaby",
   "main": "src/index.js",
   "scripts": {
-    "start": "node shard.js",
-    "dev": "nodemon src/index.js"
+    "start": "cross-env NODE_ENV=production node shard.js",
+    "dev": "cross-env NODE_ENV=development nodemon src/index.js"
   },
   "author": {
     "name": "s4ory"
@@ -28,6 +28,7 @@
     "topgg-autoposter": "^2.0.2"
   },
   "devDependencies": {
+    "cross-env": "^10.0.0",
     "nodemon": "^3.1.14"
   }
 }

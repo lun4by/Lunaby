@@ -50,13 +50,13 @@ module.exports = {
       ]);
 
       const embed = createLunabyEmbed()
-        .setTitle('Thống kê tổng quan của bot')
+        .setTitle(interaction.t('commands.admin.botstats.title'))
         .addFields(
-          { name: 'Tổng server', value: `\`${formatNumber(totalGuilds)}\``, inline: true },
-          { name: 'Tổng user', value: `\`${formatNumber(totalMembers)}\``, inline: true },
-          { name: 'Shards', value: `\`${interaction.client.shard?.count || 1}\``, inline: true },
-          { name: 'User blacklist', value: `\`${formatNumber(blacklistedUsers.length)}\``, inline: true },
-          { name: 'Server blacklist', value: `\`${formatNumber(blacklistedGuilds.length)}\``, inline: true },
+          { name: interaction.t('commands.admin.botstats.total_guilds'), value: `\`${formatNumber(totalGuilds)}\``, inline: true },
+          { name: interaction.t('commands.admin.botstats.total_users'), value: `\`${formatNumber(totalMembers)}\``, inline: true },
+          { name: interaction.t('commands.admin.botstats.shards'), value: `\`${interaction.client.shard?.count || 1}\``, inline: true },
+          { name: interaction.t('commands.admin.botstats.user_blacklist'), value: `\`${formatNumber(blacklistedUsers.length)}\``, inline: true },
+          { name: interaction.t('commands.admin.botstats.server_blacklist'), value: `\`${formatNumber(blacklistedGuilds.length)}\``, inline: true },
         );
 
       await interaction.reply({
@@ -66,7 +66,7 @@ module.exports = {
     } catch (error) {
       logger.error('BOTSTATS', 'Error in botstats command:', error);
       await interaction.reply({
-        content: `${emojis.error} Đã xảy ra lỗi khi tải thống kê bot!`,
+        content: `${emojis.error} ${interaction.t('commands.admin.botstats.error')}`,
         ephemeral: true,
       }).catch(() => { });
     }

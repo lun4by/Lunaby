@@ -108,11 +108,11 @@ module.exports = {
 
                 await targetUser.send({ embeds: [dmEmbed] });
             } catch (error) {
-                logger.error('MODERATION', `Không thể gửi DM cho ${targetUser.tag}`);
+                logger.error('MODERATION', `Failed to send DM to ${targetUser.tag}`);
             }
 
         } catch (error) {
-            logger.error('MODERATION', 'Lỗi khi unmute thành viên:', error);
+            logger.error('MODERATION', 'Error unmuting member:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.unmute.error_unmute', { error: error.message })}`,
                 ephemeral: true
