@@ -16,17 +16,6 @@ const MariaModDB = require("../services/database/MariaModDB");
 function setupMessageCreateEvent(client) {
   client.on(Events.MessageCreate, async (message) => {
     try {
-      // TEMP DEBUG: hard console logging to confirm MessageCreate path; remove after prefix bug is identified.
-      if (!message.author?.bot) {
-        console.log('[TEMP MESSAGE TRACE]', {
-          content: message.content,
-          userId: message.author?.id,
-          userTag: message.author?.tag,
-          guildId: message.guildId,
-          channelId: message.channelId,
-        });
-      }
-
       if (message.author.bot) return;
 
       let locale = 'vi';
@@ -79,16 +68,6 @@ function setupMessageCreateEvent(client) {
 
       await handleMentionMessage(message, client);
     } catch (error) {
-      // TEMP DEBUG: hard console logging to bypass logger filters; remove after message bug is identified.
-      console.error('[TEMP MESSAGE ERROR]', {
-        content: message.content,
-        userId: message.author?.id,
-        userTag: message.author?.tag,
-        guildId: message.guildId,
-        channelId: message.channelId,
-      });
-      console.error(error?.stack || error);
-
       logger.error("MESSAGE_EVENT", "Error handling message:", error);
     }
   });

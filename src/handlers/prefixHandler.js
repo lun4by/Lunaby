@@ -36,31 +36,35 @@ class PseudoInteraction {
     _parseOptions(args, message) {
         const options = new Map();
 
-        // Lấy mention user
+        // Lấy người dùng được mention
         const mentionedUser = message.mentions.users.first();
         if (mentionedUser) {
             options.set('user', mentionedUser);
             options.set('target', mentionedUser);
         }
+        const mentionedChannel = message.mentions.channels.first();
+        if (mentionedChannel) {
+            options.set('channel', mentionedChannel);
+        }
 
         // Lọc ra các text args (không phải mention)
-        const textArgs = args.filter(a => !a.match(/^<@!?\d+>$/));
+        const textArgs = args.filter(a => !a.match(/^<@!?\d+>$/) && !a.match(/^<#\d+>$/));
 
         // Nếu command có schema slash, parse theo đúng thứ tự option
         if (this.command?.data) {
             try {
                 const jsonData = this.command.data.toJSON();
                 const schemaOptions = (jsonData.options || []).filter(opt => opt.type !== 1 && opt.type !== 2);
-                // Discord option types: 3=STRING, 4=INTEGER, 5=BOOLEAN, 6=USER, 7=CHANNEL, 10=NUMBER
+                // Các loại option Discord: 3=STRING, 4=INTEGER, 5=BOOLEAN, 6=USER, 7=CHANNEL, 10=NUMBER
 
                 let textIdx = 0;
                 for (const opt of schemaOptions) {
                     const name = opt.name;
 
-                    // Type 6 = USER → đã xử lý qua mention ở trên
-                    if (opt.type === 6) continue;
+                    // Loại 6 = USER → đã xử lý qua mention ở trên
+                    if (opt.type === 6 || opt.type === 7) continue;
 
-                    // Type 4 = INTEGER, Type 10 = NUMBER
+                    // Loại 4 = INTEGER, Loại 10 = NUMBER
                     if (opt.type === 4 || opt.type === 10) {
                         if (textIdx < textArgs.length) {
                             const parsed = parseInt(textArgs[textIdx], 10);
@@ -72,7 +76,21 @@ class PseudoInteraction {
                         continue;
                     }
 
-                    // Type 3 = STRING
+                    // Loại 5 = BOOLEAN
+                        if (textIdx < textArgs.length) {
+                            const value = textArgs[textIdx].toLowerCase();
+                            if (['true', 'yes', 'on', 'enable', 'enabled', '1'].includes(value)) {
+                                options.set(name, true);
+                                textIdx++;
+                            } else if (['false', 'no', 'off', 'disable', 'disabled', '0'].includes(value)) {
+                                options.set(name, false);
+                                textIdx++;
+                            }
+                        }
+                        continue;
+                    }
+
+                    // Loại 3 = STRING
                     if (opt.type === 3) {
                         // Nếu có choices (like 'all'/'latest'), lấy 1 arg
                         if (opt.choices && opt.choices.length > 0) {
@@ -128,7 +146,7 @@ class PseudoInteraction {
                     const arg0 = self.args[0]?.toLowerCase();
                     const arg1 = self.args[1]?.toLowerCase();
 
-                    // 2 = SUB_COMMAND_GROUP, 1 = SUB_COMMAND
+                    // 2 = SUB_COMMAND_GROUP, 1 = SUB_COMMAND (loại lệnh con)
                     const groupOpt = jsonData.options.find(opt => opt.name === arg0 && opt.type === 2);
                     const subCmdOpt = jsonData.options.find(opt => opt.name === arg0 && opt.type === 1);
 
@@ -143,13 +161,18 @@ class PseudoInteraction {
                     }
                 }
             } catch (e) {
-                // Ignore parse errors, fallback to null
+                // Bỏ qua lỗi parse, fallback về null
             }
         }
 
         return {
             getString(name) { return self._options.get(name) || null; },
             getUser(name) { return self._options.get(name) || null; },
+            getBoolean(name) {
+                const val = self._options.get(name);
+                return typeof val === 'boolean' ? val : null;
+            },
+            getChannel(name) { return self._options.get(name) || null; },
             getMember(name) {
                 const user = self._options.get(name);
                 if (user && self.guild) {
@@ -257,17 +280,6 @@ async function handlePrefixMessage(message, client) {
     }
 
     try {
-        // TEMP DEBUG: hard console logging to bypass logger filters; remove after prefix bug is identified.
-        console.log('[TEMP PREFIX TRACE]', {
-            commandName,
-            rawContent: message.content,
-            userId: message.author?.id,
-            userTag: message.author?.tag,
-            guildId: message.guildId,
-            channelId: message.channelId,
-            hasMessageT: typeof message.t === 'function',
-        });
-
         if (message.guildId) {
             const isDisabled = await MariaModDB.isCommandDisabled(message.guildId, message.channelId, command.data?.name || commandName);
             if (isDisabled) {
@@ -297,16 +309,6 @@ async function handlePrefixMessage(message, client) {
 
         logger.info('COMMAND_USAGE', `[Server: ${message.guild?.name || 'DM'}] [Channel: ${message.channel?.name || 'N/A'}] User ${message.author.tag} (${message.author.id}) used: ${prefix}${commandName}`);
     } catch (error) {
-        // TEMP DEBUG: hard console logging to bypass logger filters; remove after prefix bug is identified.
-        console.error('[TEMP PREFIX ERROR]', {
-            commandName,
-            userId: message.author?.id,
-            userTag: message.author?.tag,
-            guildId: message.guildId,
-            channelId: message.channelId,
-            hasMessageT: typeof message.t === 'function',
-        });
-        console.error(error?.stack || error);
         logger.error('PREFIX', `Error executing prefix command ${commandName}:`, error);
         await message.reply(`${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`).catch(() => { });
     }
