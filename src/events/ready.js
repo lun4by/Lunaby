@@ -88,15 +88,6 @@ async function loadBotCommands(client, loadCommands) {
   logger.info('SYSTEM', `Loaded ${commandCount} commands`);
 }
 
-async function warmGuildProfiles(client) {
-  for (const [guildId, guild] of client.guilds.cache) {
-    try {
-      await MariaModDB.getGuildSettings(guildId);
-    } catch (error) {
-      logger.error('SYSTEM', `Guild config error ${guild.name}:`, error.message);
-    }
-  }
-}
 
 async function cleanupBlacklistedGuilds(client) {
   for (const guild of client.guilds.cache.values()) {
@@ -120,7 +111,7 @@ async function initializeReadyState(client, loadCommands) {
   await Promise.all([
     runStartupStep('Conversation history init', () => storageDB.initializeConversationHistory(), 'conversationHistory'),
     runStartupStep('Profile system init', () => storageDB.initializeProfiles(), 'profiles'),
-    runStartupStep('Guild profiles init', () => warmGuildProfiles(client), 'guildProfiles'),
+
   ]);
 
   await runStartupStep('Guild sync', () => syncAllGuilds(client));

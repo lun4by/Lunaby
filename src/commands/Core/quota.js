@@ -82,10 +82,10 @@ module.exports = {
             })
             .setDescription(
                 `### ${roleBadge}\n` +
-                `**💬 Lunaby Pro**\n` +
+                `*💬 Lunaby Pro*\n` +
                 `${msgBar}\n` +
                 `${formatQuotaValue(msgCurrent, msgMax)} · ${msgRemainingText}\n\n` +
-                `**🎨 Lunaby Vision**\n` +
+                `*🎨 Lunaby Vision*\n` +
                 `${imgBar}\n` +
                 `${formatQuotaValue(imgCurrent, imgMax)} · ${imgRemainingText}\n` +
                 `${interaction.t('commands.quota.total_usage')} **${stats.usage.total}** Lunaby Pro · **${stats.imageUsage.total}** Lunaby Vision\n` +

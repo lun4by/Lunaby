@@ -19,14 +19,7 @@ const sendGlobalLog = async (client, message) => {
 
 async function ensureGuildSettings(guild) {
   try {
-    const settings = await MariaModDB.getGuildSettings(guild.id);
-
-    if (guild.client?.guildProfiles) {
-      guild.client.guildProfiles.set(guild.id, {
-        xp: settings?.xp || { isActive: false, exceptions: [] },
-      });
-    }
-
+    await MariaModDB.getGuildSettings(guild.id);
     logger.info('GUILD', `Ensured guild settings for ${guild.name} in MariaDB`);
   } catch (error) {
     logger.error('GUILD', `Error ensuring guild settings for ${guild.name}:`, error);
