@@ -1,107 +1,50 @@
 const { REST, Routes } = require('discord.js');
-const mongoClient = require('../services/database/mongoClient.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
 const BlacklistService = require('../services/user/BlacklistService');
 const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
 const logger = require('../utils/logger.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 
-const sendGlobalLog = async (client, message) => {
-    const logChannelId = await MariaModDB.getBotSetting('global_log_channel');
-    if (!logChannelId) return;
+const GUILD_COMMAND_DEPLOY_DELAY_MS = 1000;
 
-    const logChannel = await client.channels.fetch(logChannelId).catch(() => null);
-    if (logChannel?.isTextBased()) {
-        await logChannel.send(message);
-    }
+const sendGlobalLog = async (client, message) => {
+  const logChannelId = await MariaModDB.getBotSetting('global_log_channel');
+  if (!logChannelId) return;
+
+  const logChannel = await client.channels.fetch(logChannelId).catch(() => null);
+  if (logChannel?.isTextBased()) {
+    await logChannel.send(message);
+  }
 };
 
-
-async function storeGuildInDB(guild) {
+async function ensureGuildSettings(guild) {
   try {
-    const db = await mongoClient.getDbSafe();
-
-    const guildData = {
-      guildId: guild.id,
-      name: guild.name,
-      memberCount: guild.memberCount,
-      ownerID: guild.ownerId,
-      icon: guild.iconURL(),
-      joinedAt: new Date(),
-      settings: {
-        welcomeChannel: null,
-        moderationEnabled: true,
-        autoRoles: []
-      },
-      xp: {
-        isActive: true,
-        exceptions: []
-      }
-    };
-
-    await db.collection('guilds').updateOne(
-      { guildId: guild.id },
-      { $set: guildData },
-      { upsert: true }
-    );
+    const settings = await MariaModDB.getGuildSettings(guild.id);
 
     if (guild.client?.guildProfiles) {
-      guild.client.guildProfiles.set(guild.id, { xp: guildData.xp });
+      guild.client.guildProfiles.set(guild.id, {
+        xp: settings?.xp || { isActive: false, exceptions: [] },
+      });
     }
 
-    logger.info('GUILD', `Saved server information ${guild.name} to MongoDB`);
+    logger.info('GUILD', `Ensured guild settings for ${guild.name} in MariaDB`);
   } catch (error) {
-    logger.error('GUILD', `Error khi lưu thông tin guild to MongoDB:`, error);
+    logger.error('GUILD', `Error ensuring guild settings for ${guild.name}:`, error);
+    throw error;
   }
 }
-
-
-async function removeGuildFromDB(guildId) {
-  try {
-    const db = await mongoClient.getDbSafe();
-    await db.collection('guilds').deleteOne({ guildId });
-    logger.info('GUILD', `Deleted info for server ID: ${guildId} from MongoDB`);
-  } catch (error) {
-    logger.error('GUILD', `Error deleting guild from MongoDB:`, error);
-  }
-}
-
-
-async function getGuildFromDB(guildId) {
-  try {
-    const db = await mongoClient.getDbSafe();
-    return await db.collection('guilds').findOne({ guildId });
-  } catch (error) {
-    logger.error('GUILD', `Error fetching guild info from MongoDB:`, error);
-    return null;
-  }
-}
-
-async function updateGuildSettings(guildId, settings) {
-  try {
-    const db = await mongoClient.getDbSafe();
-    await db.collection('guilds').updateOne(
-      { guildId },
-      { $set: { settings } }
-    );
-    logger.info('GUILD', `Updated settings for server ID: ${guildId}`);
-    return true;
-  } catch (error) {
-    logger.error('GUILD', `Error updating guild settings:`, error);
-    return false;
-  }
-}
-
 
 function findDefaultChannel(guild) {
   try {
-    const canSend = (ch) => ch.type === 0 && ch.permissionsFor(guild.members.me).has('SendMessages');
-    const nameMatch = (ch) => {
-      const name = ch.name.toLowerCase();
+    const canSend = (channel) =>
+      channel.type === 0 && channel.permissionsFor(guild.members.me).has('SendMessages');
+
+    const hasPreferredName = (channel) => {
+      const name = channel.name.toLowerCase();
       return name.includes('general') || name.includes('chung') || name.includes('welcome');
     };
 
-    return guild.channels.cache.find(ch => canSend(ch) && nameMatch(ch))
+    return guild.channels.cache.find((channel) => canSend(channel) && hasPreferredName(channel))
       || guild.channels.cache.find(canSend)
       || null;
   } catch (error) {
@@ -110,23 +53,17 @@ function findDefaultChannel(guild) {
   }
 }
 
-
 async function handleGuildLeave(guild) {
   logger.info('GUILD', `Bot left server: ${guild.name} (${guild.id})`);
-  await sendGlobalLog(guild.client, `Bot rời khỏi guild: ${guild.name} (${guild.id})`);
-  try {
-    await removeGuildFromDB(guild.id);
-  } catch (error) {
-    logger.error('GUILD', `Error deleting info for server ${guild.name}:`, error);
-  }
+  await sendGlobalLog(guild.client, `Bot left guild: ${guild.name} (${guild.id})`);
 }
 
 async function deployCommandsToGuild(guildId, existingCommands = null, client = null) {
   const token = process.env.DISCORD_TOKEN;
   const clientId = process.env.CLIENT_ID;
 
-  if (!token) throw new Error('DISCORD_TOKEN không được thiết lập trong biến môi trường');
-  if (!clientId) throw new Error('CLIENT_ID không được thiết lập trong biến môi trường');
+  if (!token) throw new Error('DISCORD_TOKEN is not configured');
+  if (!clientId) throw new Error('CLIENT_ID is not configured');
 
   const commands = existingCommands || (client ? getCommandsJson(client) : []);
   if (!commands?.length) {
@@ -156,10 +93,9 @@ async function deployCommandsToGuild(guildId, existingCommands = null, client = 
   }
 }
 
-
 async function handleGuildJoin(guild, commands) {
-  logger.info('GUILD', `Bot tham gia guild: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
-  await sendGlobalLog(guild.client, `Bot tham gia guild mới: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
+  logger.info('GUILD', `Bot joined guild: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
+  await sendGlobalLog(guild.client, `Bot joined new guild: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
 
   try {
     const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
@@ -168,7 +104,7 @@ async function handleGuildJoin(guild, commands) {
       return;
     }
 
-    await storeGuildInDB(guild);
+    await ensureGuildSettings(guild);
 
     const commandsToRegister = commands?.length ? commands : getCommandsJson(guild.client);
     if (!commandsToRegister?.length) {
@@ -181,9 +117,9 @@ async function handleGuildJoin(guild, commands) {
     const defaultChannel = findDefaultChannel(guild);
     if (defaultChannel) {
       await defaultChannel.send({
-        content: `Xin chào! Lunaby đã sẵn sàng hỗ trợ server **${guild.name}**!\n` +
-          `Bạn có thể chat với mình bằng cách @Luna hoặc sử dụng các lệnh slash.\n` +
-          `Cảm ơn đã thêm mình vào server!`
+        content: `Xin chao! Lunaby da san sang ho tro server **${guild.name}**!\n`
+          + 'Ban co the chat voi minh bang cach @Luna hoac su dung cac lenh slash.\n'
+          + 'Cam on da them minh vao server!'
       });
     }
   } catch (error) {
@@ -191,13 +127,10 @@ async function handleGuildJoin(guild, commands) {
   }
 }
 
-
 async function syncAllGuilds(client, commands = null) {
   logger.info('GUILD', 'Started syncing all guilds...');
 
   try {
-    await mongoClient.getDbSafe();
-
     if (!commands && (!client.commands || client.commands.size === 0)) {
       loadCommands(client);
     }
@@ -226,7 +159,7 @@ async function syncAllGuilds(client, commands = null) {
       }
 
       try {
-        await storeGuildInDB(guild);
+        await ensureGuildSettings(guild);
         syncCount++;
       } catch (error) {
         logger.error('GUILD', `Error syncing guild ${guild.name}:`, error);
@@ -235,17 +168,19 @@ async function syncAllGuilds(client, commands = null) {
       try {
         await deployCommandsToGuild(guild.id, commandsToRegister, client);
         deployCount++;
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, GUILD_COMMAND_DEPLOY_DELAY_MS));
       } catch (error) {
         deployErrors++;
         logger.error('GUILD', `Deploy error for guild ${guild.name}:`, error.message);
       }
     }
 
-    logger.info('GUILD', `Sync complete: Sync ${syncCount}/${guilds.size}, Deploy ${deployCount}/${guilds.size}${deployErrors > 0 ? `, Error: ${deployErrors}` : ''}`);
-
+    logger.info(
+      'GUILD',
+      `Sync complete: Sync ${syncCount}/${guilds.size}, Deploy ${deployCount}/${guilds.size}${deployErrors > 0 ? `, Error: ${deployErrors}` : ''}`
+    );
   } catch (error) {
-    logger.error('GUILD', 'Error nghiêm trọng khi đồng bộ guilds:', error);
+    logger.error('GUILD', 'Critical error while syncing guilds:', error);
     throw error;
   }
 }
@@ -255,7 +190,4 @@ module.exports = {
   handleGuildLeave,
   deployCommandsToGuild,
   syncAllGuilds,
-  getGuildFromDB,
-  updateGuildSettings,
-  storeGuildInDB
 };
