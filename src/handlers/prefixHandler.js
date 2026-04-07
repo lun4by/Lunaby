@@ -16,12 +16,14 @@ class PseudoInteraction {
         this.command = command; // Inject command here to parse schema
 
         this.user = message.author;
+        this.author = message.author;
         this.member = message.member;
         this.guild = message.guild;
         this.guildId = message.guildId;
         this.channel = message.channel;
         this.channelId = message.channelId;
         this.client = message.client;
+        this.content = message.content;
         this.createdTimestamp = message.createdTimestamp;
         this.t = message.t;
         this.memberPermissions = message.member?.permissions ?? null;
