@@ -4,8 +4,17 @@
   "description": "Bot Discord hỗ trợ trò chuyện AI và tạo hình ảnh, phiên bản native chỉ dùng cho model Lunaby",
   "main": "src/index.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=production node shard.js",
-    "dev": "cross-env NODE_ENV=development nodemon src/index.js"
+    "start": "npm run bot",
+    "bot": "node shard.js",
+    "bot:dev": "cross-env NODE_ENV=development nodemon src/index.js",
+    "dashboard": "npm --prefix dashboard run dev",
+    "dashboard:build": "npm --prefix dashboard run build",
+    "dashboard:preview": "npm --prefix dashboard run preview",
+    "dashboard:prod": "npm --prefix dashboard run build && npm --prefix dashboard run prod",
+    "all": "concurrently \"npm run bot\" \"npm run dashboard\"",
+    "all:preview": "concurrently \"npm run bot\" \"npm run dashboard:preview\"",
+    "all:prod": "concurrently \"npm run bot\" \"npm run dashboard:prod\"",
+    "dev": "npm run bot:dev"
   },
   "author": {
     "name": "s4ory"
@@ -28,6 +37,7 @@
     "topgg-autoposter": "^2.0.1"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "cross-env": "^10.0.0",
     "nodemon": "^3.1.14"
   }
