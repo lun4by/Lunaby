@@ -36,7 +36,7 @@ class PseudoInteraction {
     _parseOptions(args, message) {
         const options = new Map();
 
-        // Lấy người dùng được mention
+        // Lấy mention user
         const mentionedUser = message.mentions.users.first();
         if (mentionedUser) {
             options.set('user', mentionedUser);
@@ -48,23 +48,23 @@ class PseudoInteraction {
         }
 
         // Lọc ra các text args (không phải mention)
-        const textArgs = args.filter(a => !a.match(/^<@!?\d+>$/) && !a.match(/^<#\d+>$/));
+        const textArgs = args.filter(a => !a.match(/^<@!?\d+>$/));
 
         // Nếu command có schema slash, parse theo đúng thứ tự option
         if (this.command?.data) {
             try {
                 const jsonData = this.command.data.toJSON();
                 const schemaOptions = (jsonData.options || []).filter(opt => opt.type !== 1 && opt.type !== 2);
-                // Các loại option Discord: 3=STRING, 4=INTEGER, 5=BOOLEAN, 6=USER, 7=CHANNEL, 10=NUMBER
+                // Discord option types: 3=STRING, 4=INTEGER, 5=BOOLEAN, 6=USER, 7=CHANNEL, 10=NUMBER
 
                 let textIdx = 0;
                 for (const opt of schemaOptions) {
                     const name = opt.name;
 
-                    // Loại 6 = USER → đã xử lý qua mention ở trên
+                    // Type 6 = USER → đã xử lý qua mention ở trên
                     if (opt.type === 6 || opt.type === 7) continue;
 
-                    // Loại 4 = INTEGER, Loại 10 = NUMBER
+                    // Type 4 = INTEGER, Type 10 = NUMBER
                     if (opt.type === 4 || opt.type === 10) {
                         if (textIdx < textArgs.length) {
                             const parsed = parseInt(textArgs[textIdx], 10);
@@ -76,7 +76,7 @@ class PseudoInteraction {
                         continue;
                     }
 
-                    // Loại 5 = BOOLEAN
+                    if (opt.type === 5) {
                         if (textIdx < textArgs.length) {
                             const value = textArgs[textIdx].toLowerCase();
                             if (['true', 'yes', 'on', 'enable', 'enabled', '1'].includes(value)) {
@@ -90,7 +90,7 @@ class PseudoInteraction {
                         continue;
                     }
 
-                    // Loại 3 = STRING
+                    // Type 3 = STRING
                     if (opt.type === 3) {
                         // Nếu có choices (like 'all'/'latest'), lấy 1 arg
                         if (opt.choices && opt.choices.length > 0) {
@@ -146,7 +146,7 @@ class PseudoInteraction {
                     const arg0 = self.args[0]?.toLowerCase();
                     const arg1 = self.args[1]?.toLowerCase();
 
-                    // 2 = SUB_COMMAND_GROUP, 1 = SUB_COMMAND (loại lệnh con)
+                    // 2 = SUB_COMMAND_GROUP, 1 = SUB_COMMAND
                     const groupOpt = jsonData.options.find(opt => opt.name === arg0 && opt.type === 2);
                     const subCmdOpt = jsonData.options.find(opt => opt.name === arg0 && opt.type === 1);
 
