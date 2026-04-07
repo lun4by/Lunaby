@@ -12,7 +12,8 @@ module.exports = {
     cooldown: 10,
 
     async execute(interaction) {
-        const sent = await interaction.deferReply({ fetchReply: true });
+        await interaction.deferReply();
+        const sent = await interaction.fetchReply();
         const pingLatency = ((sent.createdTimestamp - interaction.createdTimestamp) / 100).toFixed(0);
         const latency = { ping: pingLatency, ws: interaction.client.ws.ping };
 

@@ -88,15 +88,23 @@ const handleCommand = async (interaction, client) => {
   }
 
   try {
+    logger.info(
+      'COMMAND',
+      `Handling /${interaction.commandName} | user=${interaction.user?.tag} (${interaction.user?.id}) | guild=${interaction.guild?.name || 'DM'} (${interaction.guildId || 'DM'}) | channel=${interaction.channel?.name || 'N/A'} (${interaction.channelId || 'N/A'})`
+    );
+
     let locale = 'vi';
     if (interaction.guildId) {
         const gSettings = await MariaModDB.getGuildSettings(interaction.guildId);
         locale = gSettings?.language || 'vi';
+        logger.info('COMMAND', `Guild locale resolved for /${interaction.commandName}: ${locale}`);
     }
     const uProfile = await MariaModDB.getUserProfile(interaction.user.id);
     if (uProfile && uProfile.language) {
         locale = uProfile.language;
     }
+
+    logger.info('COMMAND', `Effective locale for /${interaction.commandName}: ${locale} | i18nInitialized=${Boolean(i18nManager.isInitialized)}`);
 
     interaction.t = (key, options) => i18nManager.t(key, locale, options);
 
@@ -109,6 +117,7 @@ const handleCommand = async (interaction, client) => {
 
     const userRole = await RoleService.getUserRole(interaction.user.id);
     const isPrivileged = userRole === 'owner' || userRole === 'admin';
+    logger.info('COMMAND', `Role resolved for ${interaction.user.id}: ${userRole}`);
 
     if (command.prefix?.adminOnly && !isPrivileged) {
       return interaction.reply({ content: `${emojis.error} Bạn không có quyền sử dụng lệnh này.`, ephemeral: true });
@@ -135,6 +144,7 @@ const handleCommand = async (interaction, client) => {
     }
 
     const hasConsented = await consentService.hasUserConsented(interaction.user.id);
+    logger.info('COMMAND', `Consent state for ${interaction.user.id}: ${hasConsented}`);
 
     if (!hasConsented) {
       try {
@@ -150,6 +160,7 @@ const handleCommand = async (interaction, client) => {
       return;
     }
 
+    logger.info('COMMAND', `Executing handler for /${interaction.commandName}`);
     await command.execute(interaction);
 
     const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
@@ -157,7 +168,20 @@ const handleCommand = async (interaction, client) => {
 
     logger.info('COMMAND_USAGE', `[Server: ${interaction.guild?.name || 'DM'}] [Channel: ${interaction.channel?.name || 'N/A'}] User ${interaction.user.tag} (${interaction.user.id}) used: /${interaction.commandName}`);
   } catch (error) {
-    logger.error('COMMAND', `Error executing command ${interaction.commandName}:`, error);
+    logger.error(
+      'COMMAND',
+      `Error executing command ${interaction.commandName} | replied=${interaction.replied} | deferred=${interaction.deferred} | localeBound=${typeof interaction.t === 'function'}`,
+      {
+        userId: interaction.user?.id,
+        userTag: interaction.user?.tag,
+        guildId: interaction.guildId,
+        guildName: interaction.guild?.name,
+        channelId: interaction.channelId,
+        channelName: interaction.channel?.name,
+        commandName: interaction.commandName,
+      },
+      error
+    );
     const errPayload = { content: `${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`, ephemeral: true };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)

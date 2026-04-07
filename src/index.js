@@ -15,6 +15,9 @@ const { setupMessageCreateEvent } = require("./events/messageCreate");
 const { setupVoiceStateEvent } = require("./events/voiceStateUpdate");
 const { setupGuildMemberAddEvent } = require("./events/guildMemberAdd");
 const logger = require("./utils/logger.js");
+const { initializeFileLogging } = require("./utils/logger.js");
+
+void initializeFileLogging();
 
 const client = new Client({
 	intents: [

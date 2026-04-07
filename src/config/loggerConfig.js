@@ -19,6 +19,11 @@ const defaultConfig = {
     INIT_SYSTEM: true, MODERATION: true, MESSAGE_EVENT: true,
     SYSTEM_SERVICE: true, XP: false, FONTS: false,
     MODLOG: true, DEBUG: false,
+    COMMAND_USAGE: true,
+    INTERACTION_EVENT: true,
+    CONSENT: true,
+    ROLE_SERVICE: true,
+    i18n: true,
   },
 };
 
