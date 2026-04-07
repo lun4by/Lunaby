@@ -23,6 +23,8 @@ class PseudoInteraction {
         this.channelId = message.channelId;
         this.client = message.client;
         this.createdTimestamp = message.createdTimestamp;
+        this.t = message.t;
+        this.memberPermissions = message.member?.permissions ?? null;
 
         this.replied = false;
         this.deferred = false;
@@ -255,6 +257,17 @@ async function handlePrefixMessage(message, client) {
     }
 
     try {
+        // TEMP DEBUG: hard console logging to bypass logger filters; remove after prefix bug is identified.
+        console.log('[TEMP PREFIX TRACE]', {
+            commandName,
+            rawContent: message.content,
+            userId: message.author?.id,
+            userTag: message.author?.tag,
+            guildId: message.guildId,
+            channelId: message.channelId,
+            hasMessageT: typeof message.t === 'function',
+        });
+
         if (message.guildId) {
             const isDisabled = await MariaModDB.isCommandDisabled(message.guildId, message.channelId, command.data?.name || commandName);
             if (isDisabled) {
@@ -284,6 +297,16 @@ async function handlePrefixMessage(message, client) {
 
         logger.info('COMMAND_USAGE', `[Server: ${message.guild?.name || 'DM'}] [Channel: ${message.channel?.name || 'N/A'}] User ${message.author.tag} (${message.author.id}) used: ${prefix}${commandName}`);
     } catch (error) {
+        // TEMP DEBUG: hard console logging to bypass logger filters; remove after prefix bug is identified.
+        console.error('[TEMP PREFIX ERROR]', {
+            commandName,
+            userId: message.author?.id,
+            userTag: message.author?.tag,
+            guildId: message.guildId,
+            channelId: message.channelId,
+            hasMessageT: typeof message.t === 'function',
+        });
+        console.error(error?.stack || error);
         logger.error('PREFIX', `Error executing prefix command ${commandName}:`, error);
         await message.reply(`${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`).catch(() => { });
     }
