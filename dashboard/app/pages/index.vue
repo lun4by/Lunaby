@@ -1,7 +1,6 @@
 <script setup lang="ts">
-const runtimeConfig = useRuntimeConfig()
-const guildId = ref(runtimeConfig.public.defaultGuildId)
-const userId = ref(runtimeConfig.public.defaultUserId)
+const guildId = ref('')
+const userId = ref('')
 
 function openGuild() {
   if (!guildId.value) {

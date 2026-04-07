@@ -2,9 +2,8 @@
 import { BarChart3, Bot, House, Settings2, Radio, UserRound } from 'lucide-vue-next'
 
 const route = useRoute()
-const runtimeConfig = useRuntimeConfig()
-const activeGuildId = computed(() => String(route.params.guildId || runtimeConfig.public.defaultGuildId || ''))
-const activeUserId = computed(() => String(route.params.userId || runtimeConfig.public.defaultUserId || ''))
+const activeGuildId = computed(() => String(route.params.guildId || ''))
+const activeUserId = computed(() => String(route.params.userId || ''))
 
 const guildLinks = computed(() => {
   if (!activeGuildId.value) {
@@ -49,7 +48,7 @@ const guildLinks = computed(() => {
       </NuxtLink>
 
       <NuxtLink
-        :to="activeUserId ? `/users/${activeUserId}` : '/users/demo-user'"
+        :to="activeUserId ? `/users/${activeUserId}` : '/'"
         class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-stone-600 transition hover:bg-stone-100 hover:text-ink"
         :class="{ 'bg-ink text-white hover:bg-ink hover:text-white': route.path.startsWith('/users/') }"
       >

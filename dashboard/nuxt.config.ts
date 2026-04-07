@@ -55,8 +55,6 @@ export default defineNuxtConfig({
     mariadbDatabase: process.env.MARIADB_DATABASE || 'lunaby',
     public: {
       appName: 'Lunaby Dashboard',
-      defaultGuildId: process.env.NUXT_PUBLIC_DEFAULT_GUILD_ID || '',
-      defaultUserId: process.env.NUXT_PUBLIC_DEFAULT_USER_ID || '',
       posthogKey: process.env.NUXT_PUBLIC_POSTHOG_KEY || '',
       posthogHost: process.env.NUXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
     },
