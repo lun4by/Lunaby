@@ -23,10 +23,6 @@ function setupMessageCreateEvent(client) {
           const gSettings = await MariaModDB.getGuildSettings(message.guildId);
           locale = gSettings?.language || 'vi';
       }
-      const uProfile = await MariaModDB.getUserProfile(message.author.id);
-      if (uProfile && uProfile.language) {
-          locale = uProfile.language;
-      }
       message.t = (key, options) => i18nManager.t(key, locale, options);
 
       const blockedGuild = message.guild ? await shouldBlockGuild(message.guild) : null;

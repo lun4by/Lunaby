@@ -173,7 +173,6 @@ class MariaModDB {
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS level_up_channel VARCHAR(32) DEFAULT NULL`);
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS vote_log_channel VARCHAR(32) DEFAULT NULL`);
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT 'vi'`);
-                await mariaClient.query(`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT NULL`);
             } catch (e) {
             }
 

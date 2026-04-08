@@ -2,7 +2,6 @@
   "system": {
     "lang_name": "Vietnamese",
     "language_changed": "Đã đổi ngôn ngữ máy chủ thành **Tiếng Việt**",
-    "language_changed_user": "Đã đổi ngôn ngữ cá nhân thành **Tiếng Việt**",
     "no_permission": "Bạn không có quyền sử dụng lệnh này.",
     "error_occurred": "Đã xảy ra lỗi trong quá trình xử lý lệnh.",
     "only_caller_can_use": "Chỉ người đã gọi lệnh mới được sử dụng tùy chọn này.",
@@ -334,7 +333,7 @@
       "other_cmds": "Các Lệnh Khác"
     },
     "language": {
-      "usage": "Cú pháp: `{{prefix}}language <personal/server> <vi/en>`"
+      "usage": "Cú pháp: `{{prefix}}language <vi/en>`"
     },
     "levelup": {
       "desc": "Cài đặt thông báo người dùng thăng cấp (Level Up)",

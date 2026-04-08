@@ -2,7 +2,6 @@
   "system": {
     "lang_name": "English",
     "language_changed": "Server language has been changed to **English**",
-    "language_changed_user": "Personal language has been changed to **English**",
     "no_permission": "You do not have permission to use this command.",
     "error_occurred": "An error occurred while processing the command.",
     "only_caller_can_use": "Only the user who invoked the command can use these options.",
@@ -334,7 +333,7 @@
       "other_cmds": "Other Commands"
     },
     "language": {
-      "usage": "Usage: `{{prefix}}language <personal/server> <vi/en>`"
+      "usage": "Usage: `{{prefix}}language <vi/en>`"
     },
     "levelup": {
       "desc": "Setup user level up notifications",

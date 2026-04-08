@@ -99,11 +99,6 @@ const handleCommand = async (interaction, client) => {
         locale = gSettings?.language || 'vi';
         logger.info('COMMAND', `Guild locale resolved for /${interaction.commandName}: ${locale}`);
     }
-    const uProfile = await MariaModDB.getUserProfile(interaction.user.id);
-    if (uProfile && uProfile.language) {
-        locale = uProfile.language;
-    }
-
     logger.info('COMMAND', `Effective locale for /${interaction.commandName}: ${locale} | i18nInitialized=${Boolean(i18nManager.isInitialized)}`);
 
     interaction.t = (key, options) => i18nManager.t(key, locale, options);
