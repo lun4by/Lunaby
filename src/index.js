@@ -1,5 +1,4 @@
 require("dotenv").config();
-console.clear();
 
 const {
 	Client,
