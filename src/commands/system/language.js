@@ -78,43 +78,6 @@ module.exports = {
                 // Ignore cleanup failures after timeout.
             }
         });
-
-        return;
-        await interaction.deferReply({ ephemeral: true });
-
-        const isSlash = !!interaction.isCommand;
-
-        let lang = 'vi';
-
-        if (isSlash) {
-            lang = interaction.options.getString('lang');
-        } else {
-            const args = interaction.content.split(' ').slice(1);
-            if (args.length < 1) {
-                const PrefixDB = require('../../services/database/PrefixDB');
-                const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
-            return interaction.editReply({
-                    content: `${emojis.error} ${interaction.t('commands.language.usage', { prefix })}`
-                });
-            }
-            lang = args[0].toLowerCase() === 'en' ? 'en' : 'vi';
-        }
-
-        if (!interaction.guildId || !interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-                return interaction.editReply({
-                content: `${emojis.error} ${interaction.t('system.no_permission')}`
-            });
-        }
-
-        await MariaModDB.updateGuildSettings(interaction.guildId, { language: lang });
-
-            // Ép ngôn ngữ ngay lập tức cho câu trả lời này
-        const manualT = require('../../services/i18n/i18nManager').t;
-        const msg = manualT('system.language_changed', lang);
-
-        return interaction.editReply({
-            content: `${emojis.success} ${msg}`
-        });
     }
 };
 
