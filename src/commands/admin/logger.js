@@ -31,6 +31,9 @@ module.exports = {
                     { name: 'COMMAND_USAGE - User dùng lệnh', value: 'COMMAND_USAGE' },
                     { name: 'DATABASE - Cơ sở dữ liệu', value: 'DATABASE' },
                     { name: 'SYSTEM - Hệ thống', value: 'SYSTEM' },
+                    { name: 'GUILD - Guild lifecycle/log', value: 'GUILD' },
+                    { name: 'GUILD_EVENT - Guild event handler', value: 'GUILD_EVENT' },
+                    { name: 'GUILD_DEPLOY - Deploy command guild', value: 'GUILD_DEPLOY' },
                     { name: 'CHAT - Trò chuyện', value: 'CHAT' },
                     { name: 'API - Gọi API', value: 'API' }
                 ))
