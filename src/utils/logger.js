@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const util = require("util");
 
 const loggerConfig = require("../config/loggerConfig.js");
 
@@ -58,13 +59,44 @@ function writeToFile(level, message) {
   logStream.write(logEntry);
 }
 
+function formatLogValue(value, useColors = false) {
+  if (value instanceof Error) {
+    return value.stack || `${value.name}: ${value.message}`;
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return util.inspect(value, {
+    depth: null,
+    colors: useColors,
+    compact: false,
+    breakLength: 120,
+  });
+}
+
+function formatLogDetails(args, useColors = false) {
+  if (!args || args.length === 0) {
+    return "";
+  }
+
+  const details = args.map((arg) => formatLogValue(arg, useColors)).join(" | ");
+  return details ? ` | ${details}` : "";
+}
+
 
 function log(category, level, message, ...args) {
   const config = loggerConfig.getConfig();
 
   if (!config.enabled) return;
 
-  if (category && !config.categories[category]) return;
+  const categoryConfig = config.categories || {};
+  const isKnownCategory = category
+    ? Object.prototype.hasOwnProperty.call(categoryConfig, category)
+    : false;
+
+  if (isKnownCategory && categoryConfig[category] === false) return;
 
   const currentLevelPriority = LOG_LEVELS[config.level]?.priority || 1;
   const messageLevelPriority = LOG_LEVELS[level]?.priority || 1;
@@ -79,12 +111,16 @@ function log(category, level, message, ...args) {
   const categoryStr = category ? `[${category}] ` : "";
   const prefix = `${timestamp}${levelColor}${level.toUpperCase()}${RESET_COLOR} ${categoryStr}`;
 
-  const logContent = `${prefix}${message}`;
+  const normalizedMessage = formatLogValue(message, false);
+  const consoleDetails = formatLogDetails(args, true);
+  const fileDetails = formatLogDetails(args, false);
+
+  const logContent = `${prefix}${normalizedMessage}${consoleDetails}`;
   const consoleFn = { error: console.error, warn: console.warn, debug: console.debug }[level] || console.log;
-  consoleFn(logContent, ...args);
+  consoleFn(logContent);
 
   if (config.fileLogging?.enabled && logStream) {
-    writeToFile(level, `${categoryStr}${message}`);
+    writeToFile(level, `${categoryStr}${normalizedMessage}${fileDetails}`);
   }
 }
 

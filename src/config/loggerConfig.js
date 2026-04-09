@@ -2,7 +2,7 @@ const VALID_LEVELS = new Set(["debug", "info", "warn", "error"]);
 
 const defaultConfig = {
   enabled: true,
-  level: "info",
+  level: "debug",
   showTimestamp: true,
   fileLogging: {
     enabled: true,
@@ -15,10 +15,10 @@ const defaultConfig = {
     MONITOR: true, NEURAL: true, COMMAND: true,
     DATABASE: true, MARIADB: true, SYSTEM: true,
     CHAT: true, API: true, CONVERSATION_SERVICE: true,
-    CONVERSATION: false, PROVIDERS: true, AI_CORE: true,
+    CONVERSATION: true, AI_CORE: true,
     INIT_SYSTEM: true, MODERATION: true, MESSAGE_EVENT: true,
-    SYSTEM_SERVICE: true, XP: false, FONTS: false,
-    MODLOG: true, DEBUG: false,
+    SYSTEM_SERVICE: true, XP: true, FONTS: true,
+    MODLOG: true, DEBUG: true,
   },
 };
 
