@@ -14,10 +14,9 @@ const emojis = require('../config/emojis');
 
 async function handleMentionMessage(message, client) {
   if (message.author.bot) return;
+  if (!message.guild) return;
 
-  const isDM = !message.guild;
-
-  const shouldRespond = isDM || message.mentions.has(client.user);
+  const shouldRespond = message.mentions.has(client.user);
 
   if (shouldRespond) {
     const hasEveryoneOrRoleMention = message.mentions.everyone || message.mentions.roles.size > 0;

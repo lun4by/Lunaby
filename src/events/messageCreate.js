@@ -15,6 +15,7 @@ function setupMessageCreateEvent(client) {
   client.on(Events.MessageCreate, async (message) => {
     try {
       if (message.author.bot) return;
+      if (!message.guild) return;
 
       const blockedGuild = message.guild ? await shouldBlockGuild(message.guild) : null;
       if (blockedGuild) {

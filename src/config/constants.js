@@ -65,7 +65,6 @@ module.exports = {
   COLLECTIONS: {
     CONVERSATIONS: 'conversations',
     CONVERSATION_META: 'conversation_meta',
-    USER_PROFILES: 'user_profiles',
     USER_MEMORIES: 'user_memories',
     USER_QUOTAS: 'user_quotas',
     GUILDS: 'guilds',
