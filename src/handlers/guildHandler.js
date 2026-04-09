@@ -1,5 +1,4 @@
 const { REST, Routes } = require('discord.js');
-const mongoClient = require('../services/database/mongoClient.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
 const BlacklistService = require('../services/user/BlacklistService');
 const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
@@ -19,71 +18,43 @@ const sendGlobalLog = async (client, message) => {
 
 async function storeGuildInDB(guild) {
   try {
-    const db = await mongoClient.getDbSafe();
-
-    const guildData = {
-      guildId: guild.id,
-      name: guild.name,
-      memberCount: guild.memberCount,
-      ownerID: guild.ownerId,
-      icon: guild.iconURL(),
-      joinedAt: new Date(),
-      settings: {
-        welcomeChannel: null,
-        moderationEnabled: true,
-        autoRoles: []
-      },
-      xp: {
-        isActive: true,
-        exceptions: []
-      }
-    };
-
-    await db.collection('guilds').updateOne(
-      { guildId: guild.id },
-      { $set: guildData },
-      { upsert: true }
-    );
+    const guildSettings = await MariaModDB.getGuildSettings(guild.id);
 
     if (guild.client?.guildProfiles) {
-      guild.client.guildProfiles.set(guild.id, { xp: guildData.xp });
+      guild.client.guildProfiles.set(guild.id, {
+        xp: guildSettings?.xp || { isActive: false, exceptions: [] }
+      });
     }
 
-    logger.info('GUILD', `Đã lưu thông tin server ${guild.name} vào MongoDB`);
+    logger.info('GUILD', `Đã đồng bộ cấu hình server ${guild.name} vào MariaDB`);
   } catch (error) {
-    logger.error('GUILD', `Lỗi khi lưu thông tin guild vào MongoDB:`, error);
+    logger.error('GUILD', `Lỗi khi đồng bộ cấu hình guild vào MariaDB:`, error);
   }
 }
 
 
 async function removeGuildFromDB(guildId) {
   try {
-    const db = await mongoClient.getDbSafe();
-    await db.collection('guilds').deleteOne({ guildId });
-    logger.info('GUILD', `Đã xóa thông tin server ID: ${guildId} khỏi MongoDB`);
+    await MariaModDB.deleteGuildData(guildId);
+    logger.info('GUILD', `Đã xóa dữ liệu server ID: ${guildId} khỏi MariaDB`);
   } catch (error) {
-    logger.error('GUILD', `Lỗi khi xóa guild từ MongoDB:`, error);
+    logger.error('GUILD', `Lỗi khi xóa dữ liệu guild từ MariaDB:`, error);
   }
 }
 
 
 async function getGuildFromDB(guildId) {
   try {
-    const db = await mongoClient.getDbSafe();
-    return await db.collection('guilds').findOne({ guildId });
+    return await MariaModDB.getGuildSettings(guildId);
   } catch (error) {
-    logger.error('GUILD', `Lỗi khi lấy thông tin guild từ MongoDB:`, error);
+    logger.error('GUILD', `Lỗi khi lấy thông tin guild từ MariaDB:`, error);
     return null;
   }
 }
 
 async function updateGuildSettings(guildId, settings) {
   try {
-    const db = await mongoClient.getDbSafe();
-    await db.collection('guilds').updateOne(
-      { guildId },
-      { $set: { settings } }
-    );
+    await MariaModDB.updateGuildSettings(guildId, settings);
     logger.info('GUILD', `Đã cập nhật cài đặt cho server ID: ${guildId}`);
     return true;
   } catch (error) {
@@ -136,7 +107,7 @@ async function deployCommandsToGuild(guildId, existingCommands = null, client = 
 
   try {
     const rest = new REST({ version: '10' }).setToken(token);
-    logger.info('GUILD', `Deploying ${commands.length} lệnh cho guild ${guildId}...`);
+    // logger.info('GUILD', `Deploying ${commands.length} lệnh cho guild ${guildId}...`);
 
     const data = await rest.put(
       Routes.applicationGuildCommands(clientId, guildId),
@@ -196,8 +167,6 @@ async function syncAllGuilds(client, commands = null) {
   logger.info('GUILD', 'Bắt đầu đồng bộ tất cả guilds...');
 
   try {
-    await mongoClient.getDbSafe();
-
     if (!commands && (!client.commands || client.commands.size === 0)) {
       loadCommands(client);
     }

@@ -12,13 +12,12 @@ const defaultConfig = {
     keepOldLogs: true,
   },
   categories: {
-    MONITOR: true, NEURAL: true, COMMAND: true,
+    COMMAND: true,
     DATABASE: true, MARIADB: true, SYSTEM: true,
     CHAT: true, API: true, CONVERSATION_SERVICE: true,
     CONVERSATION: true, AI_CORE: true,
-    INIT_SYSTEM: true, MODERATION: true, MESSAGE_EVENT: true,
-    SYSTEM_SERVICE: true, XP: true, FONTS: true,
-    MODLOG: true, DEBUG: true,
+    MODERATION: true, MESSAGE_EVENT: true,
+    XP: true, FONTS: true, MODLOG: true,
   },
 };
 
