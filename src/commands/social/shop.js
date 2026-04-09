@@ -3,8 +3,6 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
 } = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
 const QuotaService = require('../../services/user/QuotaService');
@@ -18,16 +16,6 @@ const {
 
 const SHOP_TIMEOUT_MS = 120000;
 const ITEMS_PER_PAGE = 6;
-const SHOP_CATEGORIES = {
-  quota: {
-    label: 'Quota Shop (Credits)',
-    description: 'Mua thêm lượt sử dụng Lunaby Pro và Lunaby Vision bằng credits',
-  },
-  coin: {
-    label: 'Coin Shop',
-    description: 'Sắp ra mắt',
-  },
-};
 
 const SHOP_ITEMS = [
   { id: 'chat_1', type: 'chat', amount: 1, label: 'Pro x1', style: ButtonStyle.Primary },
@@ -64,12 +52,27 @@ function getItemCost(item) {
   return item.amount * getUsageConfig(item.type).costPerUnit;
 }
 
-function getShopItems(category) {
-  return category === 'quota' ? SHOP_ITEMS : [];
+function getItemState(item, credits, stats) {
+  const usageConfig = getUsageConfig(item.type);
+  const totalCost = getItemCost(item);
+  const currentLimit = stats.limits[usageConfig.quotaField];
+  const isUnlimited = currentLimit === -1;
+  const isAffordable = credits >= totalCost;
+
+  return {
+    usageConfig,
+    totalCost,
+    isUnlimited,
+    isAffordable,
+  };
 }
 
-function getTotalPages(category) {
-  const items = getShopItems(category);
+function getShopItems() {
+  return SHOP_ITEMS;
+}
+
+function getTotalPages() {
+  const items = getShopItems();
   return Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
 }
 
@@ -81,8 +84,8 @@ function chunkArray(items, size) {
   return chunks;
 }
 
-function getPageItems(category, page) {
-  const items = getShopItems(category);
+function getPageItems(page) {
+  const items = getShopItems();
   const start = page * ITEMS_PER_PAGE;
   return items.slice(start, start + ITEMS_PER_PAGE);
 }
@@ -95,116 +98,99 @@ function getLimitText(limit, remaining) {
   return `${formatNumber(limit)} lượt - còn ${formatNumber(remaining)} lượt`;
 }
 
+function formatShopItemLine(item, credits, stats) {
+  const itemState = getItemState(item, credits, stats);
+  const statusText = itemState.isUnlimited
+    ? 'Đã vô hạn'
+    : itemState.isAffordable
+      ? 'Mua được'
+      : 'Thiếu credits';
+
+  return `• **${item.label}** - **${formatNumber(itemState.totalCost)}** credits\n` +
+    `+${formatNumber(item.amount)} lượt - ${statusText}`;
+}
+
+function buildShopSection(items, type, credits, stats) {
+  const filteredItems = items.filter((item) => item.type === type);
+
+  if (filteredItems.length === 0) {
+    return 'Không có gói trong trang này.';
+  }
+
+  return filteredItems
+    .map((item) => formatShopItemLine(item, credits, stats))
+    .join('\n\n');
+}
+
 function buildShopEmbed(user, credits, stats, state) {
-  const categoryMeta = SHOP_CATEGORIES[state.category];
   const resetTimestamp = Math.floor(stats.nextReset / 1000);
-  const totalPages = getTotalPages(state.category);
+  const totalPages = getTotalPages();
 
   const embed = createLunabyEmbed()
-    .setTitle('Lunaby Shop')
+    .setTitle('Lunaby Quota Shop')
     .setAuthor({
       name: user.globalName || user.username,
       iconURL: user.displayAvatarURL({ size: 128 }),
     })
     .setDescription(
-      `Danh mục hiện tại: **${categoryMeta.label}**\n` +
-      `Số dư của bạn: **${formatNumber(credits)}** credits\n` +
-      `Thanh toán: **Credits**\n` +
+      `Quản lý lượt sử dụng bằng credits.\n` +
       `Reset quota sau: <t:${resetTimestamp}:R>`
     )
     .addFields(
       {
-        name: 'Lunaby Pro',
-        value: getLimitText(stats.limits.period, stats.remaining.messages),
-        inline: true,
+        name: 'Tổng quan',
+        value:
+          `Số dư: **${formatNumber(credits)}** credits\n` +
+          `Trang hiện tại: **${state.page + 1}/${totalPages}**\n` +
+          `Giá Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt\n` +
+          `Giá Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
       },
       {
-        name: 'Lunaby Vision',
-        value: getLimitText(stats.limits.imagePeriod, stats.remaining.images),
-        inline: true,
+        name: 'Hạn mức hiện tại',
+        value:
+          `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages)}\n` +
+          `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images)}`,
       },
-      {
-        name: 'Trang',
-        value: `${state.page + 1}/${totalPages}`,
-        inline: true,
-      }
     )
-    .setFooter({ text: 'Nhấn nút để mua nhanh bằng credits' });
+    .setFooter({ text: 'Dùng < > để chuyển trang, Làm mới để cập nhật số dư mới nhất' });
 
-  if (state.category === 'quota') {
-    const pageItems = getPageItems(state.category, state.page);
-    const listing = pageItems
-      .map((item) => {
-        const usageConfig = getUsageConfig(item.type);
-        return `• **${item.label}** - ${formatNumber(item.amount)} lượt ${usageConfig.productName} - **${formatNumber(getItemCost(item))}** credits`;
-      })
-      .join('\n');
+  const pageItems = getPageItems(state.page);
+  const proSection = buildShopSection(pageItems, 'chat', credits, stats);
+  const visionSection = buildShopSection(pageItems, 'image', credits, stats);
 
-    embed.addFields({
-      name: 'Các gói hiện có',
-      value: listing || 'Chưa có gói nào trong trang này.',
-    });
-  } else {
-    embed.addFields({
-      name: 'Coin Shop',
-      value: 'Mục này đang được chuẩn bị. Hiện tại bạn vẫn có thể mua quota trong Quota Shop.',
-    });
-  }
+  embed.addFields(
+    {
+      name: 'Gói Lunaby Pro',
+      value: proSection,
+      inline: false,
+    },
+    {
+      name: 'Gói Lunaby Vision',
+      value: visionSection,
+      inline: false,
+    }
+  );
 
   return embed;
 }
 
-function buildCategoryRow(state, disabled = false) {
-  const select = new StringSelectMenuBuilder()
-    .setCustomId('shop_category')
-    .setPlaceholder('Chọn cửa hàng')
-    .setDisabled(disabled)
-    .addOptions(
-      Object.entries(SHOP_CATEGORIES).map(([value, meta]) =>
-        new StringSelectMenuOptionBuilder()
-          .setLabel(meta.label)
-          .setDescription(meta.description)
-          .setValue(value)
-          .setDefault(value === state.category)
-      )
-    );
-
-  return new ActionRowBuilder().addComponents(select);
-}
-
 function buildItemRows(state, credits, stats, disabled = false) {
-  if (state.category !== 'quota') {
-    return [
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('shop_placeholder')
-          .setLabel('Coin Shop đang được cập nhật')
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true)
-      ),
-    ];
-  }
-
   const rows = [];
-  const pageItems = getPageItems(state.category, state.page);
+  const pageItems = getPageItems(state.page);
   const buttonGroups = chunkArray(pageItems, 3);
 
   for (const group of buttonGroups) {
     const row = new ActionRowBuilder();
 
     for (const item of group) {
-      const usageConfig = getUsageConfig(item.type);
-      const currentLimit = stats.limits[usageConfig.quotaField];
-      const isUnlimited = currentLimit === -1;
-      const totalCost = getItemCost(item);
-      const isAffordable = credits >= totalCost;
+      const itemState = getItemState(item, credits, stats);
 
       row.addComponents(
         new ButtonBuilder()
           .setCustomId(`shop_buy_${item.id}`)
-          .setLabel(`${item.label} (${formatNumber(totalCost)})`)
+          .setLabel(`${item.label} (${formatNumber(itemState.totalCost)})`)
           .setStyle(item.style)
-          .setDisabled(disabled || isUnlimited || !isAffordable)
+          .setDisabled(disabled || itemState.isUnlimited || !itemState.isAffordable)
       );
     }
 
@@ -215,7 +201,7 @@ function buildItemRows(state, credits, stats, disabled = false) {
 }
 
 function buildNavigationRow(state, disabled = false) {
-  const totalPages = getTotalPages(state.category);
+  const totalPages = getTotalPages();
   const singlePage = totalPages <= 1;
 
   return new ActionRowBuilder().addComponents(
@@ -241,7 +227,6 @@ function buildShopMessage(user, credits, stats, state, disabled = false) {
   return {
     embeds: [buildShopEmbed(user, credits, stats, state)],
     components: [
-      buildCategoryRow(state, disabled),
       ...buildItemRows(state, credits, stats, disabled),
       buildNavigationRow(state, disabled),
     ],
@@ -254,9 +239,8 @@ async function loadShopState(user, state) {
     QuotaService.getUserMessageStats(user.id),
   ]);
 
-  const totalPages = getTotalPages(state.category);
+  const totalPages = getTotalPages();
   const nextState = {
-    category: state.category,
     page: Math.min(Math.max(state.page, 0), totalPages - 1),
   };
 
@@ -303,18 +287,18 @@ async function purchaseItem(userId, item) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('shop')
-    .setDescription('Mở cửa hàng để mua quota bằng credits'),
+    .setDescription('Mở Quota Shop để mua thêm lượt sử dụng bằng credits'),
 
   prefix: {
     name: 'shop',
     aliases: ['buyquota', 'muaturn', 'buyturn', 'muquota'],
-    description: 'Mở cửa hàng quota của Lunaby',
+    description: 'Mở Quota Shop của Lunaby',
   },
   cooldown: 5,
 
   async execute(interaction) {
     const user = interaction.user;
-    const currentState = { category: 'quota', page: 0 };
+    const currentState = { page: 0 };
 
     try {
       const initialData = await loadShopState(user, currentState);
@@ -338,24 +322,6 @@ module.exports = {
         }
 
         try {
-          if (componentInteraction.isStringSelectMenu()) {
-            if (componentInteraction.customId !== 'shop_category') {
-              return;
-            }
-
-            currentState.category = componentInteraction.values[0];
-            currentState.page = 0;
-
-            const refreshedData = await loadShopState(user, currentState);
-            await componentInteraction.update(buildShopMessage(
-              user,
-              refreshedData.credits,
-              refreshedData.quotaStats,
-              refreshedData.state
-            ));
-            return;
-          }
-
           if (!componentInteraction.isButton()) {
             return;
           }
@@ -373,7 +339,7 @@ module.exports = {
           }
 
           if (componentInteraction.customId === 'shop_next') {
-            currentState.page = Math.min(getTotalPages(currentState.category) - 1, currentState.page + 1);
+            currentState.page = Math.min(getTotalPages() - 1, currentState.page + 1);
             const refreshedData = await loadShopState(user, currentState);
             await componentInteraction.update(buildShopMessage(
               user,
@@ -411,8 +377,7 @@ module.exports = {
               credits: purchaseResult.creditsAfter,
               quotaStats: purchaseResult.quotaAfter,
               state: {
-                category: currentState.category,
-                page: Math.min(currentState.page, getTotalPages(currentState.category) - 1),
+                page: Math.min(currentState.page, getTotalPages() - 1),
               },
             };
 
