@@ -2,21 +2,23 @@ const { AttachmentBuilder } = require('discord.js');
 const { Profile } = require('lunaby-canvas');
 const logger = require('../../utils/logger.js');
 
-async function generateProfileCard(data) {
-    const { user, profile = {} } = data;
+const HEX_COLOR_REGEX = /^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/;
 
-    const theme = profile.color || '#9B59B6';
+async function generateProfileCard(data) {
+    const { user, member = null, profile = {} } = data;
+
+    const theme = HEX_COLOR_REGEX.test(profile.color || '') ? profile.color : '#9B59B6';
 
     const profileCard = new Profile()
-        .setUserData({
-            avatarURL: user.displayAvatarURL ? user.displayAvatarURL({ extension: 'png', size: 512 }) : "https://cdn.discordapp.com/embed/avatars/0.png",
-            username: user.username || "Unknown",
-            global_name: user.globalName || null,
-            banner_color: theme,
-            createdTimestamp: user.createdTimestamp || Date.now(),
-            public_flags_array: []
-        })
+        .setUser(user.id)
         .setBorder(theme);
+
+    const activity = member?.presence?.activities?.[0];
+    const largeImage = activity?.assets?.largeImageURL?.({ extension: 'png', size: 512 }) || null;
+
+    if (activity) {
+        profileCard.setActivity({ activity, largeImage });
+    }
 
     try {
         const buffer = await profileCard.build();

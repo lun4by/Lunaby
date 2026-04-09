@@ -34,6 +34,7 @@ module.exports = {
 
       const attachment = await generateProfileCard({
         user: targetUser,
+        member,
         profile: profileData
       });
 
