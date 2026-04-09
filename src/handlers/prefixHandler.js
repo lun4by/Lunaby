@@ -255,6 +255,9 @@ async function handlePrefixMessage(message, client) {
     }
 
     try {
+        logger.info('COMMAND_USAGE', `[PREFIX] [Server: ${message.guild?.name || 'DM'}] [Channel: ${message.channel?.name || 'N/A'}] User ${message.author.tag} (${message.author.id}) used: ${prefix}${commandName}`
+        );
+
         if (message.guildId) {
             const isDisabled = await MariaModDB.isCommandDisabled(message.guildId, message.channelId, command.data?.name || commandName);
             if (isDisabled) {
@@ -281,8 +284,6 @@ async function handlePrefixMessage(message, client) {
         const cmdName = command.data?.name || commandName;
         const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
         CooldownService.set(message.author.id, cmdName, cooldownTime);
-
-        logger.info('COMMAND_USAGE', `[Server: ${message.guild?.name || 'DM'}] [Channel: ${message.channel?.name || 'N/A'}] User ${message.author.tag} (${message.author.id}) used: ${prefix}${commandName}`);
     } catch (error) {
         logger.error('PREFIX', `Error executing prefix command ${commandName}:`, error);
         await message.reply(`${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`).catch(() => { });

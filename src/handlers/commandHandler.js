@@ -87,6 +87,9 @@ const handleCommand = async (interaction, client) => {
   }
 
   try {
+    logger.info('COMMAND_USAGE', `[SLASH] [Server: ${interaction.guild?.name || 'DM'}] [Channel: ${interaction.channel?.name || 'N/A'}] User ${interaction.user.tag} (${interaction.user.id}) used: /${interaction.commandName}`
+    );
+
     if (interaction.guildId) {
       const isDisabled = await MariaModDB.isCommandDisabled(interaction.guildId, interaction.channelId, interaction.commandName);
       if (isDisabled) {
@@ -141,8 +144,6 @@ const handleCommand = async (interaction, client) => {
 
     const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
     CooldownService.set(interaction.user.id, interaction.commandName, cooldownTime);
-
-    logger.info('COMMAND_USAGE', `[Server: ${interaction.guild?.name || 'DM'}] [Channel: ${interaction.channel?.name || 'N/A'}] User ${interaction.user.tag} (${interaction.user.id}) used: /${interaction.commandName}`);
   } catch (error) {
     logger.error('COMMAND', `Lỗi khi thực thi lệnh ${interaction.commandName}:`, error);
     const errPayload = { content: `${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`, ephemeral: true };

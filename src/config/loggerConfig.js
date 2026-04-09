@@ -13,6 +13,7 @@ const defaultConfig = {
   },
   categories: {
     COMMAND: true,
+    COMMAND_USAGE: true,
     DATABASE: true, MARIADB: true, SYSTEM: true,
     CHAT: true, API: true, CONVERSATION_SERVICE: true,
     CONVERSATION: true, AI_CORE: true,

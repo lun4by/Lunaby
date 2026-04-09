@@ -28,6 +28,7 @@ module.exports = {
                     { name: 'MONITOR - Giám sát tin nhắn', value: 'MONITOR' },
                     { name: 'NEURAL - AI/NeuralNetworks', value: 'NEURAL' },
                     { name: 'COMMAND - Xử lý lệnh', value: 'COMMAND' },
+                    { name: 'COMMAND_USAGE - User dùng lệnh', value: 'COMMAND_USAGE' },
                     { name: 'DATABASE - Cơ sở dữ liệu', value: 'DATABASE' },
                     { name: 'SYSTEM - Hệ thống', value: 'SYSTEM' },
                     { name: 'CHAT - Trò chuyện', value: 'CHAT' },
