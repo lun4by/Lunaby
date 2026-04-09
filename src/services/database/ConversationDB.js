@@ -13,6 +13,94 @@ class ConversationDB {
     this.maxConversationAge = MAX_CONVERSATION_AGE_MS;
   }
 
+  escapeRegex(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  buildLegacyUserRegex(userId) {
+    if (!/^\d{17,20}$/.test(String(userId))) {
+      return null;
+    }
+
+    const escapedUserId = this.escapeRegex(userId);
+    return new RegExp(`^(?:DM-|\\d{17,20}-)${escapedUserId}$`);
+  }
+
+  async migrateLegacyConversationIfNeeded(db, userId) {
+    try {
+      const legacyUserRegex = this.buildLegacyUserRegex(userId);
+      if (!legacyUserRegex) {
+        return false;
+      }
+
+      const legacyMessages = await db.collection(COLLECTIONS.CONVERSATIONS)
+        .find({ userId: { $regex: legacyUserRegex } })
+        .sort({ timestamp: 1, messageIndex: 1 })
+        .toArray();
+
+      if (!legacyMessages.length) {
+        return false;
+      }
+
+      let nextMessageIndex = 0;
+      let hasSystemMessage = false;
+
+      const normalizedMessages = legacyMessages
+        .filter((msg) => typeof msg?.content === 'string' && msg.content.trim().length > 0)
+        .filter((msg) => {
+          if (msg.role !== 'system') return true;
+          if (hasSystemMessage) return false;
+          hasSystemMessage = true;
+          return true;
+        })
+        .map((msg) => ({
+          userId,
+          messageIndex: nextMessageIndex++,
+          role: msg.role || 'user',
+          content: msg.content,
+          timestamp: msg.timestamp || Date.now(),
+        }));
+
+      if (!normalizedMessages.length) {
+        return false;
+      }
+
+      await db.collection(COLLECTIONS.CONVERSATIONS).insertMany(normalizedMessages, { ordered: true });
+
+      const legacyUserIds = [...new Set(legacyMessages.map((msg) => msg.userId).filter(Boolean))];
+      if (legacyUserIds.length > 0) {
+        await db.collection(COLLECTIONS.CONVERSATIONS).deleteMany({ userId: { $in: legacyUserIds } });
+      }
+
+      const legacyMetaRows = await db.collection(COLLECTIONS.CONVERSATION_META)
+        .find({ userId: { $regex: legacyUserRegex } })
+        .project({ _id: 0, userId: 1, lastUpdated: 1 })
+        .toArray();
+
+      const latestLegacyUpdate = legacyMetaRows.reduce((max, row) => {
+        const currentValue = Number(row?.lastUpdated || 0);
+        return Math.max(max, currentValue);
+      }, 0);
+
+      await db.collection(COLLECTIONS.CONVERSATION_META).updateOne(
+        { userId },
+        { $set: { lastUpdated: latestLegacyUpdate || Date.now() } },
+        { upsert: true }
+      );
+
+      const legacyMetaUserIds = [...new Set(legacyMetaRows.map((row) => row.userId).filter(Boolean))];
+      if (legacyMetaUserIds.length > 0) {
+        await db.collection(COLLECTIONS.CONVERSATION_META).deleteMany({ userId: { $in: legacyMetaUserIds } });
+      }
+
+      logger.info('DATABASE', `Migrated legacy conversation history to global userId: ${userId}`);
+      return true;
+    } catch (error) {
+      logger.warn('DATABASE', `Could not migrate legacy conversation history for ${userId}:`, error);
+      return false;
+    }
+  }
+
   async getNextMessageIndex(db, userId) {
     const lastMessage = await db.collection(COLLECTIONS.CONVERSATIONS)
       .find({ userId }, { projection: { messageIndex: 1 } })
@@ -29,7 +117,14 @@ class ConversationDB {
       const validUserId = Validators.normalizeUserId(userId);
 
       const db = mongoClient.getDb();
-      const count = await db.collection(COLLECTIONS.CONVERSATIONS).countDocuments({ userId: validUserId });
+      let count = await db.collection(COLLECTIONS.CONVERSATIONS).countDocuments({ userId: validUserId });
+
+      if (count === 0) {
+        const migrated = await this.migrateLegacyConversationIfNeeded(db, validUserId);
+        if (migrated) {
+          count = await db.collection(COLLECTIONS.CONVERSATIONS).countDocuments({ userId: validUserId });
+        }
+      }
 
       if (count === 0) {
         const systemMessage = {

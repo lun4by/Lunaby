@@ -9,9 +9,7 @@ const emojis = require("../../config/emojis");
 
 async function handleImageRequest(message, content, requestMatch) {
   try {
-    const conversationId = conversationManager.extractUserId
-      ? conversationManager.extractUserId(message)
-      : (message.guildId ? `${message.guildId}-${message.author.id}` : `DM-${message.author.id}`);
+    const conversationId = message.author.id;
     const globalUserId = message.author.id;
 
     const quotaCheck = await QuotaService.canUseImages(globalUserId, 1);
