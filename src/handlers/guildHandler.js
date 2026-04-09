@@ -107,14 +107,14 @@ async function deployCommandsToGuild(guildId, existingCommands = null, client = 
 
   try {
     const rest = new REST({ version: '10' }).setToken(token);
-    // logger.info('GUILD', `Deploying ${commands.length} lệnh cho guild ${guildId}...`);
+    logger.info('GUILD_DEPLOY', `Deploying ${commands.length} lệnh cho guild ${guildId}...`);
 
     const data = await rest.put(
       Routes.applicationGuildCommands(clientId, guildId),
       { body: commands }
     );
 
-    logger.info('GUILD', `Deploy thành công ${data.length} lệnh cho guild ${guildId}`);
+    logger.info('GUILD_DEPLOY', `Deploy thành công ${data.length} lệnh cho guild ${guildId}`);
 
     if (data.length !== commands.length) {
       logger.warn('GUILD', `Số lệnh deploy (${commands.length}) khác với Discord xác nhận (${data.length})`);

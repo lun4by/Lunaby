@@ -18,6 +18,7 @@ const defaultConfig = {
     CONVERSATION: true, AI_CORE: true,
     MODERATION: true, MESSAGE_EVENT: true,
     XP: true, FONTS: true, MODLOG: true,
+    GUILD_DEPLOY: false,
   },
 };
 
