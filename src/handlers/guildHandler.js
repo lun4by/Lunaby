@@ -8,7 +8,6 @@ const MariaModDB = require('../services/database/MariaModDB.js');
 const GUILD_COMMAND_DEPLOY_DELAY_MS = 1000;
 const WEBSITE_URL = process.env.WEBSITE_URL || 'https://lunaby.tech';
 const SUPPORT_SERVER_URL = process.env.SUPPORT_SERVER_URL || 'https://discord.gg/NFF7tw2zNQ';
-const DONATE_URL = process.env.DONATE_URL || 'https://lunaby.tech/donate';
 
 const sendGlobalLog = async (client, message) => {
   const logChannelId = await MariaModDB.getBotSetting('global_log_channel');
@@ -272,7 +271,7 @@ function buildGuildWelcomeRow() {
       .setURL(SUPPORT_SERVER_URL),
     new ButtonBuilder()
       .setLabel('Donate')
-      .setStyle(ButtonStyle.Link)
-      .setURL(DONATE_URL),
+      .setStyle(ButtonStyle.Success)
+      .setCustomId('guild_welcome_donate'),
   );
 }
