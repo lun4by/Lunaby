@@ -8,22 +8,22 @@ class DatabaseManager {
   async initDatabase() {
     try {
       await mongoClient.connect();
-      logger.info('database', 'MongoDB connection established successfully');
+      logger.info('mongodb', 'MongoDB connection established successfully');
 
       try {
         await this.initializeCollections();
         await this.initializeConversationHistory();
         await this.initializeProfiles();
       } catch (setupError) {
-        logger.error('database', 'Error setting up database:', setupError);
-        logger.info('database', 'Attempting to reset entire database...');
+        logger.error('mongodb', 'Error setting up database:', setupError);
+        logger.info('mongodb', 'Attempting to reset entire database...');
 
         if (!await this.resetDatabase()) {
           throw new Error('Failed to recover by resetting database');
         }
       }
     } catch (error) {
-      logger.error('database', 'Error initializing MongoDB connection:', error);
+      logger.error('mongodb', 'Error initializing MongoDB connection:', error);
       throw error;
     }
   }
@@ -40,10 +40,10 @@ class DatabaseManager {
   async safeDropIndex(collection, indexName) {
     try {
       await collection.dropIndex(indexName);
-      logger.info('database', `Dropped ${indexName} index`);
+      logger.info('mongodb', `Dropped ${indexName} index`);
       return true;
     } catch (e) {
-      logger.error('database', `Failed to drop ${indexName} index:`, e.message);
+      logger.error('mongodb', `Failed to drop ${indexName} index:`, e.message);
       return false;
     }
   }
@@ -53,11 +53,11 @@ class DatabaseManager {
       const exists = (await db.listCollections({ name }).toArray()).length > 0;
       if (!exists) {
         await db.createCollection(name);
-        logger.info('database', `Created ${name} collection`);
+        logger.info('mongodb', `Created ${name} collection`);
       }
       return true;
     } catch (e) {
-      logger.error('database', `Error ensuring ${name} collection:`, e.message);
+      logger.error('mongodb', `Error ensuring ${name} collection:`, e.message);
       return false;
     }
   }
@@ -66,13 +66,17 @@ class DatabaseManager {
     const db = mongoClient.getDb();
     const convCollection = db.collection(COLLECTIONS.CONVERSATIONS);
 
-    const indexNames = await this.getIndexNames(convCollection);
+    const indexes = await convCollection.listIndexes().toArray().catch(() => []);
+    const indexNames = indexes.map(idx => idx.name);
 
     if (indexNames.includes('conversationId_1')) {
       await this.safeDropIndex(convCollection, 'conversationId_1');
     }
     if (indexNames.includes('userId_1_messageIndex_1')) {
-      await this.safeDropIndex(convCollection, 'userId_1_messageIndex_1');
+      const userMessageIndex = indexes.find(idx => idx.name === 'userId_1_messageIndex_1');
+      if (!userMessageIndex?.unique) {
+        await this.safeDropIndex(convCollection, 'userId_1_messageIndex_1');
+      }
     }
 
     const deleteResult = await convCollection.deleteMany({
@@ -84,7 +88,7 @@ class DatabaseManager {
       ]
     });
     if (deleteResult.deletedCount > 0) {
-      logger.debug('database', `Cleaned ${deleteResult.deletedCount} invalid records`);
+      logger.debug('mongodb', `Cleaned ${deleteResult.deletedCount} invalid records`);
     }
 
     await this.ensureCollection(db, COLLECTIONS.CONVERSATIONS);
@@ -93,10 +97,10 @@ class DatabaseManager {
       await convCollection.createIndex({ userId: 1, messageIndex: 1 }, { unique: true });
       await db.collection(COLLECTIONS.CONVERSATION_META).createIndex({ userId: 1 }, { unique: true });
     } catch (e) {
-      logger.error('database', 'Error creating indexes:', e.message);
+      logger.error('mongodb', 'Error creating indexes:', e.message);
       await this.resetConversationsCollection();
     }
-    logger.info('database', 'MongoDB collections ready');
+    logger.info('mongodb', 'MongoDB collections ready');
   }
 
   async resetConversationsCollection() {
@@ -104,9 +108,9 @@ class DatabaseManager {
 
     try {
       await db.collection(COLLECTIONS.CONVERSATIONS).drop();
-      logger.info('database', 'Dropped conversations collection');
+      logger.info('mongodb', 'Dropped conversations collection');
     } catch {
-      logger.info('database', 'Conversations collection does not exist');
+      logger.info('mongodb', 'Conversations collection does not exist');
     }
 
     await this.ensureCollection(db, COLLECTIONS.CONVERSATIONS);
@@ -115,10 +119,10 @@ class DatabaseManager {
       const convCollection = db.collection(COLLECTIONS.CONVERSATIONS);
       await convCollection.createIndex({ timestamp: 1 });
       await convCollection.createIndex({ userId: 1, messageIndex: 1 }, { unique: true });
-      logger.info('database', 'Recreated conversations collection with indexes');
+      logger.info('mongodb', 'Recreated conversations collection with indexes');
       return true;
     } catch (e) {
-      logger.error('database', 'Error creating conversation indexes:', e.message);
+      logger.error('mongodb', 'Error creating conversation indexes:', e.message);
       return false;
     }
   }
@@ -133,7 +137,7 @@ class DatabaseManager {
     } else if (!indexNames.includes('timestamp_1')) {
       try {
         await convCollection.createIndex({ timestamp: 1 });
-        logger.info('database', 'Created timestamp index');
+        logger.info('mongodb', 'Created timestamp index');
       } catch (e) {
         await this.resetConversationsCollection();
       }
@@ -152,15 +156,15 @@ class DatabaseManager {
     );
 
     await ConversationDB.cleanupOldConversations();
-    logger.info('database', 'Conversation history system ready');
+    logger.info('mongodb', 'Conversation history system ready');
   }
 
   async initializeProfiles() {
     try {
       await MemoryService.initializeMemoryCollection();
-      logger.info('database', 'Personalization memory system ready');
+      logger.info('mongodb', 'Personalization memory system ready');
     } catch (e) {
-      logger.error('database', 'Error initializing Memory System:', e.message);
+      logger.error('mongodb', 'Error initializing Memory System:', e.message);
     }
   }
 
@@ -180,10 +184,10 @@ class DatabaseManager {
         const exists = (await db.listCollections({ name }).toArray()).length > 0;
         if (exists) {
           await db.collection(name).drop();
-          logger.info('database', `Dropped collection ${name}`);
+          logger.info('mongodb', `Dropped collection ${name}`);
         }
       } catch {
-        logger.info('database', `Collection ${name} cannot be dropped`);
+        logger.info('mongodb', `Collection ${name} cannot be dropped`);
       }
     }
 
@@ -191,7 +195,7 @@ class DatabaseManager {
     await this.initializeConversationHistory();
     await this.initializeProfiles();
 
-    logger.info('database', 'Database successfully reset');
+    logger.info('mongodb', 'Database successfully reset');
     return true;
   }
 }
