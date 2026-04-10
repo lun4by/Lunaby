@@ -32,17 +32,17 @@ function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(value);
 }
 
-function getUsageConfig(type) {
+function getUsageConfig(type, interaction) {
   if (type === 'image') {
     return {
-      productName: 'Lunaby Vision',
+      productName: interaction.t('commands.shop.quota_vision'),
       quotaField: 'imagePeriod',
       costPerUnit: QUOTA_COST_CREDITS_PER_IMAGE,
     };
   }
 
   return {
-    productName: 'Lunaby Pro',
+    productName: interaction.t('commands.shop.quota_pro'),
     quotaField: 'period',
     costPerUnit: QUOTA_COST_CREDITS_PER_MESSAGE,
   };
@@ -90,9 +90,9 @@ function getPageItems(page) {
   return items.slice(start, start + ITEMS_PER_PAGE);
 }
 
-function getLimitText(limit, remaining) {
+function getLimitText(limit, remaining, interaction) {
   if (limit === -1) {
-    return 'Không giới hạn';
+    return interaction.t('commands.shop.limit_unlimited');
   }
 
   return `${formatNumber(limit)} lượt - còn ${formatNumber(remaining)} lượt`;
@@ -212,7 +212,7 @@ function buildNavigationRow(state, disabled = false) {
       .setDisabled(disabled || singlePage || state.page === 0),
     new ButtonBuilder()
       .setCustomId('shop_refresh')
-      .setLabel('Làm mới')
+      .setLabel(interaction.t('commands.shop.refresh'))
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(disabled),
     new ButtonBuilder()
@@ -223,9 +223,9 @@ function buildNavigationRow(state, disabled = false) {
   );
 }
 
-function buildShopMessage(user, credits, stats, state, disabled = false) {
+function buildShopMessage(user, credits, stats, state, interaction, disabled = false) {
   return {
-    embeds: [buildShopEmbed(user, credits, stats, state)],
+    embeds: [buildShopEmbed(user, credits, stats, state, interaction)],
     components: [
       ...buildItemRows(state, credits, stats, disabled),
       buildNavigationRow(state, disabled),
@@ -251,21 +251,21 @@ async function loadShopState(user, state) {
   };
 }
 
-async function purchaseItem(userId, item) {
-  const usageConfig = getUsageConfig(item.type);
+async function purchaseItem(userId, item, interaction) {
+  const usageConfig = getUsageConfig(item.type, interaction);
   const totalCost = getItemCost(item);
 
   const quotaBefore = await QuotaService.getUserMessageStats(userId);
   const currentLimit = quotaBefore.limits[usageConfig.quotaField];
 
   if (currentLimit === -1) {
-    throw new Error(`Tài khoản của bạn đang có lượt sử dụng ${usageConfig.productName} không giới hạn, không cần mua thêm quota.`);
+    throw new Error(interaction.t('commands.shop.err_unlimited', { product: usageConfig.productName }));
   }
 
   const creditsBefore = await CreditsService.getUserCredits(userId);
   if (creditsBefore.credits < totalCost) {
     throw new Error(
-      `Bạn không đủ credits. Cần **${formatNumber(totalCost)}** credits để mua **${formatNumber(item.amount)}** lượt sử dụng ${usageConfig.productName}.`
+      interaction.t('commands.shop.err_insufficient', { cost: formatNumber(totalCost), amount: formatNumber(item.amount), product: usageConfig.productName })
     );
   }
 
@@ -307,7 +307,8 @@ module.exports = {
         user,
         initialData.credits,
         initialData.quotaStats,
-        initialData.state
+        initialData.state,
+        interaction
       ));
 
       const message = await interaction.fetchReply();
@@ -316,7 +317,7 @@ module.exports = {
       collector.on('collect', async (componentInteraction) => {
         if (componentInteraction.user.id !== user.id) {
           return componentInteraction.reply({
-            content: 'Chỉ người mở shop mới có thể sử dụng giao diện này.',
+            content: interaction.t('system.only_caller_can_use'),
             ephemeral: true,
           });
         }
@@ -333,7 +334,8 @@ module.exports = {
               user,
               refreshedData.credits,
               refreshedData.quotaStats,
-              refreshedData.state
+              refreshedData.state,
+              interaction
             ));
             return;
           }
@@ -345,7 +347,8 @@ module.exports = {
               user,
               refreshedData.credits,
               refreshedData.quotaStats,
-              refreshedData.state
+              refreshedData.state,
+              interaction
             ));
             return;
           }
@@ -356,7 +359,8 @@ module.exports = {
               user,
               refreshedData.credits,
               refreshedData.quotaStats,
-              refreshedData.state
+              refreshedData.state,
+              interaction
             ));
             return;
           }
@@ -367,12 +371,12 @@ module.exports = {
 
             if (!item) {
               return componentInteraction.reply({
-                content: `${emojis.error} Không tìm thấy gói bạn muốn mua.`,
+                content: `${emojis.error} ${interaction.t('commands.shop.package_not_found')}`,
                 ephemeral: true,
               });
             }
 
-            const purchaseResult = await purchaseItem(user.id, item);
+            const purchaseResult = await purchaseItem(user.id, item, interaction);
             const refreshedData = {
               credits: purchaseResult.creditsAfter,
               quotaStats: purchaseResult.quotaAfter,
@@ -385,13 +389,12 @@ module.exports = {
               user,
               refreshedData.credits,
               refreshedData.quotaStats,
-              refreshedData.state
+              refreshedData.state,
+              interaction
             ));
 
             await componentInteraction.followUp({
-              content:
-                `${emojis.success} Bạn đã mua **${formatNumber(item.amount)}** lượt ${purchaseResult.usageConfig.productName} ` +
-                `với giá **${formatNumber(purchaseResult.totalCost)}** credits.`,
+              content: `${emojis.success} ${interaction.t('commands.shop.buy_success', { amount: formatNumber(item.amount), product: purchaseResult.usageConfig.productName, cost: formatNumber(purchaseResult.totalCost) })}`,
               ephemeral: true,
             });
           }
@@ -399,7 +402,7 @@ module.exports = {
           logger.error('SHOP', 'Error while handling shop component:', error);
 
           const payload = {
-            content: `${emojis.error} ${error.message || 'Đã xảy ra lỗi khi xử lý shop.'}`,
+            content: `${emojis.error} ${interaction.t('commands.shop.error_process', { error: error.message || '' })}`,
             ephemeral: true,
           };
 
@@ -419,6 +422,7 @@ module.exports = {
             latestData.credits,
             latestData.quotaStats,
             latestData.state,
+            interaction,
             true
           ));
         } catch (error) {
@@ -428,7 +432,7 @@ module.exports = {
     } catch (error) {
       logger.error('SHOP', 'Error in shop command:', error);
       const payload = {
-        content: `${emojis.error} Đã xảy ra lỗi khi mở shop. Vui lòng thử lại sau.`,
+        content: `${emojis.error} ${interaction.t('commands.shop.error_open')}`,
         ephemeral: true,
       };
 

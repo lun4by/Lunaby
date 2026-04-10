@@ -14,7 +14,7 @@ module.exports = {
 
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-            const replyOptions = { content: `${emojis.error} Bạn cần quyền **Manage Server** để sử dụng lệnh này.`, ephemeral: true };
+            const replyOptions = { content: `${emojis.error} ${interaction.t('commands.setting.need_manage_server')}`, ephemeral: true };
             return interaction.replied || interaction.deferred ? interaction.editReply(replyOptions) : interaction.reply(replyOptions);
         }
 
@@ -38,7 +38,7 @@ module.exports = {
             }
 
             if (!message) {
-                logger.error('SETTING', 'Không thể lấy message để tạo collector');
+                logger.error('SETTING', 'Failed to fetch message for creating collector');
                 return;
             }
 
@@ -50,7 +50,7 @@ module.exports = {
             collector.on('collect', async (i) => {
                 try {
                     if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-                        return i.reply({ content: `${emojis.error} Bạn cần quyền **Manage Server**.`, ephemeral: true });
+                        return i.reply({ content: `${emojis.error} ${i.t('commands.setting.need_manage_server')}`, ephemeral: true });
                     }
 
                     const { customId } = i;
@@ -58,7 +58,7 @@ module.exports = {
                     if (customId === 'setting_page_select') {
                         currentPage = i.values[0];
                         if (currentPage === 'close') {
-                            await i.update({ content: `${emojis.success} Đã đóng bảng điều khiển.`, embeds: [], components: [] });
+                            await i.update({ content: `${emojis.success} ${i.t('commands.setting.closed')}`, embeds: [], components: [] });
                             return collector.stop('closed');
                         }
                         await renderPage(i, guildId, currentPage, true);
@@ -116,7 +116,7 @@ module.exports = {
                     logger.error('SETTING', `Collector error: ${err.message}`);
                     try {
                         if (!i.replied && !i.deferred) {
-                            await i.reply({ content: `${emojis.error} Đã xảy ra lỗi. Vui lòng thử lại.`, ephemeral: true });
+                            await i.reply({ content: `${emojis.error} ${i.t('commands.setting.general_error')}`, ephemeral: true });
                         }
                     } catch (e) { /* ignore */ }
                 }
@@ -126,9 +126,9 @@ module.exports = {
                 if (reason === 'closed') return;
                 try {
                     if (isSlash) {
-                        await interaction.editReply({ content: '⏱️ Phiên thao tác đã hết hạn (10 phút).', components: [], embeds: [] });
+                        await interaction.editReply({ content: interaction.t('commands.setting.session_expired'), components: [], embeds: [] });
                     } else if (message.editable) {
-                        await message.edit({ content: '⏱️ Phiên thao tác đã hết hạn (10 phút).', components: [], embeds: [] });
+                        await message.edit({ content: interaction.t('commands.setting.session_expired'), components: [], embeds: [] });
                     }
                 } catch (e) {
                     logger.error('SETTING', `Error removing components on end: ${e.message}`);
@@ -139,9 +139,9 @@ module.exports = {
             logger.error('SETTING', `Execute error: ${error.message}`);
             try {
                 if (isSlash) {
-                    await interaction.editReply({ content: `${emojis.error} Không thể tải bảng cài đặt.`, embeds: [], components: [] });
+                    await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.setting.load_error')}`, embeds: [], components: [] });
                 } else {
-                    await interaction.reply({ content: `${emojis.error} Không thể tải bảng cài đặt.` });
+                    await interaction.reply({ content: `${emojis.error} ${interaction.t('commands.setting.load_error')}` });
                 }
             } catch (e) { /* ignore */ }
         }
@@ -159,56 +159,58 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
     const modActionLogs = modSettingsDB.modActionLogs !== false;
     const monitorLogs = modSettingsDB.monitorLogs !== false;
 
+    const t = interactionOrMessage.t;
+
     const embed = new EmbedBuilder()
-        .setTitle('⚙️ Bảng Điều Khiển Server (Dashboard)')
+        .setTitle(t('commands.setting.embed_title'))
         .setColor(COLORS.LUNABY)
         .setTimestamp()
-        .setFooter({ text: `Tự động đóng sau 10 phút.` });
+        .setFooter({ text: t('commands.setting.embed_footer') });
 
     const components = [];
 
     // Row 1: The Page Selector
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('setting_page_select')
-        .setPlaceholder('Chọn danh mục cấu hình...')
+        .setPlaceholder(t('commands.setting.menu_placeholder'))
         .addOptions([
-            { label: '⚙️ Cài đặt chung', description: 'Các tùy chọn về hiển thị, bot hoạt động', value: 'general', default: page === 'general' },
-            { label: '🛡️ Cài đặt nhật ký (Logs)', description: 'Thiết lập Kênh ghi log và Kiểm duyệt', value: 'logging', default: page === 'logging' },
-            { label: 'Đóng', description: 'Thoát bảng điều khiển', value: 'close', emoji: emojis.error }
+            { label: t('commands.setting.menu_general'), description: t('commands.setting.menu_general_desc'), value: 'general', default: page === 'general' },
+            { label: t('commands.setting.menu_logging'), description: t('commands.setting.menu_logging_desc'), value: 'logging', default: page === 'logging' },
+            { label: t('commands.setting.menu_close'), description: t('commands.setting.menu_close_desc'), value: 'close', emoji: emojis.error }
         ]);
     components.push(new ActionRowBuilder().addComponents(selectMenu));
 
     if (page === 'general') {
-        embed.setDescription('**⚙️ Danh mục: Cài đặt Chung**\nĐiều chỉnh cách bot tương tác và gửi thông báo trong máy chủ.')
+        embed.setDescription(t('commands.setting.cat_general_desc'))
             .addFields(
-                { name: '🔔 Thông báo Level-up', value: levelUp ? `${emojis.success} Đã Bật` : `${emojis.error} Đã Tắt`, inline: true },
-                { name: '📋 Sử dụng Embed', value: useEmbeds ? `${emojis.success} Đã Bật` : `${emojis.error} Đã Tắt`, inline: true }
+                { name: t('commands.setting.field_levelup'), value: levelUp ? `${emojis.success} ${t('commands.setting.status_on')}` : `${emojis.error} ${t('commands.setting.status_off')}`, inline: true },
+                { name: t('commands.setting.field_embed'), value: useEmbeds ? `${emojis.success} ${t('commands.setting.status_on')}` : `${emojis.error} ${t('commands.setting.status_off')}`, inline: true }
             );
 
         const btnRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('setting_toggle_level')
-                .setLabel(levelUp ? 'Tắt Level-up' : 'Bật Level-up')
+                .setLabel(levelUp ? t('commands.setting.btn_off_levelup') : t('commands.setting.btn_on_levelup'))
                 .setStyle(levelUp ? ButtonStyle.Danger : ButtonStyle.Success),
             new ButtonBuilder()
                 .setCustomId('setting_toggle_embed')
-                .setLabel(useEmbeds ? 'Tắt Embed' : 'Bật Embed')
+                .setLabel(useEmbeds ? t('commands.setting.btn_off_embed') : t('commands.setting.btn_on_embed'))
                 .setStyle(useEmbeds ? ButtonStyle.Danger : ButtonStyle.Success)
         );
         components.push(btnRow);
     }
     else if (page === 'logging') {
-        embed.setDescription('**🛡️ Danh mục: Nhật ký sự kiện (Logs)**\nCho phép bot ghi chép lại các lệnh cấm, đá, hoặc sự kiện quan trọng vào một kênh an toàn.')
+        embed.setDescription(t('commands.setting.cat_logging_desc'))
             .addFields(
-                { name: '📝 Kênh báo cáo (Log Channel)', value: logChannelId ? `<#${logChannelId}>` : 'Chưa thiết lập (Vui lòng chọn ở Menu dưới)', inline: false },
-                { name: '🔨 Báo cáo Kiểm duyệt (Ban/Kick/Mute)', value: modActionLogs ? `${emojis.success} Bật` : `${emojis.error} Tắt`, inline: true },
-                { name: '📡 Báo cáo Mở rộng (Sự kiện phụ)', value: monitorLogs ? `${emojis.success} Bật` : `${emojis.error} Tắt`, inline: true }
+                { name: t('commands.setting.field_log_channel'), value: logChannelId ? `<#${logChannelId}>` : t('commands.setting.no_channel_set'), inline: false },
+                { name: t('commands.setting.field_modlog'), value: modActionLogs ? `${emojis.success} ${t('commands.setting.short_on')}` : `${emojis.error} ${t('commands.setting.short_off')}`, inline: true },
+                { name: t('commands.setting.field_monitor'), value: monitorLogs ? `${emojis.success} ${t('commands.setting.short_on')}` : `${emojis.error} ${t('commands.setting.short_off')}`, inline: true }
             );
 
         // Row 2: Channel Select Menu
         const channelSelect = new ChannelSelectMenuBuilder()
             .setCustomId('setting_log_channel')
-            .setPlaceholder(logChannelId ? 'Thay đổi kênh lưu Log...' : 'Thiết lập kênh lưu Log...')
+            .setPlaceholder(logChannelId ? t('commands.setting.channel_placeholder_change') : t('commands.setting.channel_placeholder_set'))
             .addChannelTypes(ChannelType.GuildText);
 
         components.push(new ActionRowBuilder().addComponents(channelSelect));
@@ -217,12 +219,12 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
         const logBtnRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('setting_toggle_modlog')
-                .setLabel(modActionLogs ? 'Tắt Báo cáo Kiểm duyệt' : 'Bật Báo cáo Kiểm duyệt')
+                .setLabel(modActionLogs ? t('commands.setting.btn_off_modlog') : t('commands.setting.btn_on_modlog'))
                 .setStyle(modActionLogs ? ButtonStyle.Danger : ButtonStyle.Success)
                 .setDisabled(!logChannelId),
             new ButtonBuilder()
                 .setCustomId('setting_toggle_monitor')
-                .setLabel(monitorLogs ? 'Tắt Báo cáo Mở rộng' : 'Bật Báo cáo Mở rộng')
+                .setLabel(monitorLogs ? t('commands.setting.btn_off_monitor') : t('commands.setting.btn_on_monitor'))
                 .setStyle(monitorLogs ? ButtonStyle.Danger : ButtonStyle.Success)
                 .setDisabled(!logChannelId)
         );

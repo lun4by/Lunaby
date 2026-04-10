@@ -32,7 +32,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
             return interaction.reply({
-                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
+                content: `${emojis.error} ${interaction.t('system.no_permission')}`,
                 ephemeral: true,
             });
         }
@@ -41,18 +41,18 @@ module.exports = {
         const targetMember = interaction.options.getMember('user');
         const reason =
             interaction.options.getString('reason') ||
-            'Không có lý do cụ thể';
+            interaction.t('commands.moderation_common.no_reason');
         const deleteMessageDays = interaction.options.getInteger('days') || 1;
 
         if (!targetUser) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Ban member: \`${prefix}ban @user [lý do] [số_ngày_xóa_tin_nhắn]\`` });
+            return (interaction.message || interaction).reply({ content: interaction.t('commands.ban.usage', { prefix }) });
         }
 
         if (targetMember && !targetMember.bannable) {
             return interaction.reply({
-                content: `${emojis.error} Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!`,
+                content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
                 ephemeral: true,
             });
         }
@@ -69,7 +69,7 @@ module.exports = {
             // Ban the user
             await interaction.guild.members.ban(targetUser, {
                 deleteMessageDays: deleteMessageDays,
-                reason: `${reason} - Bởi ${interaction.user.tag}`,
+                reason: interaction.t('commands.moderation_common.audit_log_reason', { reason, user: interaction.user.tag }),
             });
 
             // Log the action
@@ -84,17 +84,17 @@ module.exports = {
             await interaction.editReply({ content: aiResponse });
 
             const logEmbed = createModActionEmbed({
-                title: '🔨 Đã ban thành viên',
-                description: `Đã cấm ${targetUser.tag} khỏi server.\n\n**Xóa tin nhắn:** ${deleteMessageDays} ngày.`,
+                title: interaction.t('commands.ban.log_title'),
+                description: interaction.t('commands.ban.log_desc', { tag: targetUser.tag, days: deleteMessageDays }),
                 color: 0xff0000,
                 fields: [
-                    { name: '👤 Người dùng', value: `${targetUser.tag}`, inline: true },
-                    { name: '🆔 ID', value: targetUser.id, inline: true },
-                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                    { name: '📝 Lý do', value: reason, inline: false },
-                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+                    { name: interaction.t('commands.moderation_common.log_field_user'), value: `${targetUser.tag}`, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_id'), value: targetUser.id, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_mod'), value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_reason'), value: reason, inline: false },
+                    { name: interaction.t('commands.moderation_common.log_field_time'), value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
                 ],
-                footer: `Server: ${interaction.guild.name}`,
+                footer: interaction.t('commands.moderation_common.log_footer', { guild: interaction.guild.name }),
             });
 
             await sendModLog(interaction.guild, logEmbed, true);
@@ -102,14 +102,10 @@ module.exports = {
             try {
                 const dmEmbed = new EmbedBuilder()
                     .setColor(0xff0000)
-                    .setTitle(
-                        `Bạn đã bị cấm tại ${interaction.guild.name}`,
-                    )
-                    .setDescription(
-                        `Lý do: ${reason}`,
-                    )
+                    .setTitle(interaction.t('commands.ban.dm_title', { guild: interaction.guild.name }))
+                    .setDescription(interaction.t('commands.moderation_common.dm_reason', { reason }))
                     .setFooter({
-                        text: 'Nếu bạn cho rằng đây là sai lầm, hãy liên hệ ban quản trị server.',
+                        text: interaction.t('commands.ban.dm_footer'),
                     })
                     .setTimestamp();
 
@@ -126,7 +122,7 @@ module.exports = {
                 `Lỗi khi cấm ${targetUser.tag}: ${error.message}`,
             );
             await interaction.editReply({
-                content: `${emojis.error} Đã xảy ra lỗi khi cấm người dùng: ${error.message}`,
+                content: `${emojis.error} ${interaction.t('commands.ban.error_ban', { error: error.message })}`,
                 ephemeral: true,
             });
         }

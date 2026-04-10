@@ -1,4 +1,5 @@
 const mongoClient = require('../database/mongoClient.js');
+const MariaModDB = require('../database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
 const AICore = require('./AICore.js');
 const prompts = require('../../config/prompts.js');
@@ -11,6 +12,48 @@ class MemoryService {
   constructor() {
     this.memoryCache = new Map();
     this.sensitiveFields = ['name', 'nickname', 'location', 'customInstructions', 'birthday'];
+  }
+
+  async _getMariaPersonalization(userId) {
+    try {
+      const profile = await MariaModDB.getUserProfile(userId);
+      const extra = typeof profile?.extra_data === 'string'
+        ? JSON.parse(profile.extra_data || '{}')
+        : (profile?.extra_data || {});
+
+      return {
+        personalInfo: extra.personalInfo || {},
+        privacy: extra.privacy || {},
+      };
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error reading MariaDB personalization for ${userId}:`, error);
+      return { personalInfo: {}, privacy: {} };
+    }
+  }
+
+  async _saveMariaPersonalization(userId, updates = {}) {
+    try {
+      const profile = await MariaModDB.getUserProfile(userId);
+      const extra = typeof profile?.extra_data === 'string'
+        ? JSON.parse(profile.extra_data || '{}')
+        : (profile?.extra_data || {});
+
+      extra.personalInfo = {
+        ...(extra.personalInfo || {}),
+        ...(updates.personalInfo || {}),
+      };
+
+      extra.privacy = {
+        ...(extra.privacy || {}),
+        ...(updates.privacy || {}),
+      };
+
+      await MariaModDB.updateUserProfile(userId, ['extra_data'], [JSON.stringify(extra)]);
+      return true;
+    } catch (error) {
+      logger.error('MEMORY_SERVICE', `Error saving MariaDB personalization for ${userId}:`, error);
+      return false;
+    }
   }
 
   /**
@@ -136,6 +179,16 @@ class MemoryService {
         memory = this._decryptPII(memory);
       }
 
+      const mariaPersonalization = await this._getMariaPersonalization(userId);
+      memory.personalInfo.occupation = mariaPersonalization.personalInfo.occupation ?? memory.personalInfo.occupation;
+      memory.personalInfo.customInstructions = mariaPersonalization.personalInfo.customInstructions ?? memory.personalInfo.customInstructions;
+      memory.privacy.allowSearchHistoryReference = mariaPersonalization.privacy.allowSearchHistoryReference !== undefined
+        ? mariaPersonalization.privacy.allowSearchHistoryReference
+        : memory.privacy.allowSearchHistoryReference;
+      memory.privacy.allowMemoryStorage = mariaPersonalization.privacy.allowMemoryStorage !== undefined
+        ? mariaPersonalization.privacy.allowMemoryStorage
+        : memory.privacy.allowMemoryStorage;
+
       this.memoryCache.set(userId, { data: memory, timestamp: Date.now() });
       return memory;
     } catch (error) {
@@ -162,6 +215,25 @@ class MemoryService {
         { $set: { ...encryptedUpdates, lastUpdated: new Date() } },
         { upsert: true }
       );
+
+      const mariaUpdates = { personalInfo: {}, privacy: {} };
+      if (Object.prototype.hasOwnProperty.call(updates, 'personalInfo.occupation')) {
+        mariaUpdates.personalInfo.occupation = updates['personalInfo.occupation'];
+      }
+      if (Object.prototype.hasOwnProperty.call(updates, 'personalInfo.customInstructions')) {
+        mariaUpdates.personalInfo.customInstructions = updates['personalInfo.customInstructions'];
+      }
+      if (Object.prototype.hasOwnProperty.call(updates, 'privacy.allowSearchHistoryReference')) {
+        mariaUpdates.privacy.allowSearchHistoryReference = updates['privacy.allowSearchHistoryReference'];
+      }
+      if (Object.prototype.hasOwnProperty.call(updates, 'privacy.allowMemoryStorage')) {
+        mariaUpdates.privacy.allowMemoryStorage = updates['privacy.allowMemoryStorage'];
+      }
+
+      if (Object.keys(mariaUpdates.personalInfo).length > 0 || Object.keys(mariaUpdates.privacy).length > 0) {
+        await this._saveMariaPersonalization(userId, mariaUpdates);
+      }
+
       this.memoryCache.delete(userId);
       return true;
     } catch (error) {
@@ -443,6 +515,16 @@ class MemoryService {
     try {
       const collection = await this.getMemoryCollection();
       await collection.deleteOne({ userId });
+      await this._saveMariaPersonalization(userId, {
+        personalInfo: {
+          occupation: null,
+          customInstructions: null,
+        },
+        privacy: {
+          allowSearchHistoryReference: true,
+          allowMemoryStorage: true,
+        },
+      });
       this.memoryCache.delete(userId);
       return true;
     } catch (error) {

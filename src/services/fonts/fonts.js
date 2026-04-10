@@ -50,7 +50,7 @@ class FontManager {
       this.registeredFonts.add(fontKey);
       return true;
     } catch (error) {
-      logger.warn('FONTS', `Không thể đăng ký font ${path.basename(fontPath)}: ${error.message}`);
+      logger.warn('FONTS', `Failed to register font ${path.basename(fontPath)}: ${error.message}`);
       return false;
     }
   }
@@ -67,7 +67,7 @@ class FontManager {
       const fontsPath = path.join(assetsPath, 'fonts');
 
       if (!fs.existsSync(fontsPath)) {
-        logger.warn('FONTS', `Thư mục fonts không tồn tại: ${fontsPath}`);
+        logger.warn('FONTS', `Thư mục fonts không tồn at: ${fontsPath}`);
         this.initialized = true;
         return;
       }
@@ -126,14 +126,14 @@ class FontManager {
         }
       }
 
-      logger.info('FONTS', `Đăng ký thành công ${successCount}/${totalCount} fonts`);
+      logger.info('FONTS', `Successfully registered ${successCount}/${totalCount} fonts`);
 
       this.registerSystemFallbacks();
 
       this.initialized = true;
     } catch (error) {
-      logger.error('FONTS', 'Lỗi khi khởi tạo FontManager:', error);
-      logger.warn('FONTS', 'Sẽ sử dụng fonts hệ thống mặc định');
+      logger.error('FONTS', 'Error khi khởi tạo FontManager:', error);
+      logger.warn('FONTS', 'Will use default system fonts');
       this.initialized = true;
     }
   }
@@ -171,7 +171,7 @@ class FontManager {
   }
 
   registerSystemFallbacks() {
-    logger.info('FONTS', 'Fonts dự phòng hệ thống:', this.fallbackFonts.join(', '));
+    logger.info('FONTS', 'System fallback fonts:', this.fallbackFonts.join(', '));
   }
 
   getFontString(weight = 'Regular', size = 16, style = 'normal') {

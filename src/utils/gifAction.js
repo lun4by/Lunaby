@@ -15,7 +15,7 @@ function getRandomGif(action) {
     return `https://cdn.lunie.dev/Lunaby/gif/${action}/${randomNum}.gif`;
 }
 
-function buildActionEmbed(action, sender, target) {
+function buildActionEmbed(action, sender, target, interaction) {
     const info = ACTION_MESSAGES[action];
     if (!info) return null;
 
@@ -23,9 +23,9 @@ function buildActionEmbed(action, sender, target) {
 
     let description;
     if (!target || target.id === sender.id) {
-        description = `${info.emoji} **${sender.displayName || sender.username}** ${info.selfMsg}!`;
+        description = `${info.emoji} ${interaction.t(`commands.fun.self_${action}`, { sender: sender.displayName || sender.username })}`;
     } else {
-        description = `${info.emoji} **${sender.displayName || sender.username}** đã ${info.verb} **${target.displayName || target.username}**!`;
+        description = `${info.emoji} ${interaction.t(`commands.fun.target_${action}`, { sender: sender.displayName || sender.username, target: target.displayName || target.username })}`;
     }
 
     const embed = new EmbedBuilder()

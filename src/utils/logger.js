@@ -15,6 +15,22 @@ const RESET_COLOR = '\x1b[0m';
 
 let logStream = null;
 
+function formatArg(arg) {
+  if (arg instanceof Error) {
+    return arg.stack || `${arg.name}: ${arg.message}`;
+  }
+
+  if (typeof arg === "string") {
+    return arg;
+  }
+
+  try {
+    return JSON.stringify(arg, null, 2);
+  } catch {
+    return String(arg);
+  }
+}
+
 
 async function initializeFileLogging() {
   try {
@@ -50,11 +66,12 @@ async function initializeFileLogging() {
 }
 
 
-function writeToFile(level, message) {
+function writeToFile(level, message, ...args) {
   if (!logStream) return;
 
   const timestamp = new Date().toISOString();
-  const logEntry = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
+  const extra = args.length ? `\n${args.map(formatArg).join("\n")}` : "";
+  const logEntry = `[${timestamp}] ${level.toUpperCase()}: ${message}${extra}\n`;
 
   logStream.write(logEntry);
 }

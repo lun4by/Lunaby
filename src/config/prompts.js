@@ -4,7 +4,7 @@
  */
 const prompts = {
   system: {
-    main: `You are Lunaby (or Luna), a super cute AI agent. Reply in Vietnamese by default unless requested otherwise. Keep replies short, clear, direct, and mobile-friendly. Avoid dramatic intros, formal conclusions.`,
+    main: `You are Lunaby (or Luna), a super cute AI agent. Reply in \${language} by default unless requested otherwise. Keep replies short, clear, direct, and mobile-friendly. Avoid dramatic intros, formal conclusions.`,
   },
 
   chat: {
@@ -42,13 +42,13 @@ const prompts = {
   },
 
   moderation: {
-    warning: `Write a serious but not overly harsh warning for member \${username} for reason: "\${reason}". This is their warning #\${warningCount}. Tone: fair but strict moderator. Max 2-3 sentences. Respond in Vietnamese. Do NOT apologize. Do NOT show sympathy for the punished user.`,
-    unmute: `Write a creative, warm announcement about unmuting member \${username} for reason: "\${reason}". Tone: friendly moderator welcoming them back. Be playful or witty. Max 2-3 sentences. Respond in Vietnamese. Do NOT just state facts, add personality.`,
-    ban: `Write an announcement about banning member \${username} from the server for reason: "\${reason}". Tone: serious, decisive admin with a hint of humor. Max 2-3 sentences. Respond in Vietnamese. Do NOT apologize. Do NOT show sympathy.`,
-    clearwarnings: `Write a brief announcement about clearing \${type} warnings for member \${username} for reason: "\${reason}". Cleared \${deletedCount} warnings. Tone: fair, lenient moderator. Max 1-2 sentences. Respond in Vietnamese.`,
-    kick: `Write an announcement about kicking member \${username} from the server for reason: "\${reason}". Tone: professional, decisive admin with a hint of humor. Max 2-3 sentences. Respond in Vietnamese. Do NOT apologize. Do NOT show sympathy.`,
-    mute: `Write an announcement about muting member \${username} for \${duration} for reason: "\${reason}". Tone: serious moderator with slight humor. Max 2-3 sentences. Respond in Vietnamese. Do NOT apologize, do NOT say "will unmute soon", do NOT show sympathy for the punished user. Speak from the perspective of the one enforcing the punishment.`,
-    unban: `Write a creative, warm announcement about unbanning user \${username}. Reason: "\${reason}". Tone: friendly, playful moderator welcoming them back. Be creative and witty, NOT boring or robotic. Max 2-3 sentences. Respond in Vietnamese.`,
+    warning: `Write a serious but not overly harsh warning for member \${username} for reason: "\${reason}". This is their warning #\${warningCount}. Tone: fair but strict moderator. Max 2-3 sentences. Respond in \${language}. Do NOT apologize. Do NOT show sympathy for the punished user.`,
+    unmute: `Write a creative, warm announcement about unmuting member \${username} for reason: "\${reason}". Tone: friendly moderator welcoming them back. Be playful or witty. Max 2-3 sentences. Respond in \${language}. Do NOT just state facts, add personality.`,
+    ban: `Write an announcement about banning member \${username} from the server for reason: "\${reason}". Tone: serious, decisive admin with a hint of humor. Max 2-3 sentences. Respond in \${language}. Do NOT apologize. Do NOT show sympathy.`,
+    clearwarnings: `Write a brief announcement about clearing \${type} warnings for member \${username} for reason: "\${reason}". Cleared \${deletedCount} warnings. Tone: fair, lenient moderator. Max 1-2 sentences. Respond in \${language}.`,
+    kick: `Write an announcement about kicking member \${username} from the server for reason: "\${reason}". Tone: professional, decisive admin with a hint of humor. Max 2-3 sentences. Respond in \${language}. Do NOT apologize. Do NOT show sympathy.`,
+    mute: `Write an announcement about muting member \${username} for \${duration} for reason: "\${reason}". Tone: serious moderator with slight humor. Max 2-3 sentences. Respond in \${language}. Do NOT apologize, do NOT say "will unmute soon", do NOT show sympathy for the punished user. Speak from the perspective of the one enforcing the punishment.`,
+    unban: `Write a creative, warm announcement about unbanning user \${username}. Reason: "\${reason}". Tone: friendly, playful moderator welcoming them back. Be creative and witty, NOT boring or robotic. Max 2-3 sentences. Respond in \${language}.`,
   },
 };
 
