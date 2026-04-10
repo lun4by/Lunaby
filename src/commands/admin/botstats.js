@@ -64,7 +64,7 @@ module.exports = {
         ephemeral: true,
       });
     } catch (error) {
-      logger.error('BOTSTATS', 'Error in botstats command:', error);
+      logger.error('botstats', 'Error in botstats command:', error);
       await interaction.reply({
         content: `${emojis.error} ${interaction.t('commands.admin.botstats.error')}`,
         ephemeral: true,

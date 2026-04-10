@@ -399,7 +399,7 @@ module.exports = {
             });
           }
         } catch (error) {
-          logger.error('SHOP', 'Error while handling shop component:', error);
+          logger.error('shop', 'Error while handling shop component:', error);
 
           const payload = {
             content: `${emojis.error} ${interaction.t('commands.shop.error_process', { error: error.message || '' })}`,
@@ -426,11 +426,11 @@ module.exports = {
             true
           ));
         } catch (error) {
-          logger.error('SHOP', 'Error while disabling shop components:', error);
+          logger.error('shop', 'Error while disabling shop components:', error);
         }
       });
     } catch (error) {
-      logger.error('SHOP', 'Error in shop command:', error);
+      logger.error('shop', 'Error in shop command:', error);
       const payload = {
         content: `${emojis.error} ${interaction.t('commands.shop.error_open')}`,
         ephemeral: true,

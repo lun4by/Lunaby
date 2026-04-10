@@ -118,11 +118,11 @@ module.exports = {
 
                 await targetUser.send({ embeds: [dmEmbed] });
             } catch (error) {
-                logger.error('MODERATION', `Failed to send DM to ${targetUser.tag}`);
+                logger.error('moderation', `Failed to send DM to ${targetUser.tag}`);
             }
 
         } catch (error) {
-            logger.error('MODERATION', 'Error muting member:', error);
+            logger.error('moderation', 'Error muting member:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.mute.error_mute', { error: error.message })}`,
                 ephemeral: true

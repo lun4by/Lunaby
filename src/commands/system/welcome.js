@@ -89,7 +89,7 @@ module.exports = {
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.welcome.setup_success', { channelId: channel.id, message })}` });
             }
         } catch (error) {
-            logger.error('SYSTEM', 'Error setting welcome:', error);
+            logger.error('system', 'Error setting welcome:', error);
             return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     }

@@ -60,7 +60,7 @@ module.exports = {
         `${emojis.success} ${interaction.t('commands.give.success', { amount: formatNumber(amount), targetId: targetUser.id, balance: formatNumber(result.fromBalance) })}`
       );
     } catch (error) {
-      logger.error('GIVE', 'Error in give command:', error);
+      logger.error('give', 'Error in give command:', error);
       await interaction.reply({
         content: `${emojis.error} ${interaction.t('commands.give.error')}`,
         ephemeral: true

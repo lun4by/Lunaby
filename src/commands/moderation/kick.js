@@ -91,7 +91,7 @@ module.exports = {
 
             await sendModLog(interaction.guild, logEmbed, true);
         } catch (error) {
-            logger.error('MODERATION', `Error kicking ${targetUser.tag}: ${error.message}`);
+            logger.error('moderation', `Error kicking ${targetUser.tag}: ${error.message}`);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.kick.error_kick', { error: error.message })}`,
                 ephemeral: true

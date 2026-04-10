@@ -71,7 +71,7 @@ module.exports = {
                 })}`
             );
         } catch (error) {
-            logger.error('ADMIN', 'Error in addquota command:', error);
+            logger.error('admin', 'Error in addquota command:', error);
             await interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.admin.addquota.error')}`,
                 ephemeral: true

@@ -14,10 +14,10 @@ class AICore {
     const apiKey = process.env.LUNABY_API_KEY;
 
     if (!apiKey) {
-      logger.error("AI_CORE", "LUNABY_API_KEY not configured!");
+      logger.error("ai_core", "lunaby_api_key not configured!");
     } else {
       this.client = new Lunaby({ apiKey });
-      logger.debug("AI_CORE", "Lunaby client initialized");
+      logger.debug("ai_core", "Lunaby client initialized");
     }
   }
 

@@ -26,17 +26,17 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
         if ('data' in command && 'execute' in command) {
           const commandName = command.data.name;
           if (client.commands.has(commandName)) {
-            logger.warn('COMMAND', `Command "${commandName}" already exists and will be overwritten by ${itemPath}`);
+            logger.warn('command', `Command "${commandName}" already exists and will be overwritten by ${itemPath}`);
           }
 
           try {
             const jsonData = command.data.toJSON();
             if (!jsonData || typeof jsonData !== 'object') {
-              logger.error('COMMAND', `Command "${commandName}" has invalid toJSON():`, jsonData);
+              logger.error('command', `Command "${commandName}" has invalid toJSON():`, jsonData);
               continue;
             }
             if (!jsonData.name || !jsonData.description) {
-              logger.error('COMMAND', `Command "${commandName}" is missing name or description:`, jsonData);
+              logger.error('command', `Command "${commandName}" is missing name or description:`, jsonData);
               continue;
             }
 
@@ -46,14 +46,14 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
             client.commands.set(commandName, command);
             commandsJson.push(jsonData);
           } catch (jsonError) {
-            logger.error('COMMAND', `Error converting command "${commandName}" to JSON:`, jsonError);
+            logger.error('command', `Error converting command "${commandName}" to json:`, jsonError);
             continue;
           }
         } else {
-          logger.warn('COMMAND', `Command at ${itemPath} is missing required property "data" hoặc "execute" `);
+          logger.warn('command', `Command at ${itemPath} is missing required property "data" or "execute" `);
         }
       } catch (error) {
-        logger.error('COMMAND', `Failed to load command from ${itemPath}:`, error);
+        logger.error('command', `Failed to load command from ${itemPath}:`, error);
       }
     }
   }
@@ -62,12 +62,12 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
 const loadCommands = (client) => {
   const commandsPath = path.join(__dirname, '../commands');
   const commandsJson = [];
-  logger.info('COMMAND', 'STARTING COMMAND LOAD');
+  logger.info('command', 'starting command load');
   client.commands.clear();
   loadCommandsFromDirectory(client, commandsPath, commandsJson);
   commandsJsonCache = commandsJson;
-  logger.info('COMMAND', `LOADED A TOTAL OF ${client.commands.size} COMMANDS`);
-  if (!commandsJson.length) logger.warn('COMMAND', 'NO COMMANDS WERE LOADED!');
+  logger.info('command', `loaded A total OF ${client.commands.size} commands`);
+  if (!commandsJson.length) logger.warn('command', 'NO commands were loaded!');
   return client.commands.size;
 };
 
@@ -78,18 +78,17 @@ const getCommandsJson = (client) => {
 
 const handleCommand = async (interaction, client) => {
   if (!client.commands.size) {
-    logger.warn('COMMAND', 'Commands not loaded, reloading...');
+    logger.warn('command', 'Commands not loaded, reloading...');
     loadCommands(client);
   }
   const command = client.commands.get(interaction.commandName);
   if (!command) {
-    logger.error('COMMAND', `No command found matching ${interaction.commandName}.`);
+    logger.error('command', `No command found matching ${interaction.commandName}.`);
     return;
   }
 
   try {
-    logger.info(
-      'COMMAND',
+    logger.info('command',
       `Handling /${interaction.commandName} | user=${interaction.user?.tag} (${interaction.user?.id}) | guild=${interaction.guild?.name || 'DM'} (${interaction.guildId || 'DM'}) | channel=${interaction.channel?.name || 'N/A'} (${interaction.channelId || 'N/A'})`
     );
 
@@ -97,13 +96,13 @@ const handleCommand = async (interaction, client) => {
     if (interaction.guildId) {
         const gSettings = await MariaModDB.getGuildSettings(interaction.guildId);
         locale = gSettings?.language || 'vi';
-        logger.info('COMMAND', `Guild locale resolved for /${interaction.commandName}: ${locale}`);
+        logger.info('command', `Guild locale resolved for /${interaction.commandName}: ${locale}`);
     }
-    logger.info('COMMAND', `Effective locale for /${interaction.commandName}: ${locale} | i18nInitialized=${Boolean(i18nManager.isInitialized)}`);
+    logger.info('command', `Effective locale for /${interaction.commandName}: ${locale} | i18nInitialized=${Boolean(i18nManager.isInitialized)}`);
 
     interaction.t = (key, options) => i18nManager.t(key, locale, options);
 
-    logger.info('COMMAND_USAGE', `[SLASH] [Server: ${interaction.guild?.name || 'DM'}] [Channel: ${interaction.channel?.name || 'N/A'}] User ${interaction.user.tag} (${interaction.user.id}) used: /${interaction.commandName}`
+    logger.info('command_usage', `[slash] [Server: ${interaction.guild?.name || 'DM'}] [Channel: ${interaction.channel?.name || 'N/A'}] User ${interaction.user.tag} (${interaction.user.id}) used: /${interaction.commandName}`
     );
 
     if (interaction.guildId) {
@@ -115,7 +114,7 @@ const handleCommand = async (interaction, client) => {
 
     const userRole = await RoleService.getUserRole(interaction.user.id);
     const isPrivileged = userRole === 'owner' || userRole === 'admin';
-    logger.info('COMMAND', `Role resolved for ${interaction.user.id}: ${userRole}`);
+    logger.info('command', `Role resolved for ${interaction.user.id}: ${userRole}`);
 
     if (command.prefix?.adminOnly && !isPrivileged) {
       return interaction.reply({ content: `${emojis.error} Bạn không có quyền sử dụng lệnh này.`, ephemeral: true });
@@ -142,7 +141,7 @@ const handleCommand = async (interaction, client) => {
     }
 
     const hasConsented = await consentService.hasUserConsented(interaction.user.id);
-    logger.info('COMMAND', `Consent state for ${interaction.user.id}: ${hasConsented}`);
+    logger.info('command', `Consent state for ${interaction.user.id}: ${hasConsented}`);
 
     if (!hasConsented) {
       try {
@@ -158,14 +157,13 @@ const handleCommand = async (interaction, client) => {
       return;
     }
 
-    logger.info('COMMAND', `Executing handler for /${interaction.commandName}`);
+    logger.info('command', `Executing handler for /${interaction.commandName}`);
     await command.execute(interaction);
 
     const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
     CooldownService.set(interaction.user.id, interaction.commandName, cooldownTime);
   } catch (error) {
-    logger.error(
-      'COMMAND',
+    logger.error('command',
       `Error executing command ${interaction.commandName} | replied=${interaction.replied} | deferred=${interaction.deferred} | localeBound=${typeof interaction.t === 'function'}`,
       {
         userId: interaction.user?.id,

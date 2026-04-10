@@ -68,7 +68,7 @@ async function handleMemoryRequest(message, ConversationService, memoryRequest) 
     }
 
   } catch (error) {
-    logger.error('MEMORY', 'Error handling memory request:', error);
+    logger.error('memory', 'Error handling memory request:', error);
     await message.reply('Xin lỗi, mình gặp lỗi khi truy cập trí nhớ của cuộc trò chuyện.').catch(() => { });
   }
 }

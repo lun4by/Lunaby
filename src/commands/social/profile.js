@@ -41,7 +41,7 @@ module.exports = {
       await interaction.editReply({ content: '', files: [attachment] });
 
     } catch (error) {
-      logger.error('PROFILE', 'Error creating profile card:', error);
+      logger.error('profile', 'Error creating profile card:', error);
       await interaction.editReply({
         content: `${emojis.error} ${interaction.t('commands.profile.error')}`,
         ephemeral: true

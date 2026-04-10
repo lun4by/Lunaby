@@ -59,7 +59,7 @@ module.exports = {
         components: [buildBannerActionRow(bannerUrl, interaction)],
       });
     } catch (error) {
-      logger.error('BANNER', 'Error in banner command:', error);
+      logger.error('banner', 'Error in banner command:', error);
       const payload = {
         content: `${emojis.error} ${interaction.t('commands.banner.error')}`,
         ephemeral: true,

@@ -14,7 +14,7 @@ class CreditsService {
         credits
       };
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Error khi lấy credits cho ${userId}:`, error);
+      logger.error('credits_service', `Error while fetching credits for ${userId}:`, error);
       throw error;
     }
   }
@@ -35,7 +35,7 @@ class CreditsService {
 
       return this.getUserCredits(userId);
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Error khi cộng credits cho ${userId}:`, error);
+      logger.error('credits_service', `Error while adding credits for ${userId}:`, error);
       throw error;
     }
   }
@@ -56,7 +56,7 @@ class CreditsService {
 
       return this.getUserCredits(userId);
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Error khi đặt credits cho ${userId}:`, error);
+      logger.error('credits_service', `Error while setting credits for ${userId}:`, error);
       throw error;
     }
   }
@@ -77,7 +77,7 @@ class CreditsService {
 
       return await MariaModDB.transferUserCredits(fromUserId, toUserId, normalizedAmount);
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Error khi chuyển credits từ ${fromUserId} to ${toUserId}:`, error);
+      logger.error('credits_service', `Error while transferring credits from ${fromUserId} to ${toUserId}:`, error);
       throw error;
     }
   }
@@ -104,7 +104,7 @@ class CreditsService {
 
       return await MariaModDB.purchaseQuotaWithCredits(userId, normalizedType, normalizedQuota, normalizedCost);
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Error khi mua quota bằng credits cho ${userId}:`, error);
+      logger.error('credits_service', `Error while purchasing quota with credits for ${userId}:`, error);
       throw error;
     }
   }

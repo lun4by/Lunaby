@@ -23,7 +23,7 @@ async function runStartupStep(label, task, readyKey = null) {
   try {
     return await task();
   } catch (error) {
-    logger.error('SYSTEM', `${label} failed:`, error.message);
+    logger.error('system', `${label} failed:`, error.message);
     return null;
   } finally {
     if (readyKey) {
@@ -34,7 +34,7 @@ async function runStartupStep(label, task, readyKey = null) {
 
 async function updatePresence(client, shardId) {
   if (!client?.isReady?.() || !client.user) {
-    logger.warn('SYSTEM', `Skipped presence update because client is not ready yet | Shard ${shardId}`);
+    logger.warn('system', `Skipped presence update because client is not ready yet | Shard ${shardId}`);
     return;
   }
 
@@ -50,7 +50,7 @@ async function updatePresence(client, shardId) {
       afk: false,
     });
   } catch (error) {
-    logger.error('SYSTEM', `Presence update failed on shard ${shardId}:`, error.message);
+    logger.error('system', `Presence update failed on shard ${shardId}:`, error.message);
   }
 }
 
@@ -85,7 +85,7 @@ async function initializeMaria() {
 
 async function loadBotCommands(client, loadCommands) {
   const commandCount = await loadCommands(client);
-  logger.info('SYSTEM', `Loaded ${commandCount} commands`);
+  logger.info('system', `Loaded ${commandCount} commands`);
 }
 
 
@@ -140,7 +140,7 @@ async function startbot(client, loadCommands) {
 
     await initializeReadyState(client, loadCommands);
 
-    logger.info('SYSTEM', `Bot is ready! Logged in as ${client.user.tag} | Shard ${shardId}`);
+    logger.info('system', `Bot is ready! Logged in as ${client.user.tag} | Shard ${shardId}`);
   });
 }
 

@@ -77,7 +77,7 @@ module.exports = {
         components: [buildAvatarActionRow(avatarUrl, interaction)],
       });
     } catch (error) {
-      logger.error('AVATAR', 'Error in avatar command:', error);
+      logger.error('avatar', 'Error in avatar command:', error);
       const payload = {
         content: `${emojis.error} ${interaction.t('commands.avatar.error')}`,
         ephemeral: true,

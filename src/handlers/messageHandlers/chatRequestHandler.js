@@ -37,9 +37,9 @@ async function handleChatRequest(message, content, ConversationService) {
     await conversationManager.addMessage(conversationId, 'user', enhancedPrompt);
     messages = conversationManager.getHistory(conversationId);
 
-    logger.debug('CHAT', `Messages before validation: ${messages.length}`);
+    logger.debug('chat', `Messages before validation: ${messages.length}`);
     const validMessages = Validators.cleanMessages(messages);
-    logger.debug('CHAT', `Messages after validation: ${validMessages.length}`);
+    logger.debug('chat', `Messages after validation: ${validMessages.length}`);
 
     if (validMessages.length === 0) {
       throw new Error('No valid messages after validation');
@@ -58,7 +58,7 @@ async function handleChatRequest(message, content, ConversationService) {
       const response = await ConversationService.getCompletion(content, message);
 
       if (!response) {
-        logger.error('CHAT', 'ConversationService returned null/undefined');
+        logger.error('chat', 'ConversationService returned null/undefined');
         const errStr = message.t ? message.t('system.error_occurred') : 'Xin lỗi, tôi không thể xử lý tin nhắn của bạn lúc này.';
         await message.reply(errStr).catch(() => { });
         return;
@@ -78,7 +78,7 @@ async function handleChatRequest(message, content, ConversationService) {
       ErrorHandler.logError('CHAT', 'Both streaming and fallback failed', fallbackError);
       const userMessage = ErrorHandler.getUserFriendlyMessage(fallbackError, 'xử lý tin nhắn');
       await message.reply(userMessage).catch(() => {
-        logger.error('CHAT', 'Failed to send error message to user');
+        logger.error('chat', 'Failed to send error message to user');
       });
     }
   }

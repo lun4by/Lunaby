@@ -13,7 +13,7 @@ class RoleService {
         try {
             await RoleDB.initTables();
         } catch (error) {
-            logger.error('ROLE_SERVICE', 'Error khi khởi tạo bảng MariaDB user_roles:', error);
+            logger.error('role_service', 'Error while initializing MariaDB user_roles table:', error);
             throw error;
         }
     }
@@ -24,7 +24,7 @@ class RoleService {
 
             return await RoleDB.getUserRole(userId);
         } catch (error) {
-            logger.error('ROLE_SERVICE', `Error khi lấy role của ${userId}:`, error);
+            logger.error('role_service', `Error while fetching role for ${userId}:`, error);
             return 'user';
         }
     }
@@ -42,7 +42,7 @@ class RoleService {
 
             return true;
         } catch (error) {
-            logger.error('ROLE_SERVICE', `Error khi đặt role cho ${userId}:`, error);
+            logger.error('role_service', `Error while setting role for ${userId}:`, error);
             throw error;
         }
     }

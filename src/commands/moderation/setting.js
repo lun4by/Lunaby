@@ -38,7 +38,7 @@ module.exports = {
             }
 
             if (!message) {
-                logger.error('SETTING', 'Failed to fetch message for creating collector');
+                logger.error('setting', 'Failed to fetch message for creating collector');
                 return;
             }
 
@@ -113,7 +113,7 @@ module.exports = {
                         await renderPage(i, guildId, currentPage, true);
                     }
                 } catch (err) {
-                    logger.error('SETTING', `Collector error: ${err.message}`);
+                    logger.error('setting', `Collector error: ${err.message}`);
                     try {
                         if (!i.replied && !i.deferred) {
                             await i.reply({ content: `${emojis.error} ${i.t('commands.setting.general_error')}`, ephemeral: true });
@@ -131,12 +131,12 @@ module.exports = {
                         await message.edit({ content: interaction.t('commands.setting.session_expired'), components: [], embeds: [] });
                     }
                 } catch (e) {
-                    logger.error('SETTING', `Error removing components on end: ${e.message}`);
+                    logger.error('setting', `Error removing components on end: ${e.message}`);
                 }
             });
 
         } catch (error) {
-            logger.error('SETTING', `Execute error: ${error.message}`);
+            logger.error('setting', `Execute error: ${error.message}`);
             try {
                 if (isSlash) {
                     await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.setting.load_error')}`, embeds: [], components: [] });

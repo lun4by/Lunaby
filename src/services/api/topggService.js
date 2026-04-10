@@ -15,7 +15,7 @@ async function setupAutoPoster(client) {
   const token = process.env.TOPGG_TOKEN;
 
   if (!token) {
-    logger.warn('TOPGG', 'TOPGG_TOKEN not configured, skipping AutoPoster');
+    logger.warn('topgg', 'topgg_token not configured, skipping AutoPoster');
     return null;
   }
 
@@ -27,17 +27,17 @@ async function setupAutoPoster(client) {
     });
 
     autoPoster.on('posted', (stats) => {
-      logger.info('TOPGG', `Sent stats to Top.gg | Servers: ${stats.serverCount}`);
+      logger.info('topgg', `Sent stats to Top.gg | Servers: ${stats.serverCount}`);
     });
 
     autoPoster.on('error', (err) => {
-      logger.error('TOPGG', `AutoPoster error: ${err.message}`);
+      logger.error('topgg', `AutoPoster error: ${err.message}`);
     });
 
-    logger.info('TOPGG', 'AutoPoster initialized successfully');
+    logger.info('topgg', 'AutoPoster initialized successfully');
     return autoPoster;
   } catch (error) {
-    logger.error('TOPGG', `Failed to initialize AutoPoster: ${error.message}`);
+    logger.error('topgg', `Failed to initialize AutoPoster: ${error.message}`);
     return null;
   }
 }
@@ -82,14 +82,14 @@ async function sendVoteNotifications(client, vote) {
         embed.setFooter({ text: 'Top.gg Vote System' });
 
         await channel.send({ embeds: [embed] }).catch((err) => {
-          logger.warn('TOPGG', `Failed to send vote log to guild ${guildId}: ${err.message}`);
+          logger.warn('topgg', `Failed to send vote log to guild ${guildId}: ${err.message}`);
         });
       } catch (error) {
-        logger.error('TOPGG', `Error xử lý vote log cho guild ${guildId}: ${error.message}`);
+        logger.error('topgg', `Error processing vote log for guild ${guildId}: ${error.message}`);
       }
     }
   } catch (error) {
-    logger.error('TOPGG', `Error gửi thông báo vote: ${error.message}`);
+    logger.error('topgg', `Error sending vote notification: ${error.message}`);
   }
 }
 
@@ -105,7 +105,7 @@ async function setupWebhook(client, onVote) {
   const webhookPath = process.env.TOPGG_WEBHOOK_PATH || '/topggwebhook';
 
   if (!webhookAuth) {
-    logger.warn('TOPGG', 'TOPGG_WEBHOOK_AUTH not configured, skipping Webhook');
+    logger.warn('topgg', 'topgg_webhook_auth not configured, skipping Webhook');
     return null;
   }
 
@@ -117,7 +117,7 @@ async function setupWebhook(client, onVote) {
     const webhook = new Topgg.Webhook(webhookAuth);
 
     app.post(webhookPath, webhook.listener(async (vote) => {
-      logger.info('TOPGG', `Received vote from user: ${vote.user} | Bot: ${vote.bot} | Type: ${vote.type}`);
+      logger.info('topgg', `Received vote from user: ${vote.user} | Bot: ${vote.bot} | Type: ${vote.type}`);
 
       // Gửi thông báo đến các guild đã cấu hình vote log
       await sendVoteNotifications(client, vote);
@@ -127,7 +127,7 @@ async function setupWebhook(client, onVote) {
         try {
           await onVote(vote, client);
         } catch (error) {
-          logger.error('TOPGG', `Error xử lý vote callback: ${error.message}`);
+          logger.error('topgg', `Error processing vote callback: ${error.message}`);
         }
       }
     }));
@@ -148,17 +148,17 @@ async function setupWebhook(client, onVote) {
         cert: fs.readFileSync(sslCert),
         key: fs.readFileSync(sslKey),
       }, app).listen(webhookPort, () => {
-        logger.info('TOPGG', `Webhook HTTPS server đang chạy at port ${webhookPort} (path: ${webhookPath})`);
+        logger.info('topgg', `Webhook https server is running on port ${webhookPort} (path: ${webhookPath})`);
       });
     } else {
       webhookApp = app.listen(webhookPort, () => {
-        logger.info('TOPGG', `Webhook HTTP server đang chạy at port ${webhookPort} (path: ${webhookPath})`);
+        logger.info('topgg', `Webhook http server is running on port ${webhookPort} (path: ${webhookPath})`);
       });
     }
 
     return webhookApp;
   } catch (error) {
-    logger.error('TOPGG', `Failed to initialize Webhook: ${error.message}`);
+    logger.error('topgg', `Failed to initialize Webhook: ${error.message}`);
     return null;
   }
 }
@@ -177,11 +177,11 @@ async function initializeTopgg(client, onVote) {
   const [posterResult, webhookResult] = results;
 
   if (posterResult.status === 'rejected') {
-    logger.error('TOPGG', `AutoPoster init failed: ${posterResult.reason}`);
+    logger.error('topgg', `AutoPoster init failed: ${posterResult.reason}`);
   }
 
   if (webhookResult.status === 'rejected') {
-    logger.error('TOPGG', `Webhook init failed: ${webhookResult.reason}`);
+    logger.error('topgg', `Webhook init failed: ${webhookResult.reason}`);
   }
 
   return {
@@ -197,18 +197,18 @@ function shutdownTopgg() {
   if (autoPoster) {
     try {
       autoPoster.stop?.();
-      logger.info('TOPGG', 'AutoPoster stopped');
+      logger.info('topgg', 'AutoPoster stopped');
     } catch (error) {
-      logger.error('TOPGG', `Error khi dừng AutoPoster: ${error.message}`);
+      logger.error('topgg', `Error while stopping AutoPoster: ${error.message}`);
     }
   }
 
   if (webhookApp) {
     try {
       webhookApp.close();
-      logger.info('TOPGG', 'Webhook server stopped');
+      logger.info('topgg', 'Webhook server stopped');
     } catch (error) {
-      logger.error('TOPGG', `Error khi dừng Webhook: ${error.message}`);
+      logger.error('topgg', `Error while stopping Webhook: ${error.message}`);
     }
   }
 }

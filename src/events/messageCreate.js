@@ -59,7 +59,7 @@ function setupMessageCreateEvent(client) {
             }
           }
         } catch (err) {
-          logger.error('LEVELUP', 'Failed to send level up message:', err);
+          logger.error('levelup', 'Failed to send level up message:', err);
         }
       }
 
@@ -68,11 +68,11 @@ function setupMessageCreateEvent(client) {
 
       await handleMentionMessage(message, client);
     } catch (error) {
-      logger.error("MESSAGE_EVENT", "Error handling message:", error);
+      logger.error("message_event", "Error handling message:", error);
     }
   });
 
-  logger.info("EVENTS", "Registered event: MessageCreate");
+  logger.info("events", "Registered event: MessageCreate");
 }
 
 module.exports = { setupMessageCreateEvent };

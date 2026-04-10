@@ -126,9 +126,9 @@ async function handleSetup(interaction) {
 
         await interaction.editReply({ embeds: [embed] });
 
-        logger.info('LVOICE', `Setup completed in ${guild.name} by ${interaction.user.tag}`);
+        logger.info('lvoice', `Setup completed in ${guild.name} by ${interaction.user.tag}`);
     } catch (error) {
-        logger.error('LVOICE', 'Error during setup:', error);
+        logger.error('lvoice', 'Error during setup:', error);
         await interaction.editReply({
             content: `${emojis.error} ${interaction.t('commands.lvoice.setup_error', { error: error.message })}`,
         });
@@ -172,9 +172,9 @@ async function handleDisable(interaction) {
             content: `${emojis.success} ${interaction.t('commands.lvoice.disable_success')}`,
         });
 
-        logger.info('LVOICE', `Disabled in ${guild.name} by ${interaction.user.tag}`);
+        logger.info('lvoice', `Disabled in ${guild.name} by ${interaction.user.tag}`);
     } catch (error) {
-        logger.error('LVOICE', 'Error during disable:', error);
+        logger.error('lvoice', 'Error during disable:', error);
         await interaction.editReply({
             content: `${emojis.error} ${interaction.t('commands.lvoice.disable_error', { error: error.message })}`,
         });

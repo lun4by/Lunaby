@@ -51,7 +51,7 @@ module.exports = {
 
       await interaction.editReply({ content: '', files: [attachment] });
     } catch (error) {
-      logger.error('RANK', 'Error in rank command:', error);
+      logger.error('rank', 'Error in rank command:', error);
       await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.rank.error')}`, ephemeral: true });
     }
   }

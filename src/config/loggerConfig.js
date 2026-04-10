@@ -12,18 +12,18 @@ const defaultConfig = {
     keepOldLogs: true,
   },
   categories: {
-    COMMAND: true, COMMAND_USAGE: true,
-    DATABASE: true, MARIADB: true, SYSTEM: true,
-    CHAT: true, API: true, CONVERSATION_SERVICE: true,
-    CONVERSATION: true, AI_CORE: true,
-    MODERATION: true, MESSAGE_EVENT: true,
-    GUILD: true, GUILD_EVENT: true, GUILD_DEPLOY: false,
-    XP: true, FONTS: true, MODLOG: true,
+    command: true, command_usage: true,
+    database: true, mariadb: true, system: true,
+    chat: true, api: true, conversation_service: true,
+    conversation: true, ai_core: true,
+    moderation: true, message_event: true,
+    guild: true, guild_event: true, guild_deploy: false,
+    xp: true, fonts: true, modlog: true,
   },
 };
 
 let currentConfig = structuredClone(defaultConfig);
-
+  
 function getConfig() {
   return { ...currentConfig };
 }

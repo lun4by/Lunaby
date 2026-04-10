@@ -40,7 +40,7 @@ class MyAnimeListAPI {
     this.timeout = 5000;
 
     if (!this.clientId) {
-      logger.warn("API", "MAL_CLIENT_ID not set. MyAnimeList API will not work.");
+      logger.warn("api", "mal_client_id not set. MyAnimeList api will not work.");
     }
   }
 
@@ -72,7 +72,7 @@ class MyAnimeListAPI {
       const data = await this.request("/anime", { q: query, limit, fields: ANIME_SEARCH_FIELDS });
       return data.data;
     } catch (error) {
-      logger.error("MAL API", "Error khi tìm kiếm anime:", error.message);
+      logger.error("mal api", "Error while searching anime:", error.message);
       return [];
     }
   }
@@ -81,7 +81,7 @@ class MyAnimeListAPI {
     try {
       return await this.request(`/anime/${animeId}`, { fields: ANIME_DETAIL_FIELDS });
     } catch (error) {
-      logger.error("MAL API", `Error khi lấy chi tiết anime ID ${animeId}:`, error.message);
+      logger.error("mal api", `Error while fetching anime details for ID ${animeId}:`, error.message);
       return null;
     }
   }
@@ -91,7 +91,7 @@ class MyAnimeListAPI {
       const data = await this.request("/anime/ranking", { ranking_type: rankingType, limit, fields: ANIME_RANKING_FIELDS });
       return data.data;
     } catch (error) {
-      logger.error("MAL API", `Error khi lấy BXH anime loại ${rankingType}:`, error.message);
+      logger.error("mal api", `Error while fetching anime ranking type ${rankingType}:`, error.message);
       return [];
     }
   }
@@ -101,7 +101,7 @@ class MyAnimeListAPI {
       const data = await this.request(`/anime/season/${year}/${season}`, { limit, fields: ANIME_SEARCH_FIELDS });
       return data.data;
     } catch (error) {
-      logger.error("MAL API", `Error khi lấy anime mùa ${season} ${year}:`, error.message);
+      logger.error("mal api", `Error while fetching seasonal anime for ${season} ${year}:`, error.message);
       return [];
     }
   }
@@ -111,7 +111,7 @@ class MyAnimeListAPI {
       const data = await this.request("/manga", { q: query, limit, fields: MANGA_SEARCH_FIELDS });
       return data.data;
     } catch (error) {
-      logger.error("MAL API", "Error khi tìm kiếm manga:", error.message);
+      logger.error("mal api", "Error while searching manga:", error.message);
       return [];
     }
   }
@@ -120,7 +120,7 @@ class MyAnimeListAPI {
     try {
       return await this.request(`/manga/${mangaId}`, { fields: MANGA_DETAIL_FIELDS });
     } catch (error) {
-      logger.error("MAL API", `Error khi lấy chi tiết manga ID ${mangaId}:`, error.message);
+      logger.error("mal api", `Error while fetching manga details for ID ${mangaId}:`, error.message);
       return null;
     }
   }
@@ -130,7 +130,7 @@ class MyAnimeListAPI {
       const data = await this.request("/manga/ranking", { ranking_type: rankingType, limit, fields: MANGA_RANKING_FIELDS });
       return data.data;
     } catch (error) {
-      logger.error("MAL API", `Error khi lấy BXH manga loại ${rankingType}:`, error.message);
+      logger.error("mal api", `Error while fetching manga ranking type ${rankingType}:`, error.message);
       return [];
     }
   }

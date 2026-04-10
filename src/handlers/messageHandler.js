@@ -86,7 +86,7 @@ async function handleMentionMessage(message, client) {
         await handleChatRequest(message, content, ConversationService);
 
       } catch (error) {
-        logger.error('CHAT', `Error processing message from ${message.author.tag}:`, error);
+        logger.error('chat', `Error processing message from ${message.author.tag}:`, error);
 
         const msg = error?.message || '';
         let errorMessage = 'Xin lỗi, tôi gặp lỗi khi xử lý tin nhắn của bạn. Vui lòng thử lại sau.';

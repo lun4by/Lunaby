@@ -282,7 +282,7 @@ async function handlePrefixMessage(message, client) {
     }
 
     try {
-        logger.info('COMMAND_USAGE', `[PREFIX] [Server: ${message.guild?.name || 'DM'}] [Channel: ${message.channel?.name || 'N/A'}] User ${message.author.tag} (${message.author.id}) used: ${prefix}${commandName}`
+        logger.info('command_usage', `[prefix] [Server: ${message.guild?.name || 'DM'}] [Channel: ${message.channel?.name || 'N/A'}] User ${message.author.tag} (${message.author.id}) used: ${prefix}${commandName}`
         );
 
         if (message.guildId) {
@@ -312,7 +312,7 @@ async function handlePrefixMessage(message, client) {
         const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
         CooldownService.set(message.author.id, cmdName, cooldownTime);
     } catch (error) {
-        logger.error('PREFIX', `Error executing prefix command ${commandName}:`, error);
+        logger.error('prefix', `Error executing prefix command ${commandName}:`, error);
         await message.reply(`${emojis.error} ${message.t('system.command_execution_failed')}`).catch(() => { });
     }
 

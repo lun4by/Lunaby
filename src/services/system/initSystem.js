@@ -18,16 +18,16 @@ class InitSystem extends EventEmitter {
 
   markReady(service) {
     if (!(service in this.services)) {
-      logger.warn("SYSTEM", `Unrecognized service: ${service}`);
+      logger.warn("system", `Unrecognized service: ${service}`);
       return;
     }
 
     this.services[service] = true;
-    logger.info("SYSTEM", `Service ${service} is ready`);
+    logger.info("system", `Service ${service} is ready`);
 
     if (Object.values(this.services).every(Boolean)) {
       this.initialized = true;
-      logger.info("SYSTEM", "All services are ready");
+      logger.info("system", "All services are ready");
       this.emit("ready");
     }
   }

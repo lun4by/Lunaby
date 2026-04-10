@@ -24,7 +24,7 @@ module.exports = {
         content: interaction.t('commands.credits.balance', { amount: formatCredits(credits) })
       });
     } catch (error) {
-      logger.error('CREDITS', 'Error while running /credits:', error);
+      logger.error('credits', 'Error while running /credits:', error);
       const payload = {
         content: `${emojis.error} ${interaction.t('commands.credits.error')}`,
         ephemeral: true

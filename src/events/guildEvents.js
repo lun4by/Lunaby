@@ -8,7 +8,7 @@ function setupGuildEvents(client) {
     try {
       await handleGuildJoin(guild, null);
     } catch (error) {
-      logger.error('GUILD_EVENT', `Error handling GuildCreate for ${guild.name}:`, error);
+      logger.error('guild_event', `Error handling GuildCreate for ${guild.name}:`, error);
     }
   });
 
@@ -16,11 +16,11 @@ function setupGuildEvents(client) {
     try {
       await handleGuildLeave(guild);
     } catch (error) {
-      logger.error('GUILD_EVENT', `Error handling GuildDelete for ${guild.name}:`, error);
+      logger.error('guild_event', `Error handling GuildDelete for ${guild.name}:`, error);
     }
   });
 
-  logger.info("EVENTS", "Registered events: GuildCreate, GuildDelete");
+  logger.info("events", "Registered events: GuildCreate, GuildDelete");
 }
 
 module.exports = { setupGuildEvents };

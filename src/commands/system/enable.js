@@ -65,7 +65,7 @@ module.exports = {
             return interaction.reply({ embeds: [embed], ephemeral: true });
 
         } catch (error) {
-            logger.error('COMMAND', 'Error in enable command:', error);
+            logger.error('command', 'Error in enable command:', error);
             return interaction.reply({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     },

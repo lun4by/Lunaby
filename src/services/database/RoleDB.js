@@ -13,10 +13,10 @@ class RoleDB {
           INDEX idx_role (role)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
-            logger.info('MARIADB', 'user_roles table ready');
+            logger.info('mariadb', 'user_roles table ready');
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error creating user_roles table:', error);
+            logger.error('mariadb', 'Error creating user_roles table:', error);
             return false;
         }
     }
@@ -31,7 +31,7 @@ class RoleDB {
 
             return rows[0].role;
         } catch (error) {
-            logger.error('ROLE_DB', `Error getting user role for ${userId}:`, error);
+            logger.error('role_db', `Error getting user role for ${userId}:`, error);
             return 'user';
         }
     }
@@ -46,7 +46,7 @@ class RoleDB {
             );
             return true;
         } catch (error) {
-            logger.error('ROLE_DB', `Error setting role for ${userId}:`, error);
+            logger.error('role_db', `Error setting role for ${userId}:`, error);
             throw error;
         }
     }

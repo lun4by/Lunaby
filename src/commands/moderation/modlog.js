@@ -126,7 +126,7 @@ module.exports = {
 
             await interaction.editReply({ embeds: [logEmbed] });
         } catch (error) {
-            logger.error('MODLOG', 'Error viewing moderation logs:', error);
+            logger.error('modlog', 'Error viewing moderation logs:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.modlog.error_modlog', { error: error.message })}`,
                 ephemeral: true,

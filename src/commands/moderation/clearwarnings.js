@@ -105,10 +105,10 @@ module.exports = {
 
                 await targetUser.send({ embeds: [dmEmbed] });
             } catch (error) {
-                logger.error('MODERATION', `Failed to send DM to ${targetUser.tag}`);
+                logger.error('moderation', `Failed to send DM to ${targetUser.tag}`);
             }
         } catch (error) {
-            logger.error('MODERATION', 'Error clearing member warnings:', error);
+            logger.error('moderation', 'Error clearing member warnings:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.clearwarnings.error_clearwarnings', { error: error.message })}`,
                 ephemeral: true,

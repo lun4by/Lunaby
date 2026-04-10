@@ -18,17 +18,17 @@ async function generateProfileCard(data) {
     const largeImage = activity?.assets?.largeImageURL?.({ extension: 'png', size: 512 }) || null;
 
     if (activity) {
-        logger.info('PROFILE_CANVAS', `Activity found: type=${activity.type}, name=${activity.name}`);
+        logger.info('profile_canvas', `Activity found: type=${activity.type}, name=${activity.name}`);
         profileCard.setActivity({ activity, largeImage });
     } else {
-        logger.info('PROFILE_CANVAS', `No activity for user ${user.id} (presence: ${member?.presence ? 'exists' : 'null'})`);
+        logger.info('profile_canvas', `No activity for user ${user.id} (presence: ${member?.presence ? 'exists' : 'null'})`);
     }
 
     try {
         const buffer = await profileCard.build();
         return new AttachmentBuilder(buffer, { name: 'profile.png' });
     } catch (err) {
-        logger.error('PROFILE_CANVAS', 'Failed to build profile:', err);
+        logger.error('profile_canvas', 'Failed to build profile:', err);
         throw err;
     }
 }

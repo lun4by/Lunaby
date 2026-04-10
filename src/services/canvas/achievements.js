@@ -18,9 +18,9 @@ class AchievementCanvas {
   async initializeFonts() {
     try {
       await fontManager.initialize(ASSETS_PATH);
-      logger.debug('ACHIEVEMENT', 'Fonts loaded');
+      logger.debug('achievement', 'Fonts loaded');
     } catch (error) {
-      logger.error('ACHIEVEMENT', 'Failed to load fonts:', error);
+      logger.error('achievement', 'Failed to load fonts:', error);
     }
   }
 
@@ -58,7 +58,7 @@ class AchievementCanvas {
       this.imageCache.set(imagePath, image);
       return image;
     } catch (error) {
-      logger.warn('ACHIEVEMENT', `Failed to load achievement image ${path.basename(imagePath)}:`, error.message);
+      logger.warn('achievement', `Failed to load achievement image ${path.basename(imagePath)}:`, error.message);
       
       // Fallback to default icon
       const fallbackPath = path.join(ASSETS_PATH, 'lunaby-avatar.png');
@@ -220,7 +220,7 @@ class AchievementCanvas {
       ctx.lineWidth = 3;
       ctx.stroke();
     } catch (error) {
-      logger.error('ACHIEVEMENT', 'Error khi vẽ icon achievement:', error);
+      logger.error('achievement', 'Error while drawing achievement icon:', error);
     }
   }
 
@@ -323,7 +323,7 @@ class AchievementCanvas {
 
       return canvas.toBuffer();
     } catch (error) {
-      logger.error('ACHIEVEMENT', 'Error khi tạo achievement canvas:', error);
+      logger.error('achievement', 'Error while creating achievement canvas:', error);
       throw error;
     }
   }
@@ -391,7 +391,7 @@ async function checkAchievements(message, xpResult) {
       });
     }
   } catch (error) {
-    logger.error('ACHIEVEMENT', 'Error khi kiểm tra thành tựu:', error);
+    logger.error('achievement', 'Error while checking achievements:', error);
   }
 }
 

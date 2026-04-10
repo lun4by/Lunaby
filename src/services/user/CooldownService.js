@@ -34,7 +34,7 @@ function cleanup() {
         }
     }
     if (cleaned > 0) {
-        logger.debug('COOLDOWN', `Cleaned up ${cleaned} expired cooldowns`);
+        logger.debug('cooldown', `Cleaned up ${cleaned} expired cooldowns`);
     }
 }
 

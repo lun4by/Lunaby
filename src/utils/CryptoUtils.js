@@ -17,7 +17,7 @@ if (!ENCRYPTION_KEY_HEX) {
 }
 
 if (encryptionError) {
-  logger.error('CRYPTO', `Unsafe encryption configuration: ${encryptionError}`);
+  logger.error('crypto', `Unsafe encryption configuration: ${encryptionError}`);
 }
 
 class CryptoUtils {

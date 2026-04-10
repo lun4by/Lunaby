@@ -49,9 +49,9 @@ async function handleVoiceToggle(interaction) {
 
         await interaction.editReply({ content: message });
 
-        logger.info('SETUP', `Voice toggle ${newEnabled ? 'enabled' : 'disabled'} for guild ${interaction.guild.name} by ${interaction.user.tag}`);
+        logger.info('setup', `Voice toggle ${newEnabled ? 'enabled' : 'disabled'} for guild ${interaction.guild.name} by ${interaction.user.tag}`);
     } catch (error) {
-        logger.error('SETUP', 'Error handling voice toggle:', error);
+        logger.error('setup', 'Error handling voice toggle:', error);
         await interaction.editReply({
             content: `${emojis.error} ${interaction.t('system.error_occurred')}`,
         });

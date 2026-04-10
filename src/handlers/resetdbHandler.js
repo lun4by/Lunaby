@@ -37,7 +37,7 @@ async function handleResetdbInteraction(interaction) {
             '> Bot sẽ không còn nhớ cuộc trò chuyện trước đây\n\n' +
             '**Hệ thống đã sẵn sàng sử dụng!**',
         });
-        logger.info('RESET', `Owner ${user.tag} successfully reset database`);
+        logger.info('reset', `Owner ${user.tag} successfully reset database`);
       } else {
         await interaction.editReply({
           content:
@@ -46,7 +46,7 @@ async function handleResetdbInteraction(interaction) {
             '> Vui lòng kiểm tra logs để biết thêm chi tiết\n' +
             '> Liên hệ admin nếu vấn đề tiếp tục',
         });
-        logger.error('RESET', 'Database reset failed');
+        logger.error('reset', 'Database reset failed');
       }
     } else if (customId === 'reset_database_cancel') {
       await interaction.update({
@@ -59,7 +59,7 @@ async function handleResetdbInteraction(interaction) {
         components: [],
       });
 
-      logger.info('RESET', `Owner ${user.tag} cancelled database reset`);
+      logger.info('reset', `Owner ${user.tag} cancelled database reset`);
     } else if (customId === 'reset_users_confirm') {
       await interaction.update({
         content: `${emojis.lvoice.cooldown} **Đang reset user profiles...**`,
@@ -87,7 +87,7 @@ async function handleResetdbInteraction(interaction) {
             '**User profiles đã được reset hoàn toàn!**',
         });
 
-        logger.info('RESET', `Đã reset user profile data: ${JSON.stringify(mariaResult.deleted)}`);
+        logger.info('reset', `Reset user profile data: ${JSON.stringify(mariaResult.deleted)}`);
       } catch (error) {
         await interaction.editReply({
           content:
@@ -97,7 +97,7 @@ async function handleResetdbInteraction(interaction) {
             '> Liên hệ admin nếu vấn đề tiếp tục',
         });
 
-        logger.error('RESET', 'Error khi reset user profiles:', error);
+        logger.error('reset', 'Error while resetting user profiles:', error);
       }
     } else if (customId === 'reset_users_cancel') {
       await interaction.update({
@@ -110,10 +110,10 @@ async function handleResetdbInteraction(interaction) {
         components: [],
       });
 
-      logger.info('RESET', `Owner ${user.tag} cancelled user profiles reset`);
+      logger.info('reset', `Owner ${user.tag} cancelled user profiles reset`);
     }
   } catch (error) {
-    logger.error('RESET', `Error khi xử lý reset interaction:`, error);
+    logger.error('reset', `Error while processing reset interaction:`, error);
     const errPayload = { content: '**Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại sau!**', ephemeral: true };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)

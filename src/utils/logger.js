@@ -47,21 +47,21 @@ async function initializeFileLogging() {
       const oldTimestamp = stats.mtime.toISOString().replace(/[:.]/g, "-");
       const oldLogFile = path.join(logDir, `console_${oldTimestamp}.old`);
       fs.renameSync(currentLogFile, oldLogFile);
-      info("SYSTEM", `Đã đổi tên file log cũ thành: ${oldLogFile}`);
+      info("system", `Renamed old log file to: ${oldLogFile}`);
     }
 
     logStream = fs.createWriteStream(currentLogFile, { flags: "a" });
 
-    const startupMessage = `\nLUNABY AI STARTUP LOG\nStartup Time: ${new Date().toISOString()}\nEnvironment: ${process.env.NODE_ENV || "development"
+    const startupMessage = `\nLunaby AI startup log\nStartup time: ${new Date().toISOString()}\nEnvironment: ${process.env.NODE_ENV || "development"
       }\n=========================\n\n`;
     logStream.write(startupMessage);
 
-    process.on("exit", () => logStream?.end("\nLUNABY AI SHUTDOWN\n"));
-    process.on("SIGINT", () => { logStream?.end("\nLUNABY AI INTERRUPTED\n"); process.exit(); });
+    process.on("exit", () => logStream?.end("\nLunaby AI shutdown\n"));
+    process.on("SIGINT", () => { logStream?.end("\nLunaby AI interrupted\n"); process.exit(); });
 
-    info("SYSTEM", "Đã khởi tạo hệ thống ghi log vào file thành công");
+    info("system", "File logging initialized successfully");
   } catch (error) {
-    console.error("Lỗi khi khởi tạo hệ thống ghi log vào file:", error.message);
+    console.error("Error initializing file logging system:", error.message);
   }
 }
 
@@ -71,7 +71,7 @@ function writeToFile(level, message, ...args) {
 
   const timestamp = new Date().toISOString();
   const extra = args.length ? `\n${args.map(formatArg).join("\n")}` : "";
-  const logEntry = `[${timestamp}] ${level.toUpperCase()}: ${message}${extra}\n`;
+  const logEntry = `[${timestamp}] ${level}: ${message}${extra}\n`;
 
   logStream.write(logEntry);
 }
@@ -126,7 +126,7 @@ function log(category, level, message, ...args) {
 
   const levelColor = LOG_LEVELS[level]?.color || "";
   const categoryStr = category ? `[${category}] ` : "";
-  const prefix = `${timestamp}${levelColor}${level.toUpperCase()}${RESET_COLOR} ${categoryStr}`;
+  const prefix = `${timestamp}${levelColor}${level}${RESET_COLOR} ${categoryStr}`;
 
   const normalizedMessage = formatLogValue(message, false);
   const consoleDetails = formatLogDetails(args, true);

@@ -113,7 +113,7 @@ module.exports = {
                     });
                 }
             } catch (error) {
-                logger.error('HELP', 'Error when disabling the help menu:', error);
+                logger.error('help', 'Error when disabling the help menu:', error);
             }
         });
     },

@@ -35,11 +35,11 @@ function setupInteractionCreateEvent(client) {
         }
       }
     } catch (error) {
-      logger.error("INTERACTION_EVENT", "Error handling interaction:", error);
+      logger.error("interaction_event", "Error handling interaction:", error);
     }
   });
 
-  logger.info("EVENTS", "Registered event: InteractionCreate");
+  logger.info("events", "Registered event: InteractionCreate");
 }
 
 module.exports = { setupInteractionCreateEvent };

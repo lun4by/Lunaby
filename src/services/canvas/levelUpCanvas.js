@@ -14,7 +14,7 @@ async function generateLevelUpCard(user, oldLevel, newLevel) {
         const buffer = await card.build();
         return new AttachmentBuilder(buffer, { name: 'levelup.png' });
     } catch (err) {
-        logger.error('LEVELUP_CANVAS', 'Failed to build LevelUp canvas:', err);
+        logger.error('levelup_canvas', 'Failed to build LevelUp canvas:', err);
         throw err;
     }
 }

@@ -22,7 +22,7 @@ async function generateLeaderboardCard(usersData) {
         const buffer = await topCard.build();
         return new AttachmentBuilder(buffer, { name: 'leaderboard.png' });
     } catch (err) {
-        logger.error('LEADERBOARD_CANVAS', 'Failed to build leaderboard canvas:', err);
+        logger.error('leaderboard_canvas', 'Failed to build leaderboard canvas:', err);
         throw err;
     }
 }

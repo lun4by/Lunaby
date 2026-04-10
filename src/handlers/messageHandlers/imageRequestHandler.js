@@ -38,7 +38,7 @@ async function handleImageRequest(message, content, requestMatch) {
 
     await QuotaService.recordImageUsage(globalUserId, 1);
   } catch (error) {
-    logger.error("IMAGE", "Error processing image generation:", error);
+    logger.error("image", "Error processing image generation:", error);
     ErrorHandler.logError("IMAGE", "Image Generation failed", error, "warn");
 
     const errorText = ErrorHandler.getUserFriendlyMessage(error, "tạo ảnh");

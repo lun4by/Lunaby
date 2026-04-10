@@ -166,7 +166,7 @@ class MariaModDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
-            logger.info('MARIADB', 'All tables ready');
+            logger.info('mariadb', 'All tables ready');
 
             try {
                 await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS voice_toggle_enabled BOOLEAN DEFAULT FALSE`);
@@ -178,7 +178,7 @@ class MariaModDB {
 
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error creating tables:', error);
+            logger.error('mariadb', 'Error creating tables:', error);
             return false;
         }
     }
@@ -191,7 +191,7 @@ class MariaModDB {
             );
             return rows.length > 0 ? rows[0].setting_value : null;
         } catch (error) {
-            logger.error('MARIADB', `Error getting bot setting ${key}:`, error);
+            logger.error('mariadb', `Error getting bot setting ${key}:`, error);
             return null;
         }
     }
@@ -207,7 +207,7 @@ class MariaModDB {
             `, [key, value, updatedBy]);
             return true;
         } catch (error) {
-            logger.error('MARIADB', `Error setting bot setting ${key}:`, error);
+            logger.error('mariadb', `Error setting bot setting ${key}:`, error);
             return false;
         }
     }
@@ -230,7 +230,7 @@ class MariaModDB {
                 updatedAt: row.updated_at
             };
         } catch (error) {
-            logger.error('MARIADB', 'Error getting mod settings:', error);
+            logger.error('mariadb', 'Error getting mod settings:', error);
             return null;
         }
     }
@@ -250,7 +250,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error setting mod settings:', error);
+            logger.error('mariadb', 'Error setting mod settings:', error);
             return false;
         }
     }
@@ -263,7 +263,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error adding warning:', error);
+            logger.error('mariadb', 'Error adding warning:', error);
             return false;
         }
     }
@@ -276,7 +276,7 @@ class MariaModDB {
             );
             return rows;
         } catch (error) {
-            logger.error('MARIADB', 'Error getting warnings:', error);
+            logger.error('mariadb', 'Error getting warnings:', error);
             return [];
         }
     }
@@ -289,7 +289,7 @@ class MariaModDB {
             );
             return row ? Number(row.count) : 0;
         } catch (error) {
-            logger.error('MARIADB', 'Error getting warning count:', error);
+            logger.error('mariadb', 'Error getting warning count:', error);
             return 0;
         }
     }
@@ -302,7 +302,7 @@ class MariaModDB {
             );
             return result.affectedRows;
         } catch (error) {
-            logger.error('MARIADB', 'Error clearing warnings:', error);
+            logger.error('mariadb', 'Error clearing warnings:', error);
             return 0;
         }
     }
@@ -324,7 +324,7 @@ class MariaModDB {
             );
             return result.affectedRows;
         } catch (error) {
-            logger.error('MARIADB', 'Error clearing latest warning:', error);
+            logger.error('mariadb', 'Error clearing latest warning:', error);
             return 0;
         }
     }
@@ -338,7 +338,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error adding mod log:', error);
+            logger.error('mariadb', 'Error adding mod log:', error);
             return false;
         }
     }
@@ -364,7 +364,7 @@ class MariaModDB {
             const rows = await mariaClient.query(query, params);
             return rows;
         } catch (error) {
-            logger.error('MARIADB', 'Error getting mod logs:', error);
+            logger.error('mariadb', 'Error getting mod logs:', error);
             return [];
         }
     }
@@ -404,7 +404,7 @@ class MariaModDB {
                 language: r.language || 'vi',
             };
         } catch (error) {
-            logger.error('MARIADB', 'Error getting guild settings:', error);
+            logger.error('mariadb', 'Error getting guild settings:', error);
             return this._defaultGuildSettings(guildId);
         }
     }
@@ -472,7 +472,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', `Error updating guild settings for ${guildId}:`, error);
+            logger.error('mariadb', `Error updating guild settings for ${guildId}:`, error);
             return false;
         }
     }
@@ -500,7 +500,7 @@ class MariaModDB {
 
             return true;
         } catch (error) {
-            logger.error('MARIADB', `Error deleting guild data for ${guildId}:`, error);
+            logger.error('mariadb', `Error deleting guild data for ${guildId}:`, error);
             return false;
         }
     }
@@ -521,7 +521,7 @@ class MariaModDB {
 
             return this.updateGuildSettings(guildId, { 'xp.exceptions': exceptions });
         } catch (error) {
-            logger.error('MARIADB', `Error setting XP exception for ${guildId}:`, error);
+            logger.error('mariadb', `Error setting XP exception for ${guildId}:`, error);
             return false;
         }
     }
@@ -534,7 +534,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error disabling command:', error);
+            logger.error('mariadb', 'Error disabling command:', error);
             return false;
         }
     }
@@ -547,7 +547,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error enabling command:', error);
+            logger.error('mariadb', 'Error enabling command:', error);
             return false;
         }
     }
@@ -562,7 +562,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error disabling all commands:', error);
+            logger.error('mariadb', 'Error disabling all commands:', error);
             return false;
         }
     }
@@ -575,7 +575,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error enabling all commands:', error);
+            logger.error('mariadb', 'Error enabling all commands:', error);
             return false;
         }
     }
@@ -588,7 +588,7 @@ class MariaModDB {
             );
             return rows.map(r => r.command_name);
         } catch (error) {
-            logger.error('MARIADB', 'Error getting disabled commands:', error);
+            logger.error('mariadb', 'Error getting disabled commands:', error);
             return [];
         }
     }
@@ -601,7 +601,7 @@ class MariaModDB {
             );
             return rows.length > 0;
         } catch (error) {
-            logger.error('MARIADB', 'Error checking command status:', error);
+            logger.error('mariadb', 'Error checking command status:', error);
             return false;
         }
     }
@@ -615,7 +615,7 @@ class MariaModDB {
             if (rows.length === 0) return { xp: 0, level: 1 };
             return { xp: rows[0].xp, level: rows[0].level };
         } catch (error) {
-            logger.error('MARIADB', 'Error getting user XP:', error);
+            logger.error('mariadb', 'Error getting user XP:', error);
             return { xp: 0, level: 1 };
         }
     }
@@ -631,7 +631,7 @@ class MariaModDB {
             `, [guildId, userId, xp, level]);
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error setting user XP:', error);
+            logger.error('mariadb', 'Error setting user XP:', error);
             return false;
         }
     }
@@ -644,7 +644,7 @@ class MariaModDB {
             );
             return rows;
         } catch (error) {
-            logger.error('MARIADB', 'Error getting guild leaderboard:', error);
+            logger.error('mariadb', 'Error getting guild leaderboard:', error);
             return [];
         }
     }
@@ -660,7 +660,7 @@ class MariaModDB {
             );
             return Number(countRows[0].count) + 1;
         } catch (error) {
-            logger.error('MARIADB', 'Error getting user rank:', error);
+            logger.error('mariadb', 'Error getting user rank:', error);
             return 0;
         }
     }
@@ -674,7 +674,7 @@ class MariaModDB {
             }
             return rows[0];
         } catch (error) {
-            logger.error('MARIADB', 'Error getting user profile:', error);
+            logger.error('mariadb', 'Error getting user profile:', error);
             return null;
         }
     }
@@ -696,7 +696,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error updating user profile:', error);
+            logger.error('mariadb', 'Error updating user profile:', error);
             return false;
         }
     }
@@ -710,7 +710,7 @@ class MariaModDB {
             }
             return rows[0];
         } catch (error) {
-            logger.error('MARIADB', 'Error getting user economy:', error);
+            logger.error('mariadb', 'Error getting user economy:', error);
             return null;
         }
     }
@@ -720,7 +720,7 @@ class MariaModDB {
             const economy = await this.getUserEconomy(userId);
             return Number(economy?.wallet || 0);
         } catch (error) {
-            logger.error('MARIADB', 'Error getting user credits:', error);
+            logger.error('mariadb', 'Error getting user credits:', error);
             return 0;
         }
     }
@@ -735,7 +735,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error setting user credits:', error);
+            logger.error('mariadb', 'Error setting user credits:', error);
             return false;
         }
     }
@@ -750,7 +750,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error adding user credits:', error);
+            logger.error('mariadb', 'Error adding user credits:', error);
             return false;
         }
     }
@@ -805,7 +805,7 @@ class MariaModDB {
             if (conn) {
                 try { await conn.rollback(); } catch { }
             }
-            logger.error('MARIADB', 'Error transferring user credits:', error);
+            logger.error('mariadb', 'Error transferring user credits:', error);
             throw error;
         } finally {
             if (conn) conn.release();
@@ -867,7 +867,7 @@ class MariaModDB {
             if (conn) {
                 try { await conn.rollback(); } catch { }
             }
-            logger.error('MARIADB', 'Error purchasing quota with credits:', error);
+            logger.error('mariadb', 'Error purchasing quota with credits:', error);
             throw error;
         } finally {
             if (conn) conn.release();
@@ -884,7 +884,7 @@ class MariaModDB {
             await mariaClient.query(query, [amount, userId]);
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error updating user economy:', error);
+            logger.error('mariadb', 'Error updating user economy:', error);
             return false;
         }
     }
@@ -910,7 +910,7 @@ class MariaModDB {
                 totalDeleted: Object.values(deleted).reduce((sum, count) => sum + count, 0)
             };
         } catch (error) {
-            logger.error('MARIADB', 'Error resetting user profile data:', error);
+            logger.error('mariadb', 'Error resetting user profile data:', error);
             return {
                 success: false,
                 deleted: {},
@@ -933,7 +933,7 @@ class MariaModDB {
                 defaultBitrate: r.default_bitrate || 64000,
             };
         } catch (error) {
-            logger.error('MARIADB', 'Error getting LVoice config:', error);
+            logger.error('mariadb', 'Error getting LVoice config:', error);
             return null;
         }
     }
@@ -953,7 +953,7 @@ class MariaModDB {
             `, [guildId, creatorChannelId, categoryId, defaultName, defaultLimit, defaultBitrate]);
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error setting LVoice config:', error);
+            logger.error('mariadb', 'Error setting LVoice config:', error);
             return false;
         }
     }
@@ -964,7 +964,7 @@ class MariaModDB {
             await mariaClient.query('DELETE FROM lvoice_active WHERE guild_id = ?', [guildId]);
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error deleting LVoice config:', error);
+            logger.error('mariadb', 'Error deleting LVoice config:', error);
             return false;
         }
     }
@@ -977,7 +977,7 @@ class MariaModDB {
             );
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error adding active voice:', error);
+            logger.error('mariadb', 'Error adding active voice:', error);
             return false;
         }
     }
@@ -987,7 +987,7 @@ class MariaModDB {
             await mariaClient.query('DELETE FROM lvoice_active WHERE channel_id = ?', [channelId]);
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error removing active voice:', error);
+            logger.error('mariadb', 'Error removing active voice:', error);
             return false;
         }
     }
@@ -999,7 +999,7 @@ class MariaModDB {
             const r = rows[0];
             return { channelId: r.channel_id, guildId: r.guild_id, ownerId: r.owner_id };
         } catch (error) {
-            logger.error('MARIADB', 'Error getting active voice:', error);
+            logger.error('mariadb', 'Error getting active voice:', error);
             return null;
         }
     }
@@ -1009,7 +1009,7 @@ class MariaModDB {
             const rows = await mariaClient.query('SELECT * FROM lvoice_active');
             return rows.map(r => ({ channelId: r.channel_id, guildId: r.guild_id, ownerId: r.owner_id }));
         } catch (error) {
-            logger.error('MARIADB', 'Error getting all active voices:', error);
+            logger.error('mariadb', 'Error getting all active voices:', error);
             return [];
         }
     }
@@ -1026,7 +1026,7 @@ class MariaModDB {
                 defaultBitrate: r.default_bitrate || 64000,
             }));
         } catch (error) {
-            logger.error('MARIADB', 'Error getting all VoiceMaster configs:', error);
+            logger.error('mariadb', 'Error getting all VoiceMaster configs:', error);
             return [];
         }
     }

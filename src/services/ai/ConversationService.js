@@ -87,7 +87,7 @@ class ConversationService {
 
       return instructionsContext + memoryContext + conversationContext + originalPrompt;
     } catch (error) {
-      logger.error("CONVERSATION_SERVICE", "Error enriching prompt with memory:", error);
+      logger.error("conversation_service", "Error enriching prompt with memory:", error);
       return originalPrompt;
     }
   }
@@ -116,7 +116,7 @@ class ConversationService {
 
       return relevantMemories.slice(-RELEVANT_MEMORY_COUNT);
     } catch (error) {
-      logger.error("CONVERSATION_SERVICE", "Error extracting relevant memories:", error);
+      logger.error("conversation_service", "Error extracting relevant memories:", error);
       return [];
     }
   }
@@ -187,7 +187,7 @@ class ConversationService {
       analysis += "\n\n*Lưu ý: Mình vẫn nhớ toàn bộ cuộc trò chuyện của chúng ta và có thể trả lời dựa trên ngữ cảnh đó.*";
       return analysis;
     } catch (error) {
-      logger.error("CONVERSATION_SERVICE", "Error analyzing memory:", error);
+      logger.error("conversation_service", "Error analyzing memory:", error);
       return `Xin lỗi, mình gặp lỗi khi truy cập trí nhớ của cuộc trò chuyện. Lỗi: ${error.message}`;
     }
   }
@@ -196,7 +196,7 @@ class ConversationService {
     try {
       const userId = this.extractUserId(message);
       if (userId === DEFAULT_USER_ID) {
-        logger.warn("CONVERSATION_SERVICE", "Cannot determine userId, using default");
+        logger.warn("conversation_service", "Cannot determine userId, using default");
       }
 
       const enhancedPrompt = await this.enrichPromptWithMemory(prompt, userId);
@@ -216,7 +216,7 @@ class ConversationService {
         ...config,
       });
     } catch (error) {
-      logger.error("CONVERSATION_SERVICE", "Error in getOneTimeCompletion:", error.message);
+      logger.error("conversation_service", "Error in getOneTimeCompletion:", error.message);
       return null;
     }
   }
@@ -234,7 +234,7 @@ class ConversationService {
 
     let messages = conversationManager.getHistory(userId);
     if (!messages || messages.length === 0) {
-      logger.error("CONVERSATION_SERVICE", `Empty history for ${userId}, reinitializing`);
+      logger.error("conversation_service", `Empty history for ${userId}, reinitializing`);
       await conversationManager.resetConversation(userId, systemPrompt, DEFAULT_MODEL);
       await conversationManager.addMessage(userId, "user", enhancedPrompt);
       messages = conversationManager.getHistory(userId);
@@ -272,18 +272,18 @@ class ConversationService {
 
     if (tokenUsage && tokenUsage.total_tokens) {
       QuotaService.recordMessageUsage(userId, 1, "chat").catch((err) =>
-        logger.error("CONVERSATION_SERVICE", "Error recording usage:", err)
+        logger.error("conversation_service", "Error recording usage:", err)
       );
     }
 
     await conversationManager.addMessage(userId, "assistant", content);
 
     MemoryService.extractMemoryFromConversation(userId, prompt, content).catch((err) =>
-      logger.error("CONVERSATION_SERVICE", "Error extracting memory:", err)
+      logger.error("conversation_service", "Error extracting memory:", err)
     );
 
     MemoryService.updateInteractionStats(userId).catch((err) =>
-      logger.error("CONVERSATION_SERVICE", "Error updating interaction stats:", err)
+      logger.error("conversation_service", "Error updating interaction stats:", err)
     );
 
     return content;

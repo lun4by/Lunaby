@@ -6,7 +6,7 @@ class BlacklistService {
     try {
       return await MariaBlacklistDB.isUserBlacklisted(userId);
     } catch (error) {
-      logger.error('BLACKLIST_SERVICE', `Error khi kiểm tra user blacklist ${userId}:`, error);
+      logger.error('blacklist_service', `Error while checking user blacklist ${userId}:`, error);
       return null;
     }
   }
@@ -15,7 +15,7 @@ class BlacklistService {
     try {
       return await MariaBlacklistDB.isGuildBlacklisted(guildId);
     } catch (error) {
-      logger.error('BLACKLIST_SERVICE', `Error khi kiểm tra guild blacklist ${guildId}:`, error);
+      logger.error('blacklist_service', `Error while checking guild blacklist ${guildId}:`, error);
       return null;
     }
   }

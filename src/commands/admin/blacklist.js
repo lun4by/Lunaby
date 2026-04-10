@@ -305,7 +305,7 @@ module.exports = {
         `${emojis.error} ${interaction.t('commands.admin.blacklist.invalid_syntax')}`
       );
     } catch (error) {
-      logger.error('BLACKLIST', 'Error in blacklist command:', error);
+      logger.error('blacklist', 'Error in blacklist command:', error);
       return reply(interaction, {
         content: `${emojis.error} ${interaction.t('commands.admin.blacklist.error', { message: error.message || '' })}`,
         ephemeral: true,

@@ -87,7 +87,7 @@ module.exports = {
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.levelup.setup_success', { channelId: channel.id })}` });
             }
         } catch (error) {
-            logger.error('SYSTEM', 'Error setting levelup:', error);
+            logger.error('system', 'Error setting levelup:', error);
             return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     }

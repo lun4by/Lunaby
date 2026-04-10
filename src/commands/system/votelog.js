@@ -96,7 +96,7 @@ module.exports = {
                 });
             }
         } catch (error) {
-            logger.error('SYSTEM', 'Error setting vote log:', error);
+            logger.error('system', 'Error setting vote log:', error);
             return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     }

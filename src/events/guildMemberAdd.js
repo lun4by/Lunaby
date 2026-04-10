@@ -25,15 +25,15 @@ async function handleGuildMemberAdd(member) {
             .replace(/{count}/g, member.guild.memberCount);
 
         await channel.send({ content: message });
-        logger.info('GREETER', `Sent welcome message to ${member.user.tag} in server ${member.guild.name}`);
+        logger.info('greeter', `Sent welcome message to ${member.user.tag} in server ${member.guild.name}`);
     } catch (error) {
-        logger.error('GREETER', `Error processing new member welcome:`, error);
+        logger.error('greeter', `Error processing new member welcome:`, error);
     }
 }
 
 function setupGuildMemberAddEvent(client) {
     client.on(Events.GuildMemberAdd, handleGuildMemberAdd);
-    logger.info("EVENTS", "Registered event: GuildMemberAdd");
+    logger.info("events", "Registered event: GuildMemberAdd");
 }
 
 module.exports = { setupGuildMemberAddEvent, handleGuildMemberAdd };

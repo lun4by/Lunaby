@@ -41,7 +41,7 @@ class UserProfileDB {
         }
       };
     } catch (error) {
-      logger.error('MARIADB_WRAPPER', 'Error getting user profile:', error);
+      logger.error('mariadb_wrapper', 'Error getting user profile:', error);
       throw error;
     }
   }
@@ -49,7 +49,7 @@ class UserProfileDB {
   async updateUserProfile(userId, updateData) {
     // This is a proxy for $set objects from old mongo calls. But nothing in the repo uses this specific format natively anymore except for internal things.
     // If it's used, we will just return false or map it.
-    logger.warn('MARIADB_WRAPPER', 'updateUserProfile is deprecated through UserProfileDB. Use MariaModDB directly instead.');
+    logger.warn('mariadb_wrapper', 'updateUserProfile is deprecated through UserProfileDB. Use MariaModDB directly instead.');
     return false;
   }
 
@@ -82,7 +82,7 @@ class UserProfileDB {
         }
       };
     } catch (error) {
-      logger.error('MARIADB_WRAPPER', 'Error updating user economy:', error);
+      logger.error('mariadb_wrapper', 'Error updating user economy:', error);
       return null;
     }
   }

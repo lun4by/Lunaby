@@ -72,7 +72,7 @@ module.exports = {
 
             await interaction.reply({ content: successMessage });
         } catch (error) {
-            logger.error('ADMIN', 'Error in giveadmin command:', error);
+            logger.error('admin', 'Error in giveadmin command:', error);
             await interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.error')}`, ephemeral: true });
         }
     }

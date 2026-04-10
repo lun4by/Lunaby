@@ -26,7 +26,7 @@ class MemoryService {
         privacy: extra.privacy || {},
       };
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error reading MariaDB personalization for ${userId}:`, error);
+      logger.error('memory_service', `Error reading MariaDB personalization for ${userId}:`, error);
       return { personalInfo: {}, privacy: {} };
     }
   }
@@ -51,7 +51,7 @@ class MemoryService {
       await MariaModDB.updateUserProfile(userId, ['extra_data'], [JSON.stringify(extra)]);
       return true;
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error saving MariaDB personalization for ${userId}:`, error);
+      logger.error('memory_service', `Error saving MariaDB personalization for ${userId}:`, error);
       return false;
     }
   }
@@ -123,9 +123,9 @@ class MemoryService {
       await collection.createIndex({ 'lastUpdated': 1 });
       await collection.createIndex({ 'memories.category': 1 });
 
-      logger.info('MEMORY_SERVICE', 'Memory system ready');
+      logger.info('memory_service', 'Memory system ready');
     } catch (error) {
-      logger.error('MEMORY_SERVICE', 'Error initializing memory collection:', error);
+      logger.error('memory_service', 'Error initializing memory collection:', error);
       throw error;
     }
   }
@@ -192,7 +192,7 @@ class MemoryService {
       this.memoryCache.set(userId, { data: memory, timestamp: Date.now() });
       return memory;
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error getting user memory for ${userId}:`, error);
+      logger.error('memory_service', `Error getting user memory for ${userId}:`, error);
       return this.getDefaultMemoryStructure(userId);
     }
   }
@@ -237,7 +237,7 @@ class MemoryService {
       this.memoryCache.delete(userId);
       return true;
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error updating user memory for ${userId}:`, error);
+      logger.error('memory_service', `Error updating user memory for ${userId}:`, error);
       return false;
     }
   }
@@ -251,7 +251,7 @@ class MemoryService {
       await this.updateUserMemory(userId, updates);
       return true;
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error updating privacy settings for ${userId}:`, error);
+      logger.error('memory_service', `Error updating privacy settings for ${userId}:`, error);
       return false;
     }
   }
@@ -284,7 +284,7 @@ class MemoryService {
       this.memoryCache.delete(userId);
       return true;
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error adding memory for ${userId}:`, error);
+      logger.error('memory_service', `Error adding memory for ${userId}:`, error);
       return false;
     }
   }
@@ -356,13 +356,13 @@ class MemoryService {
           extracted.memory.content = SecurityUtils.sanitizeInput(extracted.memory.content);
           await this.addMemory(userId, { ...extracted.memory, source: 'auto-extracted' });
         } else {
-          logger.warn('MEMORY_SERVICE', `Memory poisoning prevented. Extracted content rejected: ${validation.reason}`);
+          logger.warn('memory_service', `Memory poisoning prevented. Extracted content rejected: ${validation.reason}`);
         }
       }
 
       return extracted;
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error extracting memory for ${userId}:`, error);
+      logger.error('memory_service', `Error extracting memory for ${userId}:`, error);
       return null;
     }
   }
@@ -395,7 +395,7 @@ class MemoryService {
 
       return scored.sort((a, b) => b.score - a.score).slice(0, limit);
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error getting relevant memories for ${userId}:`, error);
+      logger.error('memory_service', `Error getting relevant memories for ${userId}:`, error);
       return [];
     }
   }
@@ -433,7 +433,7 @@ class MemoryService {
       if (!parts.length) return '';
       return `\n===== USER MEMORY CONTEXT =====\n${parts.join('\n')}\n===== END MEMORY CONTEXT =====\n\n`;
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error building memory context for ${userId}:`, error);
+      logger.error('memory_service', `Error building memory context for ${userId}:`, error);
       return '';
     }
   }
@@ -462,7 +462,7 @@ class MemoryService {
       );
       this.memoryCache.delete(userId);
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error updating interaction stats for ${userId}:`, error);
+      logger.error('memory_service', `Error updating interaction stats for ${userId}:`, error);
     }
   }
 
@@ -485,7 +485,7 @@ class MemoryService {
         currentContext: memory.currentContext
       };
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error getting memory summary for ${userId}:`, error);
+      logger.error('memory_service', `Error getting memory summary for ${userId}:`, error);
       return null;
     }
   }
@@ -503,7 +503,7 @@ class MemoryService {
       this.memoryCache.delete(userId);
       return true;
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error deleting memory for ${userId}:`, error);
+      logger.error('memory_service', `Error deleting memory for ${userId}:`, error);
       return false;
     }
   }
@@ -528,7 +528,7 @@ class MemoryService {
       this.memoryCache.delete(userId);
       return true;
     } catch (error) {
-      logger.error('MEMORY_SERVICE', `Error clearing memories for ${userId}:`, error);
+      logger.error('memory_service', `Error clearing memories for ${userId}:`, error);
       return false;
     }
   }

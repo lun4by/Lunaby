@@ -91,7 +91,7 @@ async function handleCodeRequest(message, content, ConversationService) {
       ErrorHandler.logError('CODE', 'Both streaming and fallback failed', fallbackError);
       const userMessage = ErrorHandler.getUserFriendlyMessage(fallbackError, 'tạo mã');
       await message.reply(userMessage).catch(() => {
-        logger.error('CODE', 'Failed to send error message to user');
+        logger.error('code', 'Failed to send error message to user');
       });
     }
   }

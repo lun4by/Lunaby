@@ -55,7 +55,7 @@ async function notifyBlacklistedUser(user, reason = null) {
     });
     return true;
   } catch (error) {
-    logger.warn('BLACKLIST', `Failed to send DM to user blacklist ${user.id}: ${error.message}`);
+    logger.warn('blacklist', `Failed to send DM to user blacklist ${user.id}: ${error.message}`);
     return false;
   }
 }
@@ -97,15 +97,15 @@ async function notifyBlacklistedGuildAndLeave(guild, reason = null) {
       }).catch(() => { });
     }
   } catch (error) {
-    logger.warn('BLACKLIST', `Failed to send blacklist notice to guild ${guild.id}: ${error.message}`);
+    logger.warn('blacklist', `Failed to send blacklist notice to guild ${guild.id}: ${error.message}`);
   }
 
   try {
     await guild.leave();
-    logger.info('BLACKLIST', `Bot left blacklisted guild ${guild.name} (${guild.id})`);
+    logger.info('blacklist', `Bot left blacklisted guild ${guild.name} (${guild.id})`);
     return true;
   } catch (error) {
-    logger.error('BLACKLIST', `Failed to leave blacklisted guild ${guild.name} (${guild.id}):`, error);
+    logger.error('blacklist', `Failed to leave blacklisted guild ${guild.name} (${guild.id}):`, error);
     return false;
   }
 }

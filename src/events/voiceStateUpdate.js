@@ -34,9 +34,9 @@ async function loadLVoiceCache() {
             });
         }
 
-        logger.info('LVOICE', `Loaded ${creatorChannels.size} creator configs, ${activeVoiceChannels.size} active channels`);
+        logger.info('lvoice', `Loaded ${creatorChannels.size} creator configs, ${activeVoiceChannels.size} active channels`);
     } catch (error) {
-        logger.error('LVOICE', 'Error loading VoiceMaster cache:', error);
+        logger.error('lvoice', 'Error loading VoiceMaster cache:', error);
     }
 }
 
@@ -78,10 +78,10 @@ async function cleanupZombieChannels(client) {
         }
 
         if (cleaned > 0) {
-            logger.info('LVOICE', `Cleaned up ${cleaned} zombie channels`);
+            logger.info('lvoice', `Cleaned up ${cleaned} zombie channels`);
         }
     } catch (error) {
-        logger.error('LVOICE', 'Error cleaning up zombie channels:', error);
+        logger.error('lvoice', 'Error cleaning up zombie channels:', error);
     }
 }
 
@@ -116,7 +116,7 @@ async function sendVoiceGreeting(eventType, memberName, voiceChannel) {
         await voiceChannel.send(result.content + footer);
     }
 
-    logger.debug('VOICE_TOGGLE', `${eventType === 'join' ? 'Greeted' : 'Farewell'} ${memberName} in ${voiceChannel.guild.name}/${channelName}`);
+    logger.debug('voice_toggle', `${eventType === 'join' ? 'Greeted' : 'Farewell'} ${memberName} in ${voiceChannel.guild.name}/${channelName}`);
 }
 
 async function handleVoiceMasterJoin(newState, member) {
@@ -185,9 +185,9 @@ async function handleVoiceMasterJoin(newState, member) {
         });
         await MariaModDB.addActiveVoice(tempChannel.id, guild.id, member.id);
 
-        logger.info('LVOICE', `Created temp channel "${channelName}" for ${member.user.tag} in ${guild.name}`);
+        logger.info('lvoice', `Created temp channel "${channelName}" for ${member.user.tag} in ${guild.name}`);
     } catch (error) {
-        logger.error('LVOICE', `Error creating temp voice channel:`, error);
+        logger.error('lvoice', `Error creating temp voice channel:`, error);
     }
 }
 
@@ -205,9 +205,9 @@ async function handleVoiceMasterLeave(oldState) {
         activeVoiceChannels.delete(channelId);
         await MariaModDB.removeActiveVoice(channelId);
 
-        logger.info('LVOICE', `Deleted empty temp channel "${channel.name}" in ${oldState.guild.name}`);
+        logger.info('lvoice', `Deleted empty temp channel "${channel.name}" in ${oldState.guild.name}`);
     } catch (error) {
-        logger.error('LVOICE', `Error deleting temp voice channel:`, error);
+        logger.error('lvoice', `Error deleting temp voice channel:`, error);
         // Fallback: xóa khỏi cache nếu kênh đã không còn
         activeVoiceChannels.delete(channelId);
         await MariaModDB.removeActiveVoice(channelId);
@@ -254,11 +254,11 @@ function setupVoiceStateEvent(client) {
                 }
             }
         } catch (error) {
-            logger.error('VOICE_TOGGLE', 'Error handling voice state update:', error);
+            logger.error('voice_toggle', 'Error handling voice state update:', error);
         }
     });
 
-    logger.info('EVENTS', 'Registered event: VoiceStateUpdate');
+    logger.info('events', 'Registered event: VoiceStateUpdate');
 }
 
 module.exports = {

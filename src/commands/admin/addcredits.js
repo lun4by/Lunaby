@@ -48,7 +48,7 @@ module.exports = {
         })}`
       );
     } catch (error) {
-      logger.error('ADMIN', 'Error in addcredits command:', error);
+      logger.error('admin', 'Error in addcredits command:', error);
       await interaction.reply({
         content: `${emojis.error} ${interaction.t('commands.admin.addcredits.error')}`,
         ephemeral: true

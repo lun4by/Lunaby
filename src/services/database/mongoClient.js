@@ -17,12 +17,12 @@ class MongoDBClient {
   async connect() {
     try {
       if (this.db) {
-        logger.info("SYSTEM", "Already connected to MongoDB.");
+        logger.info("system", "Already connected to MongoDB.");
         return this.db;
       }
 
       if (this.isConnecting) {
-        logger.info("SYSTEM", "Connecting to MongoDB...");
+        logger.info("system", "Connecting to MongoDB...");
         while (!this.db) {
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
@@ -33,7 +33,7 @@ class MongoDBClient {
       await this.client.connect();
       this.db = this.client.db();
       this.isConnecting = false;
-      logger.debug("DATABASE", "MongoDB connected");
+      logger.debug("database", "MongoDB connected");
 
       // if (!initSystem.getStatus().services.mongodb) {
       //   console.log('MongoDB đang đợi trong hàng đợi khởi tạo...');
@@ -43,7 +43,7 @@ class MongoDBClient {
       return this.db;
     } catch (error) {
       this.isConnecting = false;
-      logger.error("SYSTEM", "Error khi kết nối đến MongoDB:", error);
+      logger.error("system", "Error while connecting to MongoDB:", error);
       throw error;
     }
   }
@@ -51,9 +51,9 @@ class MongoDBClient {
   async close() {
     try {
       await this.client.close();
-      logger.info("SYSTEM", "Closed MongoDB connection");
+      logger.info("system", "Closed MongoDB connection");
     } catch (error) {
-      logger.error("SYSTEM", "Error khi đóng kết nối MongoDB:", error);
+      logger.error("system", "Error while closing MongoDB connection:", error);
     }
   }
 
@@ -69,7 +69,7 @@ class MongoDBClient {
       try {
         await this.connect();
       } catch (error) {
-        logger.error("SYSTEM", "Failed to connect to MongoDB:", error);
+        logger.error("system", "Failed to connect to MongoDB:", error);
         throw new Error(
           "Không thể kết nối đến MongoDB. Vui lòng kiểm tra kết nối và cấu hình."
         );

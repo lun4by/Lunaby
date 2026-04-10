@@ -55,7 +55,7 @@ module.exports = {
       });
 
     } catch (error) {
-      logger.error('LEADERBOARD', 'Error in leaderboard command:', error);
+      logger.error('leaderboard', 'Error in leaderboard command:', error);
       await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.leaderboard.error')}`, ephemeral: true });
     }
   }

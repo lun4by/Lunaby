@@ -27,10 +27,10 @@ class PrefixDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
-            logger.info('MARIADB', 'Prefix tables ready');
+            logger.info('mariadb', 'Prefix tables ready');
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error creating prefix tables:', error);
+            logger.error('mariadb', 'Error creating prefix tables:', error);
             return false;
         }
     }
@@ -50,7 +50,7 @@ class PrefixDB {
             if (prefix) this.userCache.set(userId, { prefix, time: Date.now() });
             return prefix;
         } catch (error) {
-            logger.error('MARIADB', 'Error getting user prefix:', error);
+            logger.error('mariadb', 'Error getting user prefix:', error);
             return null;
         }
     }
@@ -64,7 +64,7 @@ class PrefixDB {
             this.userCache.set(userId, { prefix, time: Date.now() });
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error setting user prefix:', error);
+            logger.error('mariadb', 'Error setting user prefix:', error);
             return false;
         }
     }
@@ -78,7 +78,7 @@ class PrefixDB {
             this.userCache.delete(userId);
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error removing user prefix:', error);
+            logger.error('mariadb', 'Error removing user prefix:', error);
             return false;
         }
     }
@@ -98,7 +98,7 @@ class PrefixDB {
             if (prefix) this.serverCache.set(guildId, { prefix, time: Date.now() });
             return prefix;
         } catch (error) {
-            logger.error('MARIADB', 'Error getting server prefix:', error);
+            logger.error('mariadb', 'Error getting server prefix:', error);
             return null;
         }
     }
@@ -112,7 +112,7 @@ class PrefixDB {
             this.serverCache.set(guildId, { prefix, time: Date.now() });
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error setting server prefix:', error);
+            logger.error('mariadb', 'Error setting server prefix:', error);
             return false;
         }
     }
@@ -126,7 +126,7 @@ class PrefixDB {
             this.serverCache.delete(guildId);
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error removing server prefix:', error);
+            logger.error('mariadb', 'Error removing server prefix:', error);
             return false;
         }
     }

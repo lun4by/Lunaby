@@ -70,7 +70,7 @@ module.exports = {
                     await handleModalSubmit(i, userId, interaction);
                 }
             } catch (error) {
-                logger.error('PERSONALIZE', 'Error handling interaction:', error);
+                logger.error('personalize', 'Error handling interaction:', error);
                 const errMsg = interaction.t('commands.personalize.error_occurred');
                 if (i.deferred || i.replied) {
                     await i.followUp({ content: errMsg, ephemeral: true }).catch(() => { });
@@ -368,9 +368,9 @@ async function handleButtonClick(i, userId, interaction) {
 
             autoRemoveNotification(i, updatedMemory, interaction);
 
-            logger.info('PERSONALIZE', `User ${interaction.user.tag} cleared all data`);
+            logger.info('personalize', `User ${interaction.user.tag} cleared all data`);
         } catch (error) {
-            logger.error('PERSONALIZE', 'Error clearing data:', error);
+            logger.error('personalize', 'Error clearing data:', error);
             await i.update({
                 embeds: [new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.clear_error'))],
                 components: [buildSelectMenuRow(interaction)],
