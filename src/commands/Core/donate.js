@@ -10,7 +10,7 @@ const BANK_CODE = 'TCB';
 const BANK_NAME = 'Techcombank';
 const ACCOUNT_NUMBER = '6688887838';
 const ACCOUNT_NAME = 'NGUYEN HO HUU HOANG';
-const TRANSFER_NOTE = 'Ung ho Lunaby project';
+const TRANSFER_NOTE = 'Donate for Lunaby project';
 
 function buildDonateQrUrl() {
     const params = new URLSearchParams({
@@ -53,7 +53,7 @@ module.exports = {
                     bank: `${BANK_NAME} (${BANK_CODE})`,
                     account: ACCOUNT_NUMBER,
                     note: TRANSFER_NOTE
-                }) + `\n\nChủ tài khoản: **${ACCOUNT_NAME}**`
+                })
             )
             .setImage(buildDonateQrUrl())
             .setFooter({ text: interaction.t('commands.donate.footer') });
