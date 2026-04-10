@@ -120,7 +120,7 @@ module.exports = {
             currentLang = selectedLang;
 
             await i.update({
-                embeds: [buildLanguageEmbed(selectedLang, true)],
+                embeds: [buildLanguageEmbed(selectedLang)],
                 components: [buildLanguageRow(selectedLang)],
             });
 
@@ -151,8 +151,7 @@ function buildLanguageRow(currentLang, disabled = false) {
             .addOptions(
                 ...SUPPORTED_LANGS.map((lang) =>
                     new StringSelectMenuOptionBuilder()
-                        .setLabel(getLanguageDisplay(lang, currentLang, true))
-                        .setDescription(tByLang(currentLang, `commands.language.languages.${lang}.description`))
+                        .setLabel(getLanguageMeta(lang, currentLang).label)
                         .setValue(lang)
                         .setDefault(currentLang === lang)
                 ),
@@ -162,6 +161,8 @@ function buildLanguageRow(currentLang, disabled = false) {
 
 function buildLanguageEmbed(lang, changed = false) {
     const display = getLanguageDisplay(lang, lang, true);
+    const currentMeta = getLanguageMeta(lang, lang);
+    const currentLocaleValue = `${currentMeta.flag} \`${currentMeta.label}\``;
 
     return createLunabyEmbed()
         .setTitle(
@@ -176,7 +177,7 @@ function buildLanguageEmbed(lang, changed = false) {
         )
         .addFields({
             name: tByLang(lang, 'commands.language.field.current_locale'),
-            value: `\`${display}\``,
+            value: currentLocaleValue,
             inline: false,
         })
         .setFooter({
