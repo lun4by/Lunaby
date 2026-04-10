@@ -13,7 +13,7 @@ const defaultConfig = {
   },
   categories: {
     command: true, command_usage: true,
-    database: true, mariadb: true, system: true,
+    mongodb: true, mariadb: true, system: true,
     chat: true, api: true, conversation_service: true,
     conversation: true, ai_core: true,
     moderation: true, message_event: true,
