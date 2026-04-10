@@ -7,7 +7,7 @@ const {
 const BlacklistService = require('../services/user/BlacklistService');
 const logger = require('./logger');
 
-const SUPPORT_SERVER_URL = process.env.SUPPORT_SERVER_URL || 'https://discord.gg/NFF7tw2zNQ';
+const SUPPORT_SERVER_URL = 'https://discord.gg/NFF7tw2zNQ';
 const DM_NOTIFY_COOLDOWN_MS = 60 * 60 * 1000;
 
 const notifiedUsers = new Map();
@@ -55,7 +55,7 @@ async function notifyBlacklistedUser(user, reason = null) {
     });
     return true;
   } catch (error) {
-    logger.warn('BLACKLIST', `Failed to send DM to user blacklist ${user.id}: ${error.message}`);
+    logger.warn('BLACKLIST', `Không thể gửi DM cho user blacklist ${user.id}: ${error.message}`);
     return false;
   }
 }
@@ -97,15 +97,15 @@ async function notifyBlacklistedGuildAndLeave(guild, reason = null) {
       }).catch(() => { });
     }
   } catch (error) {
-    logger.warn('BLACKLIST', `Failed to send blacklist notice to guild ${guild.id}: ${error.message}`);
+    logger.warn('BLACKLIST', `Không thể gửi thông báo blacklist cho guild ${guild.id}: ${error.message}`);
   }
 
   try {
     await guild.leave();
-    logger.info('BLACKLIST', `Bot left blacklisted guild ${guild.name} (${guild.id})`);
+    logger.info('BLACKLIST', `Bot đã rời guild blacklist ${guild.name} (${guild.id})`);
     return true;
   } catch (error) {
-    logger.error('BLACKLIST', `Failed to leave blacklisted guild ${guild.name} (${guild.id}):`, error);
+    logger.error('BLACKLIST', `Không thể rời guild blacklist ${guild.name} (${guild.id}):`, error);
     return false;
   }
 }

@@ -25,15 +25,15 @@ async function handleGuildMemberAdd(member) {
             .replace(/{count}/g, member.guild.memberCount);
 
         await channel.send({ content: message });
-        logger.info('GREETER', `Sent welcome message to ${member.user.tag} in server ${member.guild.name}`);
+        logger.info('GREETER', `Đã gửi tin nhắn chào mừng cho ${member.user.tag} ở server ${member.guild.name}`);
     } catch (error) {
-        logger.error('GREETER', `Error processing new member welcome:`, error);
+        logger.error('GREETER', `Lỗi khi xử lý chào mừng thành viên mới:`, error);
     }
 }
 
 function setupGuildMemberAddEvent(client) {
     client.on(Events.GuildMemberAdd, handleGuildMemberAdd);
-    logger.info("EVENTS", "Registered event: GuildMemberAdd");
+    logger.info("EVENTS", "Đã đăng ký event: GuildMemberAdd");
 }
 
 module.exports = { setupGuildMemberAddEvent, handleGuildMemberAdd };

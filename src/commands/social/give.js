@@ -37,32 +37,33 @@ module.exports = {
       : interaction.args?.find((arg) => !arg.match(/^<@!?\d+>$/));
 
     if (!targetUser || amountRaw === undefined || amountRaw === null) {
-      return interaction.reply(`${emojis.error} ${interaction.t('commands.give.invalid_input')}`);
+      return interaction.reply(`${emojis.error} Vui lòng chọn người nhận và nhập số credits hợp lệ.`);
     }
 
     const amount = parseInt(amountRaw, 10);
     if (Number.isNaN(amount) || amount <= 0) {
-      return interaction.reply(`${emojis.error} ${interaction.t('commands.give.must_be_positive')}`);
+      return interaction.reply(`${emojis.error} Số credits muốn chuyển phải là một số nguyên dương.`);
     }
 
     if (targetUser.bot) {
-      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.give.no_bot')}`, ephemeral: true });
+      return interaction.reply({ content: `${emojis.error} Bạn không thể chuyển credits cho bot.`, ephemeral: true });
     }
 
     if (targetUser.id === interaction.user.id) {
-      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.give.no_self')}`, ephemeral: true });
+      return interaction.reply({ content: `${emojis.error} Bạn không thể tự chuyển credits cho chính mình.`, ephemeral: true });
     }
 
     try {
       const result = await CreditsService.transferCredits(interaction.user.id, targetUser.id, amount);
 
       await interaction.reply(
-        `${emojis.success} ${interaction.t('commands.give.success', { amount: formatNumber(amount), targetId: targetUser.id, balance: formatNumber(result.fromBalance) })}`
+        `${emojis.success} Bạn đã chuyển **${formatNumber(amount)}** credits cho <@${targetUser.id}>.\n` +
+        `Số dư của bạn: **${formatNumber(result.fromBalance)}** credits.`
       );
     } catch (error) {
       logger.error('GIVE', 'Error in give command:', error);
       await interaction.reply({
-        content: `${emojis.error} ${interaction.t('commands.give.error')}`,
+        content: `${emojis.error} ${error.message || 'Đã xảy ra lỗi khi chuyển credits.'}`,
         ephemeral: true
       }).catch(() => { });
     }

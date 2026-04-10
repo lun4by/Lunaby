@@ -25,9 +25,9 @@ async function handlePermissionError(interaction, permission, username, action =
   try {
     const msg = `${username}, bot không có quyền \`${permission}\`! Vui lòng thêm quyền này cho bot hoặc liên hệ quản trị viên.`;
     await sendToInteraction(interaction, msg, action);
-    logger.warn('PERMISSION', `Bot is missing permission ${permission} in guild ${interaction.guild?.id || 'DM'}`);
+    logger.warn('PERMISSION', `Bot thiếu quyền ${permission} trong guild ${interaction.guild?.id || 'DM'}`);
   } catch (error) {
-    logger.error('PERMISSION', 'Error khi xử lý permission error:', error);
+    logger.error('PERMISSION', 'Lỗi khi xử lý permission error:', error);
   }
 }
 

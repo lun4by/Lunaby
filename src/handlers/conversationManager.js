@@ -28,7 +28,7 @@ const conversationManager = (() => {
       userLastActivity.set(validUserId, Date.now());
       return userConversations.get(validUserId);
     } catch (error) {
-      logger.error('CONVERSATION', `Error fetching conversation history: ${error.message}`);
+      logger.error('CONVERSATION', `Lỗi khi lấy lịch sử cuộc trò chuyện: ${error.message}`);
       return [];
     }
   };
@@ -41,7 +41,7 @@ const conversationManager = (() => {
       if (now - lastActive > inactiveThreshold) {
         userConversations.delete(userId);
         userLastActivity.delete(userId);
-        logger.debug('CONVERSATION', `Cleared inactive conversation buffer for user ${userId}`);
+        logger.debug('CONVERSATION', `Đã xóa bộ đệm cuộc trò chuyện không hoạt động cho user ${userId}`);
       }
     }
   }, 5 * 60 * 1000);
@@ -58,7 +58,7 @@ const conversationManager = (() => {
         userHistory.push(...history);
         return [...userHistory];
       } catch (error) {
-        logger.error('CONVERSATION', `Error loading conversation history: ${error.message}`);
+        logger.error('CONVERSATION', `Lỗi khi tải lịch sử cuộc trò chuyện: ${error.message}`);
         return [{
           role: 'system',
           content: systemPrompt + ` You are running on ${modelName} model.`
@@ -73,7 +73,7 @@ const conversationManager = (() => {
         await storageDB.addMessageToConversation(validUserId, role, content);
         return true;
       } catch (error) {
-        logger.error('CONVERSATION', `Error adding message: ${error.message}`);
+        logger.error('CONVERSATION', `Lỗi khi thêm tin nhắn: ${error.message}`);
         return false;
       }
     },
@@ -83,7 +83,7 @@ const conversationManager = (() => {
         const validUserId = validateUserId(userId);
         return [...getUserHistory(validUserId)];
       } catch (error) {
-        logger.error('CONVERSATION', `Error fetching history: ${error.message}`);
+        logger.error('CONVERSATION', `Lỗi khi lấy lịch sử: ${error.message}`);
         return [];
       }
     },
@@ -100,7 +100,7 @@ const conversationManager = (() => {
         }
         return true;
       } catch (error) {
-        logger.error('CONVERSATION', `Error deleting history: ${error.message}`);
+        logger.error('CONVERSATION', `Lỗi khi xóa lịch sử: ${error.message}`);
         return false;
       }
     },
@@ -110,11 +110,11 @@ const conversationManager = (() => {
         const validUserId = validateUserId(userId);
         this.clearLocalHistory(validUserId);
         await storageDB.clearConversationHistory(validUserId, systemPrompt, modelName);
-        logger.info('CONVERSATION', `Completely deleted conversation for userId: ${validUserId}`);
+        logger.info('CONVERSATION', `Đã xóa hoàn toàn cuộc trò chuyện cho userId: ${validUserId}`);
         await this.loadConversationHistory(validUserId, systemPrompt, modelName);
         return true;
       } catch (error) {
-        logger.error('CONVERSATION', `Error resetting conversation: ${error.message}`);
+        logger.error('CONVERSATION', `Lỗi khi reset cuộc trò chuyện: ${error.message}`);
         return false;
       }
     }

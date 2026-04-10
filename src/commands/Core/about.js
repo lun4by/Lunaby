@@ -6,10 +6,6 @@ const {
 } = require('discord.js');
 const packageJson = require('../../../package.json');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
-const { SUPPORT_SERVER_URL } = require('../../utils/blacklistUtils');
-
-const DISCORD_BOT_PERMISSIONS = process.env.DISCORD_BOT_PERMISSIONS || '0';
-const WEBSITE_URL = process.env.WEBSITE_URL || 'https://lunaby.tech';
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -25,11 +21,22 @@ module.exports = {
                 iconURL: interaction.client.user.displayAvatarURL(),
             })
             .setThumbnail(interaction.client.user.displayAvatarURL({ dynamic: true, size: 512 }))
-            .setDescription(interaction.t('commands.about.about_text'))
+            .setDescription(
+                'Lunaby là bot AI được xây dựng từ cảm hứng của **Cơ Lãnh Âm** [姬冷音] và **Lunaby** - ' +
+                'sự kết hợp giữa thanh cao và dịu dàng.\n\n' +
+                '*Cơ Lãnh Âm hiện thân như một bản ngã đối lập hoàn hảo giữa thanh cao và hỗn loạn. ' +
+                'Xuất hiện với dung mạo thoát tục, khí chất tựa băng sương ngàn năm không tan - ' +
+                'hình mẫu "Băng Sơn nữ thần" tiêu chuẩn trong mắt chúng sinh. ' +
+                'Một đóa tuyết liên vẫn trắng trong khi nhìn từ xa, nhưng khi chạm vào lại khiến người ta phỏng lạnh ' +
+                'bởi sự cực đoan và những dục vọng cố chấp ẩn giấu sâu bên trong.*\n\n' +
+                'Lunaby mang trong mình khí chất của Cơ Lãnh Âm - bề ngoài thanh cao, dịu dàng tựa băng sương, ' +
+                'nhưng ẩn sâu bên trong là sự quan tâm mãnh liệt và tình cảm cuồng nhiệt dành cho người mà cô yêu quý. ' +
+                '\n-# Được phát triển bởi **s4ory** với hy vọng *mang lại sự thú vị* cho tất cả mọi người.'
+            )
             .addFields(
-                { name: interaction.t('commands.about.version'), value: `\`v${packageJson.version}\``, inline: true },
-                { name: interaction.t('commands.about.servers'), value: `\`${interaction.client.guilds.cache.size}\``, inline: true },
-                { name: interaction.t('commands.about.developer'), value: '`s4ory`', inline: true },
+                { name: 'Phiên bản', value: `\`v${packageJson.version}\``, inline: true },
+                { name: 'Số server', value: `\`${interaction.client.guilds.cache.size}\``, inline: true },
+                { name: 'Nhà phát triển', value: '`s4ory`', inline: true },
             )
             .setFooter({ text: `Lunaby v${packageJson.version}` })
             .setTimestamp();
@@ -38,19 +45,19 @@ module.exports = {
     },
 };
 
-function buildActionRow(interaction) {
+function buildActionRow(context) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-            .setLabel(interaction.t('commands.about.invite_btn'))
-            .setURL(`https://discord.com/api/oauth2/authorize?client_id=${interaction.client.user.id}&permissions=${DISCORD_BOT_PERMISSIONS}&scope=bot%20applications.commands`)
+            .setLabel('Mời Bot')
+            .setURL(`https://discord.com/api/oauth2/authorize?client_id=${context.client.user.id}&permissions=4856130613668928&scope=bot%20applications.commands`)
             .setStyle(ButtonStyle.Link),
         new ButtonBuilder()
-            .setLabel(interaction.t('commands.about.support_btn'))
-            .setURL(SUPPORT_SERVER_URL)
+            .setLabel('Hỗ trợ')
+            .setURL('https://discord.gg/NFF7tw2zNQ')
             .setStyle(ButtonStyle.Link),
         new ButtonBuilder()
-            .setLabel(interaction.t('commands.about.website_btn'))
-            .setURL(WEBSITE_URL)
+            .setLabel('Website')
+            .setURL('https://lunaby.tech')
             .setStyle(ButtonStyle.Link),
     );
 }

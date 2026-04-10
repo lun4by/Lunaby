@@ -42,38 +42,34 @@ module.exports = {
         if (!targetUser || !role) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.giveadmin.usage', { prefix, roles: Object.values(USER_ROLES).join(', ') })}`);
+            return interaction.reply(`${emojis.error} **Cách dùng:** \`${prefix}giveadmin @user <role>\`\nCác role hợp lệ: ${Object.values(USER_ROLES).join(', ')}`);
         }
 
         if (!Object.values(USER_ROLES).includes(role)) {
-            return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.giveadmin.invalid_role', { roles: Object.values(USER_ROLES).join(', ') })}`);
+            return interaction.reply(`${emojis.error} Quyền không hợp lệ! Hãy dùng một trong các quyền sau: ${Object.values(USER_ROLES).join(', ')}`);
         }
 
         const executorId = interaction.user.id;
 
         try {
             if (executorId !== process.env.OWNER_ID?.trim()) {
-                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.owner_only')}`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} Lệnh này chỉ dành cho Owner của Bot!`, ephemeral: true });
             }
 
             const currentRole = await RoleService.getUserRole(targetUser.id);
             if (currentRole === role) {
-                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.already_has_role', { tag: targetUser.tag, role })}`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} Người dùng **${targetUser.tag}** hiện đã có quyền **${role}** rồi.`, ephemeral: true });
             }
 
             await RoleService.setUserRole(targetUser.id, role);
 
-            const successMessage = `${emojis.success} ${interaction.t('commands.admin.giveadmin.success', {
-                id: targetUser.id,
-                tag: targetUser.tag,
-                oldRole: currentRole,
-                newRole: role
-            })}`;
+            // Tin nhắn text
+            const successMessage = `${emojis.success} **Cấp quyền thành công!**\nĐã thay đổi quyền của <@${targetUser.id}> (${targetUser.tag}).\n**Từ:** \`${currentRole}\` **Sang:** \`${role}\``;
 
             await interaction.reply({ content: successMessage });
         } catch (error) {
             logger.error('ADMIN', 'Error in giveadmin command:', error);
-            await interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.error')}`, ephemeral: true });
+            await interaction.reply({ content: `${emojis.error} Đã xảy ra lỗi khi cập nhật Quyền cho người dùng này.`, ephemeral: true });
         }
     }
 };

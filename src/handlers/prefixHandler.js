@@ -16,17 +16,13 @@ class PseudoInteraction {
         this.command = command; // Inject command here to parse schema
 
         this.user = message.author;
-        this.author = message.author;
         this.member = message.member;
         this.guild = message.guild;
         this.guildId = message.guildId;
         this.channel = message.channel;
         this.channelId = message.channelId;
         this.client = message.client;
-        this.content = message.content;
         this.createdTimestamp = message.createdTimestamp;
-        this.t = message.t;
-        this.memberPermissions = message.member?.permissions ?? null;
 
         this.replied = false;
         this.deferred = false;
@@ -44,10 +40,6 @@ class PseudoInteraction {
             options.set('user', mentionedUser);
             options.set('target', mentionedUser);
         }
-        const mentionedChannel = message.mentions.channels.first();
-        if (mentionedChannel) {
-            options.set('channel', mentionedChannel);
-        }
 
         // Lọc ra các text args (không phải mention)
         const textArgs = args.filter(a => !a.match(/^<@!?\d+>$/));
@@ -64,7 +56,7 @@ class PseudoInteraction {
                     const name = opt.name;
 
                     // Type 6 = USER → đã xử lý qua mention ở trên
-                    if (opt.type === 6 || opt.type === 7) continue;
+                    if (opt.type === 6) continue;
 
                     // Type 4 = INTEGER, Type 10 = NUMBER
                     if (opt.type === 4 || opt.type === 10) {
@@ -72,20 +64,6 @@ class PseudoInteraction {
                             const parsed = parseInt(textArgs[textIdx], 10);
                             if (!isNaN(parsed)) {
                                 options.set(name, parsed);
-                                textIdx++;
-                            }
-                        }
-                        continue;
-                    }
-
-                    if (opt.type === 5) {
-                        if (textIdx < textArgs.length) {
-                            const value = textArgs[textIdx].toLowerCase();
-                            if (['true', 'yes', 'on', 'enable', 'enabled', '1'].includes(value)) {
-                                options.set(name, true);
-                                textIdx++;
-                            } else if (['false', 'no', 'off', 'disable', 'disabled', '0'].includes(value)) {
-                                options.set(name, false);
                                 textIdx++;
                             }
                         }
@@ -163,18 +141,13 @@ class PseudoInteraction {
                     }
                 }
             } catch (e) {
-                // Bỏ qua lỗi parse, fallback về null
+                // Ignore parse errors, fallback to null
             }
         }
 
         return {
             getString(name) { return self._options.get(name) || null; },
             getUser(name) { return self._options.get(name) || null; },
-            getBoolean(name) {
-                const val = self._options.get(name);
-                return typeof val === 'boolean' ? val : null;
-            },
-            getChannel(name) { return self._options.get(name) || null; },
             getMember(name) {
                 const user = self._options.get(name);
                 if (user && self.guild) {

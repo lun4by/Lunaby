@@ -19,10 +19,10 @@ function buildDonateQrUrl() {
     return `https://img.vietqr.io/image/${BANK_CODE}-${ACCOUNT_NUMBER}-compact2.png?${params.toString()}`;
 }
 
-function buildDonateActionRow(interaction) {
+function buildDonateActionRow() {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-            .setLabel(interaction.t('commands.donate.open_qr'))
+            .setLabel('Mở mã QR')
             .setStyle(ButtonStyle.Link)
             .setURL(buildDonateQrUrl()),
     );
@@ -42,23 +42,24 @@ module.exports = {
     async execute(interaction) {
         const embed = createLunabyEmbed()
             .setAuthor({
-                name: interaction.t('commands.donate.title'),
+                name: 'Ủng hộ Lunaby project',
                 iconURL: interaction.client.user.displayAvatarURL(),
             })
-            .setTitle(interaction.t('commands.donate.scan_qr'))
+            .setTitle('Quét mã để chuyển khoản')
             .setDescription(
-                interaction.t('commands.donate.description', {
-                    bank: `${BANK_NAME} (${BANK_CODE})`,
-                    account: ACCOUNT_NUMBER,
-                    note: TRANSFER_NOTE
-                })
+                [
+                    'Cảm ơn bạn đã muốn ủng hộ dự án Lunaby.',
+                    `**Ngân hàng:** ${BANK_NAME} (${BANK_CODE})`,
+                    `**Số tài khoản:** \`${ACCOUNT_NUMBER}\``,
+                    `**Nội dung chuyển khoản:** \`${TRANSFER_NOTE}\``,
+                ].join('\n')
             )
             .setImage(buildDonateQrUrl())
-            .setFooter({ text: interaction.t('commands.donate.footer') });
+            .setFooter({ text: 'Bạn có thể quét QR hoặc bấm nút bên dưới để mở ảnh mã QR.' });
 
         await interaction.reply({
             embeds: [embed],
-            components: [buildDonateActionRow(interaction)],
+            components: [buildDonateActionRow()],
         });
     },
 };

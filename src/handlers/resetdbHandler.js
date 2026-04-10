@@ -36,7 +36,7 @@ async function handleResetdbInteraction(interaction) {
             '> Bot sẽ không còn nhớ cuộc trò chuyện trước đây\n\n' +
             '**Hệ thống đã sẵn sàng sử dụng!**',
         });
-        logger.info('RESET', `Owner ${user.tag} successfully reset database`);
+        logger.info('RESET', `Owner ${user.tag} đã reset database thành công`);
       } else {
         await interaction.editReply({
           content:
@@ -45,7 +45,7 @@ async function handleResetdbInteraction(interaction) {
             '> Vui lòng kiểm tra logs để biết thêm chi tiết\n' +
             '> Liên hệ admin nếu vấn đề tiếp tục',
         });
-        logger.error('RESET', 'Database reset failed');
+        logger.error('RESET', 'Reset database thất bại');
       }
     } else if (customId === 'reset_database_cancel') {
       await interaction.update({
@@ -58,7 +58,7 @@ async function handleResetdbInteraction(interaction) {
         components: [],
       });
 
-      logger.info('RESET', `Owner ${user.tag} cancelled database reset`);
+      logger.info('RESET', `Owner ${user.tag} đã hủy reset database`);
     } else if (customId === 'reset_users_confirm') {
       await interaction.update({
         content: '⏳ **Đang reset user profiles...**',
@@ -96,7 +96,7 @@ async function handleResetdbInteraction(interaction) {
             '> Liên hệ admin nếu vấn đề tiếp tục',
         });
 
-        logger.error('RESET', 'Error khi reset user profiles:', error);
+        logger.error('RESET', 'Lỗi khi reset user profiles:', error);
       }
     } else if (customId === 'reset_users_cancel') {
       await interaction.update({
@@ -109,10 +109,10 @@ async function handleResetdbInteraction(interaction) {
         components: [],
       });
 
-      logger.info('RESET', `Owner ${user.tag} cancelled user profiles reset`);
+      logger.info('RESET', `Owner ${user.tag} đã hủy reset user profiles`);
     }
   } catch (error) {
-    logger.error('RESET', `Error khi xử lý reset interaction:`, error);
+    logger.error('RESET', `Lỗi khi xử lý reset interaction:`, error);
     const errPayload = { content: '**Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại sau!**', ephemeral: true };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)

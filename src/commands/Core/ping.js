@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+﻿const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const packageJson = require('../../../package.json');
 const { formatUptime } = require('../../utils/string');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
@@ -12,14 +12,13 @@ module.exports = {
     cooldown: 10,
 
     async execute(interaction) {
-        await interaction.deferReply();
-        const sent = await interaction.fetchReply();
+        const sent = await interaction.deferReply({ fetchReply: true });
         const pingLatency = ((sent.createdTimestamp - interaction.createdTimestamp) / 100).toFixed(0);
         const latency = { ping: pingLatency, ws: interaction.client.ws.ping };
 
         const response = await interaction.editReply({
-            embeds: [createStatusEmbed(latency, interaction)],
-            components: [createActionRow(true, interaction)],
+            embeds: [createStatusEmbed(latency, interaction.client)],
+            components: [createActionRow(true)],
         });
 
         const collector = response.createMessageComponentCollector({
@@ -29,25 +28,25 @@ module.exports = {
 
         collector.on('collect', async (i) => {
             if (i.user.id !== interaction.user.id) {
-                return i.reply({ content: interaction.t('system.only_caller_can_use'), ephemeral: true });
+                return i.reply({ content: 'Chỉ người đã gọi lệnh mới được sử dụng các nút này.', ephemeral: true });
             }
 
             if (i.customId === 'refresh_status') {
                 const refreshed = { ping: pingLatency, ws: interaction.client.ws.ping };
                 await i.update({
-                    embeds: [createStatusEmbed(refreshed, interaction)],
-                    components: [createActionRow(true, interaction)],
+                    embeds: [createStatusEmbed(refreshed, interaction.client)],
+                    components: [createActionRow(true)],
                 });
             }
         });
 
         collector.on('end', () => {
-            interaction.editReply({ components: [createActionRow(false, interaction)] }).catch(() => { });
+            interaction.editReply({ components: [createActionRow(false)] }).catch(() => { });
         });
     },
 };
 
-function createStatusEmbed({ ping, ws }, interaction) {
+function createStatusEmbed({ ping, ws }, client) {
     const color = ping < 200 ? 0x57F287 : ping < 400 ? 0xFEE75C : 0xED4245;
     const { cpu, ram } = getSystemMetrics();
 
@@ -55,20 +54,20 @@ function createStatusEmbed({ ping, ws }, interaction) {
         .setColor(color)
         .setAuthor({
             name: 'Lunaby',
-            iconURL: interaction.client.user.displayAvatarURL(),
+            iconURL: client.user.displayAvatarURL(),
         })
         .addFields(
-            { name: interaction.t('commands.ping.system_status'), value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false },
-            { name: interaction.t('commands.ping.resources'), value: `> **CPU**: \`${cpu}%\`\n> **RAM**: \`${ram}%\``, inline: false },
+            { name: 'Trạng thái hệ thống', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false },
+            { name: 'Tài nguyên', value: `> **CPU**: \`${cpu}%\`\n> **RAM**: \`${ram}%\``, inline: false },
         )
         .setFooter({ text: `Lunaby v${packageJson.version} - ${formatUptime(process.uptime())}` });
 }
 
-function createActionRow(enabled = true, interaction) {
+function createActionRow(enabled = true) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId('refresh_status')
-            .setLabel(interaction.t('commands.ping.refresh'))
+            .setLabel('Làm mới')
             .setStyle(ButtonStyle.Primary)
             .setDisabled(!enabled),
     );

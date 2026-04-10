@@ -28,7 +28,7 @@ module.exports = {
         color = '#' + hexMatch[1];
       } else {
         return interaction.editReply({
-          content: `${emojis.error} ${interaction.t('commands.setcolor.invalid_color')}`
+          content: `${emojis.error} Mã màu không hợp lệ!\n\nVui lòng nhập mã hex hợp lệ (ví dụ: #FF0000) hoặc "default" để reset.`
         });
       }
 
@@ -37,18 +37,18 @@ module.exports = {
 
       if (color) {
         await interaction.editReply({
-          content: `${emojis.success} ${interaction.t('commands.setcolor.success', { color })}`
+          content: `${emojis.success} **Màu profile card đã được đặt thành:** \`${color}\``
         });
       } else {
         await interaction.editReply({
-          content: `${emojis.success} ${interaction.t('commands.setcolor.reset_success')}`
+          content: `${emojis.success} Màu profile card đã được reset về mặc định!`
         });
       }
 
     } catch (error) {
-      logger.error('SET_COLOR', 'Error setting color:', error);
+      logger.error('SET_COLOR', 'Lỗi khi set color:', error);
       await interaction.editReply({
-        content: `${emojis.error} ${interaction.t('commands.setcolor.error')}`
+        content: `${emojis.error} Có lỗi xảy ra khi cập nhật màu!`
       });
     }
   }

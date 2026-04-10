@@ -9,16 +9,17 @@ class InitSystem extends EventEmitter {
       mongodb: false,
       mariadb: false,
       commands: false,
-      i18n: false,
+      providers: false,
       profiles: false,
       conversationHistory: false,
+      guildProfiles: false,
       dashboard: false,
     };
   }
 
   markReady(service) {
     if (!(service in this.services)) {
-      logger.warn("SYSTEM", `Unrecognized service: ${service}`);
+      logger.warn("SYSTEM", `Không nhận dạng được service: ${service}`);
       return;
     }
 

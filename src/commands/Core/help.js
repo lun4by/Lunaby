@@ -36,16 +36,16 @@ module.exports = {
 
         const select = new StringSelectMenuBuilder()
             .setCustomId('category-select')
-            .setPlaceholder(interaction.t('commands.help.select_placeholder'))
-            .addOptions(buildSelectOptions(visibleCategories, interaction));
+            .setPlaceholder('Chọn một danh mục')
+            .addOptions(buildSelectOptions(visibleCategories));
 
         const row = new ActionRowBuilder().addComponents(select);
         const banner = 'https://cdn.lunie.dev/Lunaby/Lunaby_Help.jpg';
 
         const welcomeEmbed = new EmbedBuilder()
             .setColor(COLORS.LUNABY)
-            .setTitle(interaction.t('commands.help.embed_title'))
-            .setDescription(interaction.t('commands.help.embed_desc'))
+            .setTitle('📚 Trợ Giúp - Lunaby')
+            .setDescription('Chào mừng bạn đến với hệ thống trợ giúp!\n\n> Chọn một danh mục từ menu bên dưới để xem chi tiết các lệnh.')
             .setImage(banner)
             .setFooter({ text: 'Made by s4ory' })
             .setTimestamp();
@@ -65,7 +65,7 @@ module.exports = {
         collector.on('collect', async (i) => {
             if (i.user.id !== interaction.user.id) {
                 return i.reply({
-                    content: interaction.t('system.only_caller_can_use'),
+                    content: 'Chỉ người dùng gọi lệnh mới có thể sử dụng menu này!',
                     ephemeral: true,
                 });
             }
@@ -74,7 +74,7 @@ module.exports = {
 
             if (category === 'setting' && !isOwner) {
                 return i.reply({
-                    content: interaction.t('commands.help.no_view_permission'),
+                    content: 'Bạn không có quyền xem danh mục này!',
                     ephemeral: true,
                 });
             }
@@ -87,7 +87,7 @@ module.exports = {
                 });
             }
 
-            const helpEmbed = buildHelpEmbed(category, visibleCategories, commandsPath, interaction);
+            const helpEmbed = buildHelpEmbed(category, visibleCategories, commandsPath);
 
             await i.update({
                 embeds: [helpEmbed],
@@ -103,7 +103,7 @@ module.exports = {
 
                 if (collected.size === 0) {
                     await interaction.editReply({
-                        content: interaction.t('commands.help.menu_expired'),
+                        content: '⏱️ Menu trợ giúp đã hết hạn!',
                         components: [disabledRow],
                     });
                 } else {
@@ -118,11 +118,11 @@ module.exports = {
     },
 };
 
-function buildSelectOptions(categories, interaction) {
+function buildSelectOptions(categories) {
     const options = [];
 
     for (const folder of categories) {
-        const metadata = getCategoryMetadata(folder, interaction);
+        const metadata = getCategoryMetadata(folder);
         options.push(
             new StringSelectMenuOptionBuilder()
                 .setLabel(metadata.label)
@@ -135,61 +135,50 @@ function buildSelectOptions(categories, interaction) {
     return options;
 }
 
-function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) {
+function buildHelpEmbed(category, visibleCategories, commandsPath) {
     const embed = new EmbedBuilder()
         .setColor(COLORS.LUNABY)
         .setTimestamp();
 
-    const metadata = getCategoryMetadata(category, interaction);
+    const metadata = getCategoryMetadata(category);
 
     embed
         .setTitle(`${metadata.emoji} ${metadata.label}`)
-        .setDescription(interaction.t('commands.help.category_details', { category: metadata.label }));
+        .setDescription(`Chi tiết các lệnh trong danh mục **${metadata.label}**:`);
 
     const folderPath = path.join(commandsPath, category);
     const commandFiles = fs.readdirSync(folderPath).filter((file) => file.endsWith('.js'));
 
     const commandList = commandFiles.map((file) => {
         const command = require(path.join(folderPath, file));
-        const description = interaction.t(`commands.${command.data.name}.desc`, { returnObjects: true });
-        const textDesc = typeof description === 'string' ? description : (command.data.description || interaction.t('commands.help.no_description'));
-        return `/${command.data.name} : ${textDesc}`;
+        const description = command.data.description || 'Không có mô tả';
+        return `/${command.data.name} : ${description}`;
     }).join('\n');
 
     embed.addFields({
         name: '\u200B',
-        value: `\`\`\`${commandList || interaction.t('commands.help.no_commands')}\`\`\``,
+        value: `\`\`\`${commandList || 'Không có lệnh nào'}\`\`\``,
     });
 
     return embed;
 }
 
-function getCategoryMetadata(category, interaction) {
-    let label = capitalizeFirstLetter(category);
-    let desc = `Danh mục ${label}`;
-    
-    // Default structure before trying fallback
-    const keyPath = `commands.help.categories.${category}`;
-    const trans = interaction.t(keyPath, { returnObjects: true });
-    
-    if (trans && typeof trans === 'object') {
-        label = trans.label || label;
-        desc = trans.desc || desc;
-    }
-
+function getCategoryMetadata(category) {
     const categoryMap = {
-        'home': { emoji: '🏠' },
-        'AIcore': { emoji: '🤖' },
-        'Core': { emoji: '⚙️' },
-        'moderation': { emoji: '🛡️' },
-        'social': { emoji: '👥' },
-        'system': { emoji: '🔧' },
-        'fun': { emoji: '🎉' },
+        'home': { label: 'Trang chủ', description: 'Quay lại menu trợ giúp chính', emoji: '🏠' },
+        'AIcore': { label: 'AI Core', description: 'Các lệnh AI nâng cao', emoji: '🤖' },
+        'Core': { label: 'Core', description: 'Các lệnh cơ bản của bot', emoji: '⚙️' },
+        'moderation': { label: 'Moderation', description: 'Các lệnh quản lý server', emoji: '🛡️' },
+        'social': { label: 'Social', description: 'Các lệnh tương tác xã hội', emoji: '👥' },
+        'system': { label: 'System', description: 'Các lệnh quản lý hệ thống', emoji: '🔧' },
+        'fun': { label: 'Fun', description: 'Các lệnh giải trí và GIF', emoji: '🎉' },
     };
 
-    const emoji = categoryMap[category]?.emoji || '📁';
-
-    return { label, description: desc, emoji };
+    return categoryMap[category] || {
+        label: capitalizeFirstLetter(category),
+        description: `Danh mục ${capitalizeFirstLetter(category)}`,
+        emoji: '📁',
+    };
 }
 
 function capitalizeFirstLetter(value) {
