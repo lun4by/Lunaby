@@ -12,41 +12,41 @@ const i18nManager = require('../../services/i18n/i18nManager');
 const viLocale = require('../../locales/vi.json');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 
-const DEFAULT_LANG = 'vi';
-const FALLBACK_LANGUAGE_CONFIG = viLocale?.commands?.language || {};
-const FALLBACK_LANGUAGE_META = FALLBACK_LANGUAGE_CONFIG.languages || {};
-const SUPPORTED_LANGS = Array.isArray(FALLBACK_LANGUAGE_CONFIG.supported)
-    ? FALLBACK_LANGUAGE_CONFIG.supported
-    : Object.keys(FALLBACK_LANGUAGE_META);
+const defaultLang = 'vi';
+const fallbackLanguageConfig = viLocale?.commands?.language || {};
+const fallbackLanguageMeta = fallbackLanguageConfig.languages || {};
+const supportedLangs = Array.isArray(fallbackLanguageConfig.supported)
+    ? fallbackLanguageConfig.supported
+    : Object.keys(fallbackLanguageMeta);
 
 function formatLanguageDisplay(meta, withCode = false) {
     if (!meta) return '';
     return withCode ? `${meta.flag} ${meta.label} - ${meta.code}` : `${meta.flag} ${meta.label}`;
 }
 
-const LANGUAGE_CHOICES = SUPPORTED_LANGS.map((lang) => ({
-    name: formatLanguageDisplay(FALLBACK_LANGUAGE_META[lang]),
+const languageChoices = supportedLangs.map((lang) => ({
+    name: formatLanguageDisplay(fallbackLanguageMeta[lang]),
     value: lang,
 }));
 
 function tByLang(lang, key, options = {}) {
-    return i18nManager.t(key, lang || DEFAULT_LANG, options);
+    return i18nManager.t(key, lang || defaultLang, options);
 }
 
-function getLanguageCatalog(textLang = DEFAULT_LANG) {
+function getLanguageCatalog(textLang = defaultLang) {
     const catalog = tByLang(textLang, 'commands.language.languages', { returnObjects: true });
     if (catalog && typeof catalog === 'object' && !Array.isArray(catalog)) {
         return catalog;
     }
-    return FALLBACK_LANGUAGE_META;
+    return fallbackLanguageMeta;
 }
 
-function getLanguageMeta(targetLang, textLang = DEFAULT_LANG) {
+function getLanguageMeta(targetLang, textLang = defaultLang) {
     const catalog = getLanguageCatalog(textLang);
-    return catalog[targetLang] || FALLBACK_LANGUAGE_META[targetLang] || FALLBACK_LANGUAGE_META[DEFAULT_LANG];
+    return catalog[targetLang] || fallbackLanguageMeta[targetLang] || fallbackLanguageMeta[defaultLang];
 }
 
-function getLanguageDisplay(targetLang, textLang = DEFAULT_LANG, withCode = false) {
+function getLanguageDisplay(targetLang, textLang = defaultLang, withCode = false) {
     return formatLanguageDisplay(getLanguageMeta(targetLang, textLang), withCode);
 }
 
@@ -68,7 +68,7 @@ module.exports = {
             option.setName('lang')
                 .setDescription('Chọn ngôn ngữ của server / Select the server language')
                 .setRequired(false)
-                .addChoices(...LANGUAGE_CHOICES)),
+                .addChoices(...languageChoices)),
     prefix: { name: 'language', aliases: ['lang'], description: 'Cài đặt ngôn ngữ server / Server language settings' },
     cooldown: 5,
 
@@ -81,7 +81,7 @@ module.exports = {
         }
 
         const guildSettings = await MariaModDB.getGuildSettings(interaction.guildId);
-        let currentLang = guildSettings?.language || DEFAULT_LANG;
+        let currentLang = guildSettings?.language || defaultLang;
 
         await interaction.reply({
             embeds: [buildLanguageEmbed(currentLang)],
@@ -149,7 +149,7 @@ function buildLanguageRow(currentLang, disabled = false) {
             .setPlaceholder(tByLang(currentLang, 'commands.language.placeholder'))
             .setDisabled(disabled)
             .addOptions(
-                ...SUPPORTED_LANGS.map((lang) =>
+                ...supportedLangs.map((lang) =>
                     new StringSelectMenuOptionBuilder()
                         .setLabel(getLanguageMeta(lang, currentLang).label)
                         .setValue(lang)
