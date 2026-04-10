@@ -124,7 +124,7 @@ async function initializeReadyState(client, loadCommands) {
 }
 
 async function startbot(client, loadCommands) {
-  client.once('ready', async () => {
+  client.once('clientReady', async () => {
     console.log(`
     ██╗     ██╗   ██╗███╗   ██╗ █████╗ ██████╗ ██╗   ██╗
     ██║     ██║   ██║████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝
