@@ -8,26 +8,56 @@ const {
 } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
 const emojis = require('../../config/emojis');
+const i18nManager = require('../../services/i18n/i18nManager');
+const viLocale = require('../../locales/vi.json');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 
-const LANGUAGE_META = {
-    vi: {
-        flag: '🇻🇳',
-        label: 'Tiếng Việt',
-        code: 'vi-VN',
-        description: 'Hiển thị bot bằng tiếng Việt',
-    },
-    en: {
-        flag: '🇺🇸',
-        label: 'English',
-        code: 'en-US',
-        description: 'Show the bot in English',
-    },
-};
+const DEFAULT_LANG = 'vi';
+const FALLBACK_LANGUAGE_CONFIG = viLocale?.commands?.language || {};
+const FALLBACK_LANGUAGE_META = FALLBACK_LANGUAGE_CONFIG.languages || {};
+const SUPPORTED_LANGS = Array.isArray(FALLBACK_LANGUAGE_CONFIG.supported)
+    ? FALLBACK_LANGUAGE_CONFIG.supported
+    : Object.keys(FALLBACK_LANGUAGE_META);
 
-function getLanguageDisplay(lang, withCode = false) {
-    const meta = LANGUAGE_META[lang] || LANGUAGE_META.vi;
+function formatLanguageDisplay(meta, withCode = false) {
+    if (!meta) return '';
     return withCode ? `${meta.flag} ${meta.label} - ${meta.code}` : `${meta.flag} ${meta.label}`;
+}
+
+const LANGUAGE_CHOICES = SUPPORTED_LANGS.map((lang) => ({
+    name: formatLanguageDisplay(FALLBACK_LANGUAGE_META[lang], true),
+    value: lang,
+}));
+
+function tByLang(lang, key, options = {}) {
+    return i18nManager.t(key, lang || DEFAULT_LANG, options);
+}
+
+function getLanguageCatalog(textLang = DEFAULT_LANG) {
+    const catalog = tByLang(textLang, 'commands.language.languages', { returnObjects: true });
+    if (catalog && typeof catalog === 'object' && !Array.isArray(catalog)) {
+        return catalog;
+    }
+    return FALLBACK_LANGUAGE_META;
+}
+
+function getLanguageMeta(targetLang, textLang = DEFAULT_LANG) {
+    const catalog = getLanguageCatalog(textLang);
+    return catalog[targetLang] || FALLBACK_LANGUAGE_META[targetLang] || FALLBACK_LANGUAGE_META[DEFAULT_LANG];
+}
+
+function getLanguageDisplay(targetLang, textLang = DEFAULT_LANG, withCode = false) {
+    return formatLanguageDisplay(getLanguageMeta(targetLang, textLang), withCode);
+}
+
+function buildLanguageChangedText(targetLang, previousLang, guildName = '') {
+    const from = getLanguageDisplay(previousLang, targetLang, true);
+    const to = getLanguageDisplay(targetLang, targetLang, true);
+    return tByLang(targetLang, 'commands.language.notice.changed', {
+        guildName: guildName || (targetLang === 'vi' ? 'server này' : 'this server'),
+        from,
+        to,
+    });
 }
 
 module.exports = {
@@ -38,10 +68,7 @@ module.exports = {
             option.setName('lang')
                 .setDescription('Chọn ngôn ngữ của server / Select the server language')
                 .setRequired(false)
-                .addChoices(
-                    { name: getLanguageDisplay('vi', true), value: 'vi' },
-                    { name: getLanguageDisplay('en', true), value: 'en' }
-                )),
+                .addChoices(...LANGUAGE_CHOICES)),
     prefix: { name: 'language', aliases: ['lang'], description: 'Cài đặt ngôn ngữ server / Server language settings' },
     cooldown: 5,
 
@@ -54,7 +81,7 @@ module.exports = {
         }
 
         const guildSettings = await MariaModDB.getGuildSettings(interaction.guildId);
-        let currentLang = guildSettings?.language || 'vi';
+        let currentLang = guildSettings?.language || DEFAULT_LANG;
 
         await interaction.reply({
             embeds: [buildLanguageEmbed(currentLang)],
@@ -80,28 +107,30 @@ module.exports = {
 
             if (selectedLang === currentLang) {
                 await i.reply({
-                    content: selectedLang === 'vi'
-                        ? `${emojis.info} Server đang dùng ${getLanguageDisplay(selectedLang, true)} rồi.`
-                        : `${emojis.info} This server is already using ${getLanguageDisplay(selectedLang, true)}.`,
+                    content: tByLang(selectedLang, 'commands.language.notice.already_using', {
+                        langDisplay: getLanguageDisplay(selectedLang, selectedLang, true),
+                    }),
                     ephemeral: true,
                 });
                 return;
             }
 
+            const previousLang = currentLang;
             await MariaModDB.updateGuildSettings(interaction.guildId, { language: selectedLang });
             currentLang = selectedLang;
 
             await i.update({
                 embeds: [buildLanguageEmbed(selectedLang, true)],
-                components: [buildLanguageRow(selectedLang, true)],
+                components: [buildLanguageRow(selectedLang)],
             });
 
-            collector.stop('selected');
+            await i.followUp({
+                content: buildLanguageChangedText(selectedLang, previousLang, interaction.guild?.name),
+                ephemeral: true,
+            }).catch(() => { });
         });
 
         collector.on('end', async (_, reason) => {
-            if (reason === 'selected') return;
-
             try {
                 await interaction.editReply({
                     components: [buildLanguageRow(currentLang, true)],
@@ -117,49 +146,42 @@ function buildLanguageRow(currentLang, disabled = false) {
     return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
             .setCustomId('server-language-select')
-            .setPlaceholder(currentLang === 'vi' ? 'Chọn ngôn ngữ cho server' : 'Select the server language')
+            .setPlaceholder(tByLang(currentLang, 'commands.language.placeholder'))
             .setDisabled(disabled)
             .addOptions(
-                new StringSelectMenuOptionBuilder()
-                    .setLabel(getLanguageDisplay('vi', true))
-                    .setDescription(LANGUAGE_META.vi.description)
-                    .setValue('vi')
-                    .setDefault(currentLang === 'vi'),
-                new StringSelectMenuOptionBuilder()
-                    .setLabel(getLanguageDisplay('en', true))
-                    .setDescription(LANGUAGE_META.en.description)
-                    .setValue('en')
-                    .setDefault(currentLang === 'en'),
+                ...SUPPORTED_LANGS.map((lang) =>
+                    new StringSelectMenuOptionBuilder()
+                        .setLabel(getLanguageDisplay(lang, currentLang, true))
+                        .setDescription(tByLang(currentLang, `commands.language.languages.${lang}.description`))
+                        .setValue(lang)
+                        .setDefault(currentLang === lang)
+                ),
             ),
     );
 }
 
 function buildLanguageEmbed(lang, changed = false) {
-    const isVi = lang === 'vi';
+    const display = getLanguageDisplay(lang, lang, true);
 
     return createLunabyEmbed()
         .setTitle(
             changed
-                ? (isVi ? 'Ngôn ngữ server đã được cập nhật' : 'Server language updated')
-                : (isVi ? 'Thiết lập ngôn ngữ server' : 'Server language settings')
+                ? tByLang(lang, 'commands.language.title.updated')
+                : tByLang(lang, 'commands.language.title.settings')
         )
         .setDescription(
             changed
-                ? (isVi
-                    ? `${emojis.success} Bot hiện sẽ hiển thị bằng **${getLanguageDisplay('vi', true)}** trong server này.`
-                    : `${emojis.success} The bot will now use **${getLanguageDisplay('en', true)}** in this server.`)
-                : (isVi
-                    ? 'Chọn ngôn ngữ bạn muốn dùng cho bot trong server từ menu bên dưới.'
-                    : 'Choose the language you want the bot to use in this server from the menu below.')
+                ? tByLang(lang, 'commands.language.description.updated', { langDisplay: display })
+                : tByLang(lang, 'commands.language.description.settings')
         )
         .addFields({
-            name: isVi ? 'Locale hiện tại' : 'Current locale',
-            value: isVi ? `\`${getLanguageDisplay('vi', true)}\`` : `\`${getLanguageDisplay('en', true)}\``,
+            name: tByLang(lang, 'commands.language.field.current_locale'),
+            value: `\`${display}\``,
             inline: false,
         })
         .setFooter({
             text: changed
-                ? (isVi ? 'Menu đã được khóa sau khi cập nhật.' : 'The menu was locked after updating.')
-                : (isVi ? 'Menu sẽ tự tắt sau 60 giây.' : 'This menu will disable after 60 seconds.'),
+                ? tByLang(lang, 'commands.language.footer.changed')
+                : tByLang(lang, 'commands.language.footer.normal'),
         });
 }

@@ -362,7 +362,42 @@
       "other_cmds": "Other Commands"
     },
     "language": {
-      "usage": "Usage: `{{prefix}}language <vi/en>`"
+      "usage": "Usage: `{{prefix}}language <vi/en>`",
+      "supported": ["vi", "en"],
+      "placeholder": "Select the server language",
+      "title": {
+        "settings": "Server language settings",
+        "updated": "Server language updated"
+      },
+      "description": {
+        "settings": "Choose the language you want the bot to use in this server from the menu below.",
+        "updated": "{{_emoji.success}} The bot will now use **{{langDisplay}}** in this server."
+      },
+      "field": {
+        "current_locale": "Current locale"
+      },
+      "footer": {
+        "normal": "This menu will disable after 60 seconds.",
+        "changed": "You can keep changing language for 60 seconds."
+      },
+      "notice": {
+        "already_using": "{{_emoji.info}} This server is already using {{langDisplay}}.",
+        "changed": "{{_emoji.success}} The bot language in **{{guildName}}** has been changed from **{{from}}** to **{{to}}**."
+      },
+      "languages": {
+        "vi": {
+          "flag": "🇻🇳",
+          "label": "Vietnamese",
+          "code": "vi-VN",
+          "description": "Use Vietnamese for bot messages"
+        },
+        "en": {
+          "flag": "🇺🇸",
+          "label": "English",
+          "code": "en-US",
+          "description": "Use English for bot messages"
+        }
+      }
     },
     "levelup": {
       "desc": "Setup user level up notifications",

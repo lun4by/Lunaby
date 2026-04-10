@@ -362,7 +362,42 @@
       "other_cmds": "Các Lệnh Khác"
     },
     "language": {
-      "usage": "Cú pháp: `{{prefix}}language <vi/en>`"
+      "usage": "Cú pháp: `{{prefix}}language <vi/en>`",
+      "supported": ["vi", "en"],
+      "placeholder": "Chọn ngôn ngữ cho server",
+      "title": {
+        "settings": "Thiết lập ngôn ngữ server",
+        "updated": "Ngôn ngữ server đã được cập nhật"
+      },
+      "description": {
+        "settings": "Chọn ngôn ngữ bạn muốn dùng cho bot trong server từ menu bên dưới.",
+        "updated": "{{_emoji.success}} Bot hiện sẽ hiển thị bằng **{{langDisplay}}** trong server này."
+      },
+      "field": {
+        "current_locale": "Locale hiện tại"
+      },
+      "footer": {
+        "normal": "Menu sẽ tự tắt sau 60 giây.",
+        "changed": "Bạn có thể tiếp tục đổi ngôn ngữ trong 60 giây."
+      },
+      "notice": {
+        "already_using": "{{_emoji.info}} Server đang dùng {{langDisplay}} rồi.",
+        "changed": "{{_emoji.success}} Ngôn ngữ của bot trong máy chủ **{{guildName}}** đã được thay đổi từ **{{from}}** thành **{{to}}**."
+      },
+      "languages": {
+        "vi": {
+          "flag": "🇻🇳",
+          "label": "Tiếng Việt",
+          "code": "vi-VN",
+          "description": "Hiển thị bot bằng tiếng Việt"
+        },
+        "en": {
+          "flag": "🇺🇸",
+          "label": "English",
+          "code": "en-US",
+          "description": "Hiển thị bot bằng tiếng Anh"
+        }
+      }
     },
     "levelup": {
       "desc": "Cài đặt thông báo người dùng thăng cấp (Level Up)",
