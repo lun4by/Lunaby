@@ -22,6 +22,10 @@ async function storeGuildInDB(guild) {
   try {
     const guildSettings = await MariaModDB.getGuildSettings(guild.id);
 
+    if (guild.client && !guild.client.guildProfiles) {
+      guild.client.guildProfiles = new Map();
+    }
+
     if (guild.client?.guildProfiles) {
       guild.client.guildProfiles.set(guild.id, {
         xp: guildSettings?.xp || { isActive: false, exceptions: [] }
@@ -29,9 +33,35 @@ async function storeGuildInDB(guild) {
     }
 
     logger.info('guild_deploy', `Synchronized server config for ${guild.name} to MariaDB`);
+    return guildSettings;
   } catch (error) {
     logger.error('guild_deploy', `Error while syncing guild config to MariaDB:`, error);
+    throw error;
   }
+}
+
+async function ensureGuildSettings(guild) {
+  return storeGuildInDB(guild);
+}
+
+async function warmGuildProfiles(client) {
+  if (!client?.guilds?.cache) return;
+
+  if (!client.guildProfiles) {
+    client.guildProfiles = new Map();
+  }
+
+  let warmedCount = 0;
+  for (const guild of client.guilds.cache.values()) {
+    try {
+      await ensureGuildSettings(guild);
+      warmedCount++;
+    } catch (error) {
+      logger.error('guild_deploy', `Error while warming guild profile for ${guild.name}:`, error);
+    }
+  }
+
+  logger.info('guild_deploy', `Guild profiles warmup completed: ${warmedCount}/${client.guilds.cache.size}`);
 }
 
 
@@ -221,5 +251,7 @@ module.exports = {
   handleGuildJoin,
   handleGuildLeave,
   deployCommandsToGuild,
+  ensureGuildSettings,
+  warmGuildProfiles,
   syncAllGuilds,
 };
