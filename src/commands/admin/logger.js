@@ -17,8 +17,8 @@ module.exports = {
         .addSubcommand(sub => sub.setName('level').setDescription('Đặt mức độ ghi log')
             .addStringOption(opt => opt.setName('level').setDescription('Mức độ ghi log').setRequired(true)
                 .addChoices(
-                    { name: 'Debug - Chi tiết nhất', value: 'debug' },
                     { name: 'Info - Thông tin chung', value: 'info' },
+                    { name: 'Debug - Chi tiết nhất', value: 'debug' },
                     { name: 'Warning - Cảnh báo', value: 'warn' },
                     { name: 'Error - Lỗi', value: 'error' }
                 )))

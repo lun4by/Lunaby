@@ -5,10 +5,10 @@ const util = require("util");
 const loggerConfig = require("../config/loggerConfig.js");
 
 const LOG_LEVELS = {
-  debug: { priority: 0, color: '\x1b[36m' },
-  info: { priority: 1, color: '\x1b[32m' },
-  warn: { priority: 2, color: '\x1b[33m' },
-  error: { priority: 3, color: '\x1b[31m' },
+  debug: { priority: 0, color: '\x1b[36m', label: 'DEBUG' },
+  info: { priority: 1, color: '\x1b[32m', label: 'INFO' },
+  warn: { priority: 2, color: '\x1b[33m', label: 'WARN' },
+  error: { priority: 3, color: '\x1b[31m', label: 'ERROR' },
 };
 
 const RESET_COLOR = '\x1b[0m';
@@ -70,8 +70,9 @@ function writeToFile(level, message, ...args) {
   if (!logStream) return;
 
   const timestamp = new Date().toISOString();
+  const levelLabel = (LOG_LEVELS[level]?.label || String(level).toUpperCase()).padEnd(5, ' ');
   const extra = args.length ? `\n${args.map(formatArg).join("\n")}` : "";
-  const logEntry = `[${timestamp}] ${level}: ${message}${extra}\n`;
+  const logEntry = `[${timestamp}] ${levelLabel}: ${message}${extra}\n`;
 
   logStream.write(logEntry);
 }
@@ -125,8 +126,9 @@ function log(category, level, message, ...args) {
     : "";
 
   const levelColor = LOG_LEVELS[level]?.color || "";
+  const levelLabel = (LOG_LEVELS[level]?.label || String(level).toUpperCase()).padEnd(5, ' ');
   const categoryStr = category ? `[${category}] ` : "";
-  const prefix = `${timestamp}${levelColor}${level}${RESET_COLOR} ${categoryStr}`;
+  const prefix = `${timestamp}${levelColor}${levelLabel}${RESET_COLOR} ${categoryStr}`;
 
   const normalizedMessage = formatLogValue(message, false);
   const consoleDetails = formatLogDetails(args, true);
