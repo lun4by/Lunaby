@@ -26,12 +26,12 @@ async function handleImageRequest(message, content, requestMatch) {
       return message.reply(`${emojis.error} Bạn muốn mình vẽ gì nào? Hãy diễn tả thật chi tiết chút coi!`);
     }
 
-    const waitMsg = await message.reply("✨ Chờ xíu nhaa, Lunaby đang vẽ cho bạn nà...");
+    const waitMsg = await message.reply(`${emojis.image.sparkle} Chờ xíu nhaa, Lunaby đang vẽ cho bạn nà...`);
 
     const imageResult = await ImageService.generateImage(userPrompt);
     const attachment = new AttachmentBuilder(imageResult.buffer, { name: "lunaby_art.png" });
 
-    await waitMsg.edit({ content: "✨ Đây là tác phẩm Lunaby vẽ cho bạn nè", files: [attachment] });
+    await waitMsg.edit({ content: `${emojis.image.sparkle} Đây là tác phẩm Lunaby vẽ cho bạn nè`, files: [attachment] });
 
     await conversationManager.addMessage(conversationId, "user", `[Yêu cầu vẽ ảnh]: ${userPrompt}`);
     await conversationManager.addMessage(conversationId, "assistant", `[Đã gửi 1 hình ảnh] Của bạn đây! Mình đã vẽ theo yêu cầu: "${userPrompt}"`);

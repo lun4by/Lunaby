@@ -270,13 +270,13 @@ async function handlePrefixMessage(message, client) {
     if (command.prefix?.adminOnly) {
         const userRole = await RoleService.getUserRole(message.author.id);
         if (userRole !== 'owner' && userRole !== 'admin') {
-            await message.reply(`${emojis.error} Bạn không có quyền sử dụng lệnh này.`).catch(() => { });
+            await message.reply(`${emojis.error} ${message.t('system.no_permission')}`).catch(() => { });
             return true;
         }
     } else if (command.data?.default_member_permissions) {
         const requiredPermissions = BigInt(command.data.default_member_permissions);
         if (message.member && !message.member.permissions.has(requiredPermissions)) {
-            await message.reply(`${emojis.error} Bạn không có đủ quyền trong server để sử dụng lệnh này.`).catch(() => { });
+            await message.reply(`${emojis.error} ${message.t('system.missing_server_permissions')}`).catch(() => { });
             return true;
         }
     }
@@ -288,7 +288,7 @@ async function handlePrefixMessage(message, client) {
         if (message.guildId) {
             const isDisabled = await MariaModDB.isCommandDisabled(message.guildId, message.channelId, command.data?.name || commandName);
             if (isDisabled) {
-                await message.reply(`${emojis.error} Lệnh này đã bị tắt trong kênh này.`);
+                await message.reply(`${emojis.error} ${message.t('system.command_disabled_in_channel')}`);
                 return true;
             }
         }
@@ -299,7 +299,7 @@ async function handlePrefixMessage(message, client) {
             const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
             const { onCooldown, remaining, expiresAtUnix } = CooldownService.check(message.author.id, cmdName, cooldownTime);
             if (onCooldown) {
-                const msg = await message.reply(`Bạn phải chờ <t:${expiresAtUnix}:R> mới được xài lệnh tiếp!`);
+                const msg = await message.reply(message.t('system.cooldown_wait', { expiresAtUnix }));
                 setTimeout(() => msg.delete().catch(() => { }), remaining * 1000);
                 return true;
             }
@@ -313,7 +313,7 @@ async function handlePrefixMessage(message, client) {
         CooldownService.set(message.author.id, cmdName, cooldownTime);
     } catch (error) {
         logger.error('PREFIX', `Error executing prefix command ${commandName}:`, error);
-        await message.reply(`${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`).catch(() => { });
+        await message.reply(`${emojis.error} ${message.t('system.command_execution_failed')}`).catch(() => { });
     }
 
     return true;

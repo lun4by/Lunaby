@@ -109,7 +109,7 @@ const handleCommand = async (interaction, client) => {
     if (interaction.guildId) {
       const isDisabled = await MariaModDB.isCommandDisabled(interaction.guildId, interaction.channelId, interaction.commandName);
       if (isDisabled) {
-        return interaction.reply({ content: `${emojis.error} Lệnh này đã bị tắt trong kênh này.`, ephemeral: true });
+        return interaction.reply({ content: `${emojis.error} ${interaction.t('system.command_disabled_in_channel')}`, ephemeral: true });
       }
     }
 
@@ -124,7 +124,7 @@ const handleCommand = async (interaction, client) => {
     if (command.data && command.data.default_member_permissions) {
       const requiredPermissions = BigInt(command.data.default_member_permissions);
       if (!interaction.memberPermissions.has(requiredPermissions)) {
-        return interaction.reply({ content: `${emojis.error} Bạn không có đủ quyền trong server để sử dụng lệnh này.`, ephemeral: true });
+        return interaction.reply({ content: `${emojis.error} ${interaction.t('system.missing_server_permissions')}`, ephemeral: true });
       }
     }
 
@@ -133,7 +133,7 @@ const handleCommand = async (interaction, client) => {
       const { onCooldown, remaining, expiresAtUnix } = CooldownService.check(interaction.user.id, interaction.commandName, cooldownTime);
       if (onCooldown) {
         await interaction.reply({
-          content: `Bạn phải chờ <t:${expiresAtUnix}:R> mới được xài lệnh tiếp!`,
+          content: interaction.t('system.cooldown_wait', { expiresAtUnix }),
           ephemeral: true,
         });
         setTimeout(() => interaction.deleteReply().catch(() => { }), remaining * 1000);
@@ -178,7 +178,7 @@ const handleCommand = async (interaction, client) => {
       },
       error
     );
-    const errPayload = { content: `${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`, ephemeral: true };
+    const errPayload = { content: `${emojis.error} ${interaction.t('system.command_execution_failed')}`, ephemeral: true };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)
       : interaction.reply(errPayload);

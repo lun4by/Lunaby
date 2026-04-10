@@ -100,13 +100,13 @@ module.exports = {
                 // Định dạng tên hành động
                 const actionName =
                     {
-                        ban: '🔨 Ban',
-                        unban: '🔓 Unban',
-                        kick: '👢 Kick',
-                        mute: '🔇 Mute',
-                        unmute: '🔊 Unmute',
-                        warn: '⚠️ Warn',
-                        clearwarnings: '🧹 Clear Warn',
+                        ban: `${emojis.moderation.ban} Ban`,
+                        unban: `${emojis.moderation.unban} Unban`,
+                        kick: `${emojis.moderation.kick} Kick`,
+                        mute: `${emojis.moderation.mute} Mute`,
+                        unmute: `${emojis.moderation.unmute} Unmute`,
+                        warn: `${emojis.moderation.warn} Warn`,
+                        clearwarnings: `${emojis.moderation.clearWarnings} Clear Warn`,
                     }[log.action] || log.action;
 
                 // Thêm thông tin bổ sung dựa trên loại hành động

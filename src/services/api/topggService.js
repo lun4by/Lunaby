@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const logger = require('../../utils/logger.js');
 const MariaModDB = require('../database/MariaModDB.js');
+const emojis = require('../../config/emojis.js');
 
 let autoPoster = null;
 let webhookApp = null;
@@ -65,17 +66,17 @@ async function sendVoteNotifications(client, vote) {
 
         const embed = new EmbedBuilder()
           .setColor(0xFF3366)
-          .setTitle('🗳️ Có người vừa vote!')
+          .setTitle(`${emojis.topgg.vote} Có người vừa vote!`)
           .setDescription(`**${displayName}** đã vote cho bot trên [Top.gg](https://top.gg/bot/${vote.bot}/vote)!`)
           .addFields(
             { name: 'Người vote', value: `<@${vote.user}>`, inline: true },
-            { name: 'Loại', value: vote.type === 'test' ? '🧪 Test' : '✅ Vote', inline: true },
+            { name: 'Loại', value: vote.type === 'test' ? `${emojis.topgg.test} Test` : `${emojis.topgg.pass} Vote`, inline: true },
           )
           .setTimestamp();
 
         if (avatarURL) embed.setThumbnail(avatarURL);
         if (isWeekend) {
-          embed.addFields({ name: '🎉 Weekend Bonus', value: 'Vote trong cuối tuần — x2 điểm!', inline: false });
+          embed.addFields({ name: `${emojis.topgg.weekend} Weekend Bonus`, value: 'Vote trong cuối tuần — x2 điểm!', inline: false });
         }
 
         embed.setFooter({ text: 'Top.gg Vote System' });

@@ -1,5 +1,6 @@
 const storageDB = require('../services/database/storagedb.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
+const emojis = require('../config/emojis.js');
 const logger = require('../utils/logger.js');
 
 
@@ -61,7 +62,7 @@ async function handleResetdbInteraction(interaction) {
       logger.info('RESET', `Owner ${user.tag} cancelled database reset`);
     } else if (customId === 'reset_users_confirm') {
       await interaction.update({
-        content: '⏳ **Đang reset user profiles...**',
+        content: `${emojis.lvoice.cooldown} **Đang reset user profiles...**`,
         components: [],
       });
 

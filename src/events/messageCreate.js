@@ -50,7 +50,10 @@ function setupMessageCreateEvent(client) {
             if (targetChannel && targetChannel.isTextBased()) {
               const attachment = await generateLevelUpCard(message.author, xpResult.previousLevel, xpResult.level);
               await targetChannel.send({
-                content: `🎉 Chúc mừng ${message.author}! Bạn vừa đạt cấp **${xpResult.level}**!`,
+                content: message.t('system.levelup_congrats', {
+                  user: message.author.toString(),
+                  level: xpResult.level,
+                }),
                 files: [attachment]
               });
             }

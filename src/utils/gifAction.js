@@ -1,12 +1,13 @@
 const { EmbedBuilder } = require('discord.js');
+const emojis = require('../config/emojis');
 
 const ACTION_MESSAGES = {
-    pat: { verb: 'xoa đầu', emoji: '🤗', color: 0xFFD700, selfMsg: 'tự xoa đầu mình' },
-    hug: { verb: 'ôm', emoji: '🫂', color: 0xFF69B4, selfMsg: 'tự ôm mình' },
-    slap: { verb: 'tát', emoji: '👋', color: 0xFF4500, selfMsg: 'tự tát mình' },
-    punch: { verb: 'đấm', emoji: '👊', color: 0xDC143C, selfMsg: 'tự đấm mình' },
-    kiss: { verb: 'hôn', emoji: '💋', color: 0xFF1493, selfMsg: 'hôn gió' },
-    poke: { verb: 'chọc', emoji: '👉', color: 0x00CED1, selfMsg: 'tự chọc mình' },
+    pat: { verb: 'xoa đầu', emoji: emojis.gifActions.pat, color: 0xFFD700, selfMsg: 'tự xoa đầu mình' },
+    hug: { verb: 'ôm', emoji: emojis.gifActions.hug, color: 0xFF69B4, selfMsg: 'tự ôm mình' },
+    slap: { verb: 'tát', emoji: emojis.gifActions.slap, color: 0xFF4500, selfMsg: 'tự tát mình' },
+    punch: { verb: 'đấm', emoji: emojis.gifActions.punch, color: 0xDC143C, selfMsg: 'tự đấm mình' },
+    kiss: { verb: 'hôn', emoji: emojis.gifActions.kiss, color: 0xFF1493, selfMsg: 'hôn gió' },
+    poke: { verb: 'chọc', emoji: emojis.gifActions.poke, color: 0x00CED1, selfMsg: 'tự chọc mình' },
 };
 
 function getRandomGif(action) {

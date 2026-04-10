@@ -3,6 +3,7 @@ const MariaModDB = require('../services/database/MariaModDB.js');
 const PrefixDB = require('../services/database/PrefixDB.js');
 const AICore = require('../services/ai/AICore.js');
 const prompts = require('../config/prompts.js');
+const emojis = require('../config/emojis.js');
 const logger = require('../utils/logger.js');
 
 const creatorChannels = new Map();
@@ -131,7 +132,7 @@ async function handleVoiceMasterJoin(newState, member) {
         const timeLeft = COOLDOWN_MS - (now - lastCreated);
         try {
             await member.send({
-                content: `⏳ Bạn thao tác quá nhanh! Vui lòng giữ nguyên ở kênh Voice trong **${(timeLeft / 1000).toFixed(1)}s** nữa, hệ thống sẽ tự động tạo phòng cho bạn.`
+                content: `${emojis.lvoice.cooldown} Bạn thao tác quá nhanh! Vui lòng giữ nguyên ở kênh Voice trong **${(timeLeft / 1000).toFixed(1)}s** nữa, hệ thống sẽ tự động tạo phòng cho bạn.`
             }).catch(() => {}); // Bỏ qua lỗi nếu user chặn tin nhắn rác (DMs)
             
             await new Promise(resolve => setTimeout(resolve, timeLeft));

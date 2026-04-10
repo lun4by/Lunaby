@@ -7,16 +7,15 @@ const logger = require('../../utils/logger');
 
 const SRC_DIR = path.join(__dirname, '../..');
 
-// Directories to scan for translation key usage
-const SCAN_DIRS = [
-    path.join(SRC_DIR, 'commands'),
-    path.join(SRC_DIR, 'utils'),
-    path.join(SRC_DIR, 'handlers'),
+// Directories to exclude from translation scan.
+const SCAN_EXCLUDED_DIRS = [
+    path.join(SRC_DIR, 'locales'),
+    path.join(SRC_DIR, 'services', 'i18n'),
 ];
 
-// Matches: interaction.t('key'), i.t('key'), t('key'), interactionOrMessage.t('key')
+// Matches: interaction.t('key'), message.t('key'), i.t('key'), interactionOrMessage?.t('key')
 // Captures static string keys only (ignores template literals with ${} interpolation)
-const TRANSLATION_KEY_REGEX = /(?:interaction|interactionOrMessage|i|t)\.t\(\s*['"]([\w.]+)['"]/g;
+const TRANSLATION_KEY_REGEX = /\b[A-Za-z_$][\w$]*(?:\?\.|\.)t\(\s*['"]([\w.]+)['"]/g;
 
 // Available locale resources for verification
 const LOCALES = { vi, en };
@@ -126,22 +125,26 @@ class I18nManager {
     collectKeyUsage() {
         const keyMap = new Map(); // key → Set<filePath>
 
-        for (const dir of SCAN_DIRS) {
-            if (!fs.existsSync(dir)) continue;
-            const files = this.getJsFiles(dir);
+        if (!fs.existsSync(SRC_DIR)) {
+            return new Map();
+        }
 
-            for (const file of files) {
-                const content = fs.readFileSync(file, 'utf8');
-                let match;
-
-                while ((match = TRANSLATION_KEY_REGEX.exec(content)) !== null) {
-                    const key = match[1];
-                    if (!keyMap.has(key)) keyMap.set(key, new Set());
-                    keyMap.get(key).add(file);
-                }
-
-                TRANSLATION_KEY_REGEX.lastIndex = 0;
+        const files = this.getJsFiles(SRC_DIR);
+        for (const file of files) {
+            if (this.isExcludedPath(file)) {
+                continue;
             }
+
+            const content = this.stripComments(fs.readFileSync(file, 'utf8'));
+            let match;
+
+            while ((match = TRANSLATION_KEY_REGEX.exec(content)) !== null) {
+                const key = match[1];
+                if (!keyMap.has(key)) keyMap.set(key, new Set());
+                keyMap.get(key).add(file);
+            }
+
+            TRANSLATION_KEY_REGEX.lastIndex = 0;
         }
 
         // Convert Sets to Arrays for easier consumption
@@ -202,6 +205,19 @@ class I18nManager {
         }
 
         return files;
+    }
+
+    isExcludedPath(filePath) {
+        return SCAN_EXCLUDED_DIRS.some(excludedDir => {
+            const relative = path.relative(excludedDir, filePath);
+            return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+        });
+    }
+
+    stripComments(content) {
+        return content
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/^\s*\/\/.*$/gm, '');
     }
 
     /**

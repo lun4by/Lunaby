@@ -14,15 +14,16 @@ const MemoryService = require('../../services/ai/MemoryService.js');
 const conversationManager = require('../../handlers/conversationManager.js');
 const prompts = require('../../config/prompts.js');
 const { DEFAULT_MODEL } = require('../../config/constants.js');
+const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger.js');
 const { COLORS } = require('../../utils/embedUtils.js');
 
 const MENU_OPTIONS = [
-    { value: 'personal_info', labelKey: 'commands.personalize.menu_info', descriptionKey: 'commands.personalize.menu_info_desc', emoji: '✏️' },
-    { value: 'toggle_search', labelKey: 'commands.personalize.menu_search', descriptionKey: 'commands.personalize.menu_search_desc', emoji: '🔍' },
-    { value: 'toggle_memory', labelKey: 'commands.personalize.menu_memory', descriptionKey: 'commands.personalize.menu_memory_desc', emoji: '🧠' },
-    { value: 'manage', labelKey: 'commands.personalize.menu_manage', descriptionKey: 'commands.personalize.menu_manage_desc', emoji: '📋' },
-    { value: 'clear', labelKey: 'commands.personalize.menu_clear', descriptionKey: 'commands.personalize.menu_clear_desc', emoji: '🗑️' },
+    { value: 'personal_info', labelKey: 'commands.personalize.menu_info', descriptionKey: 'commands.personalize.menu_info_desc', emoji: emojis.personalize.info },
+    { value: 'toggle_search', labelKey: 'commands.personalize.menu_search', descriptionKey: 'commands.personalize.menu_search_desc', emoji: emojis.personalize.search },
+    { value: 'toggle_memory', labelKey: 'commands.personalize.menu_memory', descriptionKey: 'commands.personalize.menu_memory_desc', emoji: emojis.personalize.memory },
+    { value: 'manage', labelKey: 'commands.personalize.menu_manage', descriptionKey: 'commands.personalize.menu_manage_desc', emoji: emojis.personalize.manage },
+    { value: 'clear', labelKey: 'commands.personalize.menu_clear', descriptionKey: 'commands.personalize.menu_clear_desc', emoji: emojis.personalize.clear },
 ];
 
 module.exports = {
@@ -294,7 +295,7 @@ async function handleManageMemories(i, userId, interaction) {
     if (summary.importantMemories.length > 0) {
         const memoryList = summary.importantMemories
             .slice(0, 5)
-            .map((mem, idx) => `${idx + 1}. ${mem.content} (⭐ ${mem.importance}/10)`)
+            .map((mem, idx) => `${idx + 1}. ${mem.content} (${emojis.personalize.importance} ${mem.importance}/10)`)
             .join('\n');
         embed.addFields({ name: interaction.t('commands.personalize.manage_field_imp'), value: memoryList, inline: false });
     }

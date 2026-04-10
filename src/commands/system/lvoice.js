@@ -87,7 +87,7 @@ async function handleSetup(interaction) {
 
         // Tạo kênh voice creator bên trong category
         const creatorChannel = await guild.channels.create({
-            name: '➕ Tạo Kênh Voice',
+            name: `${emojis.lvoice.createChannel} Tạo Kênh Voice`,
             type: ChannelType.GuildVoice,
             parent: category.id,
         });

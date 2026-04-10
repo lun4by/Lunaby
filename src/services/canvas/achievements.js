@@ -3,6 +3,7 @@ const { createCanvas, loadImage } = require('canvas');
 const path = require('path');
 const fs = require('fs');
 const fontManager = require('../fonts/fonts');
+const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger.js');
 
 const ASSETS_PATH = path.join(__dirname, '../../assets');
@@ -385,7 +386,7 @@ async function checkAchievements(message, xpResult) {
       });
 
       await message.channel.send({
-        content: `🎉 **${message.author.username}** đã mở khóa thành tựu mới!`,
+        content: `${emojis.achievements.unlocked} **${message.author.username}** đã mở khóa thành tựu mới!`,
         files: [attachment]
       });
     }

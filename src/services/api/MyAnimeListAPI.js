@@ -1,4 +1,5 @@
 const logger = require("../../utils/logger.js");
+const emojis = require("../../config/emojis.js");
 
 const MAL_COLOR = 0x2e51a2;
 const FOOTER = { text: "Powered by MyAnimeList API" };
@@ -159,11 +160,11 @@ class MyAnimeListAPI {
 
     embed.fields = this._buildSearchFields(animeList, (anime) => {
       let info = "";
-      if (anime.mean) info += `⭐ Điểm: ${anime.mean}/10\n`;
-      if (anime.num_episodes) info += `🎬 Tập: ${anime.num_episodes}\n`;
-      info += `📺 Loại: ${anime.media_type?.toUpperCase() || "N/A"}\n`;
-      info += `📅 Trạng thái: ${ANIME_STATUS[anime.status] || "N/A"}`;
-      if (anime.genres?.length) info += `\n🏷️ Thể loại: ${anime.genres.slice(0, 3).map(g => g.name).join(", ")}`;
+      if (anime.mean) info += `${emojis.mal.score} Điểm: ${anime.mean}/10\n`;
+      if (anime.num_episodes) info += `${emojis.mal.episodes} Tập: ${anime.num_episodes}\n`;
+      info += `${emojis.mal.tv} Loại: ${anime.media_type?.toUpperCase() || "N/A"}\n`;
+      info += `${emojis.mal.status} Trạng thái: ${ANIME_STATUS[anime.status] || "N/A"}`;
+      if (anime.genres?.length) info += `\n${emojis.mal.tags} Thể loại: ${anime.genres.slice(0, 3).map(g => g.name).join(", ")}`;
       return info;
     });
 
@@ -182,13 +183,13 @@ class MyAnimeListAPI {
     embed.thumbnail = anime.main_picture ? { url: anime.main_picture.medium } : null;
 
     embed.fields = [
-      { name: "📊 Thống kê", value: `⭐ Điểm: ${anime.mean || "N/A"}/10\n🏆 Xếp hạng: #${anime.rank || "N/A"}\n❤️ Độ phổ biến: #${anime.popularity || "N/A"}\n👥 Người dùng: ${anime.num_list_users?.toLocaleString() || "N/A"}`, inline: true },
-      { name: "📝 Thông tin", value: `📺 Loại: ${anime.media_type?.toUpperCase() || "N/A"}\n🎬 Số tập: ${anime.num_episodes || "N/A"}\n📅 Trạng thái: ${ANIME_STATUS[anime.status] || "N/A"}\n⌛ Thời lượng: ${anime.average_episode_duration ? Math.floor(anime.average_episode_duration / 60) + " phút" : "N/A"}`, inline: true },
+      { name: `${emojis.mal.stats} Thống kê`, value: `${emojis.mal.score} Điểm: ${anime.mean || "N/A"}/10\n${emojis.mal.rank} Xếp hạng: #${anime.rank || "N/A"}\n${emojis.mal.popularity} Độ phổ biến: #${anime.popularity || "N/A"}\n${emojis.mal.users} Người dùng: ${anime.num_list_users?.toLocaleString() || "N/A"}`, inline: true },
+      { name: `${emojis.mal.info} Thông tin`, value: `${emojis.mal.tv} Loại: ${anime.media_type?.toUpperCase() || "N/A"}\n${emojis.mal.episodes} Số tập: ${anime.num_episodes || "N/A"}\n${emojis.mal.status} Trạng thái: ${ANIME_STATUS[anime.status] || "N/A"}\n${emojis.mal.duration} Thời lượng: ${anime.average_episode_duration ? Math.floor(anime.average_episode_duration / 60) + " phút" : "N/A"}`, inline: true },
     ];
 
-    if (anime.start_season) embed.fields.push({ name: "🗓️ Mùa", value: `${SEASON_NAMES[anime.start_season.season] || anime.start_season.season} ${anime.start_season.year}`, inline: true });
-    if (anime.studios?.length) embed.fields.push({ name: "🏢 Studio", value: anime.studios.map(s => s.name).join(", "), inline: true });
-    if (anime.genres?.length) embed.fields.push({ name: "🏷️ Thể loại", value: anime.genres.map(g => g.name).join(", "), inline: false });
+    if (anime.start_season) embed.fields.push({ name: `${emojis.mal.season} Mùa`, value: `${SEASON_NAMES[anime.start_season.season] || anime.start_season.season} ${anime.start_season.year}`, inline: true });
+    if (anime.studios?.length) embed.fields.push({ name: `${emojis.mal.studio} Studio`, value: anime.studios.map(s => s.name).join(", "), inline: true });
+    if (anime.genres?.length) embed.fields.push({ name: `${emojis.mal.tags} Thể loại`, value: anime.genres.map(g => g.name).join(", "), inline: false });
 
     return embed;
   }
@@ -203,10 +204,10 @@ class MyAnimeListAPI {
       const anime = item.node || {};
       const ranking = item.ranking || i + 1;
       let info = "";
-      if (anime.mean) info += `⭐ Điểm: ${anime.mean}/10\n`;
-      if (anime.num_episodes) info += `🎬 Tập: ${anime.num_episodes}\n`;
-      if (anime.media_type) info += `📺 Loại: ${anime.media_type.toUpperCase()}\n`;
-      if (anime.id) info += `🔗 https://myanimelist.net/anime/${anime.id}`;
+      if (anime.mean) info += `${emojis.mal.score} Điểm: ${anime.mean}/10\n`;
+      if (anime.num_episodes) info += `${emojis.mal.episodes} Tập: ${anime.num_episodes}\n`;
+      if (anime.media_type) info += `${emojis.mal.tv} Loại: ${anime.media_type.toUpperCase()}\n`;
+      if (anime.id) info += `${emojis.mal.link} https://myanimelist.net/anime/${anime.id}`;
       return { name: `${ranking}. ${anime.title || "Không có tiêu đề"}`, value: info || "Không có thông tin", inline: false };
     });
 
@@ -221,11 +222,11 @@ class MyAnimeListAPI {
 
     embed.fields = this._buildSearchFields(mangaList, (manga) => {
       let info = "";
-      if (manga.mean) info += `⭐ Điểm: ${manga.mean}/10\n`;
-      if (manga.num_volumes) info += `📚 Tập: ${manga.num_volumes}\n`;
-      if (manga.num_chapters) info += `📑 Chương: ${manga.num_chapters}\n`;
-      info += `📅 Trạng thái: ${MANGA_STATUS[manga.status] || "N/A"}`;
-      if (manga.genres?.length) info += `\n🏷️ Thể loại: ${manga.genres.slice(0, 3).map(g => g.name).join(", ")}`;
+      if (manga.mean) info += `${emojis.mal.score} Điểm: ${manga.mean}/10\n`;
+      if (manga.num_volumes) info += `${emojis.mal.volumes} Tập: ${manga.num_volumes}\n`;
+      if (manga.num_chapters) info += `${emojis.mal.chapters} Chương: ${manga.num_chapters}\n`;
+      info += `${emojis.mal.status} Trạng thái: ${MANGA_STATUS[manga.status] || "N/A"}`;
+      if (manga.genres?.length) info += `\n${emojis.mal.tags} Thể loại: ${manga.genres.slice(0, 3).map(g => g.name).join(", ")}`;
       return info;
     });
 
@@ -244,12 +245,12 @@ class MyAnimeListAPI {
     embed.thumbnail = manga.main_picture ? { url: manga.main_picture.medium } : null;
 
     embed.fields = [
-      { name: "📊 Thống kê", value: `⭐ Điểm: ${manga.mean || "N/A"}/10\n🏆 Xếp hạng: #${manga.rank || "N/A"}\n❤️ Độ phổ biến: #${manga.popularity || "N/A"}\n👥 Người dùng: ${manga.num_list_users?.toLocaleString() || "N/A"}`, inline: true },
-      { name: "📝 Thông tin", value: `📚 Tập: ${manga.num_volumes || "N/A"}\n📑 Chương: ${manga.num_chapters || "N/A"}\n📅 Trạng thái: ${MANGA_STATUS[manga.status] || "N/A"}`, inline: true },
+      { name: `${emojis.mal.stats} Thống kê`, value: `${emojis.mal.score} Điểm: ${manga.mean || "N/A"}/10\n${emojis.mal.rank} Xếp hạng: #${manga.rank || "N/A"}\n${emojis.mal.popularity} Độ phổ biến: #${manga.popularity || "N/A"}\n${emojis.mal.users} Người dùng: ${manga.num_list_users?.toLocaleString() || "N/A"}`, inline: true },
+      { name: `${emojis.mal.info} Thông tin`, value: `${emojis.mal.volumes} Tập: ${manga.num_volumes || "N/A"}\n${emojis.mal.chapters} Chương: ${manga.num_chapters || "N/A"}\n${emojis.mal.status} Trạng thái: ${MANGA_STATUS[manga.status] || "N/A"}`, inline: true },
     ];
 
-    if (manga.authors?.length) embed.fields.push({ name: "✍️ Tác giả", value: manga.authors.map(a => `${a.node.first_name} ${a.node.last_name}`).join(", "), inline: true });
-    if (manga.genres?.length) embed.fields.push({ name: "🏷️ Thể loại", value: manga.genres.map(g => g.name).join(", "), inline: false });
+    if (manga.authors?.length) embed.fields.push({ name: `${emojis.mal.author} Tác giả`, value: manga.authors.map(a => `${a.node.first_name} ${a.node.last_name}`).join(", "), inline: true });
+    if (manga.genres?.length) embed.fields.push({ name: `${emojis.mal.tags} Thể loại`, value: manga.genres.map(g => g.name).join(", "), inline: false });
 
     return embed;
   }

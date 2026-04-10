@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
+const emojis = require('../../config/emojis');
 const { COLORS } = require('../../utils/embedUtils');
 
 const ROLE_BADGES = {
@@ -82,10 +83,10 @@ module.exports = {
             })
             .setDescription(
                 `### ${roleBadge}\n` +
-                `*💬 Lunaby Pro*\n` +
+                `*${emojis.quota.pro} Lunaby Pro*\n` +
                 `${msgBar}\n` +
                 `${formatQuotaValue(msgCurrent, msgMax)} · ${msgRemainingText}\n\n` +
-                `*🎨 Lunaby Vision*\n` +
+                `*${emojis.quota.vision} Lunaby Vision*\n` +
                 `${imgBar}\n` +
                 `${formatQuotaValue(imgCurrent, imgMax)} · ${imgRemainingText}\n` +
                 `${interaction.t('commands.quota.total_usage')} **${stats.usage.total}** Lunaby Pro · **${stats.imageUsage.total}** Lunaby Vision\n` +

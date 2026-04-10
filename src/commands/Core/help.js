@@ -9,6 +9,7 @@ const {
 const fs = require('fs');
 const path = require('path');
 const logger = require('../../utils/logger');
+const emojis = require('../../config/emojis');
 const { COLORS } = require('../../utils/embedUtils');
 
 module.exports = {
@@ -178,16 +179,16 @@ function getCategoryMetadata(category, interaction) {
     }
 
     const categoryMap = {
-        'home': { emoji: '🏠' },
-        'AIcore': { emoji: '🤖' },
-        'Core': { emoji: '⚙️' },
-        'moderation': { emoji: '🛡️' },
-        'social': { emoji: '👥' },
-        'system': { emoji: '🔧' },
-        'fun': { emoji: '🎉' },
+        'home': { emoji: emojis.categories.home },
+        'AIcore': { emoji: emojis.categories.aiCore },
+        'Core': { emoji: emojis.categories.core },
+        'moderation': { emoji: emojis.categories.moderation },
+        'social': { emoji: emojis.categories.social },
+        'system': { emoji: emojis.categories.system },
+        'fun': { emoji: emojis.categories.fun },
     };
 
-    const emoji = categoryMap[category]?.emoji || '📁';
+    const emoji = categoryMap[category]?.emoji || emojis.categories.folder;
 
     return { label, description: desc, emoji };
 }

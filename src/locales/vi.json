@@ -6,7 +6,12 @@
     "error_occurred": "Đã xảy ra lỗi trong quá trình xử lý lệnh.",
     "only_caller_can_use": "Chỉ người đã gọi lệnh mới được sử dụng tùy chọn này.",
     "quota_exceeded": "❌ **Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Pro trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.",
-    "quota_exceeded_image": "❌ **Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Vision trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng."
+    "quota_exceeded_image": "❌ **Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Vision trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.",
+    "command_disabled_in_channel": "Lệnh này đã bị tắt trong kênh này.",
+    "missing_server_permissions": "Bạn không có đủ quyền trong server để sử dụng lệnh này.",
+    "cooldown_wait": "Bạn phải chờ <t:{{expiresAtUnix}}:R> mới được dùng lệnh tiếp!",
+    "command_execution_failed": "Đã xảy ra lỗi khi thực thi lệnh này!",
+    "levelup_congrats": "🎉 Chúc mừng {{user}}! Bạn vừa đạt cấp **{{level}}**!"
   },
   "commands": {
     "moderation_common": {

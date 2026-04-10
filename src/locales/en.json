@@ -6,7 +6,12 @@
     "error_occurred": "An error occurred while processing the command.",
     "only_caller_can_use": "Only the user who invoked the command can use these options.",
     "quota_exceeded": "❌ **Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Pro in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue.",
-    "quota_exceeded_image": "❌ **Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Vision in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue."
+    "quota_exceeded_image": "❌ **Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Vision in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue.",
+    "command_disabled_in_channel": "This command has been disabled in this channel.",
+    "missing_server_permissions": "You do not have enough server permissions to use this command.",
+    "cooldown_wait": "You must wait until <t:{{expiresAtUnix}}:R> before using this command again!",
+    "command_execution_failed": "An error occurred while executing this command!",
+    "levelup_congrats": "🎉 Congratulations {{user}}! You just reached level **{{level}}**!"
   },
   "commands": {
     "moderation_common": {
