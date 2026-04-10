@@ -57,7 +57,7 @@ class AchievementCanvas {
       this.imageCache.set(imagePath, image);
       return image;
     } catch (error) {
-      logger.warn('ACHIEVEMENT', `Không thể tải hình ảnh achievement ${path.basename(imagePath)}:`, error.message);
+      logger.warn('ACHIEVEMENT', `Failed to load achievement image ${path.basename(imagePath)}:`, error.message);
       
       // Fallback to default icon
       const fallbackPath = path.join(ASSETS_PATH, 'lunaby-avatar.png');
@@ -219,7 +219,7 @@ class AchievementCanvas {
       ctx.lineWidth = 3;
       ctx.stroke();
     } catch (error) {
-      logger.error('ACHIEVEMENT', 'Lỗi khi vẽ icon achievement:', error);
+      logger.error('ACHIEVEMENT', 'Error khi vẽ icon achievement:', error);
     }
   }
 
@@ -322,7 +322,7 @@ class AchievementCanvas {
 
       return canvas.toBuffer();
     } catch (error) {
-      logger.error('ACHIEVEMENT', 'Lỗi khi tạo achievement canvas:', error);
+      logger.error('ACHIEVEMENT', 'Error khi tạo achievement canvas:', error);
       throw error;
     }
   }
@@ -390,7 +390,7 @@ async function checkAchievements(message, xpResult) {
       });
     }
   } catch (error) {
-    logger.error('ACHIEVEMENT', 'Lỗi khi kiểm tra thành tựu:', error);
+    logger.error('ACHIEVEMENT', 'Error khi kiểm tra thành tựu:', error);
   }
 }
 

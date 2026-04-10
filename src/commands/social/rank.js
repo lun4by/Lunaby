@@ -30,7 +30,7 @@ module.exports = {
       if (!serverXP || serverXP.xp === 0) {
         const embed = new EmbedBuilder()
           .setColor('#FF0000')
-          .setDescription(`${targetUser} chưa có điểm kinh nghiệm nào trong server này!`);
+          .setDescription(interaction.t('commands.rank.no_xp', { user: targetUser.toString() }));
         return interaction.editReply({ embeds: [embed] });
       }
 
@@ -52,7 +52,7 @@ module.exports = {
       await interaction.editReply({ content: '', files: [attachment] });
     } catch (error) {
       logger.error('RANK', 'Error in rank command:', error);
-      await interaction.editReply({ content: `${emojis.error} Đã xảy ra lỗi khi tạo rank card!`, ephemeral: true });
+      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.rank.error')}`, ephemeral: true });
     }
   }
 };
