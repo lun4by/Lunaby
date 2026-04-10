@@ -13,135 +13,6 @@ class MemoryService {
     this.sensitiveFields = ['name', 'nickname', 'location', 'customInstructions', 'birthday'];
   }
 
-  _escapeRegex(value) {
-    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
-
-  _isGlobalDiscordUserId(userId) {
-    return /^\d{17,20}$/.test(String(userId || '').trim());
-  }
-
-  _buildLegacyUserRegex(userId) {
-    if (!this._isGlobalDiscordUserId(userId)) {
-      return null;
-    }
-
-    const escapedUserId = this._escapeRegex(userId);
-    return new RegExp(`^(?:DM-|\\d{17,20}-)${escapedUserId}$`);
-  }
-
-  async _migrateLegacyMemoryIfNeeded(collection, userId) {
-    const legacyUserRegex = this._buildLegacyUserRegex(userId);
-    if (!legacyUserRegex) {
-      return null;
-    }
-
-    const legacyCandidates = await collection
-      .find({ userId: { $regex: legacyUserRegex } })
-      .sort({ lastUpdated: -1, createdAt: -1 })
-      .toArray();
-
-    if (!legacyCandidates.length) {
-      return null;
-    }
-
-    const decryptedLegacyRecords = legacyCandidates
-      .map((record) => this._decryptPII(JSON.parse(JSON.stringify(record))));
-
-    const migratedMemory = decryptedLegacyRecords[0];
-
-    for (const legacyRecord of decryptedLegacyRecords.slice(1)) {
-      if (legacyRecord?.personalInfo) {
-        migratedMemory.personalInfo = migratedMemory.personalInfo || {};
-        for (const [key, value] of Object.entries(legacyRecord.personalInfo)) {
-          if (!migratedMemory.personalInfo[key] && value) {
-            migratedMemory.personalInfo[key] = value;
-          }
-        }
-      }
-
-      if (legacyRecord?.preferences) {
-        migratedMemory.preferences = migratedMemory.preferences || {};
-        for (const [key, value] of Object.entries(legacyRecord.preferences)) {
-          if (!Array.isArray(value)) continue;
-          const currentValues = Array.isArray(migratedMemory.preferences[key])
-            ? migratedMemory.preferences[key]
-            : [];
-          migratedMemory.preferences[key] = [...new Set([...currentValues, ...value])];
-        }
-      }
-
-      if (Array.isArray(legacyRecord?.memories)) {
-        const existingMemories = Array.isArray(migratedMemory.memories) ? migratedMemory.memories : [];
-        const knownMemoryIds = new Set(existingMemories.map((m) => m.id).filter(Boolean));
-        const mergedMemories = [...existingMemories];
-
-        for (const memoryItem of legacyRecord.memories) {
-          if (!memoryItem) continue;
-          if (memoryItem.id && knownMemoryIds.has(memoryItem.id)) continue;
-
-          mergedMemories.push(memoryItem);
-          if (memoryItem.id) knownMemoryIds.add(memoryItem.id);
-        }
-
-        migratedMemory.memories = mergedMemories;
-      }
-
-      if (legacyRecord?.privacy) {
-        migratedMemory.privacy = migratedMemory.privacy || {};
-        for (const [key, value] of Object.entries(legacyRecord.privacy)) {
-          if (typeof value === 'boolean' && value === false) {
-            migratedMemory.privacy[key] = false;
-          } else if (migratedMemory.privacy[key] === undefined) {
-            migratedMemory.privacy[key] = value;
-          }
-        }
-      }
-
-      if (legacyRecord?.interactionStats) {
-        migratedMemory.interactionStats = migratedMemory.interactionStats || {};
-        const baseStats = migratedMemory.interactionStats;
-        const legacyStats = legacyRecord.interactionStats;
-
-        const baseFirst = baseStats.firstInteraction ? new Date(baseStats.firstInteraction).getTime() : null;
-        const legacyFirst = legacyStats.firstInteraction ? new Date(legacyStats.firstInteraction).getTime() : null;
-        if (legacyFirst && (!baseFirst || legacyFirst < baseFirst)) {
-          baseStats.firstInteraction = new Date(legacyFirst);
-        }
-
-        const baseLast = baseStats.lastInteraction ? new Date(baseStats.lastInteraction).getTime() : null;
-        const legacyLast = legacyStats.lastInteraction ? new Date(legacyStats.lastInteraction).getTime() : null;
-        if (legacyLast && (!baseLast || legacyLast > baseLast)) {
-          baseStats.lastInteraction = new Date(legacyLast);
-        }
-
-        if (typeof legacyStats.totalMessages === 'number') {
-          baseStats.totalMessages = Math.max(Number(baseStats.totalMessages || 0), legacyStats.totalMessages);
-        }
-
-        if (typeof legacyStats.totalConversations === 'number') {
-          baseStats.totalConversations = Math.max(Number(baseStats.totalConversations || 0), legacyStats.totalConversations);
-        }
-      }
-    }
-
-    const legacyUserIds = [...new Set(legacyCandidates.map((record) => record.userId).filter(Boolean))];
-
-    migratedMemory.userId = userId;
-    migratedMemory.lastUpdated = new Date();
-
-    await collection.replaceOne(
-      { userId },
-      this._encryptPII(migratedMemory),
-      { upsert: true }
-    );
-
-    await collection.deleteMany({ userId: { $regex: legacyUserRegex } });
-
-    logger.info('MEMORY_SERVICE', `Migrated legacy memory keys ${legacyUserIds.join(', ')} -> ${userId}`);
-    return migratedMemory;
-  }
-
   /**
    * Mã hóa các trường nhạy cảm trong đối tượng bộ nhớ trước khi lưu.
    */
@@ -259,12 +130,8 @@ class MemoryService {
       let memory = await collection.findOne({ userId });
 
       if (!memory) {
-        memory = await this._migrateLegacyMemoryIfNeeded(collection, userId);
-
-        if (!memory) {
-          memory = this.getDefaultMemoryStructure(userId);
-          await collection.insertOne(this._encryptPII(memory));
-        }
+        memory = this.getDefaultMemoryStructure(userId);
+        await collection.insertOne(this._encryptPII(memory));
       } else {
         memory = this._decryptPII(memory);
       }
