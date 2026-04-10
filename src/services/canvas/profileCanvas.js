@@ -13,11 +13,15 @@ async function generateProfileCard(data) {
         .setUser(user.id)
         .setBorder(theme);
 
-    const activity = member?.presence?.activities?.[0];
+    const activities = member?.presence?.activities || [];
+    const activity = activities.find(a => a.type !== 4) || activities[0] || null;
     const largeImage = activity?.assets?.largeImageURL?.({ extension: 'png', size: 512 }) || null;
 
     if (activity) {
+        logger.info('PROFILE_CANVAS', `Activity found: type=${activity.type}, name=${activity.name}`);
         profileCard.setActivity({ activity, largeImage });
+    } else {
+        logger.info('PROFILE_CANVAS', `No activity for user ${user.id} (presence: ${member?.presence ? 'exists' : 'null'})`);
     }
 
     try {

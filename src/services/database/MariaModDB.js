@@ -477,6 +477,34 @@ class MariaModDB {
         }
     }
 
+    async deleteGuildData(guildId) {
+        try {
+            const guildScopedTables = [
+                'guild_settings',
+                'server_prefixes',
+                'command_toggles',
+                'mod_settings',
+                'mod_warnings',
+                'mod_logs',
+                'user_levels',
+                'lvoice_config',
+                'lvoice_active'
+            ];
+
+            for (const tableName of guildScopedTables) {
+                await mariaClient.query(
+                    `DELETE FROM ${tableName} WHERE guild_id = ?`,
+                    [guildId]
+                );
+            }
+
+            return true;
+        } catch (error) {
+            logger.error('MARIADB', `Error deleting guild data for ${guildId}:`, error);
+            return false;
+        }
+    }
+
     async toggleXp(guildId, isActive) {
         return this.updateGuildSettings(guildId, { 'xp.isActive': isActive });
     }

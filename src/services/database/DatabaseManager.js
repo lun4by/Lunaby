@@ -1,9 +1,7 @@
 const mongoClient = require('./mongoClient');
 const logger = require('../../utils/logger');
 const ConversationDB = require('./ConversationDB');
-const UserProfileDB = require('./UserProfileDB');
 const MemoryService = require('../ai/MemoryService');
-const QuotaService = require('../user/QuotaService');
 const { COLLECTIONS } = require('../../config/constants');
 
 class DatabaseManager {
@@ -158,20 +156,9 @@ class DatabaseManager {
   }
 
   async initializeProfiles() {
-    const db = mongoClient.getDb();
-
-    await this.ensureCollection(db, COLLECTIONS.USER_PROFILES);
-
-    const indexNames = await this.getIndexNames(db.collection(COLLECTIONS.USER_PROFILES));
-    if (indexNames.includes('userId_1')) {
-      await this.safeDropIndex(db.collection(COLLECTIONS.USER_PROFILES), 'userId_1');
-    }
-
-    logger.info('DATABASE', 'User profile system ready');
-
     try {
       await MemoryService.initializeMemoryCollection();
-      logger.debug('DATABASE', 'Memory system ready');
+      logger.info('DATABASE', 'Personalization memory system ready');
     } catch (e) {
       logger.error('DATABASE', 'Error initializing Memory System:', e.message);
     }

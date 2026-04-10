@@ -7,12 +7,12 @@ const emojis = require('../../config/emojis');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('profile')
-    .setDescription('Hiển thị profile card với XP, level, rank và thông tin cá nhân')
+    .setDescription('Hiển thị profile card Discord với thông tin cá nhân và hoạt động')
     .addUserOption(option =>
       option.setName('user')
-        .setDescription('Người dùng mà bạn muốn xem profile')
+        .setDescription('Người dùng mà bạn muốn xem profile Discord')
         .setRequired(false)),
-  prefix: { name: 'profile', aliases: ['p'], description: 'Xem profile' },
+  prefix: { name: 'profile', aliases: ['p'], description: 'Xem profile Discord' },
   cooldown: 5,
 
   async execute(interaction) {

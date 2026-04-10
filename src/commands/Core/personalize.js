@@ -33,9 +33,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        const userId = interaction.guildId
-            ? `${interaction.guildId}-${interaction.user.id}`
-            : `DM-${interaction.user.id}`;
+        const userId = interaction.user.id;
 
         const memory = await MemoryService.getUserMemory(userId);
 

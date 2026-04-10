@@ -1,5 +1,4 @@
 const storageDB = require('../services/database/storagedb.js');
-const ProfileDB = require('../services/database/profiledb.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 const logger = require('../utils/logger.js');
 
@@ -74,15 +73,6 @@ async function handleResetdbInteraction(interaction) {
           throw new Error('Không thể reset dữ liệu user trong MariaDB');
         }
 
-        let legacyDeletedCount = 0;
-        try {
-          const profileCollection = await ProfileDB.getProfileCollection();
-          const legacyResult = await profileCollection.deleteMany({});
-          legacyDeletedCount = Number(legacyResult?.deletedCount || 0);
-        } catch (legacyError) {
-          logger.warn('RESET', 'Failed to delete legacy Mongo user profiles:', legacyError);
-        }
-
         await interaction.editReply({
           content:
             '**Đã reset user profiles thành công!**\n\n' +
@@ -90,14 +80,13 @@ async function handleResetdbInteraction(interaction) {
             `> User levels MariaDB: ${mariaResult.deleted.user_levels || 0}\n` +
             `> User economy MariaDB: ${mariaResult.deleted.user_economy || 0}\n` +
             `> User consents MariaDB: ${mariaResult.deleted.user_consents || 0}\n` +
-            `> Legacy Mongo user profiles: ${legacyDeletedCount}\n` +
             '> Tất cả XP, level, achievements và consent đã bị xóa\n' +
             '> Users sẽ phải đồng ý consent lại\n' +
             '> Hệ thống đã sẵn sàng cho users mới\n\n' +
             '**User profiles đã được reset hoàn toàn!**',
         });
 
-        logger.info('RESET', `Reset user profile data: ${JSON.stringify(mariaResult.deleted)}, legacyMongo=${legacyDeletedCount}`);
+        logger.info('RESET', `Đã reset user profile data: ${JSON.stringify(mariaResult.deleted)}`);
       } catch (error) {
         await interaction.editReply({
           content:

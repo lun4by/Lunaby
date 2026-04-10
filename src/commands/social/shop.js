@@ -3,8 +3,6 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
 } = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
 const QuotaService = require('../../services/user/QuotaService');
@@ -18,16 +16,6 @@ const {
 
 const SHOP_TIMEOUT_MS = 120000;
 const ITEMS_PER_PAGE = 6;
-const SHOP_CATEGORIES = {
-  quota: {
-    labelKey: 'commands.shop.cat_quota_label',
-    descriptionKey: 'commands.shop.cat_quota_desc',
-  },
-  coin: {
-    labelKey: 'commands.shop.cat_coin_label',
-    descriptionKey: 'commands.shop.cat_coin_desc',
-  },
-};
 
 const SHOP_ITEMS = [
   { id: 'chat_1', type: 'chat', amount: 1, label: 'Pro x1', style: ButtonStyle.Primary },
@@ -64,12 +52,27 @@ function getItemCost(item) {
   return item.amount * getUsageConfig(item.type).costPerUnit;
 }
 
-function getShopItems(category) {
-  return category === 'quota' ? SHOP_ITEMS : [];
+function getItemState(item, credits, stats) {
+  const usageConfig = getUsageConfig(item.type);
+  const totalCost = getItemCost(item);
+  const currentLimit = stats.limits[usageConfig.quotaField];
+  const isUnlimited = currentLimit === -1;
+  const isAffordable = credits >= totalCost;
+
+  return {
+    usageConfig,
+    totalCost,
+    isUnlimited,
+    isAffordable,
+  };
 }
 
-function getTotalPages(category) {
-  const items = getShopItems(category);
+function getShopItems() {
+  return SHOP_ITEMS;
+}
+
+function getTotalPages() {
+  const items = getShopItems();
   return Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
 }
 
@@ -81,8 +84,8 @@ function chunkArray(items, size) {
   return chunks;
 }
 
-function getPageItems(category, page) {
-  const items = getShopItems(category);
+function getPageItems(page) {
+  const items = getShopItems();
   const start = page * ITEMS_PER_PAGE;
   return items.slice(start, start + ITEMS_PER_PAGE);
 }
@@ -92,124 +95,102 @@ function getLimitText(limit, remaining, interaction) {
     return interaction.t('commands.shop.limit_unlimited');
   }
 
-  return interaction.t('commands.shop.limit_text', { limit: formatNumber(limit), remaining: formatNumber(remaining) });
+  return `${formatNumber(limit)} lượt - còn ${formatNumber(remaining)} lượt`;
 }
 
-function buildShopEmbed(user, credits, stats, state, interaction) {
-  const categoryMeta = SHOP_CATEGORIES[state.category];
+function formatShopItemLine(item, credits, stats) {
+  const itemState = getItemState(item, credits, stats);
+  const statusText = itemState.isUnlimited
+    ? 'Đã vô hạn'
+    : itemState.isAffordable
+      ? 'Mua được'
+      : 'Thiếu credits';
+
+  return `• **${item.label}** - **${formatNumber(itemState.totalCost)}** credits\n` +
+    `+${formatNumber(item.amount)} lượt - ${statusText}`;
+}
+
+function buildShopSection(items, type, credits, stats) {
+  const filteredItems = items.filter((item) => item.type === type);
+
+  if (filteredItems.length === 0) {
+    return 'Không có gói trong trang này.';
+  }
+
+  return filteredItems
+    .map((item) => formatShopItemLine(item, credits, stats))
+    .join('\n\n');
+}
+
+function buildShopEmbed(user, credits, stats, state) {
   const resetTimestamp = Math.floor(stats.nextReset / 1000);
-  const totalPages = getTotalPages(state.category);
+  const totalPages = getTotalPages();
 
   const embed = createLunabyEmbed()
-    .setTitle(interaction.t('commands.shop.title'))
+    .setTitle('Lunaby Quota Shop')
     .setAuthor({
       name: user.globalName || user.username,
       iconURL: user.displayAvatarURL({ size: 128 }),
     })
     .setDescription(
-      interaction.t('commands.shop.category_label', { label: interaction.t(categoryMeta.labelKey) }) +
-      interaction.t('commands.shop.balance', { amount: formatNumber(credits) }) +
-      interaction.t('commands.shop.payment_method') +
-      interaction.t('commands.shop.reset_quota', { timestamp: resetTimestamp })
+      `Quản lý lượt sử dụng bằng credits.\n` +
+      `Reset quota sau: <t:${resetTimestamp}:R>`
     )
     .addFields(
       {
-        name: interaction.t('commands.shop.quota_pro'),
-        value: getLimitText(stats.limits.period, stats.remaining.messages, interaction),
-        inline: true,
+        name: 'Tổng quan',
+        value:
+          `Số dư: **${formatNumber(credits)}** credits\n` +
+          `Trang hiện tại: **${state.page + 1}/${totalPages}**\n` +
+          `Giá Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt\n` +
+          `Giá Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
       },
       {
-        name: interaction.t('commands.shop.quota_vision'),
-        value: getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction),
-        inline: true,
+        name: 'Hạn mức hiện tại',
+        value:
+          `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages)}\n` +
+          `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images)}`,
       },
-      {
-        name: interaction.t('commands.shop.page'),
-        value: `${state.page + 1}/${totalPages}`,
-        inline: true,
-      }
     )
-    .setFooter({ text: interaction.t('commands.shop.footer') });
+    .setFooter({ text: 'Dùng < > để chuyển trang, Làm mới để cập nhật số dư mới nhất' });
 
-  if (state.category === 'quota') {
-    const pageItems = getPageItems(state.category, state.page);
-    const listing = pageItems
-      .map((item) => {
-        const usageConfig = getUsageConfig(item.type, interaction);
-        return interaction.t('commands.shop.quotaItemText', {
-            label: item.label,
-            amount: formatNumber(item.amount),
-            productName: usageConfig.productName,
-            cost: formatNumber(getItemCost(item))
-        });
-      })
-      .join('\n');
+  const pageItems = getPageItems(state.page);
+  const proSection = buildShopSection(pageItems, 'chat', credits, stats);
+  const visionSection = buildShopSection(pageItems, 'image', credits, stats);
 
-    embed.addFields({
-      name: interaction.t('commands.shop.available_packages'),
-      value: listing || interaction.t('commands.shop.no_packages'),
-    });
-  } else {
-    embed.addFields({
-      name: interaction.t('commands.shop.coin_shop_name'),
-      value: interaction.t('commands.shop.coin_shop_desc'),
-    });
-  }
+  embed.addFields(
+    {
+      name: 'Gói Lunaby Pro',
+      value: proSection,
+      inline: false,
+    },
+    {
+      name: 'Gói Lunaby Vision',
+      value: visionSection,
+      inline: false,
+    }
+  );
 
   return embed;
 }
 
-function buildCategoryRow(state, interaction, disabled = false) {
-  const select = new StringSelectMenuBuilder()
-    .setCustomId('shop_category')
-    .setPlaceholder(interaction.t('commands.shop.select_shop'))
-    .setDisabled(disabled)
-    .addOptions(
-      Object.entries(SHOP_CATEGORIES).map(([value, meta]) =>
-        new StringSelectMenuOptionBuilder()
-          .setLabel(interaction.t(meta.labelKey))
-          .setDescription(interaction.t(meta.descriptionKey))
-          .setValue(value)
-          .setDefault(value === state.category)
-      )
-    );
-
-  return new ActionRowBuilder().addComponents(select);
-}
-
-function buildItemRows(state, credits, stats, interaction, disabled = false) {
-  if (state.category !== 'quota') {
-    return [
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('shop_placeholder')
-          .setLabel(interaction.t('commands.shop.btn_coin_shop'))
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true)
-      ),
-    ];
-  }
-
+function buildItemRows(state, credits, stats, disabled = false) {
   const rows = [];
-  const pageItems = getPageItems(state.category, state.page);
+  const pageItems = getPageItems(state.page);
   const buttonGroups = chunkArray(pageItems, 3);
 
   for (const group of buttonGroups) {
     const row = new ActionRowBuilder();
 
     for (const item of group) {
-      const usageConfig = getUsageConfig(item.type, interaction);
-      const currentLimit = stats.limits[usageConfig.quotaField];
-      const isUnlimited = currentLimit === -1;
-      const totalCost = getItemCost(item);
-      const isAffordable = credits >= totalCost;
+      const itemState = getItemState(item, credits, stats);
 
       row.addComponents(
         new ButtonBuilder()
           .setCustomId(`shop_buy_${item.id}`)
-          .setLabel(`${item.label} (${formatNumber(totalCost)})`)
+          .setLabel(`${item.label} (${formatNumber(itemState.totalCost)})`)
           .setStyle(item.style)
-          .setDisabled(disabled || isUnlimited || !isAffordable)
+          .setDisabled(disabled || itemState.isUnlimited || !itemState.isAffordable)
       );
     }
 
@@ -219,8 +200,8 @@ function buildItemRows(state, credits, stats, interaction, disabled = false) {
   return rows;
 }
 
-function buildNavigationRow(state, interaction, disabled = false) {
-  const totalPages = getTotalPages(state.category);
+function buildNavigationRow(state, disabled = false) {
+  const totalPages = getTotalPages();
   const singlePage = totalPages <= 1;
 
   return new ActionRowBuilder().addComponents(
@@ -246,9 +227,8 @@ function buildShopMessage(user, credits, stats, state, interaction, disabled = f
   return {
     embeds: [buildShopEmbed(user, credits, stats, state, interaction)],
     components: [
-      buildCategoryRow(state, interaction, disabled),
-      ...buildItemRows(state, credits, stats, interaction, disabled),
-      buildNavigationRow(state, interaction, disabled),
+      ...buildItemRows(state, credits, stats, disabled),
+      buildNavigationRow(state, disabled),
     ],
   };
 }
@@ -259,9 +239,8 @@ async function loadShopState(user, state) {
     QuotaService.getUserMessageStats(user.id),
   ]);
 
-  const totalPages = getTotalPages(state.category);
+  const totalPages = getTotalPages();
   const nextState = {
-    category: state.category,
     page: Math.min(Math.max(state.page, 0), totalPages - 1),
   };
 
@@ -308,18 +287,18 @@ async function purchaseItem(userId, item, interaction) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('shop')
-    .setDescription('Mở cửa hàng để mua quota bằng credits'),
+    .setDescription('Mở Quota Shop để mua thêm lượt sử dụng bằng credits'),
 
   prefix: {
     name: 'shop',
     aliases: ['buyquota', 'muaturn', 'buyturn', 'muquota'],
-    description: 'Mở cửa hàng quota của Lunaby',
+    description: 'Mở Quota Shop của Lunaby',
   },
   cooldown: 5,
 
   async execute(interaction) {
     const user = interaction.user;
-    const currentState = { category: 'quota', page: 0 };
+    const currentState = { page: 0 };
 
     try {
       const initialData = await loadShopState(user, currentState);
@@ -344,25 +323,6 @@ module.exports = {
         }
 
         try {
-          if (componentInteraction.isStringSelectMenu()) {
-            if (componentInteraction.customId !== 'shop_category') {
-              return;
-            }
-
-            currentState.category = componentInteraction.values[0];
-            currentState.page = 0;
-
-            const refreshedData = await loadShopState(user, currentState);
-            await componentInteraction.update(buildShopMessage(
-              user,
-              refreshedData.credits,
-              refreshedData.quotaStats,
-              refreshedData.state,
-              interaction
-            ));
-            return;
-          }
-
           if (!componentInteraction.isButton()) {
             return;
           }
@@ -381,7 +341,7 @@ module.exports = {
           }
 
           if (componentInteraction.customId === 'shop_next') {
-            currentState.page = Math.min(getTotalPages(currentState.category) - 1, currentState.page + 1);
+            currentState.page = Math.min(getTotalPages() - 1, currentState.page + 1);
             const refreshedData = await loadShopState(user, currentState);
             await componentInteraction.update(buildShopMessage(
               user,
@@ -421,8 +381,7 @@ module.exports = {
               credits: purchaseResult.creditsAfter,
               quotaStats: purchaseResult.quotaAfter,
               state: {
-                category: currentState.category,
-                page: Math.min(currentState.page, getTotalPages(currentState.category) - 1),
+                page: Math.min(currentState.page, getTotalPages() - 1),
               },
             };
 

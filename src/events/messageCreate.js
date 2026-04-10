@@ -17,6 +17,7 @@ function setupMessageCreateEvent(client) {
   client.on(Events.MessageCreate, async (message) => {
     try {
       if (message.author.bot) return;
+      if (!message.guild) return;
 
       let locale = 'vi';
       if (message.guildId) {

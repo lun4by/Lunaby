@@ -53,10 +53,8 @@ class ConversationService {
   extractUserId(message) {
     if (!message?.author?.id) return DEFAULT_USER_ID;
 
-    const base = message.author.id;
-    if (message.channel?.type === "DM") return `DM-${base}`;
-    if (message.guildId) return `${message.guildId}-${base}`;
-    return base;
+    // Use one global user ID across all guilds/DM so memory and history stay synced.
+    return message.author.id;
   }
 
   async enrichPromptWithMemory(originalPrompt, userId) {

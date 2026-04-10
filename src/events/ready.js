@@ -110,8 +110,8 @@ async function initializeReadyState(client, loadCommands) {
 
   await Promise.all([
     runStartupStep('Conversation history init', () => storageDB.initializeConversationHistory(), 'conversationHistory'),
-    runStartupStep('Profile system init', () => storageDB.initializeProfiles(), 'profiles'),
-
+    runStartupStep('Personalization memory init', () => storageDB.initializeProfiles(), 'profiles'),
+    runStartupStep('Guild profiles init', () => warmGuildProfiles(client), 'guildProfiles'),
   ]);
 
   await runStartupStep('Guild sync', () => syncAllGuilds(client));
