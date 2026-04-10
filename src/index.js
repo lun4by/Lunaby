@@ -1,5 +1,4 @@
 require("dotenv").config();
-console.clear();
 
 const {
 	Client,
@@ -15,6 +14,9 @@ const { setupMessageCreateEvent } = require("./events/messageCreate");
 const { setupVoiceStateEvent } = require("./events/voiceStateUpdate");
 const { setupGuildMemberAddEvent } = require("./events/guildMemberAdd");
 const logger = require("./utils/logger.js");
+const { initializeFileLogging } = require("./utils/logger.js");
+
+void initializeFileLogging();
 
 const client = new Client({
 	intents: [
@@ -42,7 +44,7 @@ setupGuildMemberAddEvent(client);
 startbot(client, () => loadCommands(client));
 
 process.on("unhandledRejection", (error) => {
-	logger.error("SYSTEM", "Lỗi không được xử lý:", error);
+	logger.error("SYSTEM", "Error không được xử lý:", error);
 });
 
 client.login(process.env.DISCORD_TOKEN);

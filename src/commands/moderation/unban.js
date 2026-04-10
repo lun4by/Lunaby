@@ -23,23 +23,23 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
             return interaction.reply({
-                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
+                content: `${emojis.error} ${interaction.t('system.no_permission')}`,
                 ephemeral: true,
             });
         }
 
         const userId = interaction.options.getString('userid');
-        const reason = interaction.options.getString('reason') || 'Không có lý do được cung cấp';
+        const reason = interaction.options.getString('reason') || interaction.t('commands.moderation_common.no_reason');
 
         if (!userId) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Gỡ cấm (unban): \`${prefix}unban [id_người_dùng] [lý do]\`` });
+            return (interaction.message || interaction).reply({ content: interaction.t('commands.unban.usage', { prefix }) });
         }
 
         if (!/^\d{17,19}$/.test(userId)) {
             return interaction.reply({
-                content: `${emojis.error} ID người dùng không hợp lệ. ID phải là một chuỗi số từ 17-19 chữ số.`,
+                content: `${emojis.error} ${interaction.t('commands.unban.invalid_id')}`,
                 ephemeral: true,
             });
         }
@@ -52,7 +52,7 @@ module.exports = {
 
             if (!bannedUser) {
                 return interaction.editReply({
-                    content: `${emojis.error} Không tìm thấy thành viên này trong danh sách bị cấm của server.`,
+                    content: `${emojis.error} ${interaction.t('commands.unban.not_banned')}`,
                     ephemeral: true,
                 });
             }
@@ -78,24 +78,24 @@ module.exports = {
             await interaction.editReply({ content: aiResponse });
 
             const logEmbed = createModActionEmbed({
-                title: `🔓 Đã gỡ cấm thành viên (Unban)`,
-                description: `Đã gỡ cấm ${user.tag} khỏi server.`,
+                title: interaction.t('commands.unban.log_title'),
+                description: interaction.t('commands.unban.log_desc', { tag: user.tag }),
                 color: 0x00ff00,
                 fields: [
-                    { name: '👤 Người dùng', value: `${user.tag}`, inline: true },
-                    { name: '🆔 ID', value: user.id, inline: true },
-                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                    { name: '📝 Lý do', value: reason, inline: false },
-                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
+                    { name: interaction.t('commands.moderation_common.log_field_user'), value: `${user.tag}`, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_id'), value: user.id, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_mod'), value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_reason'), value: reason, inline: false },
+                    { name: interaction.t('commands.moderation_common.log_field_time'), value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
                 ],
-                footer: `Server: ${interaction.guild.name}`,
+                footer: interaction.t('commands.moderation_common.log_footer', { guild: interaction.guild.name }),
             });
 
             await sendModLog(interaction.guild, logEmbed, true);
         } catch (error) {
-            logger.error('MODERATION', 'Lỗi khi unban người dùng:', error);
+            logger.error('MODERATION', 'Error unbanning user:', error);
             await interaction.editReply({
-                content: `${emojis.error} Đã xảy ra lỗi khi gỡ cấm người dùng: ${error.message}`,
+                content: `${emojis.error} ${interaction.t('commands.unban.error_unban', { error: error.message })}`,
                 ephemeral: true,
             });
         }

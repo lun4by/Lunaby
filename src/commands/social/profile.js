@@ -24,7 +24,7 @@ module.exports = {
 
       if (targetUser.bot) {
         return interaction.editReply({
-          content: `${emojis.error} Bot không có profile!`,
+          content: `${emojis.error} ${interaction.t('commands.profile.no_bot')}`,
           ephemeral: true
         });
       }
@@ -43,7 +43,7 @@ module.exports = {
     } catch (error) {
       logger.error('PROFILE', 'Error creating profile card:', error);
       await interaction.editReply({
-        content: `${emojis.error} Có lỗi xảy ra khi tạo profile card!`,
+        content: `${emojis.error} ${interaction.t('commands.profile.error')}`,
         ephemeral: true
       });
     }

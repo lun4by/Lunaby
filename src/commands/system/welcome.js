@@ -37,8 +37,8 @@ module.exports = {
 
         if (!subCommand) {
             const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Bật: \`${prefix}welcome set #channel [tin nhắn]\`\n- Tắt: \`${prefix}welcome disable\`` });
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
+            return (interaction.message || interaction).reply({ content: interaction.t('commands.welcome.usage', { prefix }) });
         }
 
         if (isSlash && !interaction.deferred && !interaction.replied) {
@@ -53,7 +53,7 @@ module.exports = {
                 await MariaModDB.updateGuildSettings(guildId, {
                     'greeter.welcome.isEnabled': false
                 });
-                return replyFunc({ content: `${emojis.success} Đã tắt tính năng thông báo chào mừng thành viên mới.` });
+                return replyFunc({ content: `${emojis.success} ${interaction.t('commands.welcome.disable_success')}` });
             }
 
             if (subCommand === 'set') {
@@ -76,8 +76,8 @@ module.exports = {
 
                 if (!channel || !message) {
                     const PrefixDB = require('../../services/database/PrefixDB');
-                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-                    return replyFunc({ content: `Vui lòng cung cấp kênh và lời chào mừng hợp lệ.\nVí dụ: \`${prefix}welcome set #welcome Chào mừng {user} đến với {server}!\``, ephemeral: true });
+                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
+                    return replyFunc({ content: interaction.t('commands.welcome.no_channel', { prefix }), ephemeral: true });
                 }
 
                 await MariaModDB.updateGuildSettings(guildId, {
@@ -86,11 +86,11 @@ module.exports = {
                     'greeter.welcome.message': message
                 });
 
-                return replyFunc({ content: `${emojis.success} Đã thiết lập thành công thông báo chào mừng tại kênh <#${channel.id}>.\nNội dung: \`${message}\`` });
+                return replyFunc({ content: `${emojis.success} ${interaction.t('commands.welcome.setup_success', { channelId: channel.id, message })}` });
             }
         } catch (error) {
             logger.error('SYSTEM', 'Error setting welcome:', error);
-            return replyFunc({ content: `${emojis.error} Đã có lỗi xảy ra khi lưu thiết lập chào mừng.`, ephemeral: true });
+            return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     }
 };

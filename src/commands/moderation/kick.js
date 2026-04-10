@@ -24,7 +24,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.KickMembers)) {
             return interaction.reply({
-                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
+                content: `${emojis.error} ${interaction.t('system.no_permission')}`,
                 ephemeral: true,
             });
         }
@@ -35,21 +35,21 @@ module.exports = {
         if (!targetUser) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Đuổi thành viên (kick): \`${prefix}kick @user [lý do]\`` });
+            return (interaction.message || interaction).reply({ content: interaction.t('commands.kick.usage', { prefix }) });
         }
 
         if (!targetMember) {
             return interaction.reply({
-                content: `${emojis.error} Không tìm thấy thành viên này trong server!`,
+                content: `${emojis.error} ${interaction.t('commands.moderation_common.user_not_found')}`,
                 ephemeral: true,
             });
         }
 
-        const reason = interaction.options.getString('reason')?.trim() || 'Không có lý do cụ thể';
+        const reason = interaction.options.getString('reason')?.trim() || interaction.t('commands.moderation_common.no_reason');
 
         if (!targetMember.kickable) {
             return interaction.reply({
-                content: `${emojis.error} Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!`,
+                content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
                 ephemeral: true,
             });
         }
@@ -76,24 +76,24 @@ module.exports = {
             await interaction.editReply({ content: aiResponse });
 
             const logEmbed = createModActionEmbed({
-                title: '👢 Đã đuổi thành viên (Kick)',
-                description: `Đã đuổi ${targetUser.tag} khỏi server.`,
+                title: interaction.t('commands.kick.log_title'),
+                description: interaction.t('commands.kick.log_desc', { tag: targetUser.tag }),
                 color: 0xffa500,
                 fields: [
-                    { name: '👤 Người dùng', value: targetUser.tag, inline: true },
-                    { name: '🆔 ID', value: targetUser.id, inline: true },
-                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                    { name: '📝 Lý do', value: reason, inline: false },
-                    { name: '📅 Thời gian', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
+                    { name: interaction.t('commands.moderation_common.log_field_user'), value: targetUser.tag, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_id'), value: targetUser.id, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_mod'), value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_reason'), value: reason, inline: false },
+                    { name: interaction.t('commands.moderation_common.log_field_time'), value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
                 ],
-                footer: `Server: ${interaction.guild.name}`,
+                footer: interaction.t('commands.moderation_common.log_footer', { guild: interaction.guild.name }),
             });
 
             await sendModLog(interaction.guild, logEmbed, true);
         } catch (error) {
-            logger.error('MODERATION', `Lỗi khi kick ${targetUser.tag}: ${error.message}`);
+            logger.error('MODERATION', `Error kicking ${targetUser.tag}: ${error.message}`);
             await interaction.editReply({
-                content: `${emojis.error} Đã xảy ra lỗi khi đuổi người dùng: ${error.message}`,
+                content: `${emojis.error} ${interaction.t('commands.kick.error_kick', { error: error.message })}`,
                 ephemeral: true
             });
         }

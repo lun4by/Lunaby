@@ -14,12 +14,10 @@ async function handleImageRequest(message, content, requestMatch) {
 
     const quotaCheck = await QuotaService.canUseImages(globalUserId, 1);
     if (!quotaCheck.allowed) {
-      const embed = createLunabyEmbed()
-        .setTitle(`Hết quyền sử dụng`)
-        .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** Lunaby Vision trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
-        .setColor(0xE74C3C);
-
-      return message.reply({ embeds: [embed] }).catch(() => { });
+      if (message.t) {
+        return message.reply(message.t('system.quota_exceeded_image', { limit: quotaCheck.limit })).catch(() => { });
+      }
+      return message.reply(`Hết quyền sử dụng. Bạn đã đạt giới hạn ${quotaCheck.limit} lượt Lunaby Vision.`).catch(() => { });
     }
 
     const userPrompt = requestMatch && requestMatch[1] ? requestMatch[1].trim() : content;
