@@ -1,6 +1,8 @@
 module.exports = {
     success: '<:lunaby_yes:1486937949839818862>',
     error: '<:lunaby_no:1486937890016460810>',
+    statusOn: '🟢',
+    statusOff: '🔴',
     warning: '⚠️',
     info: 'ℹ️',
     categories: {
@@ -116,8 +118,6 @@ module.exports = {
         pencil: '✏️',
         search: '🔍',
         memory: '🧠',
-        statusOn: '🟢',
-        statusOff: '🔴',
         heart: '❤️',
         thought: '💭',
         stats: '📊',

@@ -109,8 +109,8 @@ function buildMainEmbed(memory, interaction) {
             { name: interaction.t('commands.personalize.field_occupation'), value: occupation, inline: true },
             { name: interaction.t('commands.personalize.field_instructions'), value: instructions.length > 80 ? instructions.substring(0, 80) + '...' : instructions, inline: true },
             { name: '\u200B', value: '\u200B' },
-            { name: interaction.t('commands.personalize.field_search'), value: searchHistory ? interaction.t('commands.personalize.status_on') : interaction.t('commands.personalize.status_off'), inline: true },
-            { name: interaction.t('commands.personalize.field_memory'), value: savedMemory ? interaction.t('commands.personalize.status_on') : interaction.t('commands.personalize.status_off'), inline: true },
+            { name: interaction.t('commands.personalize.field_search'), value: searchHistory ? `\`${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}\`` : `\`${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}\``, inline: true },
+            { name: interaction.t('commands.personalize.field_memory'), value: savedMemory ? `\`${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}\`` : `\`${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}\``, inline: true },
         )
         .setTimestamp();
 }
@@ -215,8 +215,8 @@ async function handleToggleSearch(i, userId, interaction) {
 
     const updatedMemory = await MemoryService.getUserMemory(userId);
     const statusText = newValue
-        ? interaction.t('commands.personalize.search_on')
-        : interaction.t('commands.personalize.search_off');
+        ? `${emojis.statusOn} ${interaction.t('commands.personalize.search_on')}`
+        : `${emojis.statusOff} ${interaction.t('commands.personalize.search_off')}`;
 
     const embed = new EmbedBuilder()
         .setColor(newValue ? 0x2ECC71 : 0xE74C3C)
@@ -240,8 +240,8 @@ async function handleToggleMemory(i, userId, interaction) {
 
     const updatedMemory = await MemoryService.getUserMemory(userId);
     const statusText = newValue
-        ? interaction.t('commands.personalize.memory_on')
-        : interaction.t('commands.personalize.memory_off');
+        ? `${emojis.statusOn} ${interaction.t('commands.personalize.memory_on')}`
+        : `${emojis.statusOff} ${interaction.t('commands.personalize.memory_off')}`;
 
     const embed = new EmbedBuilder()
         .setColor(newValue ? 0x2ECC71 : 0xE74C3C)
