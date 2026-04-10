@@ -60,7 +60,7 @@ class AchievementCanvas {
     } catch (error) {
       logger.warn('achievement', `Failed to load achievement image ${path.basename(imagePath)}:`, error.message);
       
-      // Fallback to default icon
+      // Fallback về icon mặc định
       const fallbackPath = path.join(ASSETS_PATH, 'lunaby-avatar.png');
       if (imagePath !== fallbackPath) {
         return this.loadImageWithCache(fallbackPath);
@@ -228,7 +228,7 @@ class AchievementCanvas {
   renderContent(ctx, data, contentX, contentY) {
     let currentY = contentY;
 
-    // Achievement Unlocked text
+    // Dòng chữ "Achievement Unlocked"
     this.setFont(ctx, 'SemiBold', 24);
     ctx.textAlign = 'left';
     ctx.fillStyle = '#DDD6FE';
@@ -308,7 +308,7 @@ class AchievementCanvas {
       
       this.renderMainCard(ctx, cardX, cardY, cardW, cardH);
 
-      // Icon achievement
+      // Icon thành tựu
       const iconSize = 160;
       const iconX = 180;
       const iconY = height/2;

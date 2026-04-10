@@ -169,7 +169,7 @@ function getCategoryMetadata(category, interaction) {
     let label = capitalizeFirstLetter(category);
     let desc = `Danh mục ${label}`;
     
-    // Default structure before trying fallback
+    // Cấu trúc mặc định trước khi thử fallback
     const keyPath = `commands.help.categories.${category}`;
     const trans = interaction.t(keyPath, { returnObjects: true });
     

@@ -386,7 +386,7 @@ class MariaModDB {
                     exceptions = r.xp_exceptions;
                 }
             } catch (e) {
-                // Ignore parsing errors and default to empty array
+                // Bỏ qua lỗi parse và mặc định dùng mảng rỗng
             }
 
             return {

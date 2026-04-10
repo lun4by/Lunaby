@@ -66,13 +66,13 @@ module.exports = {
 
             const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
 
-            // Ban the user
+            // Cấm người dùng
             await interaction.guild.members.ban(targetUser, {
                 deleteMessageDays: deleteMessageDays,
                 reason: interaction.t('commands.moderation_common.audit_log_reason', { reason, user: interaction.user.tag }),
             });
 
-            // Log the action
+            // Ghi log hành động
             await logModAction({
                 guildId: interaction.guild.id,
                 targetId: targetUser.id,

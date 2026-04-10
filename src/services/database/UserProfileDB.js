@@ -47,8 +47,8 @@ class UserProfileDB {
   }
 
   async updateUserProfile(userId, updateData) {
-    // This is a proxy for $set objects from old mongo calls. But nothing in the repo uses this specific format natively anymore except for internal things.
-    // If it's used, we will just return false or map it.
+    // Đây là lớp proxy cho object $set từ các lệnh mongo cũ. Nhưng trong repo hiện không còn phần nào dùng trực tiếp định dạng này ngoài một số luồng nội bộ.
+    // Nếu vẫn có chỗ gọi, hàm này sẽ tạm trả về false hoặc map lại dữ liệu.
     logger.warn('mariadb_wrapper', 'updateUserProfile is deprecated through UserProfileDB. Use MariaModDB directly instead.');
     return false;
   }

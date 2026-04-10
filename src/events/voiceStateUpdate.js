@@ -139,7 +139,7 @@ async function handleVoiceMasterJoin(newState, member) {
 
             const currentChannelId = member.voice?.channelId;
             if (currentChannelId !== newState.channelId) {
-                return; // User escaped before cooldown finished
+                return; // User đã rời trước khi cooldown kết thúc
             }
         } catch (error) {
             await new Promise(resolve => setTimeout(resolve, timeLeft));
@@ -175,7 +175,7 @@ async function handleVoiceMasterJoin(newState, member) {
             ],
         });
 
-        // Move user vào kênh tạm
+        // Chuyển user vào kênh tạm
         await member.voice.setChannel(tempChannel);
 
         // Lưu vào cache + DB
@@ -230,7 +230,7 @@ function setupVoiceStateEvent(client) {
 
             if (newChannel && creatorChannels.has(newChannel.id)) {
                 await handleVoiceMasterJoin(newState, member);
-                // Sau khi user vào creator channel, LVoice sẽ move họ sang kênh tạm.
+                // Sau khi user vào creator channel, LVoice sẽ chuyển họ sang kênh tạm.
                 // Cần đọc lại channel hiện tại để voicewelcome gửi đúng vào kênh vừa tạo.
                 newChannel = member.voice?.channel || newChannel;
             }

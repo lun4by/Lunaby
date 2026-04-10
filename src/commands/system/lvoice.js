@@ -42,7 +42,7 @@ module.exports = {
             subcommand = null;
         }
 
-        // Prefix fallback: lấy args[0] làm subcommand
+        // Fallback cho prefix: lấy args[0] làm subcommand
         if (!subcommand && interaction.args?.length > 0) {
             subcommand = interaction.args[0]?.toLowerCase();
         }
@@ -70,7 +70,7 @@ async function handleSetup(interaction) {
         || (interaction.args?.length > 1 ? interaction.args.slice(1).join(' ') : null)
         || 'Tạo Phòng Riêng';
 
-    // Kiểm tra xem đã setup chưa
+    // Kiểm tra xem đã thiết lập chưa
     const existing = await MariaModDB.getLVoiceConfig(guild.id);
     if (existing) {
         return interaction.editReply({
@@ -152,7 +152,7 @@ async function handleDisable(interaction) {
         try {
             const creatorChannel = await guild.channels.fetch(config.creatorChannelId);
             if (creatorChannel) await creatorChannel.delete('LVoice disabled');
-        } catch (e) { /* channel may already be deleted */ }
+        } catch (e) { /* channel có thể đã bị xóa trước đó */ }
 
         // Xóa category (nếu trống)
         try {
@@ -160,7 +160,7 @@ async function handleDisable(interaction) {
             if (category && category.children.cache.size === 0) {
                 await category.delete('LVoice disabled');
             }
-        } catch (e) { /* category may already be deleted */ }
+        } catch (e) { /* category có thể đã bị xóa trước đó */ }
 
         // Xóa cache
         creatorChannels.delete(config.creatorChannelId);

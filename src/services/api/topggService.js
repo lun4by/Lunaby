@@ -9,7 +9,7 @@ let webhookApp = null;
 /**
  * Khởi tạo AutoPoster để tự động gửi stats lên Top.gg
  * Yêu cầu: npm i topgg-autoposter
- * @param {import('discord.js').Client} client - Discord client
+ * @param {import('discord.js').Client} client - client Discord
  */
 async function setupAutoPoster(client) {
   const token = process.env.TOPGG_TOKEN;
@@ -43,9 +43,9 @@ async function setupAutoPoster(client) {
 }
 
 /**
- * Gửi thông báo vote đến tất cả guild đã cấu hình vote log channel
+ * Gửi thông báo vote đến tất cả guild đã cấu hình kênh vote log
  * @param {import('discord.js').Client} client
- * @param {Object} vote - Vote data từ Top.gg
+ * @param {Object} vote - Dữ liệu vote từ Top.gg
  */
 async function sendVoteNotifications(client, vote) {
   try {
@@ -96,7 +96,7 @@ async function sendVoteNotifications(client, vote) {
 /**
  * Khởi tạo Webhook listener để nhận sự kiện vote từ Top.gg
  * Yêu cầu: npm i @top-gg/sdk express
- * @param {import('discord.js').Client} client - Discord client
+ * @param {import('discord.js').Client} client - client Discord
  * @param {Function} [onVote] - Callback khi có người vote (tùy chọn)
  */
 async function setupWebhook(client, onVote) {
@@ -132,7 +132,7 @@ async function setupWebhook(client, onVote) {
       }
     }));
 
-    // Health check endpoint
+    // Endpoint kiểm tra tình trạng
     app.get('/health', (req, res) => {
       res.status(200).json({ status: 'ok', service: 'topgg-webhook' });
     });
@@ -165,7 +165,7 @@ async function setupWebhook(client, onVote) {
 
 /**
  * Khởi tạo toàn bộ dịch vụ Top.gg (AutoPoster + Webhook)
- * @param {import('discord.js').Client} client - Discord client
+ * @param {import('discord.js').Client} client - client Discord
  * @param {Function} [onVote] - Callback khi có người vote (tùy chọn)
  */
 async function initializeTopgg(client, onVote) {

@@ -75,7 +75,7 @@ module.exports = {
                     components: [buildLanguageRow(currentLang, true)],
                 });
             } catch {
-                // Ignore cleanup failures after timeout.
+                // Bỏ qua lỗi dọn dẹp sau khi hết timeout.
             }
         });
     }

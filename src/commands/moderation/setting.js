@@ -118,7 +118,7 @@ module.exports = {
                         if (!i.replied && !i.deferred) {
                             await i.reply({ content: `${emojis.error} ${i.t('commands.setting.general_error')}`, ephemeral: true });
                         }
-                    } catch (e) { /* ignore */ }
+                    } catch (e) { /* bỏ qua */ }
                 }
             });
 
@@ -143,7 +143,7 @@ module.exports = {
                 } else {
                     await interaction.reply({ content: `${emojis.error} ${interaction.t('commands.setting.load_error')}` });
                 }
-            } catch (e) { /* ignore */ }
+            } catch (e) { /* bỏ qua */ }
         }
     }
 };
@@ -169,7 +169,7 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
 
     const components = [];
 
-    // Row 1: The Page Selector
+    // Hàng 1: Bộ chọn trang
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('setting_page_select')
         .setPlaceholder(t('commands.setting.menu_placeholder'))
@@ -207,7 +207,7 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
                 { name: t('commands.setting.field_monitor'), value: monitorLogs ? `${emojis.success} ${t('commands.setting.short_on')}` : `${emojis.error} ${t('commands.setting.short_off')}`, inline: true }
             );
 
-        // Row 2: Channel Select Menu
+        // Hàng 2: Menu chọn channel (chỉ hiển thị khi đã có channel log)
         const channelSelect = new ChannelSelectMenuBuilder()
             .setCustomId('setting_log_channel')
             .setPlaceholder(logChannelId ? t('commands.setting.channel_placeholder_change') : t('commands.setting.channel_placeholder_set'))
@@ -215,7 +215,7 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
 
         components.push(new ActionRowBuilder().addComponents(channelSelect));
 
-        // Row 3: Buttons
+        // Hàng 3: Các button
         const logBtnRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('setting_toggle_modlog')
@@ -239,9 +239,9 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
     } else {
         if (isSlash) {
             await interactionOrMessage.editReply({ embeds: [embed], components, content: '' });
-            return null; // slash command dùng interaction.fetchReply() bên ngoài
+            return null; // Lệnh slash dùng interaction.fetchReply() bên ngoài
         } else {
-            // Prefix command: reply và trả về message để tạo collector
+            // Lệnh prefix: reply và trả về message để tạo collector
             const replyTarget = interactionOrMessage.message || interactionOrMessage;
             const sent = await replyTarget.reply({ embeds: [embed], components });
             return sent;

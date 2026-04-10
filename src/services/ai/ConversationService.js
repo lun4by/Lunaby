@@ -53,7 +53,7 @@ class ConversationService {
   extractUserId(message) {
     if (!message?.author?.id) return DEFAULT_USER_ID;
 
-    // Use one global user ID across all guilds/DM so memory and history stay synced.
+    // Dùng một user ID toàn cục cho mọi guild/DM để memory và history luôn đồng bộ.
     return message.author.id;
   }
 

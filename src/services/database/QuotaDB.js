@@ -25,7 +25,7 @@ class QuotaDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
             
-            // Alter existing table to add new columns if they do not exist
+            // Sửa bảng hiện có để thêm cột mới nếu chúng chưa tồn tại
             try {
                 await mariaClient.query(`
                     ALTER TABLE user_quotas 
@@ -33,7 +33,7 @@ class QuotaDB {
                     ADD COLUMN IF NOT EXISTS total_image_usage INT DEFAULT 0, 
                     ADD COLUMN IF NOT EXISTS image_limit_period INT DEFAULT ${DEFAULT_IMAGE_LIMIT_PERIOD}
                 `);
-            } catch(e) { /* Ignore error if columns already exist (some MariaDB versions don't support IF NOT EXISTS on ALTER) */ }
+            } catch(e) { /* Bỏ qua lỗi nếu cột đã tồn tại (một số phiên bản MariaDB không hỗ trợ IF NOT EXISTS trong ALTER) */ }
             
             logger.info('mariadb', 'user_quotas table ready');
             return true;

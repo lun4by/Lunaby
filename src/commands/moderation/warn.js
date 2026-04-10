@@ -78,7 +78,7 @@ module.exports = {
                 });
             }
 
-            // Add mod log entry
+            // Thêm bản ghi mod log
             await MariaModDB.addModLog(
                 interaction.guild.id,
                 targetUser.id,

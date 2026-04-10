@@ -8,17 +8,17 @@ const logger = require('../../utils/logger');
 
 const SRC_DIR = path.join(__dirname, '../..');
 
-// Directories to exclude from translation scan.
+// Các thư mục cần loại.
 const SCAN_EXCLUDED_DIRS = [
     path.join(SRC_DIR, 'locales'),
     path.join(SRC_DIR, 'services', 'i18n'),
 ];
 
-// Matches: interaction.t('key'), message.t('key'), i.t('key'), interactionOrMessage?.t('key')
-// Captures static string keys only (ignores template literals with ${} interpolation)
+// Khớp các dạng: interaction.t('key'), message.t('key'), i.t('key'), interactionOrMessage?.t('key')
+// Chỉ lấy khóa chuỗi tĩnh (bỏ qua template literal có nội suy ${})
 const TRANSLATION_KEY_REGEX = /\b[A-Za-z_$][\w$]*(?:\?\.|\.)t\(\s*['"]([\w.]+)['"]/g;
 
-// Available locale resources for verification
+// Tài nguyên locale dùng cho bước kiểm tra.
 const LOCALES = { vi, en };
 
 class I18nManager {
@@ -38,7 +38,7 @@ class I18nManager {
                     en: { translation: en },
                 },
                 interpolation: {
-                    escapeValue: false, // Not needed for Discord (used in HTML/React for XSS prevention)
+                    escapeValue: false, // Không cần cho Discord.
                 },
             });
             this.verifyTranslationsOnStart();
@@ -63,12 +63,12 @@ class I18nManager {
             return;
         }
 
-        // Report missing keys (key used in code but absent in locale file)
+        // Báo cáo khóa bị thiếu (được dùng trong code nhưng không có trong file locale)
         for (const item of results.missingKeys) {
             logger.warn('i18n', `Missing key [${item.locale.toUpperCase()}]: "${item.key}" — used in ${item.files.join(', ')}`);
         }
 
-        // Report locale structure mismatches (key exists in one locale but not the other)
+        // Báo cáo lệch cấu trúc locale (khóa có ở locale này nhưng thiếu ở locale kia)
         for (const item of results.parityMismatches) {
             logger.warn('i18n', `Locale parity mismatch: "${item.key}" exists in ${item.presentIn.toUpperCase()} but missing in ${item.missingIn.toUpperCase()}`);
         }
@@ -81,17 +81,15 @@ class I18nManager {
     }
 
     /**
-     * Runs a full i18n verification pass:
-     * 1. Scans source files for translation key usage
-     * 2. Checks each key exists in all locale files
-     * 3. Compares locale file structures for key parity
+     * Chạy toàn bộ quy trình kiểm tra i18n:
+     * 1. Quét mã nguồn để tìm các khóa dịch được sử dụng
+     * 2. Kiểm tra từng khóa có tồn tại trong mọi file locale
+     * 3. So sánh cấu trúc các file locale để đảm bảo đồng bộ khóa
      * @returns {{ missingKeys: Array, parityMismatches: Array, totalIssues: number, totalKeysScanned: number, filesScanned: number }}
      */
     runFullVerification() {
-        // Phase 1: Collect all translation keys from source code
         const keyUsageMap = this.collectKeyUsage();
 
-        // Phase 2: Check each used key against all locale resources
         const missingKeys = [];
         for (const [key, files] of keyUsageMap) {
             for (const [locale, resource] of Object.entries(LOCALES)) {
@@ -101,7 +99,6 @@ class I18nManager {
             }
         }
 
-        // Phase 3: Structural parity check between locale files
         const parityMismatches = this.checkLocaleParity();
 
         const filesScanned = new Set();
@@ -119,12 +116,11 @@ class I18nManager {
     }
 
     /**
-     * Scans all JS files in configured directories and collects
-     * translation keys mapped to the files where they are used.
-     * @returns {Map<string, string[]>} key → [file paths]
+     * Quét toàn bộ file JS trong các thư mục đã cấu hình và thu thập
+     * @returns {Map<string, string[]>} key → [đường dẫn file]
      */
     collectKeyUsage() {
-        const keyMap = new Map(); // key → Set<filePath>
+        const keyMap = new Map(); // key → Set<đường dẫn file>
 
         if (!fs.existsSync(SRC_DIR)) {
             return new Map();
@@ -148,7 +144,7 @@ class I18nManager {
             TRANSLATION_KEY_REGEX.lastIndex = 0;
         }
 
-        // Convert Sets to Arrays for easier consumption
+        // Chuyển Set sang Array để dễ sử dụng hơn
         const result = new Map();
         for (const [key, files] of keyMap) {
             result.set(key, [...files]);
@@ -157,21 +153,20 @@ class I18nManager {
     }
 
     /**
-     * Compares the key structures of all locale files against each other.
-     * Detects keys that exist in one locale but are missing in another.
+     * So sánh cấu trúc khóa giữa các file locale với nhau.
+     * Phát hiện các khóa có ở locale này nhưng thiếu ở locale khác.
      * @returns {Array<{ key: string, presentIn: string, missingIn: string }>}
      */
     checkLocaleParity() {
         const mismatches = [];
         const localeEntries = Object.entries(LOCALES);
 
-        // Flatten each locale into a set of dot-paths
         const flatKeysByLocale = {};
         for (const [locale, resource] of localeEntries) {
             flatKeysByLocale[locale] = new Set(this.flattenKeys(resource));
         }
 
-        // Cross-compare every pair
+        // So sánh chéo từng cặp locale
         for (let i = 0; i < localeEntries.length; i++) {
             for (let j = 0; j < localeEntries.length; j++) {
                 if (i === j) continue;
@@ -190,7 +185,7 @@ class I18nManager {
     }
 
     /**
-     * Recursively collects all .js files from a directory.
+     * Thu thập đệ quy toàn bộ file .js từ một thư mục.
      */
     getJsFiles(dir) {
         const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -222,16 +217,16 @@ class I18nManager {
     }
 
     /**
-     * Resolves a dot-separated key path against a nested object.
-     * @returns {*} The value at the key path, or undefined if not found.
+     * Phân giải đường dẫn khóa dạng chấm trên một object lồng nhau.
+     * @returns {*} Giá trị tại đường dẫn khóa, hoặc undefined nếu không tìm thấy.
      */
     resolveKey(resource, fullKey) {
         return fullKey.split('.').reduce((current, part) => current?.[part], resource);
     }
 
     /**
-     * Flattens a nested object into an array of dot-separated key paths.
-     * Only includes leaf (string) values, not intermediate objects.
+     * Làm phẳng object lồng nhau thành mảng đường dẫn khóa dạng chấm.
+     * Chỉ bao gồm giá trị lá (chuỗi), không gồm object trung gian.
      */
     flattenKeys(obj, prefix = '') {
         const keys = [];
@@ -251,11 +246,11 @@ class I18nManager {
     }
 
     /**
-     * Translate a key to the specified locale.
-     * @param {string} key - Translation key (dot-separated path)
-     * @param {string} locale - Language code (vi, en)
-     * @param {object} options - Interpolation variables
-     * @returns {string} Translated string
+     * Dịch một khóa theo locale được chỉ định.
+     * @param {string} key - Khóa bản dịch (đường dẫn dạng chấm)
+     * @param {string} locale - Mã ngôn ngữ (vi, en)
+     * @param {object} options - Biến nội suy
+     * @returns {string} Chuỗi đã dịch
      */
     t(key, locale = 'vi', options = {}) {
         if (!this.isInitialized) return key;

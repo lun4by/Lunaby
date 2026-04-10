@@ -52,12 +52,12 @@ class PseudoInteraction {
         // Lọc ra các text args (không phải mention)
         const textArgs = args.filter(a => !a.match(/^<@!?\d+>$/));
 
-        // Nếu command có schema slash, parse theo đúng thứ tự option
+        // Nếu command có schema slash, phân tích theo đúng thứ tự option
         if (this.command?.data) {
             try {
                 const jsonData = this.command.data.toJSON();
                 const schemaOptions = (jsonData.options || []).filter(opt => opt.type !== 1 && opt.type !== 2);
-                // Discord option types: 3=STRING, 4=INTEGER, 5=BOOLEAN, 6=USER, 7=CHANNEL, 10=NUMBER
+                // Các loại option của Discord: 3=STRING, 4=INTEGER, 5=BOOLEAN, 6=USER, 7=CHANNEL, 10=NUMBER
 
                 let textIdx = 0;
                 for (const opt of schemaOptions) {
@@ -94,7 +94,7 @@ class PseudoInteraction {
 
                     // Type 3 = STRING
                     if (opt.type === 3) {
-                        // Nếu có choices (like 'all'/'latest'), lấy 1 arg
+                        // Nếu có choices (ví dụ 'all'/'latest'), lấy 1 arg
                         if (opt.choices && opt.choices.length > 0) {
                             if (textIdx < textArgs.length) {
                                 options.set(name, textArgs[textIdx]);
@@ -111,7 +111,7 @@ class PseudoInteraction {
                     }
                 }
             } catch (e) {
-                // Fallback: parse cũ
+                // Fallback: dùng cách parse cũ
             }
         }
 
@@ -123,7 +123,7 @@ class PseudoInteraction {
                 options.set('text', text);
             }
         }
-        // Fallback cho action
+        // Fallback cho hành động
         if (!options.has('action') && textArgs.length > 0) {
             options.set('action', textArgs[0]);
         }
