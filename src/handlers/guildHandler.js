@@ -1,4 +1,4 @@
-const { REST, Routes, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { REST, Routes } = require('discord.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
 const BlacklistService = require('../services/user/BlacklistService');
 const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
@@ -6,8 +6,6 @@ const logger = require('../utils/logger.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 
 const GUILD_COMMAND_DEPLOY_DELAY_MS = 1000;
-const WEBSITE_URL = process.env.WEBSITE_URL || 'https://lunaby.tech';
-const SUPPORT_SERVER_URL = process.env.SUPPORT_SERVER_URL || 'https://discord.gg/NFF7tw2zNQ';
 
 const sendGlobalLog = async (client, message) => {
   const logChannelId = await MariaModDB.getBotSetting('global_log_channel');
@@ -186,7 +184,6 @@ async function handleGuildJoin(guild, commands) {
         content: `Xin chao! Lunaby da san sang ho tro server **${guild.name}**!\n`
           + 'Ban co the chat voi minh bang cach @Luna hoac su dung cac lenh slash.\n'
           + 'Cam on da them minh vao server!',
-        components: [buildGuildWelcomeRow()],
       });
     }
   } catch (error) {
@@ -258,20 +255,3 @@ module.exports = {
   warmGuildProfiles,
   syncAllGuilds,
 };
-
-function buildGuildWelcomeRow() {
-  return new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setLabel('Website')
-      .setStyle(ButtonStyle.Link)
-      .setURL(WEBSITE_URL),
-    new ButtonBuilder()
-      .setLabel('Server Support')
-      .setStyle(ButtonStyle.Link)
-      .setURL(SUPPORT_SERVER_URL),
-    new ButtonBuilder()
-      .setLabel('Donate')
-      .setStyle(ButtonStyle.Success)
-      .setCustomId('guild_welcome_donate'),
-  );
-}
