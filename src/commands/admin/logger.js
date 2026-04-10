@@ -25,17 +25,18 @@ module.exports = {
         .addSubcommand(sub => sub.setName('category').setDescription('Bật/tắt ghi log cho một danh mục')
             .addStringOption(opt => opt.setName('category').setDescription('Danh mục ghi log').setRequired(true)
                 .addChoices(
-                    { name: 'MONITOR - Giám sát tin nhắn', value: 'MONITOR' },
-                    { name: 'NEURAL - AI/NeuralNetworks', value: 'NEURAL' },
-                    { name: 'COMMAND - Xử lý lệnh', value: 'COMMAND' },
-                    { name: 'COMMAND_USAGE - User dùng lệnh', value: 'COMMAND_USAGE' },
-                    { name: 'DATABASE - Cơ sở dữ liệu', value: 'DATABASE' },
-                    { name: 'SYSTEM - Hệ thống', value: 'SYSTEM' },
-                    { name: 'GUILD - Guild lifecycle/log', value: 'GUILD' },
-                    { name: 'GUILD_EVENT - Guild event handler', value: 'GUILD_EVENT' },
-                    { name: 'GUILD_DEPLOY - Deploy command guild', value: 'GUILD_DEPLOY' },
-                    { name: 'CHAT - Trò chuyện', value: 'CHAT' },
-                    { name: 'API - Gọi API', value: 'API' }
+                    { name: 'COMMAND - Xử lý lệnh', value: 'command' },
+                    { name: 'COMMAND_USAGE - User dùng lệnh', value: 'command_usage' },
+                    { name: 'MONGODB - Cơ sở dữ liệu MongoDB', value: 'mongodb' },
+                    { name: 'MARIADB - Cơ sở dữ liệu MariaDB', value: 'mariadb' },
+                    { name: 'SYSTEM - Hệ thống', value: 'system' },
+                    { name: 'GUILD - Guild lifecycle/log', value: 'guild' },
+                    { name: 'GUILD_EVENT - Guild event handler', value: 'guild_event' },
+                    { name: 'GUILD_DEPLOY - Deploy command guild', value: 'guild_deploy' },
+                    { name: 'CHAT - Trò chuyện', value: 'chat' },
+                    { name: 'API - Gọi API', value: 'api' },
+                    { name: 'AI_CORE - AI core', value: 'ai_core' },
+                    { name: 'MESSAGE_EVENT - Sự kiện message', value: 'message_event' }
                 ))
             .addBooleanOption(opt => opt.setName('enabled').setDescription('Bật/tắt').setRequired(true)))
         .addSubcommand(sub => sub.setName('reset').setDescription('Khôi phục cài đặt ghi log về mặc định')),

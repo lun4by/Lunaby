@@ -23,16 +23,31 @@ const defaultConfig = {
 };
 
 let currentConfig = structuredClone(defaultConfig);
+
+function cloneConfig(config) {
+  return structuredClone(config);
+}
   
 function getConfig() {
-  return { ...currentConfig };
+  return cloneConfig(currentConfig);
 }
 
 function updateConfig(newConfig) {
-  currentConfig = { ...currentConfig, ...newConfig };
-  if (newConfig.categories) {
-    currentConfig.categories = { ...currentConfig.categories, ...newConfig.categories };
-  }
+  const nextConfig = newConfig || {};
+
+  currentConfig = {
+    ...currentConfig,
+    ...nextConfig,
+    fileLogging: {
+      ...currentConfig.fileLogging,
+      ...(nextConfig.fileLogging || {}),
+    },
+    categories: {
+      ...currentConfig.categories,
+      ...(nextConfig.categories || {}),
+    },
+  };
+
   return getConfig();
 }
 
@@ -41,7 +56,9 @@ function setEnabled(enabled) {
 }
 
 function setLevel(level) {
-  return VALID_LEVELS.has(level) ? updateConfig({ level }) : getConfig();
+  return VALID_LEVELS.has(level)
+    ? updateConfig({ level })
+    : getConfig();
 }
 
 function setCategoryEnabled(category, enabled) {
@@ -52,13 +69,15 @@ function setCategoryEnabled(category, enabled) {
 }
 
 function resetToDefault() {
-  currentConfig = structuredClone(defaultConfig);
+  currentConfig = cloneConfig(defaultConfig);
   return getConfig();
 }
 
 function updateFileLogging(fileConfig) {
-  if (fileConfig) currentConfig.fileLogging = { ...currentConfig.fileLogging, ...fileConfig };
-  return getConfig();
+  if (!fileConfig || typeof fileConfig !== "object") {
+    return getConfig();
+  }
+  return updateConfig({ fileLogging: fileConfig });
 }
 
 module.exports = { getConfig, updateConfig, setEnabled, setLevel, setCategoryEnabled, resetToDefault, updateFileLogging };
