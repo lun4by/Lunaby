@@ -33,7 +33,7 @@ class MongoDBClient {
       await this.client.connect();
       this.db = this.client.db();
       this.isConnecting = false;
-      logger.info("mongodb", "MongoDB connected");
+      logger.info("mongodb", "Connected to MongoDB");
 
       // if (!initSystem.getStatus().services.mongodb) {
       //   console.log('MongoDB đang đợi trong hàng đợi khởi tạo...');

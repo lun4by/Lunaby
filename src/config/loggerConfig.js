@@ -15,7 +15,7 @@ const defaultConfig = {
     command: true, command_usage: true,
     mongodb: true, mariadb: true, system: true,
     chat: true, api: true, conversation_service: true,
-    conversation: true, ai_core: true,
+    conversation: true, aicore: true,
     moderation: true, message_event: true,
     guild: true, guild_event: true, guild_deploy: false,
     xp: true, fonts: true, modlog: true,

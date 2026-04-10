@@ -35,7 +35,7 @@ module.exports = {
                     { name: 'GUILD_DEPLOY - Deploy command guild', value: 'guild_deploy' },
                     { name: 'CHAT - Trò chuyện', value: 'chat' },
                     { name: 'API - Gọi API', value: 'api' },
-                    { name: 'AI_CORE - AI core', value: 'ai_core' },
+                    { name: 'AICORE - AI core', value: 'aicore' },
                     { name: 'MESSAGE_EVENT - Sự kiện message', value: 'message_event' }
                 ))
             .addBooleanOption(opt => opt.setName('enabled').setDescription('Bật/tắt').setRequired(true)))
