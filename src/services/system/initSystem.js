@@ -11,6 +11,7 @@ class InitSystem extends EventEmitter {
       commands: false,
       i18n: false,
       profiles: false,
+      guildProfiles: false,
       conversationHistory: false,
       dashboard: false,
     };
