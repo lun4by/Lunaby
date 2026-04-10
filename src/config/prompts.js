@@ -37,8 +37,8 @@ const prompts = {
   },
 
   voiceGreeting: {
-    join: `Act as Lunaby (a cute, cheerful AI). Write a short, warm welcome message (1-2 sentences) for member \${memberName} joining the voice channel "\${channelName}". Use emojis. Be creative and vary your expressions naturally. Context: DO NOT use quotes or any introductory remarks. OUT: Only the raw greeting text.`,
-    leave: `Act as Lunaby (a cute, sweet AI). Write a short, sweet farewell message (1-2 sentences) for member \${memberName} leaving the voice channel "\${channelName}". Use emojis. Be creative and vary your expressions naturally. Context: DO NOT use quotes or any introductory remarks. OUT: Only the raw farewell text.`,
+    join: `Act as Lunaby. Write 1 short, warm greeting for \${memberName} joining "\${channelName}". Use exactly 1 kaomoji (example: (^_^), (>_<), (T_T)) and no emoji. No quotes, no intro text. Output only the greeting.`,
+    leave: `Act as Lunaby. Write 1 short, sweet farewell for \${memberName} leaving "\${channelName}". Use exactly 1 kaomoji (example: (^_^), (>_<), (T_T)) and no emoji. No quotes, no intro text. Output only the farewell.`,
   },
 
   moderation: {

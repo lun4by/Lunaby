@@ -3,6 +3,7 @@ const path = require('path');
 const i18next = require('i18next');
 const vi = require('../../locales/vi.json');
 const en = require('../../locales/en.json');
+const emojis = require('../../config/emojis');
 const logger = require('../../utils/logger');
 
 const SRC_DIR = path.join(__dirname, '../..');
@@ -259,7 +260,10 @@ class I18nManager {
     t(key, locale = 'vi', options = {}) {
         if (!this.isInitialized) return key;
         const translator = i18next.getFixedT(locale);
-        return translator(key, options);
+        return translator(key, {
+            ...options,
+            _emoji: emojis,
+        });
     }
 }
 
