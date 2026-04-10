@@ -62,8 +62,7 @@ module.exports = {
             const prompt = prompts.moderation.unban
                 .replace('${username}', user.username)
                 .replace('${reason}', reason);
-
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
 
             await interaction.guild.members.unban(user, reason);
 
@@ -75,7 +74,10 @@ module.exports = {
                 reason: reason,
             });
 
-            await interaction.editReply({ content: aiResponse });
+            const aiResponse = await aiResponsePromise;
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} ${user.tag} đã được unban.`,
+            });
 
             const logEmbed = createModActionEmbed({
                 title: interaction.t('commands.unban.log_title'),

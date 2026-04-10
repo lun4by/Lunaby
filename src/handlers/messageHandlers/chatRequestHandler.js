@@ -1,4 +1,3 @@
-const AICore = require('../../services/ai/AICore');
 const logger = require('../../utils/logger');
 const { sendStreamingMessage } = require('../../services/ai/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
@@ -8,7 +7,6 @@ const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
 const ErrorHandler = require('../../utils/ErrorHandler');
 const QuotaService = require('../../services/user/QuotaService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 async function handleChatRequest(message, content, ConversationService) {
   const conversationId = ConversationService.extractUserId(message);
@@ -29,10 +27,7 @@ async function handleChatRequest(message, content, ConversationService) {
     await conversationManager.loadConversationHistory(conversationId, systemPrompt, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(conversationId);
 
-    const enhancedPrompt = `
-      ${prompts.chat.instructions}
-      ${content}
-    `;
+    const enhancedPrompt = `${prompts.chat.instructions}\n${content}`;
 
     await conversationManager.addMessage(conversationId, 'user', enhancedPrompt);
     messages = conversationManager.getHistory(conversationId);

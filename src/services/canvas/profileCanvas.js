@@ -5,7 +5,7 @@ const logger = require('../../utils/logger.js');
 const HEX_COLOR_REGEX = /^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/;
 
 async function generateProfileCard(data) {
-    const { user, member = null, profile = {} } = data;
+    const { user, member = null, presence = null, profile = {} } = data;
 
     const theme = HEX_COLOR_REGEX.test(profile.color || '') ? profile.color : '#9B59B6';
 
@@ -13,15 +13,16 @@ async function generateProfileCard(data) {
         .setUser(user.id)
         .setBorder(theme);
 
-    const activities = member?.presence?.activities || [];
-    const activity = activities.find(a => a.type !== 4) || activities[0] || null;
+    const resolvedPresence = presence || member?.presence || null;
+    const activities = Array.isArray(resolvedPresence?.activities) ? resolvedPresence.activities : [];
+    const activity = activities.find((entry) => entry.type !== 4 && entry.name) || activities[0] || null;
     const largeImage = activity?.assets?.largeImageURL?.({ extension: 'png', size: 512 }) || null;
 
     if (activity) {
         logger.info('profile_canvas', `Activity found: type=${activity.type}, name=${activity.name}`);
         profileCard.setActivity({ activity, largeImage });
     } else {
-        logger.info('profile_canvas', `No activity for user ${user.id} (presence: ${member?.presence ? 'exists' : 'null'})`);
+        logger.info('profile_canvas', `No activity for user ${user.id} (presence: ${resolvedPresence ? 'exists' : 'null'})`);
     }
 
     try {

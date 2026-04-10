@@ -1,7 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
 const ConversationService = require('../services/ai/ConversationService');
 const consentService = require('../services/user/consentService');
 const { handlePermissionError } = require('../utils/permissionUtils');
+const { TYPING_INDICATOR_INTERVAL_MS } = require('../config/constants');
 
 const { handleMemoryRequest, splitMessageIntoChunks } = require('./messageHandlers/memoryRequestHandler');
 const { handleCodeRequest } = require('./messageHandlers/codeRequestHandler');
@@ -10,100 +10,103 @@ const { handleImageRequest } = require('./messageHandlers/imageRequestHandler');
 const logger = require('../utils/logger');
 const emojis = require('../config/emojis');
 
+function normalizeMentions(content, message, client) {
+  let normalized = content.replace(new RegExp(`<@!?${client.user.id}>`, 'g'), '');
 
+  if (message.mentions.users.size === 0) {
+    return normalized.trim();
+  }
+
+  normalized = normalized.replace(/<@!?(\d+)>/g, (raw, userId) => {
+    if (userId === client.user.id) {
+      return '';
+    }
+
+    const user = message.mentions.users.get(userId);
+    if (!user) {
+      return raw;
+    }
+
+    const member = message.guild?.members.cache.get(userId);
+    return member?.displayName || user.displayName || user.username;
+  });
+
+  return normalized.trim();
+}
 
 async function handleMentionMessage(message, client) {
   if (message.author.bot) return;
   if (!message.guild) return;
 
   const shouldRespond = message.mentions.has(client.user);
+  if (!shouldRespond) return;
 
-  if (shouldRespond) {
-    const hasEveryoneOrRoleMention = message.mentions.everyone || message.mentions.roles.size > 0;
+  const hasEveryoneOrRoleMention = message.mentions.everyone || message.mentions.roles.size > 0;
+  if (hasEveryoneOrRoleMention) return;
 
-    if (!hasEveryoneOrRoleMention) {
-      const typingInterval = setInterval(() => message.channel.sendTyping().catch(() => { }), 5000);
-      message.channel.sendTyping().catch(() => { });
-
-      const hasConsented = await consentService.hasUserConsented(message.author.id);
-
-      if (!hasConsented) {
-        clearInterval(typingInterval);
-        try {
-          const consentData = consentService.createConsentEmbed(message.author);
-          await message.reply(consentData);
-        } catch (error) {
-          if (error.code === 50013 || error.message.includes('permission')) {
-            await handlePermissionError(message, 'embedLinks', message.author.username, 'reply');
-          } else {
-            throw error;
-          }
-        }
-        return;
-      }
-
-      try {
-        let content = message.content;
-
-        // Loại bỏ thẻ tag trực tiếp gọi bot
-        content = content.replace(new RegExp(`<@!?${client.user.id}>`, 'g'), '');
-
-        // Chuyển các thẻ tag user khác thành tên thật (Username) để AI hiểu như một người bình thường
-        if (message.mentions.users.size > 0) {
-          message.mentions.users.forEach(user => {
-            if (user.id !== client.user.id) {
-              const member = message.guild?.members.cache.get(user.id);
-              const displayName = member?.displayName || user.displayName || user.username;
-              content = content.replace(new RegExp(`<@!?${user.id}>`, 'g'), displayName);
-            }
-          });
-        }
-
-        content = content.trim();
-        if (!content) {
-          await message.reply('Tôi có thể giúp gì cho bạn hôm nay?');
-          return;
-        }
-
-        const requestType = ConversationService.detectRequestType(content);
-
-        if (requestType.type === 'image') {
-          await handleImageRequest(message, content, requestType.match);
-          return;
-        }
-
-        if (requestType.type === 'memory') {
-          const memoryRequest = requestType.match[2].trim() || "toàn bộ cuộc trò chuyện";
-          await handleMemoryRequest(message, ConversationService, memoryRequest);
-          return;
-        }
-
-        if (requestType.type === 'code') {
-          await handleCodeRequest(message, content, ConversationService);
-          return;
-        }
-
-        await handleChatRequest(message, content, ConversationService);
-
-      } catch (error) {
-        logger.error('chat', `Error processing message from ${message.author.tag}:`, error);
-
-        const msg = error?.message || '';
-        let errorMessage = 'Xin lỗi, tôi gặp lỗi khi xử lý tin nhắn của bạn. Vui lòng thử lại sau.';
-
-        if (msg.includes('Không có API provider nào được cấu hình')) {
-          errorMessage = 'Xin lỗi, hệ thống AI hiện tại không khả dụng. Vui lòng thử lại sau.';
-        } else if (msg.includes('Tất cả providers đã thất bại')) {
-          errorMessage = 'Xin lỗi, tất cả nhà cung cấp AI đều không khả dụng. Vui lòng thử lại sau.';
-        } else if (error.code === 'EPROTO' || error.code === 'ECONNREFUSED' || msg.includes('connect')) {
-          errorMessage = 'Xin lỗi, tôi đang gặp vấn đề kết nối. Vui lòng thử lại sau hoặc liên hệ quản trị viên để được hỗ trợ.';
-        }
-
-        await message.reply(`${emojis.error} ${errorMessage}`).catch(() => { });
-      } finally {
-        clearInterval(typingInterval);
+  const hasConsented = await consentService.hasUserConsented(message.author.id);
+  if (!hasConsented) {
+    try {
+      const consentData = consentService.createConsentEmbed(message.author);
+      await message.reply(consentData);
+    } catch (error) {
+      if (error.code === 50013 || error.message.includes('permission')) {
+        await handlePermissionError(message, 'embedLinks', message.author.username, 'reply');
+      } else {
+        throw error;
       }
     }
+    return;
+  }
+
+  const typingInterval = setInterval(() => message.channel.sendTyping().catch(() => { }), TYPING_INDICATOR_INTERVAL_MS);
+  message.channel.sendTyping().catch(() => { });
+
+  try {
+    const content = normalizeMentions(message.content, message, client);
+
+    if (!content) {
+      await message.reply('Tôi có thể giúp gì cho bạn hôm nay?');
+      return;
+    }
+
+    const requestType = ConversationService.detectRequestType(content);
+
+    if (requestType.type === 'image') {
+      await handleImageRequest(message, content, requestType.match);
+      return;
+    }
+
+    if (requestType.type === 'memory') {
+      const memoryRequest = requestType.match[2].trim() || 'toàn bộ cuộc trò chuyện';
+      await handleMemoryRequest(message, ConversationService, memoryRequest);
+      return;
+    }
+
+    if (requestType.type === 'code') {
+      await handleCodeRequest(message, content, ConversationService);
+      return;
+    }
+
+    await handleChatRequest(message, content, ConversationService);
+
+  } catch (error) {
+    logger.error('chat', `Error processing message from ${message.author.tag}:`, error);
+
+    const msg = error?.message || '';
+    let errorMessage = 'Xin lỗi, tôi gặp lỗi khi xử lý tin nhắn của bạn. Vui lòng thử lại sau.';
+
+    if (msg.includes('Không có API provider nào được cấu hình')) {
+      errorMessage = 'Xin lỗi, hệ thống AI hiện tại không khả dụng. Vui lòng thử lại sau.';
+    } else if (msg.includes('Tất cả providers đã thất bại')) {
+      errorMessage = 'Xin lỗi, tất cả nhà cung cấp AI đều không khả dụng. Vui lòng thử lại sau.';
+    } else if (error.code === 'EPROTO' || error.code === 'ECONNREFUSED' || msg.includes('connect')) {
+      errorMessage = 'Xin lỗi, tôi đang gặp vấn đề kết nối. Vui lòng thử lại sau hoặc liên hệ quản trị viên để được hỗ trợ.';
+    }
+
+    await message.reply(`${emojis.error} ${errorMessage}`).catch(() => { });
+  } finally {
+    clearInterval(typingInterval);
   }
 }
 

@@ -33,28 +33,31 @@ function formatNumber(value) {
 }
 
 function getUsageConfig(type, interaction) {
+  const proName = interaction?.t ? interaction.t('commands.shop.quota_pro') : 'Lunaby Pro';
+  const visionName = interaction?.t ? interaction.t('commands.shop.quota_vision') : 'Lunaby Vision';
+
   if (type === 'image') {
     return {
-      productName: interaction.t('commands.shop.quota_vision'),
+      productName: visionName,
       quotaField: 'imagePeriod',
       costPerUnit: QUOTA_COST_CREDITS_PER_IMAGE,
     };
   }
 
   return {
-    productName: interaction.t('commands.shop.quota_pro'),
+    productName: proName,
     quotaField: 'period',
     costPerUnit: QUOTA_COST_CREDITS_PER_MESSAGE,
   };
 }
 
-function getItemCost(item) {
-  return item.amount * getUsageConfig(item.type).costPerUnit;
+function getItemCost(item, interaction) {
+  return item.amount * getUsageConfig(item.type, interaction).costPerUnit;
 }
 
-function getItemState(item, credits, stats) {
-  const usageConfig = getUsageConfig(item.type);
-  const totalCost = getItemCost(item);
+function getItemState(item, credits, stats, interaction) {
+  const usageConfig = getUsageConfig(item.type, interaction);
+  const totalCost = getItemCost(item, interaction);
   const currentLimit = stats.limits[usageConfig.quotaField];
   const isUnlimited = currentLimit === -1;
   const isAffordable = credits >= totalCost;
@@ -95,22 +98,23 @@ function getLimitText(limit, remaining, interaction) {
     return interaction.t('commands.shop.limit_unlimited');
   }
 
-  return `${formatNumber(limit)} lượt - còn ${formatNumber(remaining)} lượt`;
+  return `${formatNumber(limit)} lượt • còn ${formatNumber(remaining)} lượt`;
 }
 
-function formatShopItemLine(item, credits, stats) {
-  const itemState = getItemState(item, credits, stats);
+function formatShopItemLine(item, credits, stats, interaction) {
+  const itemState = getItemState(item, credits, stats, interaction);
   const statusText = itemState.isUnlimited
     ? 'Đã vô hạn'
     : itemState.isAffordable
       ? 'Mua được'
       : 'Thiếu credits';
+  const statusIcon = itemState.isUnlimited ? '∞' : itemState.isAffordable ? '✓' : '✕';
 
-  return `• **${item.label}** - **${formatNumber(itemState.totalCost)}** credits\n` +
-    `+${formatNumber(item.amount)} lượt - ${statusText}`;
+  return `• **${item.label}** · **${formatNumber(itemState.totalCost)}** credits\n` +
+    `${statusIcon} +${formatNumber(item.amount)} lượt · ${statusText}`;
 }
 
-function buildShopSection(items, type, credits, stats) {
+function buildShopSection(items, type, credits, stats, interaction) {
   const filteredItems = items.filter((item) => item.type === type);
 
   if (filteredItems.length === 0) {
@@ -118,45 +122,53 @@ function buildShopSection(items, type, credits, stats) {
   }
 
   return filteredItems
-    .map((item) => formatShopItemLine(item, credits, stats))
+    .map((item) => formatShopItemLine(item, credits, stats, interaction))
     .join('\n\n');
 }
 
-function buildShopEmbed(user, credits, stats, state) {
+function buildShopEmbed(user, credits, stats, state, interaction) {
   const resetTimestamp = Math.floor(stats.nextReset / 1000);
   const totalPages = getTotalPages();
 
   const embed = createLunabyEmbed()
-    .setTitle('Lunaby Quota Shop')
+    .setTitle('Lunaby Credit Market')
     .setAuthor({
       name: user.globalName || user.username,
       iconURL: user.displayAvatarURL({ size: 128 }),
     })
+    .setThumbnail(user.displayAvatarURL({ size: 256 }))
     .setDescription(
-      `Quản lý lượt sử dụng bằng credits.\n` +
-      `Reset quota sau: <t:${resetTimestamp}:R>`
+      `Mở rộng quota bằng credits ngay trong chat.\n` +
+      `Kỳ reset tiếp theo: <t:${resetTimestamp}:R>`
     )
     .addFields(
       {
-        name: 'Tổng quan',
+        name: 'Ví credits',
         value:
-          `Số dư: **${formatNumber(credits)}** credits\n` +
-          `Trang hiện tại: **${state.page + 1}/${totalPages}**\n` +
-          `Giá Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt\n` +
-          `Giá Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
+          `Số dư hiện tại: **${formatNumber(credits)}** credits\n` +
+          `Trang: **${state.page + 1}/${totalPages}**`,
+        inline: true,
+      },
+      {
+        name: 'Bảng giá',
+        value:
+          `Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt\n` +
+          `Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
+        inline: true,
       },
       {
         name: 'Hạn mức hiện tại',
         value:
-          `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages)}\n` +
-          `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images)}`,
+          `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages, interaction)}\n` +
+          `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction)}`,
+        inline: false,
       },
     )
-    .setFooter({ text: 'Dùng < > để chuyển trang, Làm mới để cập nhật số dư mới nhất' });
+    .setFooter({ text: 'Dùng < > để đổi trang, Làm mới để cập nhật realtime' });
 
   const pageItems = getPageItems(state.page);
-  const proSection = buildShopSection(pageItems, 'chat', credits, stats);
-  const visionSection = buildShopSection(pageItems, 'image', credits, stats);
+  const proSection = buildShopSection(pageItems, 'chat', credits, stats, interaction);
+  const visionSection = buildShopSection(pageItems, 'image', credits, stats, interaction);
 
   embed.addFields(
     {
@@ -174,7 +186,7 @@ function buildShopEmbed(user, credits, stats, state) {
   return embed;
 }
 
-function buildItemRows(state, credits, stats, disabled = false) {
+function buildItemRows(state, credits, stats, interaction, disabled = false) {
   const rows = [];
   const pageItems = getPageItems(state.page);
   const buttonGroups = chunkArray(pageItems, 3);
@@ -183,7 +195,7 @@ function buildItemRows(state, credits, stats, disabled = false) {
     const row = new ActionRowBuilder();
 
     for (const item of group) {
-      const itemState = getItemState(item, credits, stats);
+      const itemState = getItemState(item, credits, stats, interaction);
 
       row.addComponents(
         new ButtonBuilder()
@@ -200,7 +212,7 @@ function buildItemRows(state, credits, stats, disabled = false) {
   return rows;
 }
 
-function buildNavigationRow(state, disabled = false) {
+function buildNavigationRow(state, interaction, disabled = false) {
   const totalPages = getTotalPages();
   const singlePage = totalPages <= 1;
 
@@ -227,8 +239,8 @@ function buildShopMessage(user, credits, stats, state, interaction, disabled = f
   return {
     embeds: [buildShopEmbed(user, credits, stats, state, interaction)],
     components: [
-      ...buildItemRows(state, credits, stats, disabled),
-      buildNavigationRow(state, disabled),
+      ...buildItemRows(state, credits, stats, interaction, disabled),
+      buildNavigationRow(state, interaction, disabled),
     ],
   };
 }
@@ -253,7 +265,7 @@ async function loadShopState(user, state) {
 
 async function purchaseItem(userId, item, interaction) {
   const usageConfig = getUsageConfig(item.type, interaction);
-  const totalCost = getItemCost(item);
+  const totalCost = getItemCost(item, interaction);
 
   const quotaBefore = await QuotaService.getUserMessageStats(userId);
   const currentLimit = quotaBefore.limits[usageConfig.quotaField];

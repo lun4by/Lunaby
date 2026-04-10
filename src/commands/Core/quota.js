@@ -18,17 +18,27 @@ const ROLE_COLORS = {
 };
 
 function createProgressBar(current, max, length = 10) {
-    if (max === -1) return '`' + '▰'.repeat(length) + '` ∞';
-    const ratio = Math.min(current / max, 1);
+    if (max === -1) return '`' + '█'.repeat(length) + '` ∞';
+    const safeMax = Math.max(max, 1);
+    const ratio = Math.min(Math.max(current / safeMax, 0), 1);
     const filled = Math.round(ratio * length);
     const empty = length - filled;
     const percent = Math.round(ratio * 100);
-    return '`' + '▰'.repeat(filled) + '▱'.repeat(empty) + '` ' + percent + '%';
+    return '`' + '█'.repeat(filled) + '░'.repeat(empty) + '` ' + percent + '%';
 }
 
 function formatQuotaValue(current, max) {
     if (max === -1) return `**${current}** / ∞`;
     return `**${current}** / **${max}**`;
+}
+
+function getUsageStateText(current, max) {
+    if (max === -1) return 'Unlimited';
+
+    const ratio = current / Math.max(max, 1);
+    if (ratio >= 0.95) return 'Nguy hiểm';
+    if (ratio >= 0.75) return 'Cảnh báo';
+    return 'Ổn định';
 }
 
 module.exports = {
@@ -69,30 +79,48 @@ module.exports = {
             else if (usageRatio >= 0.75) embedColor = 0xE67E22;  // Cam - cảnh báo
         }
 
-        const msgBar = createProgressBar(msgCurrent, msgMax);
-        const imgBar = createProgressBar(imgCurrent, imgMax);
+        const msgBar = createProgressBar(msgCurrent, msgMax, 12);
+        const imgBar = createProgressBar(imgCurrent, imgMax, 12);
 
         const msgRemainingText = msgMax === -1 ? '∞' : interaction.t('commands.quota.remaining', { count: msgRemaining });
         const imgRemainingText = imgMax === -1 ? '∞' : interaction.t('commands.quota.remaining', { count: imgRemaining });
 
         const embed = new EmbedBuilder()
             .setColor(embedColor)
+            .setTitle('Lunaby Quota Center')
             .setAuthor({
                 name: user.globalName || user.username,
                 iconURL: user.displayAvatarURL({ size: 64 })
             })
             .setDescription(
-                `### ${roleBadge}\n` +
-                `*${emojis.quota.pro} Lunaby Pro*\n` +
-                `${msgBar}\n` +
-                `${formatQuotaValue(msgCurrent, msgMax)} · ${msgRemainingText}\n\n` +
-                `*${emojis.quota.vision} Lunaby Vision*\n` +
-                `${imgBar}\n` +
-                `${formatQuotaValue(imgCurrent, imgMax)} · ${imgRemainingText}\n` +
-                `${interaction.t('commands.quota.total_usage')} **${stats.usage.total}** Lunaby Pro · **${stats.imageUsage.total}** Lunaby Vision\n` +
-                `${interaction.t('commands.quota.reset_in', { days: daysLeft })} · <t:${resetTimestamp}:R>`
+                `Gói hiện tại: **${roleBadge}**\n` +
+                `Reset quota: <t:${resetTimestamp}:R> (${interaction.t('commands.quota.reset_in', { days: daysLeft })})`
             )
-            .setFooter({ text: 'Lunaby · Quota System' })
+            .addFields(
+                {
+                    name: `${emojis.quota.pro} Lunaby Pro`,
+                    value:
+                        `${msgBar}\n` +
+                        `${formatQuotaValue(msgCurrent, msgMax)} · ${msgRemainingText}\n` +
+                        `Trạng thái: **${getUsageStateText(msgCurrent, msgMax)}**`,
+                    inline: false,
+                },
+                {
+                    name: `${emojis.quota.vision} Lunaby Vision`,
+                    value:
+                        `${imgBar}\n` +
+                        `${formatQuotaValue(imgCurrent, imgMax)} · ${imgRemainingText}\n` +
+                        `Trạng thái: **${getUsageStateText(imgCurrent, imgMax)}**`,
+                    inline: false,
+                },
+                {
+                    name: 'Tổng sử dụng',
+                    value:
+                        `${interaction.t('commands.quota.total_usage')} **${stats.usage.total}** Lunaby Pro · **${stats.imageUsage.total}** Lunaby Vision`,
+                    inline: false,
+                },
+            )
+            .setFooter({ text: 'Lunaby · Quota Overview' })
             .setTimestamp();
 
         return embed;

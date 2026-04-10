@@ -9,6 +9,10 @@ const prompts = {
 
   chat: {
     instructions: `IMPORTANT: Respond naturally based on the conversation context. Focus on providing helpful answers. Always use Discord-compatible formatting.`,
+    responseStyle: `Response style: concise, practical, and easy to read on mobile.`,
+    newConversation: `If this is a new conversation, ask only 1 short clarifying question when needed.`,
+    ongoingConversation: `If this is an ongoing conversation, continue the current context without re-introducing basics.`,
+    generalInstructions: `Prefer actionable steps and avoid generic filler text.`,
   },
 
   code: {

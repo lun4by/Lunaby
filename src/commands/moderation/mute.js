@@ -75,8 +75,7 @@ module.exports = {
                 .replace('${username}', targetUser.username)
                 .replace('${duration}', formattedDuration)
                 .replace('${reason}', reason);
-
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
 
             await targetMember.timeout(durationMs, reason);
 
@@ -89,7 +88,10 @@ module.exports = {
                 duration: duration
             });
 
-            await interaction.editReply({ content: aiResponse });
+            const aiResponse = await aiResponsePromise;
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} ${targetUser.tag} đã bị mute ${formattedDuration}.`,
+            });
 
             const logEmbed = createModActionEmbed({
                 title: interaction.t('commands.mute.log_title'),

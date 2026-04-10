@@ -96,10 +96,12 @@ module.exports = {
                 .replace('${username}', targetUser.username)
                 .replace('${reason}', reason)
                 .replace('${warningCount}', warningCount);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
+            const aiResponse = await aiResponsePromise;
 
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
-
-            await interaction.editReply({ content: aiResponse });
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} Đã cảnh cáo ${targetUser.tag} (#${warningCount}).`,
+            });
 
             try {
                 const dmEmbed = new EmbedBuilder()

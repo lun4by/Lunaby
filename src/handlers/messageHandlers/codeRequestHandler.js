@@ -8,7 +8,6 @@ const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
 const ErrorHandler = require('../../utils/ErrorHandler');
 const QuotaService = require('../../services/user/QuotaService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 function formatCodeResponse(text) {
   const { LANGUAGE_DETECTION_PATTERNS } = require('../../config/patterns');
@@ -30,8 +29,6 @@ async function handleCodeRequest(message, content, ConversationService) {
     const conversationId = ConversationService.extractUserId(message);
     const globalUserId = message.author.id;
 
-    const emojis = require('../../config/emojis');
-
     const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
     if (!quotaCheck.allowed) {
       if (message.t) {
@@ -46,12 +43,12 @@ async function handleCodeRequest(message, content, ConversationService) {
     let messages = conversationManager.getHistory(conversationId);
 
     const isNewConversation = messages.length <= 2;
-    const enhancedPrompt = `
-      ${prompts.chat.responseStyle}
-      ${isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
-      ${prompts.chat.generalInstructions}
-      Code request: ${promptContent}
-    `;
+    const enhancedPrompt = [
+      prompts.chat.responseStyle,
+      isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation,
+      prompts.chat.generalInstructions,
+      `Code request: ${promptContent}`,
+    ].join('\n');
 
     await conversationManager.addMessage(conversationId, 'user', enhancedPrompt);
     messages = conversationManager.getHistory(conversationId);

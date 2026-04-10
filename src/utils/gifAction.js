@@ -10,9 +10,15 @@ const ACTION_MESSAGES = {
     poke: { verb: 'chọc', emoji: emojis.gifActions.poke, color: 0x00CED1, selfMsg: 'tự chọc mình' },
 };
 
+const GIF_VARIANTS_PER_ACTION = 5;
+
+function resolveDisplayName(userLike) {
+    return userLike?.displayName || userLike?.globalName || userLike?.username || 'Unknown';
+}
+
 function getRandomGif(action) {
     if (!ACTION_MESSAGES[action]) return null;
-    const randomNum = Math.floor(Math.random() * 5) + 1; // 1 to 5
+    const randomNum = Math.floor(Math.random() * GIF_VARIANTS_PER_ACTION) + 1;
     return `https://cdn.lunie.dev/Lunaby/gif/${action}/${randomNum}.gif`;
 }
 
@@ -23,10 +29,11 @@ function buildActionEmbed(action, sender, target, interaction) {
     const gifUrl = getRandomGif(action);
 
     let description;
+    const senderName = resolveDisplayName(sender);
     if (!target || target.id === sender.id) {
-        description = `${info.emoji} ${interaction.t(`commands.fun.self_${action}`, { sender: sender.displayName || sender.username })}`;
+        description = `${info.emoji} ${interaction.t(`commands.fun.self_${action}`, { sender: senderName })}`;
     } else {
-        description = `${info.emoji} ${interaction.t(`commands.fun.target_${action}`, { sender: sender.displayName || sender.username, target: target.displayName || target.username })}`;
+        description = `${info.emoji} ${interaction.t(`commands.fun.target_${action}`, { sender: senderName, target: resolveDisplayName(target) })}`;
     }
 
     const embed = new EmbedBuilder()

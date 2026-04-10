@@ -87,10 +87,12 @@ module.exports = {
                 .replace('${username}', targetUser.username)
                 .replace('${reason}', reason)
                 .replace('${deletedCount}', deletedCount);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
 
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
-
-            await interaction.editReply({ content: aiResponse });
+            const aiResponse = await aiResponsePromise;
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} Đã xóa ${deletedCount} cảnh cáo của ${targetUser.tag}.`,
+            });
 
             try {
                 const typeCap = type === 'all' ? interaction.t('commands.clearwarnings.type_all_cap') : interaction.t('commands.clearwarnings.type_latest_cap');

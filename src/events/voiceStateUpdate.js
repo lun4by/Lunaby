@@ -9,6 +9,44 @@ const logger = require('../utils/logger.js');
 const creatorChannels = new Map();
 const activeVoiceChannels = new Map();
 const userVoiceCooldowns = new Map();
+const pendingVoiceCreations = new Map();
+const voiceToggleCache = new Map();
+const voiceGreetingDebounce = new Map();
+
+const LVOICE_COOLDOWN_MS = 3000;
+const VOICE_TOGGLE_CACHE_TTL_MS = 15000;
+const VOICE_GREETING_DEBOUNCE_MS = 2500;
+
+function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function canSendVoiceGreeting(memberId, channelId, eventType) {
+    const key = `${memberId}:${channelId}:${eventType}`;
+    const now = Date.now();
+    const lastSent = voiceGreetingDebounce.get(key) || 0;
+
+    if (now - lastSent < VOICE_GREETING_DEBOUNCE_MS) {
+        return false;
+    }
+
+    voiceGreetingDebounce.set(key, now);
+    return true;
+}
+
+async function isVoiceWelcomeEnabled(guildId) {
+    const cached = voiceToggleCache.get(guildId);
+    const now = Date.now();
+
+    if (cached && now - cached.ts < VOICE_TOGGLE_CACHE_TTL_MS) {
+        return cached.enabled;
+    }
+
+    const settings = await MariaModDB.getGuildSettings(guildId);
+    const enabled = Boolean(settings?.voiceToggle?.isEnabled);
+    voiceToggleCache.set(guildId, { enabled, ts: now });
+    return enabled;
+}
 
 /**
  * Load cache từ DB khi bot khởi động
@@ -85,10 +123,21 @@ async function cleanupZombieChannels(client) {
     }
 }
 
-async function sendVoiceGreeting(eventType, memberName, voiceChannel) {
+async function sendVoiceGreeting(eventType, member, voiceChannel) {
     if (!voiceChannel || !voiceChannel.isTextBased?.()) {
         return;
     }
+
+    const me = voiceChannel.guild.members.me;
+    if (me && !voiceChannel.permissionsFor(me)?.has('SendMessages')) {
+        return;
+    }
+
+    if (!canSendVoiceGreeting(member.id, voiceChannel.id, eventType)) {
+        return;
+    }
+
+    const memberName = member.displayName || member.user.username;
 
     const channelName = voiceChannel.name;
 
@@ -101,93 +150,108 @@ async function sendVoiceGreeting(eventType, memberName, voiceChannel) {
         .replace('${channelName}', channelName);
 
     const messages = [
-        { role: 'system', content: prompts.system.main },
+        { role: 'system', content: prompts.system.main.replace(/\$\{language\}/g, 'Vietnamese') },
         { role: 'user', content: prompt },
     ];
 
-    const result = await AICore.processChatCompletion(messages, {
-        clientType: 'discord',
-        max_tokens: 256,
-        stream: false,
-    });
+    try {
+        const result = await AICore.processChatCompletion(messages, {
+            clientType: 'discord',
+            max_tokens: 256,
+            stream: false,
+        });
 
-    if (result?.content) {
-        const footer = `\n-# Sử dụng: \`/voicewelcome toggle\` để bật/tắt voice welcome`;
-        await voiceChannel.send(result.content + footer);
+        if (result?.content) {
+            const footer = `\n-# Sử dụng: \`/voicewelcome toggle\` để bật/tắt voice welcome`;
+            await voiceChannel.send(result.content + footer);
+        }
+
+        logger.debug('voice_toggle', `${eventType === 'join' ? 'Greeted' : 'Farewell'} ${memberName} in ${voiceChannel.guild.name}/${channelName}`);
+    } catch (error) {
+        logger.error('voice_toggle', `Failed to generate voice greeting (${eventType}) for ${member.user.tag}:`, error.message);
+    }
+}
+
+async function createTempVoiceChannel(newState, member, creatorConfig) {
+    if (member.voice?.channelId !== newState.channelId) {
+        return;
     }
 
-    logger.debug('voice_toggle', `${eventType === 'join' ? 'Greeted' : 'Farewell'} ${memberName} in ${voiceChannel.guild.name}/${channelName}`);
+    const guild = newState.guild;
+
+    // Tạo tên kênh từ template
+    const channelName = creatorConfig.defaultName.replace('{user}', member.displayName || member.user.username);
+    const creatorChannel = newState.channel;
+    const parentId = creatorChannel?.parentId || creatorConfig.categoryId;
+
+    // Tạo kênh voice tạm
+    const tempChannel = await guild.channels.create({
+        name: channelName,
+        type: ChannelType.GuildVoice,
+        parent: parentId,
+        userLimit: creatorConfig.defaultLimit,
+        bitrate: Math.min(creatorConfig.defaultBitrate, guild.maximumBitrate),
+        permissionOverwrites: [
+            {
+                id: member.id,
+                allow: [
+                    PermissionFlagsBits.ManageChannels,
+                    PermissionFlagsBits.MoveMembers,
+                    PermissionFlagsBits.MuteMembers,
+                    PermissionFlagsBits.DeafenMembers,
+                ],
+            },
+        ],
+    });
+
+    // Chuyển user vào kênh tạm
+    await member.voice.setChannel(tempChannel);
+
+    // Lưu vào cache + DB
+    activeVoiceChannels.set(tempChannel.id, {
+        guildId: guild.id,
+        ownerId: member.id,
+    });
+    await MariaModDB.addActiveVoice(tempChannel.id, guild.id, member.id);
+
+    logger.info('lvoice', `Created temp channel "${channelName}" for ${member.user.tag} in ${guild.name}`);
 }
 
 async function handleVoiceMasterJoin(newState, member) {
     const creatorConfig = creatorChannels.get(newState.channelId);
     if (!creatorConfig) return;
 
-    const guild = newState.guild;
-    const now = Date.now();
-    const COOLDOWN_MS = 3000;
-    const lastCreated = userVoiceCooldowns.get(member.id) || 0;
-
-    if (now - lastCreated < COOLDOWN_MS) {
-        const timeLeft = COOLDOWN_MS - (now - lastCreated);
-        try {
-            await member.send({
-                content: `${emojis.lvoice.cooldown} Bạn thao tác quá nhanh! Vui lòng giữ nguyên ở kênh Voice trong **${(timeLeft / 1000).toFixed(1)}s** nữa, hệ thống sẽ tự động tạo phòng cho bạn.`
-            }).catch(() => {}); // Bỏ qua lỗi nếu user chặn tin nhắn rác (DMs)
-            
-            await new Promise(resolve => setTimeout(resolve, timeLeft));
-
-            const currentChannelId = member.voice?.channelId;
-            if (currentChannelId !== newState.channelId) {
-                return; // User đã rời trước khi cooldown kết thúc
-            }
-        } catch (error) {
-            await new Promise(resolve => setTimeout(resolve, timeLeft));
-            if (member.voice?.channelId !== newState.channelId) return;
-        }
+    if (pendingVoiceCreations.has(member.id)) {
+        return;
     }
 
-    userVoiceCooldowns.set(member.id, Date.now());
+    const now = Date.now();
+    const lastCreated = userVoiceCooldowns.get(member.id) || 0;
+    const cooldownLeftMs = Math.max(0, LVOICE_COOLDOWN_MS - (now - lastCreated));
 
+    const pendingCreateTask = (async () => {
+        if (cooldownLeftMs > 0) {
+            await member.send({
+                content: `${emojis.lvoice.cooldown} Bạn thao tác quá nhanh! Vui lòng giữ nguyên ở kênh Voice trong **${(cooldownLeftMs / 1000).toFixed(1)}s** nữa, hệ thống sẽ tự động tạo phòng cho bạn.`
+            }).catch(() => {});
+
+            await wait(cooldownLeftMs);
+            if (member.voice?.channelId !== newState.channelId) {
+                return;
+            }
+        }
+
+        userVoiceCooldowns.set(member.id, Date.now());
+        await createTempVoiceChannel(newState, member, creatorConfig);
+    })();
+
+    pendingVoiceCreations.set(member.id, pendingCreateTask);
     try {
-        // Tạo tên kênh từ template
-        const channelName = creatorConfig.defaultName.replace('{user}', member.displayName || member.user.username);
-        const creatorChannel = newState.channel;
-        const parentId = creatorChannel?.parentId || creatorConfig.categoryId;
-
-        // Tạo kênh voice tạm
-        const tempChannel = await guild.channels.create({
-            name: channelName,
-            type: ChannelType.GuildVoice,
-            parent: parentId,
-            userLimit: creatorConfig.defaultLimit,
-            bitrate: Math.min(creatorConfig.defaultBitrate, guild.maximumBitrate),
-            permissionOverwrites: [
-                {
-                    id: member.id,
-                    allow: [
-                        PermissionFlagsBits.ManageChannels,
-                        PermissionFlagsBits.MoveMembers,
-                        PermissionFlagsBits.MuteMembers,
-                        PermissionFlagsBits.DeafenMembers,
-                    ],
-                },
-            ],
-        });
-
-        // Chuyển user vào kênh tạm
-        await member.voice.setChannel(tempChannel);
-
-        // Lưu vào cache + DB
-        activeVoiceChannels.set(tempChannel.id, {
-            guildId: guild.id,
-            ownerId: member.id,
-        });
-        await MariaModDB.addActiveVoice(tempChannel.id, guild.id, member.id);
-
-        logger.info('lvoice', `Created temp channel "${channelName}" for ${member.user.tag} in ${guild.name}`);
+        await pendingCreateTask;
     } catch (error) {
-        logger.error('lvoice', `Error creating temp voice channel:`, error);
+        logger.error('lvoice', 'Error creating temp voice channel:', error);
+    } finally {
+        pendingVoiceCreations.delete(member.id);
     }
 }
 
@@ -239,18 +303,17 @@ function setupVoiceStateEvent(client) {
                 await handleVoiceMasterLeave(oldState);
             }
 
-            const settings = await MariaModDB.getGuildSettings(guild.id);
-            if (settings?.voiceToggle?.isEnabled) {
-                const memberName = member.displayName || member.user.username;
+            const voiceWelcomeEnabled = await isVoiceWelcomeEnabled(guild.id);
+            if (voiceWelcomeEnabled) {
                 const isCreator = (ch) => ch && creatorChannels.has(ch.id);
 
                 if (oldChannel && newChannel && !isCreator(oldChannel) && !isCreator(newChannel)) {
-                    await sendVoiceGreeting('leave', memberName, oldChannel);
-                    await sendVoiceGreeting('join', memberName, newChannel);
+                    await sendVoiceGreeting('leave', member, oldChannel);
+                    await sendVoiceGreeting('join', member, newChannel);
                 } else if (!oldChannel && newChannel && !isCreator(newChannel)) {
-                    await sendVoiceGreeting('join', memberName, newChannel);
+                    await sendVoiceGreeting('join', member, newChannel);
                 } else if (oldChannel && !newChannel && !isCreator(oldChannel)) {
-                    await sendVoiceGreeting('leave', memberName, oldChannel);
+                    await sendVoiceGreeting('leave', member, oldChannel);
                 }
             }
         } catch (error) {

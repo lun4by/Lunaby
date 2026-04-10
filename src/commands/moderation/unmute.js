@@ -68,8 +68,7 @@ module.exports = {
             const prompt = prompts.moderation.unmute
                 .replace('${username}', targetUser.username)
                 .replace('${reason}', reason);
-
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
 
             await targetMember.timeout(null, reason);
 
@@ -81,7 +80,10 @@ module.exports = {
                 reason: reason
             });
 
-            await interaction.editReply({ content: aiResponse });
+            const aiResponse = await aiResponsePromise;
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} ${targetUser.tag} đã được unmute.`,
+            });
 
             const logEmbed = createModActionEmbed({
                 title: interaction.t('commands.unmute.log_title'),

@@ -19,20 +19,20 @@ function setupMessageCreateEvent(client) {
       if (message.author.bot) return;
       if (!message.guild) return;
 
-      let locale = 'vi';
-      if (message.guildId) {
-          const gSettings = await MariaModDB.getGuildSettings(message.guildId);
-          locale = gSettings?.language || 'vi';
-      }
+      const [gSettings, blockedGuild, blockedUser] = await Promise.all([
+        message.guildId ? MariaModDB.getGuildSettings(message.guildId) : Promise.resolve(null),
+        shouldBlockGuild(message.guild),
+        shouldBlockUser(message.author),
+      ]);
+
+      const locale = gSettings?.language || 'vi';
       message.t = (key, options) => i18nManager.t(key, locale, options);
 
-      const blockedGuild = message.guild ? await shouldBlockGuild(message.guild) : null;
       if (blockedGuild) {
         await notifyBlacklistedGuildAndLeave(message.guild, blockedGuild.reason);
         return;
       }
 
-      const blockedUser = await shouldBlockUser(message.author);
       if (blockedUser) {
         await notifyBlacklistedUser(message.author, blockedUser.reason);
         return;
@@ -41,10 +41,8 @@ function setupMessageCreateEvent(client) {
       const xpResult = await XPService.addXP(message);
       if (xpResult && xpResult.leveledUp) {
         try {
-          const settings = await MariaModDB.getGuildSettings(message.guild.id);
-
-          if (settings?.settings?.levelUpChannel && settings?.settings?.levelUpNotifications) {
-            const targetChannelId = settings.settings.levelUpChannel;
+          if (gSettings?.settings?.levelUpChannel && gSettings?.settings?.levelUpNotifications) {
+            const targetChannelId = gSettings.settings.levelUpChannel;
             const targetChannel = message.guild.channels.cache.get(targetChannelId) || await message.guild.channels.fetch(targetChannelId).catch(() => null);
 
             if (targetChannel && targetChannel.isTextBased()) {

@@ -63,8 +63,7 @@ module.exports = {
             const prompt = prompts.moderation.ban
                 .replace('${username}', targetUser.username)
                 .replace('${reason}', reason);
-
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
 
             // Cấm người dùng
             await interaction.guild.members.ban(targetUser, {
@@ -81,7 +80,10 @@ module.exports = {
                 reason: reason,
             });
 
-            await interaction.editReply({ content: aiResponse });
+            const aiResponse = await aiResponsePromise;
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} ${targetUser.tag} đã bị ban.`,
+            });
 
             const logEmbed = createModActionEmbed({
                 title: interaction.t('commands.ban.log_title'),

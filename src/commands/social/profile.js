@@ -20,7 +20,18 @@ module.exports = {
 
     try {
       const targetUser = interaction.options.getUser('user') || interaction.user;
-      const member = await interaction.guild.members.fetch(targetUser.id);
+      const member = interaction.options.getMember('user')
+        || interaction.guild.members.cache.get(targetUser.id)
+        || await interaction.guild.members.fetch({ user: targetUser.id }).catch(() => null);
+
+      if (!member) {
+        return interaction.editReply({
+          content: `${emojis.error} ${interaction.t('commands.moderation_common.user_not_found')}`,
+        });
+      }
+
+      const presence = interaction.guild.presences.cache.get(targetUser.id)
+        || await interaction.guild.presences.fetch(targetUser.id).catch(() => null);
 
       if (targetUser.bot) {
         return interaction.editReply({
@@ -35,6 +46,7 @@ module.exports = {
       const attachment = await generateProfileCard({
         user: targetUser,
         member,
+        presence,
         profile: profileData
       });
 
@@ -44,7 +56,6 @@ module.exports = {
       logger.error('profile', 'Error creating profile card:', error);
       await interaction.editReply({
         content: `${emojis.error} ${interaction.t('commands.profile.error')}`,
-        ephemeral: true
       });
     }
   }

@@ -60,8 +60,7 @@ module.exports = {
             const prompt = prompts.moderation.kick
                 .replace('${username}', targetUser.username)
                 .replace('${reason}', reason);
-
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
 
             await targetMember.kick(reason);
 
@@ -73,7 +72,10 @@ module.exports = {
                 reason,
             });
 
-            await interaction.editReply({ content: aiResponse });
+            const aiResponse = await aiResponsePromise;
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} ${targetUser.tag} đã bị kick khỏi server.`,
+            });
 
             const logEmbed = createModActionEmbed({
                 title: interaction.t('commands.kick.log_title'),
