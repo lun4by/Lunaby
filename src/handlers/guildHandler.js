@@ -181,9 +181,9 @@ async function handleGuildJoin(guild, commands) {
     const defaultChannel = findDefaultChannel(guild);
     if (defaultChannel) {
       await defaultChannel.send({
-        content: `Xin chao! Lunaby da san sang ho tro server **${guild.name}**!\n`
-          + 'Ban co the chat voi minh bang cach @Luna hoac su dung cac lenh slash.\n'
-          + 'Cam on da them minh vao server!',
+        content: `Xin chào! Lunaby đã sẵn sàng hỗ trợ server **${guild.name}**!\n`
+          + 'Bạn có thể chat với mình bằng cách @Luna hoặc sử dụng các lệnh slash.\n'
+          + 'Cảm ơn đã thêm mình vào server!',
       });
     }
   } catch (error) {
