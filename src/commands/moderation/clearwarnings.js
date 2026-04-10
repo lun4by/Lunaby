@@ -91,7 +91,7 @@ module.exports = {
 
             const aiResponse = await aiResponsePromise;
             await interaction.editReply({
-                content: aiResponse || `${emojis.success} Đã xóa ${deletedCount} cảnh cáo của ${targetUser.tag}.`,
+                content: aiResponse || `${emojis.success} ${interaction.t('commands.clearwarnings.success_fallback', { count: deletedCount, tag: targetUser.tag })}`,
             });
 
             try {

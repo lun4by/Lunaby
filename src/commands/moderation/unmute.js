@@ -82,7 +82,7 @@ module.exports = {
 
             const aiResponse = await aiResponsePromise;
             await interaction.editReply({
-                content: aiResponse || `${emojis.success} ${targetUser.tag} đã được unmute.`,
+                content: aiResponse || `${emojis.success} ${interaction.t('commands.unmute.success_fallback', { tag: targetUser.tag })}`,
             });
 
             const logEmbed = createModActionEmbed({

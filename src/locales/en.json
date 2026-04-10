@@ -15,6 +15,7 @@
   },
   "commands": {
     "moderation_common": {
+      "datetime_locale": "en-US",
       "no_reason": "No specific reason",
       "cant_action_higher_role": "Cannot perform this action because the user has a higher or equal role!",
       "audit_log_reason": "{{reason}} - By {{user}}",
@@ -34,6 +35,7 @@
     },
     "ban": {
       "usage": "Usage:\n- Ban member: `{{prefix}}ban @user [reason] [days_to_delete_messages]`",
+      "success_fallback": "{{tag}} has been banned.",
       "log_title": "{{_emoji.locale.hammer}} Member Banned",
       "log_desc": "Banned {{tag}} from the server.\n\n**Delete messages:** {{days}} days.",
       "dm_title": "You have been banned from {{guild}}",
@@ -42,12 +44,14 @@
     },
     "kick": {
       "usage": "Usage:\n- Kick member: `{{prefix}}kick @user [reason]`",
+      "success_fallback": "{{tag}} has been kicked from the server.",
       "log_title": "{{_emoji.locale.boot}} Member Kicked",
       "log_desc": "Kicked {{tag}} from the server.",
       "error_kick": "An error occurred while kicking the user: {{error}}"
     },
     "mute": {
       "usage": "Usage:\n- Mute member: `{{prefix}}mute @user [minutes] [reason]`",
+      "success_fallback": "{{tag}} has been muted for {{duration}}.",
       "log_title": "{{_emoji.locale.mute}} Member Muted",
       "log_desc": "Muted {{tag}}.",
       "dm_title": "You have been muted in {{guild}}",
@@ -58,6 +62,7 @@
     "unmute": {
       "usage": "Usage:\n- Unmute member: `{{prefix}}unmute @user [reason]`",
       "not_muted": "This user is not currently muted!",
+      "success_fallback": "{{tag}} has been unmuted.",
       "log_title": "{{_emoji.locale.unmute}} Member Unmuted",
       "log_desc": "Unmuted {{tag}}.",
       "dm_title": "You have been unmuted in {{guild}}",
@@ -68,13 +73,16 @@
       "usage": "Usage:\n- Warn member: `{{prefix}}warn @user [reason]`",
       "cannot_warn_bot": "Cannot warn bots!",
       "db_error": "An error occurred while saving the warning to the database!",
+      "success_fallback": "Warned {{tag}} (#{{count}}).",
       "dm_title": "You have been warned in {{guild}}",
       "dm_desc": "**Reason:** {{reason}}\n**Warnings:** {{warningCount}}",
       "dm_footer": "If you continue breaking rules, you may be muted or banned.",
       "auto_mute_title": "{{_emoji.locale.mute}} Member auto-muted",
       "auto_mute_desc": "{{tag}} was auto-muted for 1 hour after {{count}} warnings.",
+      "auto_mute_reason": "Auto-muted after {{count}} warnings",
       "auto_kick_title": "{{_emoji.locale.boot}} Member auto-kicked",
       "auto_kick_desc": "{{tag}} was auto-kicked after {{count}} warnings.",
+      "auto_kick_reason": "Auto-kicked after {{count}} warnings",
       "error_warn": "An error occurred while warning the user: {{error}}"
     },
     "warnings": {
@@ -94,6 +102,7 @@
       "type_latest": "latest warning",
       "type_all_cap": "All",
       "type_latest_cap": "Latest warning",
+      "success_fallback": "Cleared {{count}} warnings for {{tag}}.",
       "dm_title": "Your warnings have been cleared in {{guild}}",
       "dm_desc": "{{typeCap}} ({{count}}) of your warnings have been cleared.\nReason: {{reason}}",
       "dm_footer": "By {{user}}",
@@ -103,6 +112,7 @@
       "usage": "Usage:\n- Unban user: `{{prefix}}unban [user_id] [reason]`",
       "invalid_id": "Invalid user ID. The ID must be a 17-19 digit number.",
       "not_banned": "Could not find this member in the server's ban list.",
+      "success_fallback": "{{tag}} has been unbanned.",
       "log_title": "{{_emoji.locale.unban}} Member Unbanned",
       "log_desc": "Unbanned {{tag}} from the server.",
       "error_unban": "An error occurred while unbanning the user: {{error}}"
@@ -112,6 +122,13 @@
       "no_logs": "The system has not recorded any moderation logs matching the filter!",
       "embed_title": "{{_emoji.locale.clipboard}} Moderation Log",
       "embed_desc": "Displaying the last **{{count}}** moderation actions{{userText}}{{actionText}}.",
+      "action_ban": "Ban",
+      "action_unban": "Unban",
+      "action_kick": "Kick",
+      "action_mute": "Mute",
+      "action_unmute": "Unmute",
+      "action_warn": "Warn",
+      "action_clearwarnings": "Clear Warn",
       "filter_user": " for <@{{id}}>",
       "filter_action": " (Filter: `{{action}}`)",
       "unknown_id": "Unknown (ID: {{id}})",

@@ -76,7 +76,7 @@ module.exports = {
 
             const aiResponse = await aiResponsePromise;
             await interaction.editReply({
-                content: aiResponse || `${emojis.success} ${user.tag} đã được unban.`,
+                content: aiResponse || `${emojis.success} ${interaction.t('commands.unban.success_fallback', { tag: user.tag })}`,
             });
 
             const logEmbed = createModActionEmbed({

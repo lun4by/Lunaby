@@ -9,7 +9,7 @@ const { createLunabyEmbed } = require('../../utils/embedUtils');
 const BANK_CODE = 'TCB';
 const BANK_NAME = 'Techcombank';
 const ACCOUNT_NUMBER = '6688887838';
-const ACCOUNT_NAME = process.env.ACCOUNT_NAME || 'NGUYEN HO HUU HOANG';
+const ACCOUNT_NAME = 'NGUYEN HO HUU HOANG';
 const TRANSFER_NOTE = 'Ung ho Lunaby project';
 
 function buildDonateQrUrl() {

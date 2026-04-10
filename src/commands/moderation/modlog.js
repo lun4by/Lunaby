@@ -52,6 +52,7 @@ module.exports = {
         await interaction.deferReply();
 
         try {
+            const dateLocale = interaction.t('commands.moderation_common.datetime_locale');
             const logs = await MariaModDB.getModLogs({
                 guildId: interaction.guild.id,
                 targetId: targetUser ? targetUser.id : null,
@@ -77,8 +78,8 @@ module.exports = {
                 .setTimestamp();
 
             for (const log of logs) {
-                const date = new Date(log.timestamp).toLocaleDateString('vi-VN');
-                const time = new Date(log.timestamp).toLocaleTimeString('vi-VN');
+                const date = new Date(log.timestamp).toLocaleDateString(dateLocale);
+                const time = new Date(log.timestamp).toLocaleTimeString(dateLocale);
 
                 let moderator = interaction.t('commands.moderation_common.unknown_user');
                 let target = interaction.t('commands.moderation_common.unknown_user');
@@ -100,13 +101,13 @@ module.exports = {
                 // Định dạng tên hành động
                 const actionName =
                     {
-                        ban: `${emojis.moderation.ban} Ban`,
-                        unban: `${emojis.moderation.unban} Unban`,
-                        kick: `${emojis.moderation.kick} Kick`,
-                        mute: `${emojis.moderation.mute} Mute`,
-                        unmute: `${emojis.moderation.unmute} Unmute`,
-                        warn: `${emojis.moderation.warn} Warn`,
-                        clearwarnings: `${emojis.moderation.clearWarnings} Clear Warn`,
+                        ban: `${emojis.moderation.ban} ${interaction.t('commands.modlog.action_ban')}`,
+                        unban: `${emojis.moderation.unban} ${interaction.t('commands.modlog.action_unban')}`,
+                        kick: `${emojis.moderation.kick} ${interaction.t('commands.modlog.action_kick')}`,
+                        mute: `${emojis.moderation.mute} ${interaction.t('commands.modlog.action_mute')}`,
+                        unmute: `${emojis.moderation.unmute} ${interaction.t('commands.modlog.action_unmute')}`,
+                        warn: `${emojis.moderation.warn} ${interaction.t('commands.modlog.action_warn')}`,
+                        clearwarnings: `${emojis.moderation.clearWarnings} ${interaction.t('commands.modlog.action_clearwarnings')}`,
                     }[log.action] || log.action;
 
                 // Thêm thông tin bổ sung dựa trên loại hành động

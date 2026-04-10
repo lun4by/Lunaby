@@ -100,7 +100,7 @@ module.exports = {
             const aiResponse = await aiResponsePromise;
 
             await interaction.editReply({
-                content: aiResponse || `${emojis.success} Đã cảnh cáo ${targetUser.tag} (#${warningCount}).`,
+                content: aiResponse || `${emojis.success} ${interaction.t('commands.warn.success_fallback', { tag: targetUser.tag, count: warningCount })}`,
             });
 
             try {
@@ -120,7 +120,7 @@ module.exports = {
                 try {
                     await targetMember.timeout(
                         60 * 60 * 1000,
-                        `Tự động mute sau ${warningCount} lần cảnh cáo`,
+                        interaction.t('commands.warn.auto_mute_reason', { count: warningCount }),
                     );
 
                     const autoMuteEmbed = new EmbedBuilder()
@@ -136,7 +136,7 @@ module.exports = {
                 }
             } else if (warningCount >= 5) {
                 try {
-                    await targetMember.kick(`Tự động kick sau ${warningCount} lần cảnh cáo`);
+                    await targetMember.kick(interaction.t('commands.warn.auto_kick_reason', { count: warningCount }));
 
                     const autoKickEmbed = new EmbedBuilder()
                         .setColor(0xff5555)

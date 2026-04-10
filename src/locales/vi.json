@@ -15,6 +15,7 @@
   },
   "commands": {
     "moderation_common": {
+      "datetime_locale": "vi-VN",
       "no_reason": "Không có lý do cụ thể",
       "cant_action_higher_role": "Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!",
       "audit_log_reason": "{{reason}} - Bởi {{user}}",
@@ -34,6 +35,7 @@
     },
     "ban": {
       "usage": "Cách dùng:\n- Ban member: `{{prefix}}ban @user [lý do] [số_ngày_xóa_tin_nhắn]`",
+      "success_fallback": "{{tag}} đã bị ban.",
       "log_title": "{{_emoji.locale.hammer}} Đã ban thành viên",
       "log_desc": "Đã cấm {{tag}} khỏi server.\n\n**Xóa tin nhắn:** {{days}} ngày.",
       "dm_title": "Bạn đã bị cấm tại {{guild}}",
@@ -42,12 +44,14 @@
     },
     "kick": {
       "usage": "Cách dùng:\n- Đuổi thành viên (kick): `{{prefix}}kick @user [lý do]`",
+      "success_fallback": "{{tag}} đã bị kick khỏi server.",
       "log_title": "{{_emoji.locale.boot}} Đã đuổi thành viên (Kick)",
       "log_desc": "Đã đuổi {{tag}} khỏi server.",
       "error_kick": "Đã xảy ra lỗi khi đuổi người dùng: {{error}}"
     },
     "mute": {
       "usage": "Cách dùng:\n- Cấm ngôn (mute): `{{prefix}}mute @user [số_phút] [lý do]`",
+      "success_fallback": "{{tag}} đã bị mute {{duration}}.",
       "log_title": "{{_emoji.locale.mute}} Đã cấm ngôn (Mute)",
       "log_desc": "Đã cấm ngôn {{tag}}.",
       "dm_title": "Bạn đã bị mute trong {{guild}}",
@@ -58,6 +62,7 @@
     "unmute": {
       "usage": "Cách dùng:\n- Gỡ cấm ngôn (unmute): `{{prefix}}unmute @user [lý do]`",
       "not_muted": "Người dùng này hiện không bị cấm ngôn!",
+      "success_fallback": "{{tag}} đã được unmute.",
       "log_title": "{{_emoji.locale.unmute}} Đã gỡ cấm ngôn (Unmute)",
       "log_desc": "Đã gỡ cấm ngôn {{tag}}.",
       "dm_title": "Bạn đã được unmute trong {{guild}}",
@@ -68,13 +73,16 @@
       "usage": "Cách dùng:\n- Cảnh cáo (warn): `{{prefix}}warn @user [lý do]`",
       "cannot_warn_bot": "Không thể cảnh cáo bot!",
       "db_error": "Đã xảy ra lỗi khi lưu cảnh cáo vào cơ sở dữ liệu!",
+      "success_fallback": "Đã cảnh cáo {{tag}} (#{{count}}).",
       "dm_title": "Bạn đã bị cảnh cáo trong {{guild}}",
       "dm_desc": "**Lý do:** {{reason}}\n**Số lần cảnh cáo:** {{warningCount}}",
       "dm_footer": "Nếu bạn tiếp tục vi phạm quy tắc, bạn có thể bị mute hoặc ban.",
       "auto_mute_title": "{{_emoji.locale.mute}} Thành viên đã bị tự động mute",
       "auto_mute_desc": "{{tag}} đã bị tự động mute trong 1 giờ sau {{count}} lần cảnh cáo.",
+      "auto_mute_reason": "Tự động mute sau {{count}} lần cảnh cáo",
       "auto_kick_title": "{{_emoji.locale.boot}} Thành viên đã bị tự động kick",
       "auto_kick_desc": "{{tag}} đã bị tự động kick sau {{count}} lần cảnh cáo.",
+      "auto_kick_reason": "Tự động kick sau {{count}} lần cảnh cáo",
       "error_warn": "Đã xảy ra lỗi khi cảnh cáo người dùng: {{error}}"
     },
     "warnings": {
@@ -94,6 +102,7 @@
       "type_latest": "cảnh cáo mới nhất",
       "type_all_cap": "Tất cả",
       "type_latest_cap": "Cảnh cáo mới nhất",
+      "success_fallback": "Đã xóa {{count}} cảnh cáo của {{tag}}.",
       "dm_title": "Cảnh cáo của bạn đã được xóa tại {{guild}}",
       "dm_desc": "{{typeCap}} ({{count}}) cảnh cáo của bạn đã được xóa.\nLý do: {{reason}}",
       "dm_footer": "Bởi {{user}}",
@@ -103,6 +112,7 @@
       "usage": "Cách dùng:\n- Gỡ cấm (unban): `{{prefix}}unban [id_người_dùng] [lý do]`",
       "invalid_id": "ID người dùng không hợp lệ. ID phải là một chuỗi số từ 17-19 chữ số.",
       "not_banned": "Không tìm thấy thành viên này trong danh sách bị cấm của server.",
+      "success_fallback": "{{tag}} đã được unban.",
       "log_title": "{{_emoji.locale.unban}} Đã gỡ cấm thành viên (Unban)",
       "log_desc": "Đã gỡ cấm {{tag}} khỏi server.",
       "error_unban": "Đã xảy ra lỗi khi gỡ cấm người dùng: {{error}}"
@@ -112,6 +122,13 @@
       "no_logs": "Hệ thống chưa ghi nhận lược sử báo cáo nào phù hợp với bộ lọc!",
       "embed_title": "{{_emoji.locale.clipboard}} Lược sử Báo cáo Kiểm duyệt",
       "embed_desc": "Hiển thị **{{count}}** hành động kiểm duyệt gần nhất{{userText}}{{actionText}}.",
+      "action_ban": "Ban",
+      "action_unban": "Unban",
+      "action_kick": "Kick",
+      "action_mute": "Mute",
+      "action_unmute": "Unmute",
+      "action_warn": "Warn",
+      "action_clearwarnings": "Clear Warn",
       "filter_user": " đối với <@{{id}}>",
       "filter_action": " (Bộ lọc: `{{action}}`)",
       "unknown_id": "Không rõ (ID: {{id}})",

@@ -33,6 +33,7 @@ module.exports = {
         await interaction.deferReply();
 
         try {
+            const dateLocale = interaction.t('commands.moderation_common.datetime_locale');
             const warnings = await MariaModDB.getWarnings(
                 interaction.guild.id,
                 targetUser.id
@@ -58,8 +59,8 @@ module.exports = {
             recentWarnings.forEach((warning, index) => {
                 const moderator = interaction.guild.members.cache.get(warning.moderatorId);
                 const moderatorName = moderator ? moderator.user.tag : interaction.t('commands.moderation_common.unknown_user');
-                const date = new Date(warning.timestamp).toLocaleDateString('vi-VN');
-                const time = new Date(warning.timestamp).toLocaleTimeString('vi-VN');
+                const date = new Date(warning.timestamp).toLocaleDateString(dateLocale);
+                const time = new Date(warning.timestamp).toLocaleTimeString(dateLocale);
 
                 warningsEmbed.addFields({
                     name: interaction.t('commands.warnings.field_name', { index: index + 1, date, time }),
