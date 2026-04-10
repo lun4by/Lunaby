@@ -25,7 +25,7 @@ function formatLanguageDisplay(meta, withCode = false) {
 }
 
 const LANGUAGE_CHOICES = SUPPORTED_LANGS.map((lang) => ({
-    name: formatLanguageDisplay(FALLBACK_LANGUAGE_META[lang], true),
+    name: formatLanguageDisplay(FALLBACK_LANGUAGE_META[lang]),
     value: lang,
 }));
 
@@ -51,8 +51,8 @@ function getLanguageDisplay(targetLang, textLang = DEFAULT_LANG, withCode = fals
 }
 
 function buildLanguageChangedText(targetLang, previousLang, guildName = '') {
-    const from = getLanguageDisplay(previousLang, targetLang, true);
-    const to = getLanguageDisplay(targetLang, targetLang, true);
+    const from = getLanguageDisplay(previousLang, targetLang);
+    const to = getLanguageDisplay(targetLang, targetLang);
     return tByLang(targetLang, 'commands.language.notice.changed', {
         guildName: guildName || (targetLang === 'vi' ? 'server này' : 'this server'),
         from,
@@ -108,7 +108,7 @@ module.exports = {
             if (selectedLang === currentLang) {
                 await i.reply({
                     content: tByLang(selectedLang, 'commands.language.notice.already_using', {
-                        langDisplay: getLanguageDisplay(selectedLang, selectedLang, true),
+                        langDisplay: getLanguageDisplay(selectedLang, selectedLang),
                     }),
                     ephemeral: true,
                 });
