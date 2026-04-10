@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const { ShardingManager } = require('discord.js');
 const logger = require('./src/utils/logger.js');
 
