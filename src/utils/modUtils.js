@@ -8,10 +8,10 @@ async function logModAction({ guildId, targetId, moderatorId, action, reason, du
       duration: duration || null,
       count: count || null,
     });
-    if (!success) logger.error("MODERATION", "Failed to save moderation action to database");
+    if (!success) logger.error("MODERATION", "Không thể lưu hành động moderation vào MariaDB");
     return success;
   } catch (error) {
-    logger.error("MODERATION", "Error khi lưu hành động moderation:", error);
+    logger.error("MODERATION", "Lỗi khi lưu hành động moderation:", error);
     throw error;
   }
 }
@@ -20,7 +20,7 @@ async function getModLogs({ guildId, targetId = null, action = null, limit = 10 
   try {
     return await MariaModDB.getModLogs({ guildId, targetId, action, limit });
   } catch (error) {
-    logger.error("MODERATION", "Error khi lấy danh sách hành động moderation:", error);
+    logger.error("MODERATION", "Lỗi khi lấy danh sách hành động moderation:", error);
     throw error;
   }
 }

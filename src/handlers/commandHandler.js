@@ -8,7 +8,6 @@ const RoleService = require('../services/user/RoleService');
 const CooldownService = require('../services/user/CooldownService');
 const logger = require('../utils/logger.js');
 const emojis = require('../config/emojis');
-const i18nManager = require('../services/i18n/i18nManager');
 
 let commandsJsonCache = null;
 
@@ -26,17 +25,17 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
         if ('data' in command && 'execute' in command) {
           const commandName = command.data.name;
           if (client.commands.has(commandName)) {
-            logger.warn('COMMAND', `Command "${commandName}" already exists and will be overwritten by ${itemPath}`);
+            logger.warn('COMMAND', `Lệnh "${commandName}" đã tồn tại và sẽ bị ghi đè bởi ${itemPath}`);
           }
 
           try {
             const jsonData = command.data.toJSON();
             if (!jsonData || typeof jsonData !== 'object') {
-              logger.error('COMMAND', `Command "${commandName}" has invalid toJSON():`, jsonData);
+              logger.error('COMMAND', `Lệnh "${commandName}" có toJSON() không hợp lệ:`, jsonData);
               continue;
             }
             if (!jsonData.name || !jsonData.description) {
-              logger.error('COMMAND', `Command "${commandName}" is missing name or description:`, jsonData);
+              logger.error('COMMAND', `Lệnh "${commandName}" thiếu name hoặc description:`, jsonData);
               continue;
             }
 
@@ -46,14 +45,14 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
             client.commands.set(commandName, command);
             commandsJson.push(jsonData);
           } catch (jsonError) {
-            logger.error('COMMAND', `Error converting command "${commandName}" to JSON:`, jsonError);
+            logger.error('COMMAND', `Lỗi khi convert lệnh "${commandName}" sang JSON:`, jsonError);
             continue;
           }
         } else {
-          logger.warn('COMMAND', `Command at ${itemPath} is missing required property "data" hoặc "execute" `);
+          logger.warn('COMMAND', `Lệnh tại ${itemPath} thiếu thuộc tính "data" hoặc "execute" bắt buộc.`);
         }
       } catch (error) {
-        logger.error('COMMAND', `Failed to load command from ${itemPath}:`, error);
+        logger.error('COMMAND', `Không thể tải lệnh từ ${itemPath}:`, error);
       }
     }
   }
@@ -78,31 +77,16 @@ const getCommandsJson = (client) => {
 
 const handleCommand = async (interaction, client) => {
   if (!client.commands.size) {
-    logger.warn('COMMAND', 'Commands not loaded, reloading...');
+    logger.warn('COMMAND', 'Commands chưa được tải, đang tải lại...');
     loadCommands(client);
   }
   const command = client.commands.get(interaction.commandName);
   if (!command) {
-    logger.error('COMMAND', `No command found matching ${interaction.commandName}.`);
+    logger.error('COMMAND', `Không tìm thấy lệnh nào khớp với ${interaction.commandName}.`);
     return;
   }
 
   try {
-    logger.info(
-      'COMMAND',
-      `Handling /${interaction.commandName} | user=${interaction.user?.tag} (${interaction.user?.id}) | guild=${interaction.guild?.name || 'DM'} (${interaction.guildId || 'DM'}) | channel=${interaction.channel?.name || 'N/A'} (${interaction.channelId || 'N/A'})`
-    );
-
-    let locale = 'vi';
-    if (interaction.guildId) {
-        const gSettings = await MariaModDB.getGuildSettings(interaction.guildId);
-        locale = gSettings?.language || 'vi';
-        logger.info('COMMAND', `Guild locale resolved for /${interaction.commandName}: ${locale}`);
-    }
-    logger.info('COMMAND', `Effective locale for /${interaction.commandName}: ${locale} | i18nInitialized=${Boolean(i18nManager.isInitialized)}`);
-
-    interaction.t = (key, options) => i18nManager.t(key, locale, options);
-
     logger.info('COMMAND_USAGE', `[SLASH] [Server: ${interaction.guild?.name || 'DM'}] [Channel: ${interaction.channel?.name || 'N/A'}] User ${interaction.user.tag} (${interaction.user.id}) used: /${interaction.commandName}`
     );
 
@@ -115,7 +99,6 @@ const handleCommand = async (interaction, client) => {
 
     const userRole = await RoleService.getUserRole(interaction.user.id);
     const isPrivileged = userRole === 'owner' || userRole === 'admin';
-    logger.info('COMMAND', `Role resolved for ${interaction.user.id}: ${userRole}`);
 
     if (command.prefix?.adminOnly && !isPrivileged) {
       return interaction.reply({ content: `${emojis.error} Bạn không có quyền sử dụng lệnh này.`, ephemeral: true });
@@ -142,7 +125,6 @@ const handleCommand = async (interaction, client) => {
     }
 
     const hasConsented = await consentService.hasUserConsented(interaction.user.id);
-    logger.info('COMMAND', `Consent state for ${interaction.user.id}: ${hasConsented}`);
 
     if (!hasConsented) {
       try {
@@ -158,26 +140,12 @@ const handleCommand = async (interaction, client) => {
       return;
     }
 
-    logger.info('COMMAND', `Executing handler for /${interaction.commandName}`);
     await command.execute(interaction);
 
     const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
     CooldownService.set(interaction.user.id, interaction.commandName, cooldownTime);
   } catch (error) {
-    logger.error(
-      'COMMAND',
-      `Error executing command ${interaction.commandName} | replied=${interaction.replied} | deferred=${interaction.deferred} | localeBound=${typeof interaction.t === 'function'}`,
-      {
-        userId: interaction.user?.id,
-        userTag: interaction.user?.tag,
-        guildId: interaction.guildId,
-        guildName: interaction.guild?.name,
-        channelId: interaction.channelId,
-        channelName: interaction.channel?.name,
-        commandName: interaction.commandName,
-      },
-      error
-    );
+    logger.error('COMMAND', `Lỗi khi thực thi lệnh ${interaction.commandName}:`, error);
     const errPayload = { content: `${emojis.error} Đã xảy ra lỗi khi thực thi lệnh này!`, ephemeral: true };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)

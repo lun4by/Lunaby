@@ -29,7 +29,7 @@ module.exports = {
         if (!logChannel) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.systemlog.invalid_channel', { prefix })}`, ephemeral: true });
+            return interaction.reply({ content: `${emojis.error} Vui lòng cung cấp hoặc mention một kênh hợp lệ (VD: \`${prefix}systemlog #log-channel\`).`, ephemeral: true });
         }
 
         if (isSlash && !interaction.deferred && !interaction.replied) {
@@ -41,8 +41,8 @@ module.exports = {
         const isSuccess = await MariaModDB.setBotSetting('global_log_channel', logChannel.id, userId);
 
         const responseMessage = isSuccess
-            ? `${emojis.success} ${interaction.t('commands.admin.systemlog.success', { id: logChannel.id })}`
-            : `${emojis.error} ${interaction.t('commands.admin.systemlog.error')}`;
+            ? `${emojis.success} Đã thiết lập kênh log global thành công tại <#${logChannel.id}>.`
+            : `${emojis.error} Đã xảy ra lỗi khi lưu thiết lập kênh log vào database.`;
 
         return replyFunc({ content: responseMessage });
     },

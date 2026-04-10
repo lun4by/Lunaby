@@ -88,6 +88,15 @@ async function loadBotCommands(client, loadCommands) {
   logger.info('SYSTEM', `Loaded ${commandCount} commands`);
 }
 
+async function warmGuildProfiles(client) {
+  for (const [guildId, guild] of client.guilds.cache) {
+    try {
+      await MariaModDB.getGuildSettings(guildId);
+    } catch (error) {
+      logger.error('SYSTEM', `Guild config error ${guild.name}:`, error.message);
+    }
+  }
+}
 
 async function cleanupBlacklistedGuilds(client) {
   for (const guild of client.guilds.cache.values()) {
@@ -103,7 +112,6 @@ async function initializeReadyState(client, loadCommands) {
     runStartupStep('MongoDB init', initializeMongo, 'mongodb'),
     runStartupStep('MariaDB init', initializeMaria, 'mariadb'),
     runStartupStep('Command loading', () => loadBotCommands(client, loadCommands), 'commands'),
-    runStartupStep('i18n init', () => require('../services/i18n/i18nManager').init(), 'i18n'),
   ]);
 
   await runStartupStep('JSON generation', () => CommandsJSONService.generateCommandsJSON());

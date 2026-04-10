@@ -30,7 +30,7 @@ async function handleConsentInteraction(interaction) {
       await consentService.handleConsentDecline(interaction, targetUserId);
     }
   } catch (error) {
-    logger.error('CONSENT_HANDLER', `Error handling consent interaction for user ${targetUserId}:`, error);
+    logger.error('CONSENT_HANDLER', `Lỗi khi xử lý consent interaction cho user ${targetUserId}:`, error);
     const errPayload = { content: 'Có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại sau!', ephemeral: true };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)

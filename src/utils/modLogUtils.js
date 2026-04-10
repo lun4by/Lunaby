@@ -15,7 +15,7 @@ async function getModLogChannel(guild, isModAction = true) {
           const channel = await guild.channels.fetch(logSettings.logChannelId);
           if (channel?.isTextBased()) return channel;
         } catch (error) {
-          logger.error("COMMAND", `Failed to find log channel ${logSettings.logChannelId}:`, error);
+          logger.error("COMMAND", `Không thể tìm thấy kênh log ${logSettings.logChannelId}:`, error);
         }
       }
     }
@@ -25,7 +25,7 @@ async function getModLogChannel(guild, isModAction = true) {
     );
     return fallback || null;
   } catch (error) {
-    logger.error("COMMAND", "Error khi lấy kênh log moderation:", error);
+    logger.error("COMMAND", "Lỗi khi lấy kênh log moderation:", error);
     return null;
   }
 }
@@ -35,7 +35,7 @@ async function sendModLog(guild, embed, isModAction = true) {
     const logChannel = await getModLogChannel(guild, isModAction);
     return logChannel ? await logChannel.send({ embeds: [embed] }) : null;
   } catch (error) {
-    logger.error("COMMAND", "Error khi gửi log moderation:", error);
+    logger.error("COMMAND", "Lỗi khi gửi log moderation:", error);
     return null;
   }
 }

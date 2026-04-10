@@ -21,7 +21,7 @@ module.exports = {
       if (leaderboard.length === 0) {
         const embed = new EmbedBuilder()
           .setColor('#FF0000')
-          .setDescription(interaction.t('commands.leaderboard.no_data'));
+          .setDescription('Chưa có dữ liệu XP trong server này!');
         return interaction.editReply({ embeds: [embed] });
       }
 
@@ -32,7 +32,7 @@ module.exports = {
           user = await interaction.client.users.fetch(leaderboard[i].userId);
         } catch (e) {
           user = {
-            tag: interaction.t('commands.leaderboard.hidden_user'),
+            tag: `Người dùng ẩn`,
             displayAvatarURL: () => 'https://cdn.discordapp.com/embed/avatars/0.png'
           };
         }
@@ -50,13 +50,13 @@ module.exports = {
       const userRank = await XPService.getUserRank(interaction.guild.id, interaction.user.id);
 
       await interaction.editReply({
-        content: interaction.t('commands.leaderboard.success', { rank: ordinalize(userRank) }),
+        content: `Cùng vinh danh top 10 thành viên năng động nhất server! 🎉\nBạn đang đứng thứ **${ordinalize(userRank)}** trong bảng xếp hạng.`,
         files: [attachment]
       });
 
     } catch (error) {
       logger.error('LEADERBOARD', 'Error in leaderboard command:', error);
-      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.leaderboard.error')}`, ephemeral: true });
+      await interaction.editReply({ content: `${emojis.error} Đã xảy ra lỗi khi tải bảng xếp hạng!`, ephemeral: true });
     }
   }
 };

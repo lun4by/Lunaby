@@ -41,11 +41,11 @@ module.exports = {
         const userId = interaction.user.id;
         const stats = await QuotaService.getUserMessageStats(userId);
 
-        const embed = this.buildQuotaEmbed(interaction.user, stats, interaction);
+        const embed = this.buildQuotaEmbed(interaction.user, stats);
         await interaction.reply({ embeds: [embed] });
     },
 
-    buildQuotaEmbed(user, stats, interaction) {
+    buildQuotaEmbed(user, stats) {
         const roleBadge = ROLE_BADGES[stats.role] || ROLE_BADGES.user;
         const roleColor = ROLE_COLORS[stats.role] || ROLE_COLORS.user;
 
@@ -71,8 +71,8 @@ module.exports = {
         const msgBar = createProgressBar(msgCurrent, msgMax);
         const imgBar = createProgressBar(imgCurrent, imgMax);
 
-        const msgRemainingText = msgMax === -1 ? '∞' : interaction.t('commands.quota.remaining', { count: msgRemaining });
-        const imgRemainingText = imgMax === -1 ? '∞' : interaction.t('commands.quota.remaining', { count: imgRemaining });
+        const msgRemainingText = msgMax === -1 ? '∞' : `${msgRemaining}`;
+        const imgRemainingText = imgMax === -1 ? '∞' : `${imgRemaining}`;
 
         const embed = new EmbedBuilder()
             .setColor(embedColor)
@@ -82,14 +82,14 @@ module.exports = {
             })
             .setDescription(
                 `### ${roleBadge}\n` +
-                `*💬 Lunaby Pro*\n` +
+                `**💬 Lunaby Pro**\n` +
                 `${msgBar}\n` +
-                `${formatQuotaValue(msgCurrent, msgMax)} · ${msgRemainingText}\n\n` +
-                `*🎨 Lunaby Vision*\n` +
+                `${formatQuotaValue(msgCurrent, msgMax)} · Còn **${msgRemainingText}** lượt\n\n` +
+                `**🎨 Lunaby Vision**\n` +
                 `${imgBar}\n` +
-                `${formatQuotaValue(imgCurrent, imgMax)} · ${imgRemainingText}\n` +
-                `${interaction.t('commands.quota.total_usage')} **${stats.usage.total}** Lunaby Pro · **${stats.imageUsage.total}** Lunaby Vision\n` +
-                `${interaction.t('commands.quota.reset_in', { days: daysLeft })} · <t:${resetTimestamp}:R>`
+                `${formatQuotaValue(imgCurrent, imgMax)} · Còn **${imgRemainingText}** lượt\n` +
+                `Tổng lượt sử dụng: **${stats.usage.total}** lượt Lunaby Pro · **${stats.imageUsage.total}** lượt Lunaby Vision\n` +
+                `Làm mới sau **${daysLeft}** ngày · <t:${resetTimestamp}:R>`
             )
             .setFooter({ text: 'Lunaby · Quota System' })
             .setTimestamp();

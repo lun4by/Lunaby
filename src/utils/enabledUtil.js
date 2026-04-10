@@ -11,14 +11,14 @@ exports.createEmbed = async function (interaction, channel, guildId, channelId) 
     const disabledSet = new Set(disabledCommands);
 
     const embed = new EmbedBuilder()
-        .setAuthor({ name: interaction.t('commands.enabledUtil.title', { channelName: channel.name }) })
+        .setAuthor({ name: `Lệnh đang hoạt động tại #${channel.name}` })
         .setColor(COLORS.LUNABY);
 
     const allCommands = [...interaction.client.commands.values()].filter(c => c.data.name !== 'disable' && c.data.name !== 'enable');
     const groups = {};
 
     for (const cmd of allCommands) {
-        let category = cmd.category || interaction.t('commands.enabledUtil.other_cmds');
+        let category = cmd.category || 'Các Lệnh Khác';
         category = category.charAt(0).toUpperCase() + category.slice(1);
         if (!groups[category]) groups[category] = [];
         groups[category].push(cmd.data.name);

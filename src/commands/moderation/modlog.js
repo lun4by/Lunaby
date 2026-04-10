@@ -40,7 +40,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: `${emojis.error} ${interaction.t('system.no_permission')}`,
+                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
                 ephemeral: true,
             });
         }
@@ -61,40 +61,39 @@ module.exports = {
 
             if (logs.length === 0) {
                 return interaction.editReply({
-                    content: `${emojis.success} ${interaction.t('commands.modlog.no_logs')}`,
+                    content: `${emojis.success} Hệ thống chưa ghi nhận lược sử báo cáo nào phù hợp với bộ lọc!`,
                     ephemeral: false,
                 });
             }
 
-            const userText = targetUser ? interaction.t('commands.modlog.filter_user', { id: targetUser.id }) : '';
-            const actionText = actionType ? interaction.t('commands.modlog.filter_action', { action: actionType }) : '';
-
             const logEmbed = new EmbedBuilder()
                 .setColor(0x00B0F4)
-                .setTitle(interaction.t('commands.modlog.embed_title'))
-                .setDescription(interaction.t('commands.modlog.embed_desc', { count: logs.length, userText, actionText }))
-                .setFooter({ text: interaction.t('commands.moderation_common.log_footer', { guild: interaction.guild.name }) })
+                .setTitle('📋 Lược sử Báo cáo Kiểm duyệt')
+                .setDescription(
+                    `Hiển thị **${logs.length}** hành động kiểm duyệt gần nhất${targetUser ? ` đối với <@${targetUser.id}>` : ''}${actionType ? ` (Bộ lọc: \`${actionType}\`)` : ''}.`,
+                )
+                .setFooter({ text: `Server: ${interaction.guild.name}` })
                 .setTimestamp();
 
             for (const log of logs) {
                 const date = new Date(log.timestamp).toLocaleDateString('vi-VN');
                 const time = new Date(log.timestamp).toLocaleTimeString('vi-VN');
 
-                let moderator = interaction.t('commands.moderation_common.unknown_user');
-                let target = interaction.t('commands.moderation_common.unknown_user');
+                let moderator = 'Không rõ';
+                let target = 'Không rõ';
 
                 try {
                     const modUser = await interaction.client.users.fetch(log.moderatorId);
                     moderator = modUser.tag;
                 } catch (error) {
-                    moderator = interaction.t('commands.modlog.unknown_id', { id: log.moderatorId });
+                    moderator = `Không rõ (ID: ${log.moderatorId})`;
                 }
 
                 try {
                     const targetUser = await interaction.client.users.fetch(log.targetId);
                     target = targetUser.tag;
                 } catch (error) {
-                    target = interaction.t('commands.modlog.unknown_id', { id: log.targetId });
+                    target = `Không rõ (ID: ${log.targetId})`;
                 }
 
                 // Định dạng tên hành động
@@ -112,23 +111,22 @@ module.exports = {
                 // Thêm thông tin bổ sung dựa trên loại hành động
                 let additionalInfo = '';
                 if (log.action === 'mute' && log.duration) {
-                    additionalInfo = interaction.t('commands.modlog.field_duration', { duration: log.duration });
+                    additionalInfo = `\n**Thời gian:** ${log.duration} phút`;
                 } else if (log.action === 'clearwarnings' && log.count) {
-                    additionalInfo = interaction.t('commands.modlog.field_clear_count', { count: log.count });
+                    additionalInfo = `\n**Số cảnh cáo đã xóa:** ${log.count}`;
                 }
 
-                const reasonText = log.reason || interaction.t('commands.moderation_common.no_reason');
                 logEmbed.addFields({
                     name: `${actionName} - ${date} ${time}`,
-                    value: interaction.t('commands.modlog.field_value', { moderator, target, reason: reasonText, additional: additionalInfo }),
+                    value: `**👮 Người xử lý:** ${moderator}\n**👤 Người dùng:** ${target}\n**📝 Lý do:** ${log.reason || 'Không có lý do'}${additionalInfo}`,
                 });
             }
 
             await interaction.editReply({ embeds: [logEmbed] });
         } catch (error) {
-            logger.error('MODLOG', 'Error viewing moderation logs:', error);
+            logger.error('MODLOG', 'Lỗi khi xem nhật ký moderation:', error);
             await interaction.editReply({
-                content: `${emojis.error} ${interaction.t('commands.modlog.error_modlog', { error: error.message })}`,
+                content: `${emojis.error} Đã xảy ra lỗi khi xem lược sử báo cáo: ${error.message}`,
                 ephemeral: true,
             });
         }

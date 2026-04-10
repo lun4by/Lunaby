@@ -32,7 +32,7 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: `${emojis.error} ${interaction.t('system.no_permission')}`,
+                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
                 ephemeral: true
             });
         }
@@ -40,24 +40,24 @@ module.exports = {
         const targetUser = interaction.options.getUser('user');
         const targetMember = interaction.options.getMember('user');
         const duration = interaction.options.getInteger('duration'); // Thời gian tính bằng phút
-        const reason = interaction.options.getString('reason') || interaction.t('commands.moderation_common.no_reason');
+        const reason = interaction.options.getString('reason') || 'Không có lý do được cung cấp';
 
         if (!targetUser || !duration) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: interaction.t('commands.mute.usage', { prefix }) });
+            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Cấm ngôn (mute): \`${prefix}mute @user [số_phút] [lý do]\`` });
         }
 
         if (!targetMember) {
             return interaction.reply({
-                content: `${emojis.error} ${interaction.t('commands.moderation_common.user_not_found')}`,
+                content: `${emojis.error} Không tìm thấy thành viên này trong server!`,
                 ephemeral: true
             });
         }
 
         if (!targetMember.moderatable) {
             return interaction.reply({
-                content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
+                content: `${emojis.error} Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!`,
                 ephemeral: true
             });
         }
@@ -92,18 +92,18 @@ module.exports = {
             await interaction.editReply({ content: aiResponse });
 
             const logEmbed = createModActionEmbed({
-                title: interaction.t('commands.mute.log_title'),
-                description: interaction.t('commands.mute.log_desc', { tag: targetUser.tag }),
+                title: `🔇 Đã cấm ngôn (Mute)`,
+                description: `Đã cấm ngôn ${targetUser.tag}.`,
                 color: 0xffff00,
                 fields: [
-                    { name: interaction.t('commands.moderation_common.log_field_user'), value: `${targetUser.tag} (<@${targetUser.id}>)`, inline: true },
-                    { name: interaction.t('commands.moderation_common.log_field_id'), value: targetUser.id, inline: true },
-                    { name: interaction.t('commands.moderation_common.log_field_mod'), value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                    { name: interaction.t('commands.moderation_common.log_field_duration'), value: formattedDuration, inline: true },
-                    { name: interaction.t('commands.moderation_common.log_field_endtime'), value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>`, inline: true },
-                    { name: interaction.t('commands.moderation_common.log_field_reason'), value: reason, inline: false }
+                    { name: '👤 Người dùng', value: `${targetUser.tag} (<@${targetUser.id}>)`, inline: true },
+                    { name: '🆔 ID', value: targetUser.id, inline: true },
+                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: '⏳ Thời gian phạt', value: formattedDuration, inline: true },
+                    { name: '📅 Kết thúc lúc', value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>`, inline: true },
+                    { name: '📝 Lý do', value: reason, inline: false }
                 ],
-                footer: interaction.t('commands.moderation_common.log_footer', { guild: interaction.guild.name })
+                footer: `Server: ${interaction.guild.name}`
             });
 
             await sendModLog(interaction.guild, logEmbed, true);
@@ -111,20 +111,20 @@ module.exports = {
             try {
                 const dmEmbed = new EmbedBuilder()
                     .setColor(0xFFA500)
-                    .setTitle(interaction.t('commands.mute.dm_title', { guild: interaction.guild.name }))
-                    .setDescription(interaction.t('commands.mute.dm_desc', { reason, duration: formattedDuration, time: `<t:${Math.floor(endTime.getTime() / 1000)}:F>` }))
-                    .setFooter({ text: interaction.t('commands.mute.dm_footer') })
+                    .setTitle(`Bạn đã bị mute trong ${interaction.guild.name}`)
+                    .setDescription(`**Lý do:** ${reason}\n**Thời gian:** ${formattedDuration}\n**Kết thúc lúc:** <t:${Math.floor(endTime.getTime() / 1000)}:F>`)
+                    .setFooter({ text: `Trong thời gian mute, bạn không thể gửi tin nhắn hoặc tham gia voice chat.` })
                     .setTimestamp();
 
                 await targetUser.send({ embeds: [dmEmbed] });
             } catch (error) {
-                logger.error('MODERATION', `Failed to send DM to ${targetUser.tag}`);
+                logger.error('MODERATION', `Không thể gửi DM cho ${targetUser.tag}`);
             }
 
         } catch (error) {
-            logger.error('MODERATION', 'Error muting member:', error);
+            logger.error('MODERATION', 'Lỗi khi mute thành viên:', error);
             await interaction.editReply({
-                content: `${emojis.error} ${interaction.t('commands.mute.error_mute', { error: error.message })}`,
+                content: `${emojis.error} Đã xảy ra lỗi khi cấm ngôn người dùng: ${error.message}`,
                 ephemeral: true
             });
         }

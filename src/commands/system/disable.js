@@ -45,7 +45,7 @@ module.exports = {
                 const allCommands = [...interaction.client.commands.keys()].filter(c => c !== 'disable' && c !== 'enable');
                 await MariaModDB.disableAllCommands(guildId, channelId, allCommands, userId);
                 return interaction.reply({
-                    content: `${emojis.success} ${interaction.t('commands.disable.all_success', { channelId })}`,
+                    content: `${emojis.success} Tất cả lệnh đã bị **tắt** trong <#${channelId}>!`,
                     ephemeral: true
                 });
             }
@@ -59,7 +59,7 @@ module.exports = {
             }
 
             if (validCommands.length === 0) {
-                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.disable.invalid_cmds')}`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} Không tìm thấy lệnh hợp lệ nào để tắt.`, ephemeral: true });
             }
 
             await MariaModDB.disableAllCommands(guildId, channelId, validCommands, userId);
@@ -69,7 +69,7 @@ module.exports = {
 
         } catch (error) {
             logger.error('COMMAND', 'Error in disable command:', error);
-            return interaction.reply({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
+            return interaction.reply({ content: `${emojis.error} Đã xảy ra lỗi. Vui lòng thử lại.`, ephemeral: true });
         }
     },
 };

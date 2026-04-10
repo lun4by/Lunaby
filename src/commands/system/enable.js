@@ -41,7 +41,7 @@ module.exports = {
             if (commands.includes('all')) {
                 await MariaModDB.enableAllCommands(guildId, channelId);
                 return interaction.reply({
-                    content: `${emojis.success} ${interaction.t('commands.enable.all_success', { channelId })}`,
+                    content: `${emojis.success} Tất cả lệnh đã được **bật** trong <#${channelId}>!`,
                     ephemeral: true
                 });
             }
@@ -58,7 +58,7 @@ module.exports = {
             }
 
             if (validCommands.length === 0) {
-                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.enable.invalid_cmds')}`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} Không tìm thấy lệnh hợp lệ nào để bật.`, ephemeral: true });
             }
 
             const embed = await enabledUtil.createEmbed(interaction, channel, guildId, channelId);
@@ -66,7 +66,7 @@ module.exports = {
 
         } catch (error) {
             logger.error('COMMAND', 'Error in enable command:', error);
-            return interaction.reply({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
+            return interaction.reply({ content: `${emojis.error} Đã xảy ra lỗi. Vui lòng thử lại.`, ephemeral: true });
         }
     },
 };

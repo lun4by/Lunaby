@@ -23,9 +23,9 @@ module.exports = {
             return handleVoiceToggle(interaction);
         } else {
             const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
+            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
             const reply = interaction.reply ? interaction.reply.bind(interaction) : interaction.message.reply.bind(interaction.message);
-            return reply({ content: `${emojis.error} ${interaction.t('commands.voicewelcome.usage', { prefix })}` });
+            return reply({ content: `${emojis.error} Vui lòng dùng: \`/voicewelcome toggle\` hoặc \`${prefix}voicewelcome toggle\`` });
         }
     },
 };
@@ -44,8 +44,8 @@ async function handleVoiceToggle(interaction) {
         });
 
         const message = newEnabled
-            ? `${emojis.success} ${interaction.t('commands.voicewelcome.enabled')}`
-            : `${emojis.success} ${interaction.t('commands.voicewelcome.disabled')}`;
+            ? `${emojis.success} **Voice Toggle đã bật!**\nLunaby sẽ chào/tạm biệt thành viên khi vào/rời kênh voice.`
+            : `${emojis.success} **Voice Toggle đã tắt!**\nLunaby sẽ không còn chào/tạm biệt khi vào/rời kênh voice nữa.`;
 
         await interaction.editReply({ content: message });
 
@@ -53,7 +53,7 @@ async function handleVoiceToggle(interaction) {
     } catch (error) {
         logger.error('SETUP', 'Error handling voice toggle:', error);
         await interaction.editReply({
-            content: `${emojis.error} ${interaction.t('system.error_occurred')}`,
+            content: `${emojis.error} Đã xảy ra lỗi khi cập nhật cài đặt. Vui lòng thử lại!`,
         });
     }
 }

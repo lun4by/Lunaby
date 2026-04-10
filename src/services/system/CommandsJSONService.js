@@ -31,11 +31,11 @@ class CommandsJSONService {
       await fs.mkdir(this.outputDir, { recursive: true });
 
       await fs.writeFile(this.outputPath, JSON.stringify(commandsData, null, 2), 'utf8');
-      logger.info('COMMANDS_JSON', `Created commands.json file with ${commandsData.length} lệnh`);
+      logger.info('COMMANDS_JSON', `Đã tạo file commands.json với ${commandsData.length} lệnh`);
       return true;
 
     } catch (error) {
-      logger.error('COMMANDS_JSON', 'Error khi tạo file JSON lệnh:', error);
+      logger.error('COMMANDS_JSON', 'Lỗi khi tạo file JSON lệnh:', error);
       return false;
     }
   }
@@ -78,7 +78,7 @@ class CommandsJSONService {
               commands.push(commandData);
             }
           } catch (error) {
-            logger.warn('COMMANDS_JSON', `Failed to load command ${file}:`, error.message);
+            logger.warn('COMMANDS_JSON', `Không thể load lệnh ${file}:`, error.message);
           }
         }
       }
@@ -86,7 +86,7 @@ class CommandsJSONService {
         a.group.localeCompare(b.group) || a.name.localeCompare(b.name)
       );
     } catch (error) {
-      logger.error('COMMANDS_JSON', 'Error khi quét lệnh:', error);
+      logger.error('COMMANDS_JSON', 'Lỗi khi quét lệnh:', error);
       return [];
     }
   }

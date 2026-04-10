@@ -1,20 +1,11 @@
 {
   "name": "lunaby",
-  "version": "3.0.0-native",
+  "version": "2.1.2-native",
   "description": "Bot Discord hỗ trợ trò chuyện AI và tạo hình ảnh, phiên bản native chỉ dùng cho model Lunaby",
   "main": "src/index.js",
   "scripts": {
-    "start": "npm run bot",
-    "bot": "node shard.js",
-    "bot:dev": "cross-env NODE_ENV=development nodemon src/index.js",
-    "dashboard": "npm --prefix dashboard run dev",
-    "dashboard:build": "npm --prefix dashboard run build",
-    "dashboard:preview": "npm --prefix dashboard run preview",
-    "dashboard:prod": "npm --prefix dashboard run build && npm --prefix dashboard run prod",
-    "all": "concurrently \"npm run bot\" \"npm run dashboard\"",
-    "all:preview": "concurrently \"npm run bot\" \"npm run dashboard:preview\"",
-    "all:prod": "concurrently \"npm run bot\" \"npm run dashboard:prod\"",
-    "dev": "npm run bot:dev"
+    "start": "node shard.js",
+    "dev": "nodemon src/index.js"
   },
   "author": {
     "name": "s4ory"
@@ -25,20 +16,17 @@
   },
   "dependencies": {
     "@gradio/client": "^2.1.0",
-    "@top-gg/sdk": "^3.1.3",
+    "@top-gg/sdk": "^3.1.6",
     "discord.js": "^14.26.2",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
-    "i18next": "^26.0.3",
-    "lunaby-canvas": "github:lun4by/Lunaby-canvas",
+    "lunaby-canvas": "file:../Lunaby-canvas",
     "lunaby-sdk": "^2.1.1",
     "mariadb": "^3.5.1",
     "mongodb": "^7.1.0",
-    "topgg-autoposter": "^2.0.1"
+    "topgg-autoposter": "^2.0.2"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1",
-    "cross-env": "^10.0.0",
     "nodemon": "^3.1.14"
   }
 }

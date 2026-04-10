@@ -8,10 +8,10 @@ const { createLunabyEmbed } = require('../../utils/embedUtils');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis');
 
-function buildBannerActionRow(url, interaction) {
+function buildBannerActionRow(url) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setLabel(interaction.t('commands.banner.open_original'))
+      .setLabel('Mở ảnh gốc')
       .setStyle(ButtonStyle.Link)
       .setURL(url),
   );
@@ -41,27 +41,27 @@ module.exports = {
 
       if (!bannerUrl) {
         return interaction.reply({
-          content: `${emojis.error} ${interaction.t('commands.banner.no_banner', { user: targetUser.toString() })}`,
+          content: `${emojis.error} ${targetUser} chưa cài banner.`,
           ephemeral: true,
         });
       }
 
       const embed = createLunabyEmbed()
         .setAuthor({
-          name: interaction.t('commands.banner.title', { tag: fetchedUser.tag }),
+          name: `Banner của ${fetchedUser.tag}`,
           iconURL: fetchedUser.displayAvatarURL({ size: 256 }),
         })
-        .setDescription(interaction.t('commands.banner.click_to_open', { url: bannerUrl }))
+        .setDescription(`[Nhấn vào đây để mở ảnh gốc](${bannerUrl})`)
         .setImage(bannerUrl);
 
       await interaction.reply({
         embeds: [embed],
-        components: [buildBannerActionRow(bannerUrl, interaction)],
+        components: [buildBannerActionRow(bannerUrl)],
       });
     } catch (error) {
       logger.error('BANNER', 'Error in banner command:', error);
       const payload = {
-        content: `${emojis.error} ${interaction.t('commands.banner.error')}`,
+        content: `${emojis.error} Đã xảy ra lỗi khi tải banner!`,
         ephemeral: true,
       };
       const respond = interaction.replied || interaction.deferred

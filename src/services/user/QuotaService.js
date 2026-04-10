@@ -34,7 +34,7 @@ class QuotaService {
 
       return await QuotaDB.getUserQuota(userId);
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi khởi tạo quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi khởi tạo quota cho ${userId}:`, error);
       throw error;
     }
   }
@@ -51,7 +51,7 @@ class QuotaService {
       messageData = await QuotaDB.getUserQuota(userId);
       return await this.syncLegacyQuotaIfNeeded(userId, messageData);
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi lấy quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi lấy quota cho ${userId}:`, error);
       throw error;
     }
   }
@@ -103,7 +103,7 @@ class QuotaService {
         await QuotaDB.resetCurrentUsage(userId, now);
       }
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi reset quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi reset quota cho ${userId}:`, error);
     }
   }
 
@@ -127,7 +127,7 @@ class QuotaService {
         estimated: estimatedMessages
       };
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi kiểm tra quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi kiểm tra quota cho ${userId}:`, error);
       return { allowed: true, remaining: 0, role: 'user', error: error.message };
     }
   }
@@ -156,7 +156,7 @@ class QuotaService {
         estimated: estimatedImages
       };
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi kiểm tra image quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi kiểm tra image quota cho ${userId}:`, error);
       return { allowed: true, remaining: 0, role: 'user', error: error.message };
     }
   }
@@ -171,7 +171,7 @@ class QuotaService {
       await QuotaDB.recordUsage(userId, messagesUsed, Date.now());
       return true;
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi ghi nhận usage cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi ghi nhận usage cho ${userId}:`, error);
       return false;
     }
   }
@@ -190,7 +190,7 @@ class QuotaService {
       await QuotaDB.recordImageUsage(userId, imagesUsed, Date.now());
       return true;
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi ghi nhận image usage cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi ghi nhận image usage cho ${userId}:`, error);
       return false;
     }
   }
@@ -201,7 +201,7 @@ class QuotaService {
       await QuotaDB.addQuotaLimit(userId, amount, Date.now());
       return true;
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi cộng thêm quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi cộng thêm quota cho ${userId}:`, error);
       throw error;
     }
   }
@@ -230,7 +230,7 @@ class QuotaService {
         nextReset: periodStart + PERIOD_MS
       };
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi lấy thống kê cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi lấy thống kê cho ${userId}:`, error);
       throw error;
     }
   }
@@ -240,7 +240,7 @@ class QuotaService {
       await QuotaDB.resetCurrentUsage(userId, Date.now());
       return true;
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi reset quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi reset quota cho ${userId}:`, error);
       throw error;
     }
   }
@@ -251,10 +251,10 @@ class QuotaService {
       const newImageLimit = this.roleImageLimits[role] ?? DEFAULT_IMAGE_LIMIT;
       await this.initializeUserMessageData(userId);
       await QuotaDB.setQuotaLimit(userId, newLimit, newImageLimit, Date.now());
-      logger.info('QUOTA_SERVICE', `Synced quota for ${userId}: role=${role}, limit=${newLimit}, imageLimit=${newImageLimit}`);
+      logger.info('QUOTA_SERVICE', `Đã đồng bộ quota cho ${userId}: role=${role}, limit=${newLimit}, imageLimit=${newImageLimit}`);
       return true;
     } catch (error) {
-      logger.error('QUOTA_SERVICE', `Error khi đồng bộ quota cho ${userId}:`, error);
+      logger.error('QUOTA_SERVICE', `Lỗi khi đồng bộ quota cho ${userId}:`, error);
       throw error;
     }
   }
@@ -290,7 +290,7 @@ class QuotaService {
           .slice(0, 10)
       };
     } catch (error) {
-      logger.error('QUOTA_SERVICE', 'Error khi lấy thống kê hệ thống:', error);
+      logger.error('QUOTA_SERVICE', 'Lỗi khi lấy thống kê hệ thống:', error);
       throw error;
     }
   }
@@ -299,7 +299,7 @@ class QuotaService {
     try {
       await QuotaDB.initTables();
     } catch (error) {
-      logger.error('QUOTA_SERVICE', 'Error khi khởi tạo bảng MariaDB user_quotas:', error);
+      logger.error('QUOTA_SERVICE', 'Lỗi khi khởi tạo bảng MariaDB user_quotas:', error);
       throw error;
     }
   }
