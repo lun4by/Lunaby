@@ -10,6 +10,26 @@ const MariaModDB = require('../../services/database/MariaModDB');
 const emojis = require('../../config/emojis');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 
+const LANGUAGE_META = {
+    vi: {
+        flag: '🇻🇳',
+        label: 'Tiếng Việt',
+        code: 'vi-VN',
+        description: 'Hiển thị bot bằng tiếng Việt',
+    },
+    en: {
+        flag: '🇺🇸',
+        label: 'English',
+        code: 'en-US',
+        description: 'Show the bot in English',
+    },
+};
+
+function getLanguageDisplay(lang, withCode = false) {
+    const meta = LANGUAGE_META[lang] || LANGUAGE_META.vi;
+    return withCode ? `${meta.flag} ${meta.label} - ${meta.code}` : `${meta.flag} ${meta.label}`;
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('language')
@@ -19,8 +39,8 @@ module.exports = {
                 .setDescription('Chọn ngôn ngữ của server / Select the server language')
                 .setRequired(false)
                 .addChoices(
-                    { name: 'Tiếng Việt', value: 'vi' },
-                    { name: 'English', value: 'en' }
+                    { name: getLanguageDisplay('vi', true), value: 'vi' },
+                    { name: getLanguageDisplay('en', true), value: 'en' }
                 )),
     prefix: { name: 'language', aliases: ['lang'], description: 'Cài đặt ngôn ngữ server / Server language settings' },
     cooldown: 5,
@@ -34,7 +54,7 @@ module.exports = {
         }
 
         const guildSettings = await MariaModDB.getGuildSettings(interaction.guildId);
-        const currentLang = guildSettings?.language || 'vi';
+        let currentLang = guildSettings?.language || 'vi';
 
         await interaction.reply({
             embeds: [buildLanguageEmbed(currentLang)],
@@ -57,7 +77,19 @@ module.exports = {
             }
 
             const selectedLang = i.values[0];
+
+            if (selectedLang === currentLang) {
+                await i.reply({
+                    content: selectedLang === 'vi'
+                        ? `${emojis.info} Server đang dùng ${getLanguageDisplay(selectedLang, true)} rồi.`
+                        : `${emojis.info} This server is already using ${getLanguageDisplay(selectedLang, true)}.`,
+                    ephemeral: true,
+                });
+                return;
+            }
+
             await MariaModDB.updateGuildSettings(interaction.guildId, { language: selectedLang });
+            currentLang = selectedLang;
 
             await i.update({
                 embeds: [buildLanguageEmbed(selectedLang, true)],
@@ -89,13 +121,13 @@ function buildLanguageRow(currentLang, disabled = false) {
             .setDisabled(disabled)
             .addOptions(
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Tiếng Việt')
-                    .setDescription('Hiển thị bot bằng tiếng Việt')
+                    .setLabel(getLanguageDisplay('vi', true))
+                    .setDescription(LANGUAGE_META.vi.description)
                     .setValue('vi')
                     .setDefault(currentLang === 'vi'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('English')
-                    .setDescription('Show the bot in English')
+                    .setLabel(getLanguageDisplay('en', true))
+                    .setDescription(LANGUAGE_META.en.description)
                     .setValue('en')
                     .setDefault(currentLang === 'en'),
             ),
@@ -114,15 +146,15 @@ function buildLanguageEmbed(lang, changed = false) {
         .setDescription(
             changed
                 ? (isVi
-                    ? `${emojis.success} Bot hiện sẽ hiển thị bằng **Tiếng Việt** trong server này.`
-                    : `${emojis.success} The bot will now use **English** in this server.`)
+                    ? `${emojis.success} Bot hiện sẽ hiển thị bằng **${getLanguageDisplay('vi', true)}** trong server này.`
+                    : `${emojis.success} The bot will now use **${getLanguageDisplay('en', true)}** in this server.`)
                 : (isVi
                     ? 'Chọn ngôn ngữ bạn muốn dùng cho bot trong server từ menu bên dưới.'
                     : 'Choose the language you want the bot to use in this server from the menu below.')
         )
         .addFields({
-            name: isVi ? 'Ngôn ngữ hiện tại' : 'Current language',
-            value: isVi ? '`Tiếng Việt`' : '`English`',
+            name: isVi ? 'Locale hiện tại' : 'Current locale',
+            value: isVi ? `\`${getLanguageDisplay('vi', true)}\`` : `\`${getLanguageDisplay('en', true)}\``,
             inline: false,
         })
         .setFooter({
