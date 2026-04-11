@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('disco
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
+const { invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -55,6 +56,7 @@ module.exports = {
                     'settings.levelUpNotifications': false,
                     'settings.levelUpChannel': null
                 });
+                invalidateGuildLocaleCache(guildId);
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.levelup.disable_success')}` });
             }
 
@@ -83,6 +85,7 @@ module.exports = {
                     'settings.levelUpNotifications': true,
                     'settings.levelUpChannel': channel.id
                 });
+                invalidateGuildLocaleCache(guildId);
 
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.levelup.setup_success', { channelId: channel.id })}` });
             }

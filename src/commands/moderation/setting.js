@@ -3,7 +3,7 @@ const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger');
 const { COLORS } = require('../../utils/embedUtils');
-const { getCachedGuildSettings } = require('../../utils/guildLocale.js');
+const { getCachedGuildSettings, invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -70,6 +70,7 @@ module.exports = {
                         await MariaModDB.updateGuildSettings(guildId, {
                             'settings.levelUpNotifications': newStatus
                         });
+                        invalidateGuildLocaleCache(guildId);
                         await renderPage(i, guildId, currentPage, true);
                     }
                     else if (customId === 'setting_toggle_embed') {
@@ -78,6 +79,7 @@ module.exports = {
                         await MariaModDB.updateGuildSettings(guildId, {
                             'settings.useEmbeds': newStatus
                         });
+                        invalidateGuildLocaleCache(guildId);
                         await renderPage(i, guildId, currentPage, true);
                     }
                     else if (customId === 'setting_log_channel') {

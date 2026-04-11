@@ -2,7 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('disco
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
-const { getCachedGuildSettings } = require('../../utils/guildLocale.js');
+const { getCachedGuildSettings, invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -56,6 +56,7 @@ module.exports = {
                 await MariaModDB.updateGuildSettings(guildId, {
                     'channels.voteLog': null
                 });
+                invalidateGuildLocaleCache(guildId);
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.votelog.disable_success')}` });
             }
 
@@ -91,6 +92,7 @@ module.exports = {
                 await MariaModDB.updateGuildSettings(guildId, {
                     'channels.voteLog': channel.id
                 });
+                invalidateGuildLocaleCache(guildId);
 
                 return replyFunc({
                     content: `${emojis.success} ${interaction.t('commands.votelog.setup_success', { channelId: channel.id })}`

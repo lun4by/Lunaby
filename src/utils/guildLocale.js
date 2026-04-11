@@ -31,7 +31,7 @@ async function getGuildVoiceSettings(guildId, fallbackLocale = 'vi') {
     };
 }
 
-function clearGuildLocaleCache(guildId) {
+function invalidateGuildLocaleCache(guildId) {
     if (guildId) {
         guildSettingsCache.delete(guildId);
         return;
@@ -41,7 +41,8 @@ function clearGuildLocaleCache(guildId) {
 }
 
 module.exports = {
-    clearGuildLocaleCache,
+    clearGuildLocaleCache: invalidateGuildLocaleCache,
+    invalidateGuildLocaleCache,
     getCachedGuildSettings,
     getGuildLocale,
     getGuildVoiceSettings,

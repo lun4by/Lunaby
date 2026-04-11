@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('disco
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
+const { invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -53,6 +54,7 @@ module.exports = {
                 await MariaModDB.updateGuildSettings(guildId, {
                     'greeter.welcome.isEnabled': false
                 });
+                invalidateGuildLocaleCache(guildId);
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.welcome.disable_success')}` });
             }
 
@@ -85,6 +87,7 @@ module.exports = {
                     'greeter.welcome.channel': channel.id,
                     'greeter.welcome.message': message
                 });
+                invalidateGuildLocaleCache(guildId);
 
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.welcome.setup_success', { channelId: channel.id, message })}` });
             }

@@ -2,7 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
 const emojis = require('../../config/emojis.js');
-const { getGuildVoiceSettings } = require('../../utils/guildLocale.js');
+const { getGuildVoiceSettings, invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -43,6 +43,7 @@ async function handleVoiceToggle(interaction) {
         await MariaModDB.updateGuildSettings(guildId, {
             'voiceToggle.isEnabled': newEnabled,
         });
+        invalidateGuildLocaleCache(guildId);
 
         const message = newEnabled
             ? `${emojis.success} ${interaction.t('commands.voicewelcome.enabled')}`
