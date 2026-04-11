@@ -10,6 +10,7 @@
     "quota_exceeded": "**Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Pro in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue.",
     "quota_exceeded_image": "**Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Vision in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue.",
     "command_disabled_in_channel": "This command has been disabled in this channel.",
+    "command_locked_for_maintenance": "This command is temporarily locked for maintenance. Please try again later.",
     "missing_server_permissions": "You do not have enough server permissions to use this command.",
     "cooldown_wait": "You must wait until <t:{{expiresAtUnix}}:R> before using this command again!",
     "command_execution_failed": "An error occurred while executing this command!",
@@ -251,6 +252,18 @@
         "invalid_channel": "Please provide or mention a valid channel (e.g. `{{prefix}}systemlog #log-channel`).",
         "success": "Global log channel successfully set to <#{{id}}>.",
         "error": "An error occurred while saving the log channel to the database."
+      },
+      "commandctl": {
+        "usage": "Usage: `commandctl <lock|unlock|list|reload> [commands|all|guild]`",
+        "invalid_subcommand": "Invalid subcommand. Use: `lock`, `unlock`, `list`, `reload`.",
+        "invalid_scope": "Invalid scope. Supported values are `guild` or `all`.",
+        "invalid_cmds": "No valid commands were found for this action.",
+        "list_empty": "There are currently no locked commands.",
+        "list_title": "Currently locked **{{count}}** command(s): {{commands}}",
+        "lock_success": "Locked **{{count}}** command(s): {{commands}}",
+        "unlock_success": "Unlocked **{{count}}** command(s): {{commands}}",
+        "reload_success": "Runtime command reload completed. Scope: **{{scope}}** | Shards: **{{shards}}** | Loaded: **{{loaded}}** | Deployed: **{{deployed}}** | Failed: **{{failed}}**",
+        "error": "An error occurred while processing commandctl."
       }
     },
     "fun": {

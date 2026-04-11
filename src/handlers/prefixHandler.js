@@ -267,9 +267,11 @@ async function handlePrefixMessage(message, client) {
         return true;
     }
 
+    const userRole = await RoleService.getUserRole(message.author.id);
+    const isPrivileged = userRole === 'owner' || userRole === 'admin';
+
     if (command.prefix?.adminOnly) {
-        const userRole = await RoleService.getUserRole(message.author.id);
-        if (userRole !== 'owner' && userRole !== 'admin') {
+        if (!isPrivileged) {
             await message.reply(`${emojis.error} ${message.t('system.no_permission')}`).catch(() => { });
             return true;
         }
@@ -285,17 +287,23 @@ async function handlePrefixMessage(message, client) {
         logger.info('command_usage', `[prefix] [Server: ${message.guild?.name || 'DM'}] [Channel: ${message.channel?.name || 'N/A'}] User ${message.author.tag} (${message.author.id}) used: ${prefix}${commandName}`
         );
 
+        const cmdName = command.data?.name || commandName;
+
+        const isLocked = await MariaModDB.isCommandLocked(cmdName);
+        if (isLocked && !isPrivileged) {
+            await message.reply(`${emojis.error} ${message.t('system.command_locked_for_maintenance')}`).catch(() => { });
+            return true;
+        }
+
         if (message.guildId) {
-            const isDisabled = await MariaModDB.isCommandDisabled(message.guildId, message.channelId, command.data?.name || commandName);
+            const isDisabled = await MariaModDB.isCommandDisabled(message.guildId, message.channelId, cmdName);
             if (isDisabled) {
                 await message.reply(`${emojis.error} ${message.t('system.command_disabled_in_channel')}`);
                 return true;
             }
         }
 
-        const userRole = await RoleService.getUserRole(message.author.id);
-        if (userRole !== 'owner' && userRole !== 'admin') {
-            const cmdName = command.data?.name || commandName;
+        if (!isPrivileged) {
             const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
             const { onCooldown, remaining, expiresAtUnix } = CooldownService.check(message.author.id, cmdName, cooldownTime);
             if (onCooldown) {
@@ -308,7 +316,6 @@ async function handlePrefixMessage(message, client) {
         const interaction = new PseudoInteraction(message, commandName, args, command);
         await command.execute(interaction);
 
-        const cmdName = command.data?.name || commandName;
         const cooldownTime = command.cooldown ?? CooldownService.DEFAULT_COOLDOWN;
         CooldownService.set(message.author.id, cmdName, cooldownTime);
     } catch (error) {

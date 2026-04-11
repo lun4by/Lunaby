@@ -84,6 +84,15 @@ class MariaModDB {
       `);
 
             await mariaClient.query(`
+        CREATE TABLE IF NOT EXISTS command_locks (
+          command_name VARCHAR(50) PRIMARY KEY,
+          reason VARCHAR(255) DEFAULT NULL,
+          updated_by VARCHAR(32),
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+            await mariaClient.query(`
         CREATE TABLE IF NOT EXISTS bot_settings (
           setting_key VARCHAR(50) PRIMARY KEY,
           setting_value VARCHAR(255),
@@ -602,6 +611,99 @@ class MariaModDB {
             return rows.length > 0;
         } catch (error) {
             logger.error('mariadb', 'Error checking command status:', error);
+            return false;
+        }
+    }
+
+    async lockCommand(commandName, updatedBy, reason = null) {
+        try {
+            await mariaClient.query(
+                `INSERT INTO command_locks (command_name, reason, updated_by)
+                 VALUES (?, ?, ?)
+                 ON DUPLICATE KEY UPDATE
+                 reason = VALUES(reason),
+                 updated_by = VALUES(updated_by)`,
+                [commandName, reason, updatedBy]
+            );
+            return true;
+        } catch (error) {
+            logger.error('mariadb', 'Error locking command:', error);
+            return false;
+        }
+    }
+
+    async lockCommands(commandNames, updatedBy, reason = null) {
+        try {
+            if (!Array.isArray(commandNames) || commandNames.length === 0) return true;
+
+            const values = commandNames.map((name) => [name, reason, updatedBy]);
+            const placeholders = values.map(() => '(?, ?, ?)').join(', ');
+
+            await mariaClient.query(
+                `INSERT INTO command_locks (command_name, reason, updated_by)
+                 VALUES ${placeholders}
+                 ON DUPLICATE KEY UPDATE
+                 reason = VALUES(reason),
+                 updated_by = VALUES(updated_by)`,
+                values.flat()
+            );
+            return true;
+        } catch (error) {
+            logger.error('mariadb', 'Error locking commands:', error);
+            return false;
+        }
+    }
+
+    async unlockCommand(commandName) {
+        try {
+            await mariaClient.query(
+                'DELETE FROM command_locks WHERE command_name = ?',
+                [commandName]
+            );
+            return true;
+        } catch (error) {
+            logger.error('mariadb', 'Error unlocking command:', error);
+            return false;
+        }
+    }
+
+    async unlockCommands(commandNames) {
+        try {
+            if (!Array.isArray(commandNames) || commandNames.length === 0) return true;
+
+            const placeholders = commandNames.map(() => '?').join(', ');
+            await mariaClient.query(
+                `DELETE FROM command_locks WHERE command_name IN (${placeholders})`,
+                commandNames
+            );
+            return true;
+        } catch (error) {
+            logger.error('mariadb', 'Error unlocking commands:', error);
+            return false;
+        }
+    }
+
+    async getLockedCommands() {
+        try {
+            const rows = await mariaClient.query(
+                'SELECT command_name FROM command_locks ORDER BY command_name ASC'
+            );
+            return rows.map((row) => row.command_name);
+        } catch (error) {
+            logger.error('mariadb', 'Error getting locked commands:', error);
+            return [];
+        }
+    }
+
+    async isCommandLocked(commandName) {
+        try {
+            const rows = await mariaClient.query(
+                'SELECT 1 FROM command_locks WHERE command_name = ? LIMIT 1',
+                [commandName]
+            );
+            return rows.length > 0;
+        } catch (error) {
+            logger.error('mariadb', 'Error checking command lock status:', error);
             return false;
         }
     }

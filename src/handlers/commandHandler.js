@@ -23,6 +23,11 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
       loadCommandsFromDirectory(client, itemPath, commandsJson);
     } else if (item.name.endsWith('.js')) {
       try {
+        try {
+          delete require.cache[require.resolve(itemPath)];
+        } catch (_) {
+        }
+
         const command = require(itemPath);
         if ('data' in command && 'execute' in command) {
           const commandName = command.data.name;
@@ -114,6 +119,11 @@ const handleCommand = async (interaction, client) => {
     const userRole = await RoleService.getUserRole(interaction.user.id);
     const isPrivileged = userRole === 'owner' || userRole === 'admin';
     logger.info('command', `Role resolved for ${interaction.user.id}: ${userRole}`);
+
+    const isLocked = await MariaModDB.isCommandLocked(interaction.commandName);
+    if (isLocked && !isPrivileged) {
+      return interaction.reply({ content: `${emojis.error} ${interaction.t('system.command_locked_for_maintenance')}`, ephemeral: true });
+    }
 
     if (command.prefix?.adminOnly && !isPrivileged) {
       return interaction.reply({ content: `${emojis.error} Bạn không có quyền sử dụng lệnh này.`, ephemeral: true });
