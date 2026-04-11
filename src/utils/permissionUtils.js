@@ -117,8 +117,7 @@ async function sendEmbedWithFallback(interaction, embedData, username, permissio
 }
 
 function hasPermission(interaction, permission) {
-  if (!interaction.guild) return true;
-  return interaction.guild.members.me?.permissions.has(permission) ?? false;
+  return hasBotPermission(interaction, permission);
 }
 
 module.exports = {
