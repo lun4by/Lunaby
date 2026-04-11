@@ -34,6 +34,21 @@ function canSendVoiceGreeting(memberId, channelId, eventType) {
     return true;
 }
 
+function isCreatorVoiceChannel(channel) {
+    return Boolean(channel && creatorChannels.has(channel.id));
+}
+
+function isTrackedTempVoiceChannel(channel) {
+    return Boolean(channel && activeVoiceChannels.has(channel.id));
+}
+
+function canSendGreetingToChannel(guild, channel, wasTrackedTemp) {
+    return Boolean(channel)
+        && !isCreatorVoiceChannel(channel)
+        && !wasTrackedTemp
+        && guild.channels.cache.has(channel.id);
+}
+
 async function isVoiceWelcomeEnabled(guildId) {
     const cached = voiceToggleCache.get(guildId);
     const now = Date.now();
@@ -294,8 +309,8 @@ function setupVoiceStateEvent(client) {
 
             const oldChannel = oldState.channel;
             let newChannel = newState.channel;
-            const oldChannelWasTemp = oldChannel ? activeVoiceChannels.has(oldChannel.id) : false;
-            const newChannelWasTemp = newChannel ? activeVoiceChannels.has(newChannel.id) : false;
+            const oldChannelWasTemp = isTrackedTempVoiceChannel(oldChannel);
+            const newChannelWasTemp = isTrackedTempVoiceChannel(newChannel);
 
             if (oldChannel?.id === newChannel?.id) return;
 
@@ -312,15 +327,15 @@ function setupVoiceStateEvent(client) {
 
             const voiceWelcomeEnabled = await isVoiceWelcomeEnabled(guild.id);
             if (voiceWelcomeEnabled) {
-                const isCreator = (ch) => ch && creatorChannels.has(ch.id);
-                const shouldGreet = (ch, wasTemp) => Boolean(ch) && !isCreator(ch) && !wasTemp && guild.channels.cache.has(ch.id);
+                const shouldGreetOld = canSendGreetingToChannel(guild, oldChannel, oldChannelWasTemp);
+                const shouldGreetNew = canSendGreetingToChannel(guild, newChannel, newChannelWasTemp);
 
-                if (shouldGreet(oldChannel, oldChannelWasTemp) && shouldGreet(newChannel, newChannelWasTemp)) {
+                if (shouldGreetOld && shouldGreetNew) {
                     await sendVoiceGreeting('leave', member, oldChannel);
                     await sendVoiceGreeting('join', member, newChannel);
-                } else if (!oldChannel && shouldGreet(newChannel, newChannelWasTemp)) {
+                } else if (!oldChannel && shouldGreetNew) {
                     await sendVoiceGreeting('join', member, newChannel);
-                } else if (shouldGreet(oldChannel, oldChannelWasTemp) && !newChannel) {
+                } else if (shouldGreetOld && !newChannel) {
                     await sendVoiceGreeting('leave', member, oldChannel);
                 }
             }
