@@ -436,6 +436,7 @@
       "need_perm": "You need **Manage Channels** permission to use this command!",
       "invalid_subcmd": "Invalid subcommand! Use: `/lvoice setup`, `/lvoice disable`, `/lvoice config`",
       "already_setup": "LVoice is already set up! Use `/lvoice disable` to turn it off before setting up again.",
+      "cooldown_wait": "Slow down a bit, wait **{{cooldown}}s**.",
       "setup_title": "{{_emoji.locale.voice}} LVoice has been set up!",
       "setup_desc": "Members can join <#{{creatorId}}> to dynamically create their own voice channels.",
       "category_field": "{{_emoji.locale.folder}} Category",

@@ -2,6 +2,7 @@ const { Events, ChannelType, PermissionFlagsBits } = require('discord.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 const PrefixDB = require('../services/database/PrefixDB.js');
 const AICore = require('../services/ai/AICore.js');
+const i18nManager = require('../services/i18n/i18nManager');
 const prompts = require('../config/prompts.js');
 const emojis = require('../config/emojis.js');
 const logger = require('../utils/logger.js');
@@ -10,11 +11,11 @@ const creatorChannels = new Map();
 const activeVoiceChannels = new Map();
 const userVoiceCooldowns = new Map();
 const pendingVoiceCreations = new Map();
-const voiceToggleCache = new Map();
+const guildVoiceSettingsCache = new Map();
 const voiceGreetingDebounce = new Map();
 
 const LVOICE_COOLDOWN_MS = 3000;
-const VOICE_TOGGLE_CACHE_TTL_MS = 15000;
+const GUILD_SETTINGS_CACHE_TTL_MS = 15000;
 const VOICE_GREETING_DEBOUNCE_MS = 2500;
 
 function wait(ms) {
@@ -49,18 +50,22 @@ function canSendGreetingToChannel(guild, channel, wasTrackedTemp) {
         && guild.channels.cache.has(channel.id);
 }
 
-async function isVoiceWelcomeEnabled(guildId) {
-    const cached = voiceToggleCache.get(guildId);
+async function getGuildVoiceSettings(guildId) {
+    const cached = guildVoiceSettingsCache.get(guildId);
     const now = Date.now();
 
-    if (cached && now - cached.ts < VOICE_TOGGLE_CACHE_TTL_MS) {
-        return cached.enabled;
+    if (cached && now - cached.ts < GUILD_SETTINGS_CACHE_TTL_MS) {
+        return cached;
     }
 
     const settings = await MariaModDB.getGuildSettings(guildId);
-    const enabled = Boolean(settings?.voiceToggle?.isEnabled);
-    voiceToggleCache.set(guildId, { enabled, ts: now });
-    return enabled;
+    const resolved = {
+        enabled: Boolean(settings?.voiceToggle?.isEnabled),
+        locale: settings?.language || 'vi',
+        ts: now,
+    };
+    guildVoiceSettingsCache.set(guildId, resolved);
+    return resolved;
 }
 
 /**
@@ -237,7 +242,7 @@ async function createTempVoiceChannel(newState, member, creatorConfig) {
     logger.info('lvoice', `Created temp channel "${channelName}" for ${member.user.tag} in ${guild.name}`);
 }
 
-async function handleVoiceMasterJoin(newState, member) {
+async function handleVoiceMasterJoin(newState, member, locale = 'vi') {
     const creatorConfig = creatorChannels.get(newState.channelId);
     if (!creatorConfig) return;
 
@@ -251,8 +256,12 @@ async function handleVoiceMasterJoin(newState, member) {
 
     const pendingCreateTask = (async () => {
         if (cooldownLeftMs > 0) {
+            const cooldownText = i18nManager.t('commands.lvoice.cooldown_wait', locale, {
+                cooldown: (cooldownLeftMs / 1000).toFixed(1),
+            });
+
             await member.send({
-                content: `${emojis.lvoice.cooldown} Bạn thao tác quá nhanh! Vui lòng giữ nguyên ở kênh Voice trong **${(cooldownLeftMs / 1000).toFixed(1)}s** nữa, hệ thống sẽ tự động tạo phòng cho bạn.`
+                content: `${emojis.lvoice.cooldown} ${cooldownText}`
             }).catch(() => {});
 
             await wait(cooldownLeftMs);
@@ -307,6 +316,8 @@ function setupVoiceStateEvent(client) {
             const guild = newState.guild || oldState.guild;
             if (!guild) return;
 
+            const { enabled: voiceWelcomeEnabled, locale } = await getGuildVoiceSettings(guild.id);
+
             const oldChannel = oldState.channel;
             let newChannel = newState.channel;
             const oldChannelWasTemp = isTrackedTempVoiceChannel(oldChannel);
@@ -315,7 +326,7 @@ function setupVoiceStateEvent(client) {
             if (oldChannel?.id === newChannel?.id) return;
 
             if (newChannel && creatorChannels.has(newChannel.id)) {
-                await handleVoiceMasterJoin(newState, member);
+                await handleVoiceMasterJoin(newState, member, locale);
                 // Sau khi user vào creator channel, LVoice sẽ chuyển họ sang kênh tạm.
                 // Cần đọc lại channel hiện tại để voicewelcome gửi đúng vào kênh vừa tạo.
                 newChannel = member.voice?.channel || newChannel;
@@ -325,7 +336,6 @@ function setupVoiceStateEvent(client) {
                 await handleVoiceMasterLeave(oldState);
             }
 
-            const voiceWelcomeEnabled = await isVoiceWelcomeEnabled(guild.id);
             if (voiceWelcomeEnabled) {
                 const shouldGreetOld = canSendGreetingToChannel(guild, oldChannel, oldChannelWasTemp);
                 const shouldGreetNew = canSendGreetingToChannel(guild, newChannel, newChannelWasTemp);
