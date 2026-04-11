@@ -4,8 +4,9 @@ const BlacklistService = require('../services/user/BlacklistService');
 const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
 const logger = require('../utils/logger.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
+const { getCachedGuildSettings } = require('../utils/guildLocale.js');
 
-const GUILD_COMMAND_DEPLOY_DELAY_MS = 1000;
+const guildCommandDeployDelayMs = 1000;
 
 const sendGlobalLog = async (client, message) => {
   const logChannelId = await MariaModDB.getBotSetting('global_log_channel');
@@ -20,7 +21,7 @@ const sendGlobalLog = async (client, message) => {
 
 async function storeGuildInDB(guild) {
   try {
-    const guildSettings = await MariaModDB.getGuildSettings(guild.id);
+    const guildSettings = await getCachedGuildSettings(guild.id);
 
     if (guild.client && !guild.client.guildProfiles) {
       guild.client.guildProfiles = new Map();
@@ -77,7 +78,7 @@ async function removeGuildFromDB(guildId) {
 
 async function getGuildFromDB(guildId) {
   try {
-    return await MariaModDB.getGuildSettings(guildId);
+    return await getCachedGuildSettings(guildId);
   } catch (error) {
     logger.error('guild_deploy', `Error while fetching guild data from MariaDB:`, error);
     return null;
@@ -232,7 +233,7 @@ async function syncAllGuilds(client, commands = null) {
       try {
         await deployCommandsToGuild(guild.id, commandsToRegister, client);
         deployCount++;
-        await new Promise((resolve) => setTimeout(resolve, GUILD_COMMAND_DEPLOY_DELAY_MS));
+        await new Promise((resolve) => setTimeout(resolve, guildCommandDeployDelayMs));
       } catch (error) {
         deployErrors++;
         logger.error('guild_deploy', `Error deploying commands for guild ${guild.name}:`, error.message);

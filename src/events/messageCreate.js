@@ -11,7 +11,7 @@ const {
 } = require("../utils/blacklistUtils");
 const logger = require("../utils/logger.js");
 const i18nManager = require('../services/i18n/i18nManager');
-const MariaModDB = require("../services/database/MariaModDB");
+const { getCachedGuildSettings } = require('../utils/guildLocale.js');
 
 function setupMessageCreateEvent(client) {
   client.on(Events.MessageCreate, async (message) => {
@@ -20,7 +20,7 @@ function setupMessageCreateEvent(client) {
       if (!message.guild) return;
 
       const [gSettings, blockedGuild, blockedUser] = await Promise.all([
-        message.guildId ? MariaModDB.getGuildSettings(message.guildId) : Promise.resolve(null),
+        message.guildId ? getCachedGuildSettings(message.guildId) : Promise.resolve(null),
         shouldBlockGuild(message.guild),
         shouldBlockUser(message.author),
       ]);

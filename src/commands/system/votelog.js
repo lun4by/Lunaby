@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('disco
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
+const { getCachedGuildSettings } = require('../../utils/guildLocale.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -59,7 +60,7 @@ module.exports = {
             }
 
             if (subCommand === 'status') {
-                const settings = await MariaModDB.getGuildSettings(guildId);
+                const settings = await getCachedGuildSettings(guildId);
                 const channelId = settings.channels?.voteLog;
 
                 if (channelId) {

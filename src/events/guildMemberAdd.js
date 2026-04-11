@@ -1,11 +1,12 @@
 const { Events } = require("discord.js");
 const MariaModDB = require("../services/database/MariaModDB");
 const logger = require("../utils/logger");
+const { getCachedGuildSettings } = require('../utils/guildLocale.js');
 
 async function handleGuildMemberAdd(member) {
     try {
         const guildId = member.guild.id;
-        const settings = await MariaModDB.getGuildSettings(guildId);
+        const settings = await getCachedGuildSettings(guildId);
 
         if (!settings || !settings.greeter?.welcome?.isEnabled) return;
 

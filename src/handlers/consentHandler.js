@@ -1,16 +1,15 @@
 const consentService = require('../services/user/consentService');
-const MariaModDB = require('../services/database/MariaModDB.js');
 const i18nManager = require('../services/i18n/i18nManager');
 const logger = require('../utils/logger.js');
 const emojis = require('../config/emojis.js');
+const { getGuildLocale } = require('../utils/guildLocale.js');
 
 async function getInteractionTranslator(interaction) {
   let locale = 'vi';
 
   try {
     if (interaction.guildId) {
-      const guildSettings = await MariaModDB.getGuildSettings(interaction.guildId);
-      locale = guildSettings?.language || 'vi';
+      locale = await getGuildLocale(interaction.guildId);
     }
   } catch (error) {
     logger.warn('consent_handler', `Failed to resolve locale for consent interaction: ${error.message}`);

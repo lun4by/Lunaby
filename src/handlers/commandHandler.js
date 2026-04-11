@@ -9,6 +9,7 @@ const CooldownService = require('../services/user/CooldownService');
 const logger = require('../utils/logger.js');
 const emojis = require('../config/emojis');
 const i18nManager = require('../services/i18n/i18nManager');
+const { getGuildLocale } = require('../utils/guildLocale.js');
 
 let commandsJsonCache = null;
 
@@ -92,11 +93,9 @@ const handleCommand = async (interaction, client) => {
       `Handling /${interaction.commandName} | user=${interaction.user?.tag} (${interaction.user?.id}) | guild=${interaction.guild?.name || 'DM'} (${interaction.guildId || 'DM'}) | channel=${interaction.channel?.name || 'N/A'} (${interaction.channelId || 'N/A'})`
     );
 
-    let locale = 'vi';
+    const locale = interaction.guildId ? await getGuildLocale(interaction.guildId) : 'vi';
     if (interaction.guildId) {
-        const gSettings = await MariaModDB.getGuildSettings(interaction.guildId);
-        locale = gSettings?.language || 'vi';
-        logger.info('command', `Guild locale resolved for /${interaction.commandName}: ${locale}`);
+      logger.info('command', `Guild locale resolved for /${interaction.commandName}: ${locale}`);
     }
     logger.info('command', `Effective locale for /${interaction.commandName}: ${locale} | i18nInitialized=${Boolean(i18nManager.isInitialized)}`);
 

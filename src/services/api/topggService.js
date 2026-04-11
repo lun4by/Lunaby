@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const logger = require('../../utils/logger.js');
 const MariaModDB = require('../database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
+const { getCachedGuildSettings } = require('../../utils/guildLocale.js');
 
 let autoPoster = null;
 let webhookApp = null;
@@ -56,7 +57,7 @@ async function sendVoteNotifications(client, vote) {
 
     for (const [guildId, guild] of client.guilds.cache) {
       try {
-        const settings = await MariaModDB.getGuildSettings(guildId);
+        const settings = await getCachedGuildSettings(guildId);
         const voteLogChannelId = settings.channels?.voteLog;
 
         if (!voteLogChannelId) continue;

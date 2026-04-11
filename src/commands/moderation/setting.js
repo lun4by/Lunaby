@@ -3,6 +3,7 @@ const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger');
 const { COLORS } = require('../../utils/embedUtils');
+const { getCachedGuildSettings } = require('../../utils/guildLocale.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -64,7 +65,7 @@ module.exports = {
                         await renderPage(i, guildId, currentPage, true);
                     }
                     else if (customId === 'setting_toggle_level') {
-                        const profile = await MariaModDB.getGuildSettings(guildId);
+                        const profile = await getCachedGuildSettings(guildId);
                         const newStatus = !(profile?.settings?.levelUpNotifications ?? true);
                         await MariaModDB.updateGuildSettings(guildId, {
                             'settings.levelUpNotifications': newStatus
@@ -72,7 +73,7 @@ module.exports = {
                         await renderPage(i, guildId, currentPage, true);
                     }
                     else if (customId === 'setting_toggle_embed') {
-                        const profile = await MariaModDB.getGuildSettings(guildId);
+                        const profile = await getCachedGuildSettings(guildId);
                         const newStatus = !(profile?.settings?.useEmbeds ?? true);
                         await MariaModDB.updateGuildSettings(guildId, {
                             'settings.useEmbeds': newStatus
@@ -149,7 +150,7 @@ module.exports = {
 };
 
 async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
-    const guildSettingsDB = await MariaModDB.getGuildSettings(guildId) || { settings: {} };
+    const guildSettingsDB = await getCachedGuildSettings(guildId) || { settings: {} };
     const modSettingsDB = await MariaModDB.getSettings(guildId) || {};
 
     const levelUp = guildSettingsDB.settings?.levelUpNotifications ?? true;

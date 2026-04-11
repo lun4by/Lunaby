@@ -11,6 +11,7 @@ const emojis = require('../../config/emojis');
 const i18nManager = require('../../services/i18n/i18nManager');
 const viLocale = require('../../locales/vi.json');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
+const { getGuildLocale } = require('../../utils/guildLocale.js');
 
 const defaultLang = 'vi';
 const fallbackLanguageConfig = viLocale?.commands?.language || {};
@@ -80,8 +81,7 @@ module.exports = {
             });
         }
 
-        const guildSettings = await MariaModDB.getGuildSettings(interaction.guildId);
-        let currentLang = guildSettings?.language || defaultLang;
+        let currentLang = await getGuildLocale(interaction.guildId, defaultLang);
 
         await interaction.reply({
             embeds: [buildLanguageEmbed(currentLang)],

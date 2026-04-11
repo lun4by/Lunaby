@@ -1,8 +1,8 @@
 const { Events, ChannelType, PermissionFlagsBits } = require('discord.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
-const PrefixDB = require('../services/database/PrefixDB.js');
 const AICore = require('../services/ai/AICore.js');
 const i18nManager = require('../services/i18n/i18nManager');
+const { getGuildVoiceSettings } = require('../utils/guildLocale.js');
 const prompts = require('../config/prompts.js');
 const emojis = require('../config/emojis.js');
 const logger = require('../utils/logger.js');
@@ -11,12 +11,10 @@ const creatorChannels = new Map();
 const activeVoiceChannels = new Map();
 const userVoiceCooldowns = new Map();
 const pendingVoiceCreations = new Map();
-const guildVoiceSettingsCache = new Map();
 const voiceGreetingDebounce = new Map();
 
-const LVOICE_COOLDOWN_MS = 3000;
-const GUILD_SETTINGS_CACHE_TTL_MS = 15000;
-const VOICE_GREETING_DEBOUNCE_MS = 2500;
+const lvoiceCooldownMs = 3000;
+const voiceGreetingDebounceMs = 2500;
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,7 +25,7 @@ function canSendVoiceGreeting(memberId, channelId, eventType) {
     const now = Date.now();
     const lastSent = voiceGreetingDebounce.get(key) || 0;
 
-    if (now - lastSent < VOICE_GREETING_DEBOUNCE_MS) {
+    if (now - lastSent < voiceGreetingDebounceMs) {
         return false;
     }
 
@@ -48,24 +46,6 @@ function canSendGreetingToChannel(guild, channel, wasTrackedTemp) {
         && !isCreatorVoiceChannel(channel)
         && !wasTrackedTemp
         && guild.channels.cache.has(channel.id);
-}
-
-async function getGuildVoiceSettings(guildId) {
-    const cached = guildVoiceSettingsCache.get(guildId);
-    const now = Date.now();
-
-    if (cached && now - cached.ts < GUILD_SETTINGS_CACHE_TTL_MS) {
-        return cached;
-    }
-
-    const settings = await MariaModDB.getGuildSettings(guildId);
-    const resolved = {
-        enabled: Boolean(settings?.voiceToggle?.isEnabled),
-        locale: settings?.language || 'vi',
-        ts: now,
-    };
-    guildVoiceSettingsCache.set(guildId, resolved);
-    return resolved;
 }
 
 /**
@@ -252,7 +232,7 @@ async function handleVoiceMasterJoin(newState, member, locale = 'vi') {
 
     const now = Date.now();
     const lastCreated = userVoiceCooldowns.get(member.id) || 0;
-    const cooldownLeftMs = Math.max(0, LVOICE_COOLDOWN_MS - (now - lastCreated));
+    const cooldownLeftMs = Math.max(0, lvoiceCooldownMs - (now - lastCreated));
 
     const pendingCreateTask = (async () => {
         if (cooldownLeftMs > 0) {
