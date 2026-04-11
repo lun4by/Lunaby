@@ -1,6 +1,6 @@
 const ConversationService = require('../services/ai/ConversationService');
 const consentService = require('../services/user/consentService');
-const { handlePermissionError } = require('../utils/permissionUtils');
+const { handlePermissionError, isMissingPermissionError } = require('../utils/permissionUtils');
 const { TYPING_INDICATOR_INTERVAL_MS } = require('../config/constants');
 
 const { handleMemoryRequest, splitMessageIntoChunks } = require('./messageHandlers/memoryRequestHandler');
@@ -50,7 +50,7 @@ async function handleMentionMessage(message, client) {
       const consentData = consentService.createConsentEmbed(message.author);
       await message.reply(consentData);
     } catch (error) {
-      if (error.code === 50013 || error.message.includes('permission')) {
+      if (isMissingPermissionError(error)) {
         await handlePermissionError(message, 'embedLinks', message.author.username, 'reply');
       } else {
         throw error;

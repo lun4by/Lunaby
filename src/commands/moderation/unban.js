@@ -5,6 +5,7 @@ const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js
 const logger = require('../../utils/logger.js');
 const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
+const { hasMemberPermission } = require('../../utils/permissionUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -21,7 +22,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
+        if (!hasMemberPermission(interaction.member, PermissionFlagsBits.BanMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
                 ephemeral: true,

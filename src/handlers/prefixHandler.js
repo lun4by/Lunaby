@@ -1,6 +1,6 @@
 const PrefixDB = require('../services/database/PrefixDB');
 const consentService = require('../services/user/consentService');
-const { handlePermissionError } = require('../utils/permissionUtils');
+const { handlePermissionError, isMissingPermissionError, hasMemberPermission } = require('../utils/permissionUtils');
 const MariaModDB = require('../services/database/MariaModDB');
 const QuotaService = require('../services/user/QuotaService');
 const RoleService = require('../services/user/RoleService');
@@ -260,7 +260,7 @@ async function handlePrefixMessage(message, client) {
             const consentData = consentService.createConsentEmbed(message.author);
             await message.reply(consentData);
         } catch (error) {
-            if (error.code === 50013 || error.message.includes('permission')) {
+            if (isMissingPermissionError(error)) {
                 await handlePermissionError(message, 'embedLinks', message.author.username, 'reply');
             }
         }
@@ -275,7 +275,7 @@ async function handlePrefixMessage(message, client) {
         }
     } else if (command.data?.default_member_permissions) {
         const requiredPermissions = BigInt(command.data.default_member_permissions);
-        if (message.member && !message.member.permissions.has(requiredPermissions)) {
+        if (message.member && !hasMemberPermission(message.member, requiredPermissions)) {
             await message.reply(`${emojis.error} ${message.t('system.missing_server_permissions')}`).catch(() => { });
             return true;
         }

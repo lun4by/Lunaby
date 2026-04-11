@@ -3,6 +3,7 @@ const MariaModDB = require('../services/database/MariaModDB.js');
 const AICore = require('../services/ai/AICore.js');
 const i18nManager = require('../services/i18n/i18nManager');
 const { getGuildVoiceSettings } = require('../utils/guildLocale.js');
+const { hasChannelPermission } = require('../utils/permissionUtils.js');
 const prompts = require('../config/prompts.js');
 const emojis = require('../config/emojis.js');
 const logger = require('../utils/logger.js');
@@ -134,7 +135,7 @@ async function sendVoiceGreeting(eventType, member, voiceChannel) {
     }
 
     const me = liveChannel.guild.members.me;
-    if (me && !liveChannel.permissionsFor(me)?.has('SendMessages')) {
+    if (me && !hasChannelPermission(liveChannel, me, 'SendMessages')) {
         return;
     }
 

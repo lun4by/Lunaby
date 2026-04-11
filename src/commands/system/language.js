@@ -12,6 +12,7 @@ const i18nManager = require('../../services/i18n/i18nManager');
 const viLocale = require('../../locales/vi.json');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
 const { getGuildLocale, invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
+const { hasMemberPermission } = require('../../utils/permissionUtils.js');
 
 const defaultLang = 'vi';
 const fallbackLanguageConfig = viLocale?.commands?.language || {};
@@ -74,7 +75,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        if (!interaction.guildId || !interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+        if (!interaction.guildId || !hasMemberPermission(interaction.member, PermissionsBitField.Flags.ManageGuild)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
                 ephemeral: true,

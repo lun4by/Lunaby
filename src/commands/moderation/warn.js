@@ -4,6 +4,7 @@ const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
 const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
+const { hasMemberPermission } = require('../../utils/permissionUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,7 +21,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+        if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
                 ephemeral: true,

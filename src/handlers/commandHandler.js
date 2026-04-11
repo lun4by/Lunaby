@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const consentService = require('../services/user/consentService');
-const { handlePermissionError } = require('../utils/permissionUtils');
+const { handlePermissionError, isMissingPermissionError } = require('../utils/permissionUtils');
 const MariaModDB = require('../services/database/MariaModDB');
 const QuotaService = require('../services/user/QuotaService');
 const RoleService = require('../services/user/RoleService');
@@ -147,7 +147,7 @@ const handleCommand = async (interaction, client) => {
         const consentData = consentService.createConsentEmbed(interaction.user);
         await interaction.reply(consentData);
       } catch (error) {
-        if (error.code === 50013 || (error?.message || '').includes('permission')) {
+        if (isMissingPermissionError(error)) {
           await handlePermissionError(interaction, 'embedLinks', interaction.user.username, 'reply');
         } else {
           throw error;

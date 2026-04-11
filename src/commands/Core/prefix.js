@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('disc
 const PrefixDB = require('../../services/database/PrefixDB');
 const { DEFAULT_PREFIX } = require('../../config/constants');
 const { COLORS } = require('../../utils/embedUtils');
+const { hasMemberPermission } = require('../../utils/permissionUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -70,8 +71,7 @@ async function handleView(interaction) {
 
 async function handleSet(interaction) {
     if (interaction.guild && interaction.member) {
-        const hasPermission = interaction.member.permissions?.has?.(PermissionFlagsBits.ManageGuild);
-        if (!hasPermission) {
+        if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ManageGuild)) {
             return await interaction.reply({
                 content: interaction.t('commands.prefix.need_manage_server'),
                 ephemeral: true
@@ -126,7 +126,7 @@ async function handleReset(interaction) {
     const guildId = interaction.guild?.id;
 
     await PrefixDB.removeUserPrefix(userId);
-    if (guildId && interaction.member?.permissions?.has?.(PermissionFlagsBits.ManageGuild)) {
+    if (guildId && hasMemberPermission(interaction.member, PermissionFlagsBits.ManageGuild)) {
         await PrefixDB.removeServerPrefix(guildId);
         await interaction.reply(interaction.t('commands.prefix.reset_all', { prefix: DEFAULT_PREFIX }));
     } else {

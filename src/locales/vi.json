@@ -437,6 +437,7 @@
       "invalid_subcmd": "Subcommand không hợp lệ! Dùng: `/lvoice setup`, `/lvoice disable`, `/lvoice config`",
       "already_setup": "LVoice đã được thiết lập rồi! Dùng `/lvoice disable` để tắt trước khi setup lại.",
       "cooldown_wait": "Chậm lại chút, đợi **{{cooldown}}s** nhé.",
+      "bot_missing_perm_detail": "Bot đang thiếu quyền: {{permissions}}",
       "setup_title": "{{_emoji.locale.voice}} LVoice đã được thiết lập!",
       "setup_desc": "Thành viên có thể vào kênh <#{{creatorId}}> để tự tạo kênh voice riêng.",
       "category_field": "{{_emoji.locale.folder}} Category",

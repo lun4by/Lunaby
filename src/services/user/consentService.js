@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const mariaClient = require('../database/mariaClient');
 const logger = require('../../utils/logger.js');
-const { handlePermissionError, sendEmbedWithFallback, hasPermission } = require('../../utils/permissionUtils');
+const { handlePermissionError, sendEmbedWithFallback, hasPermission, isMissingPermissionError } = require('../../utils/permissionUtils');
 
 class ConsentService {
   async hasUserConsented(userId) {
@@ -84,7 +84,9 @@ class ConsentService {
       }
     } catch (error) {
       logger.error('consent', `Error while processing consent accept for user ${userId}:`, error);
-      await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
+      if (isMissingPermissionError(error)) {
+        await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
+      }
     }
   }
 
@@ -118,7 +120,9 @@ class ConsentService {
       }
     } catch (error) {
       logger.error('consent', `Error while processing consent decline for user ${userId}:`, error);
-      await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
+      if (isMissingPermissionError(error)) {
+        await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
+      }
     }
   }
 

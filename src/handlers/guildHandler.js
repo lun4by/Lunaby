@@ -5,6 +5,7 @@ const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
 const logger = require('../utils/logger.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 const { getCachedGuildSettings, invalidateGuildLocaleCache } = require('../utils/guildLocale.js');
+const { hasChannelPermission } = require('../utils/permissionUtils.js');
 
 const guildCommandDeployDelayMs = 1000;
 
@@ -100,7 +101,7 @@ async function updateGuildSettings(guildId, settings) {
 function findDefaultChannel(guild) {
   try {
     const canSend = (channel) =>
-      channel.type === 0 && channel.permissionsFor(guild.members.me).has('SendMessages');
+      channel.type === 0 && hasChannelPermission(channel, guild.members.me, 'SendMessages');
 
     const hasPreferredName = (channel) => {
       const name = channel.name.toLowerCase();

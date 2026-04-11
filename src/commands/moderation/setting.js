@@ -4,6 +4,7 @@ const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger');
 const { COLORS } = require('../../utils/embedUtils');
 const { getCachedGuildSettings, invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
+const { hasMemberPermission } = require('../../utils/permissionUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -14,7 +15,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+        if (!hasMemberPermission(interaction.member, PermissionsBitField.Flags.ManageGuild)) {
             const replyOptions = { content: `${emojis.error} ${interaction.t('commands.setting.need_manage_server')}`, ephemeral: true };
             return interaction.replied || interaction.deferred ? interaction.editReply(replyOptions) : interaction.reply(replyOptions);
         }
@@ -50,7 +51,7 @@ module.exports = {
 
             collector.on('collect', async (i) => {
                 try {
-                    if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+                    if (!hasMemberPermission(i.member, PermissionsBitField.Flags.ManageGuild)) {
                         return i.reply({ content: `${emojis.error} ${i.t('commands.setting.need_manage_server')}`, ephemeral: true });
                     }
 

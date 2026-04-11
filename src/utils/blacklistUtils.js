@@ -6,6 +6,7 @@ const {
 } = require('discord.js');
 const BlacklistService = require('../services/user/BlacklistService');
 const logger = require('./logger');
+const { hasChannelPermission } = require('./permissionUtils');
 
 const SUPPORT_SERVER_URL = process.env.SUPPORT_SERVER_URL || 'https://discord.gg/NFF7tw2zNQ';
 const DM_NOTIFY_COOLDOWN_MS = 60 * 60 * 1000;
@@ -66,7 +67,7 @@ function findNoticeChannel(guild) {
   const canSend = (channel) =>
     channel &&
     channel.type === ChannelType.GuildText &&
-    channel.permissionsFor(guild.members.me)?.has(['ViewChannel', 'SendMessages']);
+    hasChannelPermission(channel, guild.members.me, ['ViewChannel', 'SendMessages']);
 
   return guild.systemChannel && canSend(guild.systemChannel)
     ? guild.systemChannel

@@ -4,6 +4,9 @@ const { creatorChannels } = require('../../events/voiceStateUpdate.js');
 const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/logger.js');
 const { COLORS } = require('../../utils/embedUtils.js');
+const { formatPermissionList, getMissingPermissions, hasMemberPermission, isMissingPermissionError } = require('../../utils/permissionUtils.js');
+
+const requiredBotPermissions = [PermissionFlagsBits.ManageChannels];
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,7 +30,7 @@ module.exports = {
     cooldown: 10,
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
+        if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ManageChannels)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.lvoice.need_perm')}`,
                 ephemeral: true,
@@ -63,6 +66,14 @@ module.exports = {
 };
 
 async function handleSetup(interaction) {
+    const missingPermissions = getMissingPermissions(interaction.guild?.members.me?.permissions, requiredBotPermissions);
+    if (missingPermissions.length > 0) {
+        return interaction.reply({
+            content: `${emojis.error} ${interaction.t('commands.lvoice.bot_missing_perm_detail', { permissions: formatPermissionList(missingPermissions) })}`,
+            ephemeral: true,
+        });
+    }
+
     await interaction.deferReply({ ephemeral: true });
 
     const guild = interaction.guild;
@@ -129,6 +140,15 @@ async function handleSetup(interaction) {
         logger.info('lvoice', `Setup completed in ${guild.name} by ${interaction.user.tag}`);
     } catch (error) {
         logger.error('lvoice', 'Error during setup:', error);
+        if (isMissingPermissionError(error)) {
+            const missingPermissions = getMissingPermissions(interaction.guild?.members.me?.permissions, requiredBotPermissions);
+            if (missingPermissions.length > 0) {
+                return interaction.editReply({
+                    content: `${emojis.error} ${interaction.t('commands.lvoice.bot_missing_perm_detail', { permissions: formatPermissionList(missingPermissions) })}`,
+                });
+            }
+        }
+
         await interaction.editReply({
             content: `${emojis.error} ${interaction.t('commands.lvoice.setup_error', { error: error.message })}`,
         });
@@ -175,6 +195,15 @@ async function handleDisable(interaction) {
         logger.info('lvoice', `Disabled in ${guild.name} by ${interaction.user.tag}`);
     } catch (error) {
         logger.error('lvoice', 'Error during disable:', error);
+        if (isMissingPermissionError(error)) {
+            const missingPermissions = getMissingPermissions(interaction.guild?.members.me?.permissions, requiredBotPermissions);
+            if (missingPermissions.length > 0) {
+                return interaction.editReply({
+                    content: `${emojis.error} ${interaction.t('commands.lvoice.bot_missing_perm_detail', { permissions: formatPermissionList(missingPermissions) })}`,
+                });
+            }
+        }
+
         await interaction.editReply({
             content: `${emojis.error} ${interaction.t('commands.lvoice.disable_error', { error: error.message })}`,
         });
