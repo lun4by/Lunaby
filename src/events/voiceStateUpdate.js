@@ -124,12 +124,17 @@ async function cleanupZombieChannels(client) {
 }
 
 async function sendVoiceGreeting(eventType, member, voiceChannel) {
-    if (!voiceChannel || !voiceChannel.isTextBased?.()) {
+    if (!voiceChannel) {
         return;
     }
 
-    const me = voiceChannel.guild.members.me;
-    if (me && !voiceChannel.permissionsFor(me)?.has('SendMessages')) {
+    const liveChannel = voiceChannel.guild.channels.cache.get(voiceChannel.id);
+    if (!liveChannel || !liveChannel.isTextBased?.()) {
+        return;
+    }
+
+    const me = liveChannel.guild.members.me;
+    if (me && !liveChannel.permissionsFor(me)?.has('SendMessages')) {
         return;
     }
 
@@ -163,10 +168,10 @@ async function sendVoiceGreeting(eventType, member, voiceChannel) {
 
         if (result?.content) {
             const footer = `\n-# Sử dụng: \`/voicewelcome toggle\` để bật/tắt voice welcome`;
-            await voiceChannel.send(result.content + footer);
+            await liveChannel.send(result.content + footer);
         }
 
-        logger.debug('voice_toggle', `${eventType === 'join' ? 'Greeted' : 'Farewell'} ${memberName} in ${voiceChannel.guild.name}/${channelName}`);
+        logger.debug('voice_toggle', `${eventType === 'join' ? 'Greeted' : 'Farewell'} ${memberName} in ${liveChannel.guild.name}/${channelName}`);
     } catch (error) {
         logger.error('voice_toggle', `Failed to generate voice greeting (${eventType}) for ${member.user.tag}:`, error.message);
     }
@@ -289,6 +294,8 @@ function setupVoiceStateEvent(client) {
 
             const oldChannel = oldState.channel;
             let newChannel = newState.channel;
+            const oldChannelWasTemp = oldChannel ? activeVoiceChannels.has(oldChannel.id) : false;
+            const newChannelWasTemp = newChannel ? activeVoiceChannels.has(newChannel.id) : false;
 
             if (oldChannel?.id === newChannel?.id) return;
 
@@ -306,13 +313,14 @@ function setupVoiceStateEvent(client) {
             const voiceWelcomeEnabled = await isVoiceWelcomeEnabled(guild.id);
             if (voiceWelcomeEnabled) {
                 const isCreator = (ch) => ch && creatorChannels.has(ch.id);
+                const shouldGreet = (ch, wasTemp) => Boolean(ch) && !isCreator(ch) && !wasTemp && guild.channels.cache.has(ch.id);
 
-                if (oldChannel && newChannel && !isCreator(oldChannel) && !isCreator(newChannel)) {
+                if (shouldGreet(oldChannel, oldChannelWasTemp) && shouldGreet(newChannel, newChannelWasTemp)) {
                     await sendVoiceGreeting('leave', member, oldChannel);
                     await sendVoiceGreeting('join', member, newChannel);
-                } else if (!oldChannel && newChannel && !isCreator(newChannel)) {
+                } else if (!oldChannel && shouldGreet(newChannel, newChannelWasTemp)) {
                     await sendVoiceGreeting('join', member, newChannel);
-                } else if (oldChannel && !newChannel && !isCreator(oldChannel)) {
+                } else if (shouldGreet(oldChannel, oldChannelWasTemp) && !newChannel) {
                     await sendVoiceGreeting('leave', member, oldChannel);
                 }
             }
