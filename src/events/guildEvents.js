@@ -1,6 +1,6 @@
 const { Events } = require("discord.js");
 const { handleGuildJoin, handleGuildLeave } = require("../handlers/guildHandler");
-const logger = require("../utils/logger.js");
+const logger = require("../utils/core/logger.js");
 
 function setupGuildEvents(client) {
 

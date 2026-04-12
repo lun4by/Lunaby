@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const fontManager = require('../fonts/fonts');
 const emojis = require('../../config/emojis.js');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 
 const ASSETS_PATH = path.join(__dirname, '../../assets');
 

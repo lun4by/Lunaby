@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const BlacklistService = require('../../services/user/BlacklistService');
-const { notifyBlacklistedGuildAndLeave } = require('../../utils/blacklistUtils');
-const logger = require('../../utils/logger');
+const { notifyBlacklistedGuildAndLeave } = require('../../utils/discord/blacklistUtils');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
 function isSnowflake(value) {

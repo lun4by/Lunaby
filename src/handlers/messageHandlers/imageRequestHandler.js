@@ -1,8 +1,8 @@
 const { AttachmentBuilder } = require("discord.js");
-const logger = require("../../utils/logger");
+const logger = require("../../utils/core/logger");
 const ImageService = require("../../services/ai/ImageService");
 const QuotaService = require("../../services/user/QuotaService");
-const ErrorHandler = require("../../utils/ErrorHandler");
+const ErrorHandler = require("../../utils/core/ErrorHandler");
 const conversationManager = require("../conversationManager");
 const emojis = require("../../config/emojis");
 

@@ -1,7 +1,7 @@
 const { Events } = require("discord.js");
 const MariaModDB = require("../services/database/MariaModDB");
-const logger = require("../utils/logger");
-const { getCachedGuildSettings } = require('../utils/guildLocale.js');
+const logger = require("../utils/core/logger");
+const { getCachedGuildSettings } = require('../utils/guild/guildLocale.js');
 
 async function handleGuildMemberAdd(member) {
     try {

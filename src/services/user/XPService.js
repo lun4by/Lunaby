@@ -1,5 +1,5 @@
 const MariaModDB = require('../database/MariaModDB');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 const COOLDOWN_MS = 60000;
 

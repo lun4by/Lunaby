@@ -4,7 +4,7 @@ const {
     ButtonBuilder,
     ButtonStyle,
 } = require('discord.js');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
 
 const BANK_CODE = 'TCB';
 const BANK_NAME = 'Techcombank';

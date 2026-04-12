@@ -1,4 +1,4 @@
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 const QuotaDB = require('../database/QuotaDB.js');
 const RoleService = require('./RoleService.js');
 const { ROLE_LIMITS, ROLE_IMAGE_LIMITS, QUOTA_PERIOD_DAYS, USER_ROLES } = require('../../config/constants.js');
@@ -305,3 +305,4 @@ class QuotaService {
 }
 
 module.exports = new QuotaService();
+

@@ -1,11 +1,11 @@
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const { sendStreamingMessage } = require('../../services/ai/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 const { DEFAULT_MODEL } = require('../../config/constants');
-const Validators = require('../../utils/validators');
+const Validators = require('../../utils/text/validators');
 const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
-const ErrorHandler = require('../../utils/ErrorHandler');
+const ErrorHandler = require('../../utils/core/ErrorHandler');
 const QuotaService = require('../../services/user/QuotaService');
 
 async function handleChatRequest(message, content, ConversationService) {

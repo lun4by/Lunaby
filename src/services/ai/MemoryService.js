@@ -1,10 +1,10 @@
 const mongoClient = require('../database/mongoClient.js');
 const MariaModDB = require('../database/MariaModDB.js');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 const AICore = require('./AICore.js');
 const prompts = require('../../config/prompts.js');
-const SecurityUtils = require('../../utils/SecurityUtils.js');
-const CryptoUtils = require('../../utils/CryptoUtils.js');
+const SecurityUtils = require('../../utils/security/SecurityUtils.js');
+const CryptoUtils = require('../../utils/security/CryptoUtils.js');
 
 const CACHE_EXPIRY = 30 * 60 * 1000;
 
@@ -536,3 +536,4 @@ class MemoryService {
 }
 
 module.exports = new MemoryService();
+

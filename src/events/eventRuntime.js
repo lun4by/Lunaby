@@ -4,8 +4,8 @@ const {
   notifyBlacklistedUser,
   shouldBlockGuild,
   shouldBlockUser,
-} = require('../utils/blacklistUtils');
-const { getCachedGuildSettings } = require('../utils/guildLocale.js');
+} = require('../utils/discord/blacklistUtils');
+const { getCachedGuildSettings } = require('../utils/guild/guildLocale.js');
 
 const DEFAULT_LOCALE = 'vi';
 
@@ -67,3 +67,4 @@ module.exports = {
   ensureMessageAllowed,
   resolveMessageContext,
 };
+

@@ -1,5 +1,5 @@
-const MariaModDB = require("../services/database/MariaModDB.js");
-const logger = require("./logger.js");
+const MariaModDB = require("../../services/database/MariaModDB.js");
+const logger = require("../core/logger.js");
 
 async function logModAction({ guildId, targetId, moderatorId, action, reason, duration, count }) {
   try {

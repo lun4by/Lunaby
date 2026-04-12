@@ -1,4 +1,4 @@
-const logger = require("../../utils/logger.js");
+const logger = require("../../utils/core/logger.js");
 const emojis = require("../../config/emojis.js");
 
 const MAL_COLOR = 0x2e51a2;
@@ -257,3 +257,4 @@ class MyAnimeListAPI {
 }
 
 module.exports = new MyAnimeListAPI();
+

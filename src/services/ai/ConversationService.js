@@ -1,14 +1,14 @@
-const logger = require("../../utils/logger.js");
+const logger = require("../../utils/core/logger.js");
 const storageDB = require("../database/storagedb.js");
 const conversationManager = require("../../handlers/conversationManager.js");
 const prompts = require("../../config/prompts.js");
-const textUtils = require("../../utils/textUtils.js");
+const textUtils = require("../../utils/text/textUtils.js");
 const AICore = require("./AICore.js");
 const QuotaService = require("../user/QuotaService.js");
 const MemoryService = require("./MemoryService.js");
-const Validators = require("../../utils/validators.js");
-const ErrorHandler = require("../../utils/ErrorHandler.js");
-const SecurityUtils = require("../../utils/SecurityUtils.js");
+const Validators = require("../../utils/text/validators.js");
+const ErrorHandler = require("../../utils/core/ErrorHandler.js");
+const SecurityUtils = require("../../utils/security/SecurityUtils.js");
 const {
   DEFAULT_USER_ID,
   DEFAULT_MODEL,
@@ -314,3 +314,4 @@ class ConversationService {
 }
 
 module.exports = new ConversationService();
+

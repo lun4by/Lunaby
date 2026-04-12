@@ -1,5 +1,5 @@
 const { Events } = require('discord.js');
-const logger = require('../utils/logger.js');
+const logger = require('../utils/core/logger.js');
 const {
   activeVoiceChannels,
   cleanupZombieChannels,
@@ -27,3 +27,4 @@ module.exports = {
   creatorChannels,
   activeVoiceChannels,
 };
+

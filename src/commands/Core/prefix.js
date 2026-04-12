@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const PrefixDB = require('../../services/database/PrefixDB');
 const { DEFAULT_PREFIX } = require('../../config/constants');
-const { COLORS } = require('../../utils/embedUtils');
-const { hasMemberPermission } = require('../../utils/permissionUtils.js');
+const { COLORS } = require('../../utils/discord/embedUtils');
+const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()

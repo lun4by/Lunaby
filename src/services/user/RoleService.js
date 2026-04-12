@@ -1,5 +1,5 @@
 const RoleDB = require('../database/RoleDB.js');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 const { USER_ROLES } = require('../../config/constants.js');
 
 const VALID_ROLES = Object.values(USER_ROLES);

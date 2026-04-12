@@ -1,6 +1,6 @@
 const MariaModDB = require('../database/MariaModDB');
-const logger = require('../../utils/logger');
-const Validators = require('../../utils/validators');
+const logger = require('../../utils/core/logger');
+const Validators = require('../../utils/text/validators');
 
 class CreditsService {
   async getUserCredits(userId) {
@@ -111,3 +111,4 @@ class CreditsService {
 }
 
 module.exports = new CreditsService();
+

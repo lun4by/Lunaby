@@ -1,8 +1,8 @@
 const consentService = require('../services/user/consentService');
 const i18nManager = require('../services/i18n/i18nManager');
-const logger = require('../utils/logger.js');
+const logger = require('../utils/core/logger.js');
 const emojis = require('../config/emojis.js');
-const { getGuildLocale } = require('../utils/guildLocale.js');
+const { getGuildLocale } = require('../utils/guild/guildLocale.js');
 
 async function getInteractionTranslator(interaction) {
   let locale = 'vi';

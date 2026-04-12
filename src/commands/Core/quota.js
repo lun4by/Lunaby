@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
 const emojis = require('../../config/emojis');
-const { COLORS } = require('../../utils/embedUtils');
+const { COLORS } = require('../../utils/discord/embedUtils');
 
 const ROLE_BADGES = {
     owner: 'Owner',

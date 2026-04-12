@@ -1,4 +1,4 @@
-const MariaModDB = require('../services/database/MariaModDB.js');
+const MariaModDB = require('../../services/database/MariaModDB.js');
 
 const guildSettingsCacheTtlMs = 15000;
 const guildSettingsCache = new Map();
@@ -41,7 +41,6 @@ function invalidateGuildLocaleCache(guildId) {
 }
 
 module.exports = {
-    clearGuildLocaleCache: invalidateGuildLocaleCache,
     invalidateGuildLocaleCache,
     getCachedGuildSettings,
     getGuildLocale,

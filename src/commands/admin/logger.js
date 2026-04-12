@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const fs = require('fs');
 const emojis = require('../../config/emojis.js');
 

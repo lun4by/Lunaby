@@ -4,7 +4,7 @@ const i18next = require('i18next');
 const vi = require('../../locales/vi.json');
 const en = require('../../locales/en.json');
 const emojis = require('../../config/emojis');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 const SRC_DIR = path.join(__dirname, '../..');
 

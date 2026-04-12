@@ -1,5 +1,5 @@
 const mariaClient = require('./mariaClient');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 class RoleDB {
     async initTables() {

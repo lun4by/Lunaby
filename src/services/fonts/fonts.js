@@ -2,7 +2,7 @@ const { registerFont } = require('canvas');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 
 class FontManager {
   constructor() {

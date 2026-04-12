@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { buildActionEmbed } = require('../../utils/gifAction');
+const { buildActionEmbed } = require('../../utils/discord/gifAction');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -15,3 +15,4 @@ module.exports = {
         await interaction.reply({ embeds: [embed] });
     }
 };
+

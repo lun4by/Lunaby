@@ -1,11 +1,11 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
-const ErrorHandler = require('../../utils/ErrorHandler');
+const ErrorHandler = require('../../utils/core/ErrorHandler');
 const ConversationService = require('../../services/ai/ConversationService.js');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
-const { hasMemberPermission } = require('../../utils/permissionUtils.js');
+const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()

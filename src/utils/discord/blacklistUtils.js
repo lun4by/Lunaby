@@ -4,8 +4,8 @@ const {
   ButtonStyle,
   ChannelType,
 } = require('discord.js');
-const BlacklistService = require('../services/user/BlacklistService');
-const logger = require('./logger');
+const BlacklistService = require('../../services/user/BlacklistService');
+const logger = require('../core/logger');
 const { hasChannelPermission } = require('./permissionUtils');
 
 const SUPPORT_SERVER_URL = process.env.SUPPORT_SERVER_URL || 'https://discord.gg/NFF7tw2zNQ';
@@ -123,7 +123,6 @@ async function shouldBlockGuild(guild) {
 
 module.exports = {
   SUPPORT_SERVER_URL,
-  buildSupportServerRow,
   notifyBlacklistedUser,
   notifyBlacklistedGuildAndLeave,
   shouldBlockUser,

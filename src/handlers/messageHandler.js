@@ -5,7 +5,7 @@ const { handleCodeRequest } = require('./messageHandlers/codeRequestHandler');
 const { handleChatRequest } = require('./messageHandlers/chatRequestHandler');
 const { handleImageRequest } = require('./messageHandlers/imageRequestHandler');
 const { ensureUserConsent } = require('./commands/commandGuards');
-const logger = require('../utils/logger');
+const logger = require('../utils/core/logger');
 const emojis = require('../config/emojis');
 
 function normalizeMentions(content, message, client) {

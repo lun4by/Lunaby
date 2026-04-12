@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const packageJson = require('../../../package.json');
-const { formatUptime } = require('../../utils/string');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
-const { getSystemMetrics } = require('../../utils/systemMetrics');
+const { formatUptime } = require('../../utils/text/string');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const { getSystemMetrics } = require('../../utils/core/systemMetrics');
 
 module.exports = {
     data: new SlashCommandBuilder()

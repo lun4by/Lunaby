@@ -6,7 +6,7 @@ const {
     deferHybridReply,
     isSlashCommandInteraction,
     resolveHybridPrefix,
-} = require('../../utils/hybridCommand');
+} = require('../../utils/discord/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -49,3 +49,4 @@ module.exports = {
         return replyFunc({ content: responseMessage });
     },
 };
+

@@ -1,8 +1,8 @@
 const { EmbedBuilder } = require('discord.js');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 const MariaModDB = require('../database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
-const { getCachedGuildSettings } = require('../../utils/guildLocale.js');
+const { getCachedGuildSettings } = require('../../utils/guild/guildLocale.js');
 
 let autoPoster = null;
 let webhookApp = null;
@@ -220,3 +220,4 @@ module.exports = {
   initializeTopgg,
   shutdownTopgg,
 };
+

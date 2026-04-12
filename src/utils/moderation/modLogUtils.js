@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
-const MariaModDB = require('../services/database/MariaModDB.js');
-const logger = require("./logger.js");
+const MariaModDB = require('../../services/database/MariaModDB.js');
+const logger = require("../core/logger.js");
 
 const FALLBACK_CHANNEL_NAMES = ["mod-logs", "mod-chat", "admin", "bot-logs"];
 

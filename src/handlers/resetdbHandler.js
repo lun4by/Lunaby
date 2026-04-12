@@ -1,7 +1,7 @@
 const storageDB = require('../services/database/storagedb.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 const emojis = require('../config/emojis.js');
-const logger = require('../utils/logger.js');
+const logger = require('../utils/core/logger.js');
 
 
 async function handleResetdbInteraction(interaction) {
@@ -125,3 +125,4 @@ async function handleResetdbInteraction(interaction) {
 module.exports = {
   handleResetdbInteraction,
 };
+

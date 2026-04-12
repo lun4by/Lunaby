@@ -4,7 +4,7 @@ const { handlePrefixMessage } = require("../handlers/prefixHandler");
 const XPService = require("../services/user/XPService");
 const { generateLevelUpCard } = require("../services/canvas/levelUpCanvas");
 const { ensureMessageAllowed, resolveMessageContext } = require("./eventRuntime");
-const logger = require("../utils/logger.js");
+const logger = require("../utils/core/logger.js");
 
 async function sendLevelUpNotification(message, guildSettings, xpResult) {
   if (!xpResult?.leveledUp || !guildSettings?.settings?.levelUpChannel || !guildSettings?.settings?.levelUpNotifications) {
@@ -60,3 +60,4 @@ function setupMessageCreateEvent(client) {
 }
 
 module.exports = { setupMessageCreateEvent };
+

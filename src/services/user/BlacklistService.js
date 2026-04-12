@@ -1,5 +1,5 @@
 const MariaBlacklistDB = require('../database/MariaBlacklistDB');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 class BlacklistService {
   async isUserBlacklisted(userId) {
@@ -54,3 +54,4 @@ class BlacklistService {
 }
 
 module.exports = new BlacklistService();
+

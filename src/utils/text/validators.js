@@ -1,4 +1,4 @@
-const { DEFAULT_USER_ID, USER_ROLES } = require('../config/constants');
+const { DEFAULT_USER_ID, USER_ROLES } = require('../../config/constants');
 
 const VALID_ROLES = new Set(Object.values(USER_ROLES));
 const VALID_MSG_ROLES = new Set(['system', 'user', 'assistant']);

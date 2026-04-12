@@ -1,12 +1,12 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, PermissionsBitField } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
-const logger = require('../../utils/logger');
-const { COLORS } = require('../../utils/embedUtils');
-const { getCachedGuildSettings } = require('../../utils/guildLocale.js');
-const { updateGuildSettingsAndInvalidate } = require('../../utils/guildSettings.js');
-const { hasMemberPermission } = require('../../utils/permissionUtils.js');
-const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
+const logger = require('../../utils/core/logger');
+const { COLORS } = require('../../utils/discord/embedUtils');
+const { getCachedGuildSettings } = require('../../utils/guild/guildLocale.js');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guild/guildSettings.js');
+const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
+const { isSlashCommandInteraction } = require('../../utils/discord/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()

@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const XPService = require('../../services/user/XPService');
 const generateRankCard = require('../../services/canvas/rankCanvas.js');
-const { ordinalize } = require('../../utils/string.js');
-const logger = require('../../utils/logger');
+const { ordinalize } = require('../../utils/text/string.js');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
 module.exports = {

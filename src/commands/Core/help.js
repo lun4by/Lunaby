@@ -8,9 +8,9 @@ const {
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
-const { COLORS } = require('../../utils/embedUtils');
+const { COLORS } = require('../../utils/discord/embedUtils');
 
 module.exports = {
     data: new SlashCommandBuilder()

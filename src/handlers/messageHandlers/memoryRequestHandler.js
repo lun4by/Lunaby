@@ -1,4 +1,4 @@
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const { DISCORD_MESSAGE_MAX_LENGTH } = require('../../config/constants');
 
 function splitMessageIntoChunks(text, maxLength = DISCORD_MESSAGE_MAX_LENGTH) {

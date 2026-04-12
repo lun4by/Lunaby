@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const emojis = require('../config/emojis');
+const emojis = require('../../config/emojis');
 
 const ACTION_MESSAGES = {
     pat: { verb: 'xoa đầu', emoji: emojis.gifActions.pat, color: 0xFFD700, selfMsg: 'tự xoa đầu mình' },

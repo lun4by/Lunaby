@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
 function formatNumber(value) {

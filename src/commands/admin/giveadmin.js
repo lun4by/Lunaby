@@ -1,9 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const RoleService = require('../../services/user/RoleService');
 const { USER_ROLES } = require('../../config/constants');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
-const { isSlashCommandInteraction, resolveHybridPrefix } = require('../../utils/hybridCommand');
+const { isSlashCommandInteraction, resolveHybridPrefix } = require('../../utils/discord/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -77,3 +77,4 @@ module.exports = {
         }
     }
 };
+

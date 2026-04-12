@@ -1,4 +1,4 @@
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 const DEFAULT_COOLDOWN = 5;
 const CLEANUP_INTERVAL = 5 * 60 * 1000;

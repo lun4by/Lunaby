@@ -1,4 +1,4 @@
-const MariaModDB = require('../services/database/MariaModDB.js');
+const MariaModDB = require('../../services/database/MariaModDB.js');
 const { invalidateGuildLocaleCache } = require('./guildLocale.js');
 
 async function updateGuildSettingsAndInvalidate(guildId, settings) {

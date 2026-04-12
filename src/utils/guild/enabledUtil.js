@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
-const MariaModDB = require('../services/database/MariaModDB');
-const emojis = require('../config/emojis.js');
-const { COLORS } = require('./embedUtils');
+const MariaModDB = require('../../services/database/MariaModDB');
+const emojis = require('../../config/emojis.js');
+const { COLORS } = require('../discord/embedUtils');
 
 const CHECK = emojis.success;
 const CROSS = emojis.error;

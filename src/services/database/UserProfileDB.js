@@ -1,6 +1,6 @@
 const MariaModDB = require('./MariaModDB');
-const logger = require('../../utils/logger');
-const Validators = require('../../utils/validators');
+const logger = require('../../utils/core/logger');
+const Validators = require('../../utils/text/validators');
 
 class UserProfileDB {
   async getUserProfile(userId) {

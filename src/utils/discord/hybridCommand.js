@@ -12,7 +12,7 @@ function normalizeHybridPayload(payload, isSlash) {
 }
 
 async function resolveHybridPrefix(interaction) {
-  const PrefixDB = require('../services/database/PrefixDB');
+  const PrefixDB = require('../../services/database/PrefixDB');
   return PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
 }
 

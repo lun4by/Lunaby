@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
-const enabledUtil = require('../../utils/enabledUtil');
-const logger = require('../../utils/logger');
+const enabledUtil = require('../../utils/guild/enabledUtil');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
 
 module.exports = {

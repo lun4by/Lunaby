@@ -1,5 +1,5 @@
 const { PermissionsBitField } = require('discord.js');
-const logger = require('./logger.js');
+const logger = require('../core/logger.js');
 
 const PERMISSION_LABELS = {
   ManageChannels: 'Manage Channels',
@@ -48,11 +48,6 @@ function getMissingPermissions(permissionHolder, requiredPermissions) {
 
 function hasMemberPermission(member, requiredPermissions) {
   return Boolean(member?.permissions?.has?.(requiredPermissions));
-}
-
-function hasBotPermission(guildOrInteraction, requiredPermissions) {
-  const guild = guildOrInteraction?.guild || guildOrInteraction;
-  return Boolean(guild?.members?.me?.permissions?.has?.(requiredPermissions));
 }
 
 function hasChannelPermission(channel, member, requiredPermissions) {
@@ -116,19 +111,12 @@ async function sendEmbedWithFallback(interaction, embedData, username, permissio
   }
 }
 
-function hasPermission(interaction, permission) {
-  return hasBotPermission(interaction, permission);
-}
-
 module.exports = {
   formatPermissionList,
-  formatPermissionName,
   getMissingPermissions,
   handlePermissionError,
-  hasBotPermission,
   hasChannelPermission,
   hasMemberPermission,
   sendEmbedWithFallback,
-  hasPermission,
   isMissingPermissionError,
 };

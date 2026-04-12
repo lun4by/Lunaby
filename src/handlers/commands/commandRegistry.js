@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 
 let commandsJsonCache = null;
 

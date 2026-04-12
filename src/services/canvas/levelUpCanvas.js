@@ -1,6 +1,6 @@
 const { AttachmentBuilder } = require('discord.js');
 const { LevelUp } = require('lunaby-canvas');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 async function generateLevelUpCard(user, oldLevel, newLevel) {
     try {

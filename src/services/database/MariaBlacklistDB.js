@@ -1,5 +1,5 @@
 const mariaClient = require('./mariaClient');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const { SEVERITY_LEVELS } = require('../../config/constants');
 
 class MariaBlacklistDB {
@@ -296,3 +296,4 @@ class MariaBlacklistDB {
 }
 
 module.exports = new MariaBlacklistDB();
+

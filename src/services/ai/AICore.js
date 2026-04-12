@@ -1,4 +1,4 @@
-const logger = require("../../utils/logger.js");
+const logger = require("../../utils/core/logger.js");
 const prompts = require("../../config/prompts.js");
 const { Lunaby } = require("lunaby-sdk");
 
@@ -318,3 +318,4 @@ class AICore {
 }
 
 module.exports = new AICore();
+

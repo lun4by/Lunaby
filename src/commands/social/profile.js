@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const UserProfileDB = require('../../services/database/UserProfileDB');
 const { generateProfileCard } = require('../../services/canvas/profileCanvas');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
 module.exports = {

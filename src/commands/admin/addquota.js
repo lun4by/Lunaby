@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
-const { isSlashCommandInteraction, resolveHybridPrefix } = require('../../utils/hybridCommand');
+const { isSlashCommandInteraction, resolveHybridPrefix } = require('../../utils/discord/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -79,3 +79,4 @@ module.exports = {
         }
     }
 };
+

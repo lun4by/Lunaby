@@ -2,11 +2,11 @@ const { ChannelType, PermissionFlagsBits } = require('discord.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 const AICore = require('../services/ai/AICore.js');
 const i18nManager = require('../services/i18n/i18nManager');
-const { getGuildVoiceSettings } = require('../utils/guildLocale.js');
-const { hasChannelPermission } = require('../utils/permissionUtils.js');
+const { getGuildVoiceSettings } = require('../utils/guild/guildLocale.js');
+const { hasChannelPermission } = require('../utils/discord/permissionUtils.js');
 const prompts = require('../config/prompts.js');
 const emojis = require('../config/emojis.js');
-const logger = require('../utils/logger.js');
+const logger = require('../utils/core/logger.js');
 
 const creatorChannels = new Map();
 const activeVoiceChannels = new Map();
@@ -334,3 +334,4 @@ module.exports = {
   loadLVoiceCache,
   processVoiceStateUpdate,
 };
+

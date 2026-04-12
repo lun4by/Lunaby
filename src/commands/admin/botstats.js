@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const BlacklistService = require('../../services/user/BlacklistService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
-const logger = require('../../utils/logger');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
 function formatNumber(value) {

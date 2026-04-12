@@ -3,7 +3,7 @@ const { handleCommand } = require("../handlers/commandHandler");
 const { handleConsentInteraction } = require("../handlers/consentHandler");
 const { handleResetdbInteraction } = require("../handlers/resetdbHandler");
 const { ensureInteractionAllowed } = require("./eventRuntime");
-const logger = require("../utils/logger.js");
+const logger = require("../utils/core/logger.js");
 
 function setupInteractionCreateEvent(client) {
   client.on(Events.InteractionCreate, async (interaction) => {
@@ -30,3 +30,4 @@ function setupInteractionCreateEvent(client) {
 }
 
 module.exports = { setupInteractionCreateEvent };
+

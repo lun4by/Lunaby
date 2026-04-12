@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const util = require("util");
 
-const loggerConfig = require("../config/loggerConfig.js");
+const loggerConfig = require("../../config/loggerConfig.js");
 
 const LOG_LEVELS = {
   debug: { priority: 0, color: '\x1b[36m', label: 'DEBUG' },

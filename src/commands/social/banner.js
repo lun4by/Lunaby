@@ -4,8 +4,8 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require('discord.js');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
-const logger = require('../../utils/logger');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
 function buildBannerActionRow(url, interaction) {

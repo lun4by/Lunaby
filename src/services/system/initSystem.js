@@ -1,5 +1,5 @@
 const EventEmitter = require("events");
-const logger = require("../../utils/logger.js");
+const logger = require("../../utils/core/logger.js");
 
 class InitSystem extends EventEmitter {
   constructor() {

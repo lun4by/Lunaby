@@ -1,11 +1,11 @@
 const { REST, Routes } = require('discord.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
 const BlacklistService = require('../services/user/BlacklistService');
-const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
-const logger = require('../utils/logger.js');
+const { notifyBlacklistedGuildAndLeave } = require('../utils/discord/blacklistUtils');
+const logger = require('../utils/core/logger.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
-const { getCachedGuildSettings } = require('../utils/guildLocale.js');
-const { hasChannelPermission } = require('../utils/permissionUtils.js');
+const { getCachedGuildSettings } = require('../utils/guild/guildLocale.js');
+const { hasChannelPermission } = require('../utils/discord/permissionUtils.js');
 
 const guildCommandDeployDelayMs = 1000;
 const defaultGuildProfile = { xp: { isActive: false, exceptions: [] } };
@@ -252,3 +252,4 @@ module.exports = {
   warmGuildProfiles,
   syncAllGuilds,
 };
+

@@ -2,14 +2,14 @@ const { SlashCommandBuilder } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
 const { loadCommands, getCommandsJson } = require('../../handlers/commandHandler');
 const { deployCommandsToGuild } = require('../../handlers/guildHandler');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 const {
     createHybridReply,
     deferHybridReply,
     getHybridSubcommand,
     isSlashCommandInteraction,
-} = require('../../utils/hybridCommand');
+} = require('../../utils/discord/hybridCommand');
 
 const NON_LOCKABLE_COMMANDS = new Set(['commandctl']);
 const MAX_PREVIEW_COMMANDS = 20;
@@ -302,3 +302,4 @@ module.exports = {
         }
     },
 };
+

@@ -1,5 +1,5 @@
 const mariaClient = require('./mariaClient');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const { ROLE_LIMITS, ROLE_IMAGE_LIMITS, USER_ROLES } = require('../../config/constants');
 
 const DEFAULT_QUOTA_ROLE = USER_ROLES.USER;
@@ -159,3 +159,4 @@ class QuotaDB {
 }
 
 module.exports = new QuotaDB();
+

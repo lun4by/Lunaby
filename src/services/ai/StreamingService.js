@@ -1,5 +1,5 @@
 const AICore = require('./AICore');
-const Validators = require('../../utils/validators');
+const Validators = require('../../utils/text/validators');
 const { DISCORD_MESSAGE_MAX_LENGTH } = require('../../config/constants');
 
 function splitByLength(text, maxLength) {
@@ -115,3 +115,4 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
 }
 
 module.exports = { sendStreamingMessage, splitByLength };
+

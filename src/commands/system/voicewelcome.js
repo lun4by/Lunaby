@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 const emojis = require('../../config/emojis.js');
-const { resolveHybridPrefix } = require('../../utils/hybridCommand');
-const { updateGuildSettingsAndInvalidate } = require('../../utils/guildSettings.js');
-const { getGuildVoiceSettings } = require('../../utils/guildLocale.js');
+const { resolveHybridPrefix } = require('../../utils/discord/hybridCommand');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guild/guildSettings.js');
+const { getGuildVoiceSettings } = require('../../utils/guild/guildLocale.js');
 
 module.exports = {
     data: new SlashCommandBuilder()

@@ -1,4 +1,4 @@
-const emojis = require('../config/emojis');
+const emojis = require('../../config/emojis');
 
 const STOP_WORDS = new Set([
   "và", "hoặc", "nhưng", "nếu", "vì", "bởi", "với", "từ", "đến", "trong", "ngoài",

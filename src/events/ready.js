@@ -11,10 +11,10 @@ const CommandsJSONService = require('../services/system/CommandsJSONService');
 const QuotaService = require('../services/user/QuotaService.js');
 const RoleService = require('../services/user/RoleService.js');
 const BlacklistService = require('../services/user/BlacklistService.js');
-const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
+const { notifyBlacklistedGuildAndLeave } = require('../utils/discord/blacklistUtils');
 const { loadLVoiceCache, cleanupZombieChannels } = require('./voiceStateUpdate.js');
-const logger = require('../utils/logger.js');
-const { getSystemMetrics } = require('../utils/systemMetrics.js');
+const logger = require('../utils/core/logger.js');
+const { getSystemMetrics } = require('../utils/core/systemMetrics.js');
 const { initializeTopgg } = require('../services/api/topggService.js');
 
 const presenceIntervalMs = 10 * 1000;

@@ -9,10 +9,10 @@ const {
 const emojis = require('../../config/emojis');
 const i18nManager = require('../../services/i18n/i18nManager');
 const viLocale = require('../../locales/vi.json');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
-const { getGuildLocale } = require('../../utils/guildLocale.js');
-const { updateGuildSettingsAndInvalidate } = require('../../utils/guildSettings.js');
-const { hasMemberPermission } = require('../../utils/permissionUtils.js');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const { getGuildLocale } = require('../../utils/guild/guildLocale.js');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guild/guildSettings.js');
+const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
 const defaultLang = 'vi';
 const fallbackLanguageConfig = viLocale?.commands?.language || {};
@@ -187,3 +187,4 @@ function buildLanguageEmbed(lang, changed = false) {
                 : tByLang(lang, 'commands.language.footer.normal'),
         });
 }
+

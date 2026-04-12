@@ -15,8 +15,8 @@ const conversationManager = require('../../handlers/conversationManager.js');
 const prompts = require('../../config/prompts.js');
 const { DEFAULT_MODEL } = require('../../config/constants.js');
 const emojis = require('../../config/emojis.js');
-const logger = require('../../utils/logger.js');
-const { COLORS } = require('../../utils/embedUtils.js');
+const logger = require('../../utils/core/logger.js');
+const { COLORS } = require('../../utils/discord/embedUtils.js');
 
 const MENU_OPTIONS = [
     { value: 'personal_info', labelKey: 'commands.personalize.menu_info', descriptionKey: 'commands.personalize.menu_info_desc', emoji: emojis.personalize.info },

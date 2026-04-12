@@ -3,12 +3,12 @@ const MariaModDB = require('../../services/database/MariaModDB');
 const RoleService = require('../../services/user/RoleService');
 const CooldownService = require('../../services/user/CooldownService');
 const i18nManager = require('../../services/i18n/i18nManager');
-const { getGuildLocale } = require('../../utils/guildLocale.js');
+const { getGuildLocale } = require('../../utils/guild/guildLocale.js');
 const {
   handlePermissionError,
   hasMemberPermission,
   isMissingPermissionError,
-} = require('../../utils/permissionUtils');
+} = require('../../utils/discord/permissionUtils');
 
 const DEFAULT_LOCALE = 'vi';
 

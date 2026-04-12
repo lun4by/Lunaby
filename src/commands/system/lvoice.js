@@ -2,9 +2,9 @@ const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ChannelType } = 
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const { creatorChannels } = require('../../events/voiceStateUpdate.js');
 const emojis = require('../../config/emojis.js');
-const logger = require('../../utils/logger.js');
-const { COLORS } = require('../../utils/embedUtils.js');
-const { formatPermissionList, getMissingPermissions, hasMemberPermission, isMissingPermissionError } = require('../../utils/permissionUtils.js');
+const logger = require('../../utils/core/logger.js');
+const { COLORS } = require('../../utils/discord/embedUtils.js');
+const { formatPermissionList, getMissingPermissions, hasMemberPermission, isMissingPermissionError } = require('../../utils/discord/permissionUtils.js');
 
 const requiredBotPermissions = [PermissionFlagsBits.ManageChannels];
 

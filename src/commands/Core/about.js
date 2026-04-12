@@ -5,8 +5,8 @@ const {
     ButtonStyle,
 } = require('discord.js');
 const packageJson = require('../../../package.json');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
-const { SUPPORT_SERVER_URL } = require('../../utils/blacklistUtils');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const { SUPPORT_SERVER_URL } = require('../../utils/discord/blacklistUtils');
 
 const DISCORD_BOT_PERMISSIONS = process.env.DISCORD_BOT_PERMISSIONS || '0';
 const WEBSITE_URL = process.env.WEBSITE_URL || 'https://lunaby.tech';

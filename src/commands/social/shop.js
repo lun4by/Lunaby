@@ -6,8 +6,8 @@ const {
 } = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
 const QuotaService = require('../../services/user/QuotaService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
-const logger = require('../../utils/logger');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 const {
   QUOTA_COST_CREDITS_PER_MESSAGE,

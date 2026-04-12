@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const mariaClient = require('../database/mariaClient');
-const logger = require('../../utils/logger.js');
-const { handlePermissionError, sendEmbedWithFallback, hasPermission, isMissingPermissionError } = require('../../utils/permissionUtils');
+const logger = require('../../utils/core/logger.js');
+const { handlePermissionError, sendEmbedWithFallback, isMissingPermissionError } = require('../../utils/discord/permissionUtils');
 
 class ConsentService {
   async hasUserConsented(userId) {

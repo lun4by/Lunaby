@@ -1,6 +1,6 @@
 const { AttachmentBuilder } = require('discord.js');
 const { Profile } = require('lunaby-canvas');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 
 const HEX_COLOR_REGEX = /^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/;
 

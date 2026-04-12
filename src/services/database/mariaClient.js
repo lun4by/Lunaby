@@ -1,5 +1,5 @@
 const mariadb = require('mariadb');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 class MariaDBClient {
     constructor() {
