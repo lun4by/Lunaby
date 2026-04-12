@@ -6,12 +6,12 @@ const {
     StringSelectMenuOptionBuilder,
     ComponentType,
 } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB');
 const emojis = require('../../config/emojis');
 const i18nManager = require('../../services/i18n/i18nManager');
 const viLocale = require('../../locales/vi.json');
 const { createLunabyEmbed } = require('../../utils/embedUtils');
-const { getGuildLocale, invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
+const { getGuildLocale } = require('../../utils/guildLocale.js');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guildSettings.js');
 const { hasMemberPermission } = require('../../utils/permissionUtils.js');
 
 const defaultLang = 'vi';
@@ -117,8 +117,7 @@ module.exports = {
             }
 
             const previousLang = currentLang;
-            await MariaModDB.updateGuildSettings(interaction.guildId, { language: selectedLang });
-            invalidateGuildLocaleCache(interaction.guildId);
+            await updateGuildSettingsAndInvalidate(interaction.guildId, { language: selectedLang });
             currentLang = selectedLang;
 
             await i.update({

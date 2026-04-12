@@ -1,9 +1,14 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
-const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
-const { invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
+const {
+    createHybridReply,
+    deferHybridReply,
+    getHybridSubcommand,
+    isSlashCommandInteraction,
+    resolveHybridPrefix,
+} = require('../../utils/hybridCommand');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guildSettings.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -35,27 +40,21 @@ module.exports = {
 
         if (!guildId) return;
 
-        const subCommand = interaction.options.getSubcommand();
+        const subCommand = getHybridSubcommand(interaction);
 
         if (!subCommand) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
+            const prefix = await resolveHybridPrefix(interaction);
             return (interaction.message || interaction).reply({ content: interaction.t('commands.welcome.usage', { prefix }) });
         }
 
-        if (isSlash && !interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
-        }
-
-        const replyObj = isSlash ? interaction : (interaction.message || interaction);
-        const replyFunc = isSlash ? (data) => interaction.editReply(data) : (data) => replyObj.reply(data);
+        await deferHybridReply(interaction, { ephemeral: true });
+        const replyFunc = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
 
         try {
             if (subCommand === 'disable') {
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'greeter.welcome.isEnabled': false
                 });
-                invalidateGuildLocaleCache(guildId);
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.welcome.disable_success')}` });
             }
 
@@ -78,17 +77,15 @@ module.exports = {
                 }
 
                 if (!channel || !message) {
-                    const PrefixDB = require('../../services/database/PrefixDB');
-                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
+                    const prefix = await resolveHybridPrefix(interaction);
                     return replyFunc({ content: interaction.t('commands.welcome.no_channel', { prefix }), ephemeral: true });
                 }
 
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'greeter.welcome.isEnabled': true,
                     'greeter.welcome.channel': channel.id,
                     'greeter.welcome.message': message
                 });
-                invalidateGuildLocaleCache(guildId);
 
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.welcome.setup_success', { channelId: channel.id, message })}` });
             }

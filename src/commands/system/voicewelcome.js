@@ -1,8 +1,9 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger.js');
 const emojis = require('../../config/emojis.js');
-const { getGuildVoiceSettings, invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
+const { resolveHybridPrefix } = require('../../utils/hybridCommand');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guildSettings.js');
+const { getGuildVoiceSettings } = require('../../utils/guildLocale.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -23,8 +24,7 @@ module.exports = {
         if (subCommand === 'toggle') {
             return handleVoiceToggle(interaction);
         } else {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
+            const prefix = await resolveHybridPrefix(interaction);
             const reply = interaction.reply ? interaction.reply.bind(interaction) : interaction.message.reply.bind(interaction.message);
             return reply({ content: `${emojis.error} ${interaction.t('commands.voicewelcome.usage', { prefix })}` });
         }
@@ -40,10 +40,9 @@ async function handleVoiceToggle(interaction) {
         const currentEnabled = voiceSettings.enabled;
         const newEnabled = !currentEnabled;
 
-        await MariaModDB.updateGuildSettings(guildId, {
+        await updateGuildSettingsAndInvalidate(guildId, {
             'voiceToggle.isEnabled': newEnabled,
         });
-        invalidateGuildLocaleCache(guildId);
 
         const message = newEnabled
             ? `${emojis.success} ${interaction.t('commands.voicewelcome.enabled')}`

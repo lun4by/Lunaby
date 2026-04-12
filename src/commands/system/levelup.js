@@ -1,9 +1,14 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
-const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
-const { invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
+const {
+    createHybridReply,
+    deferHybridReply,
+    getHybridSubcommand,
+    isSlashCommandInteraction,
+    resolveHybridPrefix,
+} = require('../../utils/hybridCommand');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guildSettings.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -31,33 +36,22 @@ module.exports = {
 
         if (!guildId) return;
 
-        let subCommand = null;
-        if (isSlash) {
-            subCommand = interaction.options.getSubcommand();
-        } else if (interaction.args && interaction.args.length > 0) {
-            subCommand = interaction.args[0].toLowerCase();
-        }
+        const subCommand = getHybridSubcommand(interaction);
 
         if (!subCommand || !['set', 'disable'].includes(subCommand)) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
+            const prefix = await resolveHybridPrefix(interaction);
             return (interaction.message || interaction).reply({ content: interaction.t('commands.levelup.usage', { prefix }) });
         }
 
-        if (isSlash && !interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
-        }
-
-        const replyObj = isSlash ? interaction : (interaction.message || interaction);
-        const replyFunc = isSlash ? (data) => interaction.editReply(data) : (data) => replyObj.reply(data);
+        await deferHybridReply(interaction, { ephemeral: true });
+        const replyFunc = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
 
         try {
             if (subCommand === 'disable') {
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'settings.levelUpNotifications': false,
                     'settings.levelUpChannel': null
                 });
-                invalidateGuildLocaleCache(guildId);
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.levelup.disable_success')}` });
             }
 
@@ -77,16 +71,14 @@ module.exports = {
                 }
 
                 if (!channel) {
-                    const PrefixDB = require('../../services/database/PrefixDB');
-                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
+                    const prefix = await resolveHybridPrefix(interaction);
                     return replyFunc({ content: interaction.t('commands.levelup.no_channel', { prefix }), ephemeral: true });
                 }
 
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'settings.levelUpNotifications': true,
                     'settings.levelUpChannel': channel.id
                 });
-                invalidateGuildLocaleCache(guildId);
 
                 return replyFunc({ content: `${emojis.success} ${interaction.t('commands.levelup.setup_success', { channelId: channel.id })}` });
             }

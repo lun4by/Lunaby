@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
-const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
+const { isSlashCommandInteraction, resolveHybridPrefix } = require('../../utils/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -32,8 +32,7 @@ module.exports = {
             : interaction.args?.find(a => !a.match(/^<@!?\d+>$/));
 
         if (!targetUser || amountRaw === undefined || amountRaw === null) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            const prefix = await resolveHybridPrefix(interaction);
             return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.addquota.usage', { prefix })}`);
         }
 

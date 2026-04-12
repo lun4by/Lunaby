@@ -4,7 +4,12 @@ const { loadCommands, getCommandsJson } = require('../../handlers/commandHandler
 const { deployCommandsToGuild } = require('../../handlers/guildHandler');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis');
-const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
+const {
+    createHybridReply,
+    deferHybridReply,
+    getHybridSubcommand,
+    isSlashCommandInteraction,
+} = require('../../utils/hybridCommand');
 
 const NON_LOCKABLE_COMMANDS = new Set(['commandctl']);
 const MAX_PREVIEW_COMMANDS = 20;
@@ -176,22 +181,10 @@ module.exports = {
 
     async execute(interaction) {
         const isSlash = isSlashCommandInteraction(interaction);
-        const isDeferredInteraction = isSlash && !interaction.deferred && !interaction.replied;
+        await deferHybridReply(interaction, { ephemeral: true });
 
-        if (isDeferredInteraction) {
-            await interaction.deferReply({ ephemeral: true });
-        }
-
-        const replyFn = isSlash
-            ? (payload) => {
-                const { ephemeral, ...safePayload } = payload || {};
-                return interaction.editReply(safePayload);
-            }
-            : (payload) => interaction.reply(payload);
-
-        const subcommand = isSlash
-            ? interaction.options.getSubcommand()
-            : (interaction.args?.[0] || 'list').toLowerCase();
+        const replyFn = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
+        const subcommand = getHybridSubcommand(interaction, 'list');
 
         const allCommands = [...interaction.client.commands.keys()];
 

@@ -4,7 +4,7 @@ const BlacklistService = require('../services/user/BlacklistService');
 const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
 const logger = require('../utils/logger.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
-const { getCachedGuildSettings, invalidateGuildLocaleCache } = require('../utils/guildLocale.js');
+const { getCachedGuildSettings } = require('../utils/guildLocale.js');
 const { hasChannelPermission } = require('../utils/permissionUtils.js');
 
 const guildCommandDeployDelayMs = 1000;
@@ -83,18 +83,6 @@ async function getGuildFromDB(guildId) {
   } catch (error) {
     logger.error('guild_deploy', `Error while fetching guild data from MariaDB:`, error);
     return null;
-  }
-}
-
-async function updateGuildSettings(guildId, settings) {
-  try {
-    await MariaModDB.updateGuildSettings(guildId, settings);
-    invalidateGuildLocaleCache(guildId);
-    logger.info('guild_deploy', `Updated settings for server ID: ${guildId}`);
-    return true;
-  } catch (error) {
-    logger.error('guild_deploy', `Error while updating guild settings:`, error);
-    return false;
   }
 }
 

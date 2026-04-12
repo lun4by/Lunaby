@@ -1,7 +1,12 @@
 const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis');
-const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
+const {
+    createHybridReply,
+    deferHybridReply,
+    isSlashCommandInteraction,
+    resolveHybridPrefix,
+} = require('../../utils/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,16 +33,12 @@ module.exports = {
             : interaction.message?.mentions?.channels?.first();
 
         if (!logChannel) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            const prefix = await resolveHybridPrefix(interaction);
             return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.systemlog.invalid_channel', { prefix })}`, ephemeral: true });
         }
 
-        if (isSlash && !interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
-        }
-
-        const replyFunc = isSlash ? (data) => interaction.editReply(data) : (data) => interaction.reply(data);
+        await deferHybridReply(interaction, { ephemeral: true });
+        const replyFunc = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
 
         const isSuccess = await MariaModDB.setBotSetting('global_log_channel', logChannel.id, userId);
 

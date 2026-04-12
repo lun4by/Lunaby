@@ -3,7 +3,7 @@ const RoleService = require('../../services/user/RoleService');
 const { USER_ROLES } = require('../../config/constants');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis');
-const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
+const { isSlashCommandInteraction, resolveHybridPrefix } = require('../../utils/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -41,8 +41,7 @@ module.exports = {
         const role = roleRaw?.toLowerCase();
 
         if (!targetUser || !role) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            const prefix = await resolveHybridPrefix(interaction);
             return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.giveadmin.usage', { prefix, roles: Object.values(USER_ROLES).join(', ') })}`);
         }
 
