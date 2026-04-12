@@ -1,12 +1,10 @@
 const ConversationService = require('../services/ai/ConversationService');
-const consentService = require('../services/user/consentService');
-const { handlePermissionError, isMissingPermissionError } = require('../utils/permissionUtils');
 const { TYPING_INDICATOR_INTERVAL_MS } = require('../config/constants');
-
-const { handleMemoryRequest, splitMessageIntoChunks } = require('./messageHandlers/memoryRequestHandler');
+const { handleMemoryRequest } = require('./messageHandlers/memoryRequestHandler');
 const { handleCodeRequest } = require('./messageHandlers/codeRequestHandler');
 const { handleChatRequest } = require('./messageHandlers/chatRequestHandler');
 const { handleImageRequest } = require('./messageHandlers/imageRequestHandler');
+const { ensureUserConsent } = require('./commands/commandGuards');
 const logger = require('../utils/logger');
 const emojis = require('../config/emojis');
 
@@ -44,18 +42,7 @@ async function handleMentionMessage(message, client) {
   const hasEveryoneOrRoleMention = message.mentions.everyone || message.mentions.roles.size > 0;
   if (hasEveryoneOrRoleMention) return;
 
-  const hasConsented = await consentService.hasUserConsented(message.author.id);
-  if (!hasConsented) {
-    try {
-      const consentData = consentService.createConsentEmbed(message.author);
-      await message.reply(consentData);
-    } catch (error) {
-      if (isMissingPermissionError(error)) {
-        await handlePermissionError(message, 'embedLinks', message.author.username, 'reply');
-      } else {
-        throw error;
-      }
-    }
+  if (!(await ensureUserConsent(message, message.author))) {
     return;
   }
 
@@ -89,7 +76,6 @@ async function handleMentionMessage(message, client) {
     }
 
     await handleChatRequest(message, content, ConversationService);
-
   } catch (error) {
     logger.error('chat', `Error processing message from ${message.author.tag}:`, error);
 
@@ -112,5 +98,4 @@ async function handleMentionMessage(message, client) {
 
 module.exports = {
   handleMentionMessage,
-  splitMessageIntoChunks
 };

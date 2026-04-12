@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis');
+const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,7 +20,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        const isSlash = interaction.isCommand && interaction.isCommand();
+        const isSlash = isSlashCommandInteraction(interaction);
         const userId = interaction.user.id;
 
         const logChannel = isSlash

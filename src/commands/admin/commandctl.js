@@ -4,6 +4,7 @@ const { loadCommands, getCommandsJson } = require('../../handlers/commandHandler
 const { deployCommandsToGuild } = require('../../handlers/guildHandler');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis');
+const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
 
 const NON_LOCKABLE_COMMANDS = new Set(['commandctl']);
 const MAX_PREVIEW_COMMANDS = 20;
@@ -80,8 +81,9 @@ async function reloadCommandsAcrossShards(client, scope, guildId) {
 
     return client.shard.broadcastEval(
         async (shardClient, context) => {
-            const { loadCommands, getCommandsJson } = require('./handlers/commandHandler');
-            const { deployCommandsToGuild } = require('./handlers/guildHandler');
+            const path = require('path');
+            const { loadCommands, getCommandsJson } = require(path.join(process.cwd(), 'src', 'handlers', 'commandHandler'));
+            const { deployCommandsToGuild } = require(path.join(process.cwd(), 'src', 'handlers', 'guildHandler'));
 
             const loadedCount = loadCommands(shardClient);
             const commandsJson = getCommandsJson(shardClient);
@@ -173,7 +175,7 @@ module.exports = {
     cooldown: 3,
 
     async execute(interaction) {
-        const isSlash = Boolean(interaction.isCommand && interaction.isCommand());
+        const isSlash = isSlashCommandInteraction(interaction);
         const isDeferredInteraction = isSlash && !interaction.deferred && !interaction.replied;
 
         if (isDeferredInteraction) {

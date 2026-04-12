@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
+const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,7 +21,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        const isSlash = interaction.isCommand && interaction.isCommand();
+        const isSlash = isSlashCommandInteraction(interaction);
 
         const targetUser = isSlash
             ? interaction.options.getUser('user')

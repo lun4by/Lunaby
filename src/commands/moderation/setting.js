@@ -5,6 +5,7 @@ const logger = require('../../utils/logger');
 const { COLORS } = require('../../utils/embedUtils');
 const { getCachedGuildSettings, invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
 const { hasMemberPermission } = require('../../utils/permissionUtils.js');
+const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,7 +21,7 @@ module.exports = {
             return interaction.replied || interaction.deferred ? interaction.editReply(replyOptions) : interaction.reply(replyOptions);
         }
 
-        const isSlash = !!interaction.isCommand;
+        const isSlash = isSlashCommandInteraction(interaction);
         if (isSlash && !interaction.deferred && !interaction.replied) {
             await interaction.deferReply({ ephemeral: true });
         }
@@ -235,7 +236,7 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
         components.push(logBtnRow);
     }
 
-    const isSlash = !!interactionOrMessage.isCommand;
+    const isSlash = isSlashCommandInteraction(interactionOrMessage);
 
     if (isUpdate) {
         await interactionOrMessage.update({ embeds: [embed], components, content: '' });

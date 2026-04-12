@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('disco
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
+const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
 const { getCachedGuildSettings, invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
 
 module.exports = {
@@ -29,7 +30,7 @@ module.exports = {
     prefix: { name: 'votelog', aliases: ['setvotelog', 'topgglog'], description: 'Cài đặt kênh thông báo vote Top.gg (chỉ Admin)' },
     cooldown: 5,
     async execute(interaction) {
-        const isSlash = interaction.isCommand && interaction.isCommand();
+        const isSlash = isSlashCommandInteraction(interaction);
         const guildId = interaction.guild?.id;
 
         if (!guildId) return;

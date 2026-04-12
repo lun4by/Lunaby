@@ -3,6 +3,7 @@ const RoleService = require('../../services/user/RoleService');
 const { USER_ROLES } = require('../../config/constants');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis');
+const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,7 +28,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        const isSlash = interaction.isCommand && interaction.isCommand();
+        const isSlash = isSlashCommandInteraction(interaction);
 
         const targetUser = isSlash
             ? interaction.options.getUser('user')

@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('disco
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/logger');
 const emojis = require('../../config/emojis.js');
+const { isSlashCommandInteraction } = require('../../utils/hybridCommand');
 const { invalidateGuildLocaleCache } = require('../../utils/guildLocale.js');
 
 module.exports = {
@@ -29,7 +30,7 @@ module.exports = {
     prefix: { name: 'welcome', aliases: ['setwelcome'], description: 'Cài đặt thông báo chào mừng thành viên mới (chỉ Admin)' },
     cooldown: 5,
     async execute(interaction) {
-        const isSlash = interaction.isCommand && interaction.isCommand();
+        const isSlash = isSlashCommandInteraction(interaction);
         const guildId = interaction.guild?.id;
 
         if (!guildId) return;
