@@ -109,8 +109,8 @@ function buildMainEmbed(memory, interaction) {
             { name: interaction.t('commands.personalize.field_occupation'), value: occupation, inline: true },
             { name: interaction.t('commands.personalize.field_instructions'), value: instructions.length > 80 ? instructions.substring(0, 80) + '...' : instructions, inline: true },
             { name: '\u200B', value: '\u200B' },
-            { name: interaction.t('commands.personalize.field_search'), value: searchHistory ? `\`${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}\`` : `\`${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}\``, inline: true },
-            { name: interaction.t('commands.personalize.field_memory'), value: savedMemory ? `\`${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}\`` : `\`${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}\``, inline: true },
+            { name: interaction.t('commands.personalize.field_search'), value: searchHistory ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}` : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`, inline: true },
+            { name: interaction.t('commands.personalize.field_memory'), value: savedMemory ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}` : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`, inline: true },
         )
         .setTimestamp();
 }
