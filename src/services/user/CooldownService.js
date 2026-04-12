@@ -1,4 +1,4 @@
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 const DEFAULT_COOLDOWN = 5;
 const CLEANUP_INTERVAL = 5 * 60 * 1000;
@@ -34,7 +34,7 @@ function cleanup() {
         }
     }
     if (cleaned > 0) {
-        logger.debug('COOLDOWN', `Đã dọn dẹp ${cleaned} cooldown hết hạn`);
+        logger.debug('cooldown', `Cleaned up ${cleaned} expired cooldowns`);
     }
 }
 

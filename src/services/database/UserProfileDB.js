@@ -1,6 +1,6 @@
 const MariaModDB = require('./MariaModDB');
-const logger = require('../../utils/logger');
-const Validators = require('../../utils/validators');
+const logger = require('../../utils/core/logger');
+const Validators = require('../../utils/text/validators');
 
 class UserProfileDB {
   async getUserProfile(userId) {
@@ -41,15 +41,15 @@ class UserProfileDB {
         }
       };
     } catch (error) {
-      logger.error('MARIADB_WRAPPER', 'Error getting user profile:', error);
+      logger.error('mariadb_wrapper', 'Error getting user profile:', error);
       throw error;
     }
   }
 
   async updateUserProfile(userId, updateData) {
-    // This is a proxy for $set objects from old mongo calls. But nothing in the repo uses this specific format natively anymore except for internal things.
-    // If it's used, we will just return false or map it.
-    logger.warn('MARIADB_WRAPPER', 'updateUserProfile is deprecated through UserProfileDB. Use MariaModDB directly instead.');
+    // Đây là lớp proxy cho object $set từ các lệnh mongo cũ. Nhưng trong repo hiện không còn phần nào dùng trực tiếp định dạng này ngoài một số luồng nội bộ.
+    // Nếu vẫn có chỗ gọi, hàm này sẽ tạm trả về false hoặc map lại dữ liệu.
+    logger.warn('mariadb_wrapper', 'updateUserProfile is deprecated through UserProfileDB. Use MariaModDB directly instead.');
     return false;
   }
 
@@ -82,7 +82,7 @@ class UserProfileDB {
         }
       };
     } catch (error) {
-      logger.error('MARIADB_WRAPPER', 'Error updating user economy:', error);
+      logger.error('mariadb_wrapper', 'Error updating user economy:', error);
       return null;
     }
   }

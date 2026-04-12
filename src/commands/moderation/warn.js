@@ -1,9 +1,10 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
+const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,9 +21,9 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+        if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
+                content: `${emojis.error} ${interaction.t('system.no_permission')}`,
                 ephemeral: true,
             });
         }
@@ -34,19 +35,19 @@ module.exports = {
         if (!targetUser || !reason) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Cảnh cáo (warn): \`${prefix}warn @user [lý do]\`` });
+            return (interaction.message || interaction).reply({ content: interaction.t('commands.warn.usage', { prefix }) });
         }
 
         if (!targetMember) {
             return interaction.reply({
-                content: `${emojis.error} Không tìm thấy thành viên này trong server!`,
+                content: `${emojis.error} ${interaction.t('commands.moderation_common.user_not_found')}`,
                 ephemeral: true,
             });
         }
 
         if (targetUser.bot) {
             return interaction.reply({
-                content: `${emojis.error} Không thể cảnh cáo bot!`,
+                content: `${emojis.error} ${interaction.t('commands.warn.cannot_warn_bot')}`,
                 ephemeral: true,
             });
         }
@@ -56,7 +57,7 @@ module.exports = {
             interaction.user.id !== interaction.guild.ownerId
         ) {
             return interaction.reply({
-                content: `${emojis.error} Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!`,
+                content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
                 ephemeral: true,
             });
         }
@@ -73,12 +74,12 @@ module.exports = {
 
             if (!success) {
                 return interaction.editReply({
-                    content: `${emojis.error} Đã xảy ra lỗi khi lưu cảnh cáo vào cơ sở dữ liệu!`,
+                    content: `${emojis.error} ${interaction.t('commands.warn.db_error')}`,
                     ephemeral: true,
                 });
             }
 
-            // Add mod log entry
+            // Thêm bản ghi mod log
             await MariaModDB.addModLog(
                 interaction.guild.id,
                 targetUser.id,
@@ -96,66 +97,64 @@ module.exports = {
                 .replace('${username}', targetUser.username)
                 .replace('${reason}', reason)
                 .replace('${warningCount}', warningCount);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
+            const aiResponse = await aiResponsePromise;
 
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
-
-            await interaction.editReply({ content: aiResponse });
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} ${interaction.t('commands.warn.success_fallback', { tag: targetUser.tag, count: warningCount })}`,
+            });
 
             try {
                 const dmEmbed = new EmbedBuilder()
                     .setColor(0xffff00)
-                    .setTitle(`Bạn đã bị cảnh cáo trong ${interaction.guild.name}`)
-                    .setDescription(`**Lý do:** ${reason}\n**Số lần cảnh cáo:** ${warningCount}`)
-                    .setFooter({ text: `Nếu bạn tiếp tục vi phạm quy tắc, bạn có thể bị mute hoặc ban.` })
+                    .setTitle(interaction.t('commands.warn.dm_title', { guild: interaction.guild.name }))
+                    .setDescription(interaction.t('commands.warn.dm_desc', { reason, warningCount }))
+                    .setFooter({ text: interaction.t('commands.warn.dm_footer') })
                     .setTimestamp();
 
                 await targetUser.send({ embeds: [dmEmbed] });
             } catch (error) {
-                logger.error('MODERATION', `Không thể gửi DM cho ${targetUser.tag}`);
+                logger.error('moderation', `Failed to send DM to ${targetUser.tag}`);
             }
 
             if (warningCount >= 3 && warningCount < 5) {
                 try {
                     await targetMember.timeout(
                         60 * 60 * 1000,
-                        `Tự động mute sau ${warningCount} lần cảnh cáo`,
+                        interaction.t('commands.warn.auto_mute_reason', { count: warningCount }),
                     );
 
                     const autoMuteEmbed = new EmbedBuilder()
                         .setColor(0xffa500)
-                        .setTitle(`🔇 Thành viên đã bị tự động mute`)
-                        .setDescription(
-                            `${targetUser.tag} đã bị tự động mute trong 1 giờ sau ${warningCount} lần cảnh cáo.`,
-                        )
-                        .setFooter({ text: `Hệ thống tự động` })
+                        .setTitle(interaction.t('commands.warn.auto_mute_title'))
+                        .setDescription(interaction.t('commands.warn.auto_mute_desc', { tag: targetUser.tag, count: warningCount }))
+                        .setFooter({ text: interaction.t('commands.moderation_common.auto_system') })
                         .setTimestamp();
 
                     await interaction.followUp({ embeds: [autoMuteEmbed] });
                 } catch (error) {
-                    logger.error('MODERATION', 'Không thể tự động mute thành viên:', error);
+                    logger.error('moderation', 'Failed to auto-mute member:', error);
                 }
             } else if (warningCount >= 5) {
                 try {
-                    await targetMember.kick(`Tự động kick sau ${warningCount} lần cảnh cáo`);
+                    await targetMember.kick(interaction.t('commands.warn.auto_kick_reason', { count: warningCount }));
 
                     const autoKickEmbed = new EmbedBuilder()
                         .setColor(0xff5555)
-                        .setTitle(`👢 Thành viên đã bị tự động kick`)
-                        .setDescription(
-                            `${targetUser.tag} đã bị tự động kick sau ${warningCount} lần cảnh cáo.`,
-                        )
-                        .setFooter({ text: `Hệ thống tự động` })
+                        .setTitle(interaction.t('commands.warn.auto_kick_title'))
+                        .setDescription(interaction.t('commands.warn.auto_kick_desc', { tag: targetUser.tag, count: warningCount }))
+                        .setFooter({ text: interaction.t('commands.moderation_common.auto_system') })
                         .setTimestamp();
 
                     await interaction.followUp({ embeds: [autoKickEmbed] });
                 } catch (error) {
-                    logger.error('MODERATION', 'Không thể tự động kick thành viên:', error);
+                    logger.error('moderation', 'Failed to auto-kick member:', error);
                 }
             }
         } catch (error) {
-            logger.error('MODERATION', 'Lỗi khi cảnh cáo thành viên:', error);
+            logger.error('moderation', 'Error warning member:', error);
             await interaction.editReply({
-                content: `${emojis.error} Đã xảy ra lỗi khi cảnh cáo người dùng: ${error.message}`,
+                content: `${emojis.error} ${interaction.t('commands.warn.error_warn', { error: error.message })}`,
                 ephemeral: true,
             });
         }

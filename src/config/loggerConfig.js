@@ -12,27 +12,42 @@ const defaultConfig = {
     keepOldLogs: true,
   },
   categories: {
-    COMMAND: true, COMMAND_USAGE: true,
-    DATABASE: true, MARIADB: true, SYSTEM: true,
-    CHAT: true, API: true, CONVERSATION_SERVICE: true,
-    CONVERSATION: true, AI_CORE: true,
-    MODERATION: true, MESSAGE_EVENT: true,
-    GUILD: true, GUILD_EVENT: true, GUILD_DEPLOY: false,
-    XP: true, FONTS: true, MODLOG: true,
+    command: true, command_usage: true,
+    mongodb: true, mariadb: true, system: true,
+    chat: true, api: true, conversation_service: true,
+    conversation: true, aicore: true,
+    moderation: true, message_event: true,
+    guild: true, guild_event: true, guild_deploy: false,
+    xp: true, fonts: true, modlog: true,
   },
 };
 
 let currentConfig = structuredClone(defaultConfig);
 
+function cloneConfig(config) {
+  return structuredClone(config);
+}
+  
 function getConfig() {
-  return { ...currentConfig };
+  return cloneConfig(currentConfig);
 }
 
 function updateConfig(newConfig) {
-  currentConfig = { ...currentConfig, ...newConfig };
-  if (newConfig.categories) {
-    currentConfig.categories = { ...currentConfig.categories, ...newConfig.categories };
-  }
+  const nextConfig = newConfig || {};
+
+  currentConfig = {
+    ...currentConfig,
+    ...nextConfig,
+    fileLogging: {
+      ...currentConfig.fileLogging,
+      ...(nextConfig.fileLogging || {}),
+    },
+    categories: {
+      ...currentConfig.categories,
+      ...(nextConfig.categories || {}),
+    },
+  };
+
   return getConfig();
 }
 
@@ -41,7 +56,9 @@ function setEnabled(enabled) {
 }
 
 function setLevel(level) {
-  return VALID_LEVELS.has(level) ? updateConfig({ level }) : getConfig();
+  return VALID_LEVELS.has(level)
+    ? updateConfig({ level })
+    : getConfig();
 }
 
 function setCategoryEnabled(category, enabled) {
@@ -52,13 +69,15 @@ function setCategoryEnabled(category, enabled) {
 }
 
 function resetToDefault() {
-  currentConfig = structuredClone(defaultConfig);
+  currentConfig = cloneConfig(defaultConfig);
   return getConfig();
 }
 
 function updateFileLogging(fileConfig) {
-  if (fileConfig) currentConfig.fileLogging = { ...currentConfig.fileLogging, ...fileConfig };
-  return getConfig();
+  if (!fileConfig || typeof fileConfig !== "object") {
+    return getConfig();
+  }
+  return updateConfig({ fileLogging: fileConfig });
 }
 
 module.exports = { getConfig, updateConfig, setEnabled, setLevel, setCategoryEnabled, resetToDefault, updateFileLogging };

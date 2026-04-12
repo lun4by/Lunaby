@@ -1,11 +1,12 @@
 const { Events } = require("discord.js");
 const MariaModDB = require("../services/database/MariaModDB");
-const logger = require("../utils/logger");
+const logger = require("../utils/core/logger");
+const { getCachedGuildSettings } = require('../utils/guild/guildLocale.js');
 
 async function handleGuildMemberAdd(member) {
     try {
         const guildId = member.guild.id;
-        const settings = await MariaModDB.getGuildSettings(guildId);
+        const settings = await getCachedGuildSettings(guildId);
 
         if (!settings || !settings.greeter?.welcome?.isEnabled) return;
 
@@ -25,15 +26,15 @@ async function handleGuildMemberAdd(member) {
             .replace(/{count}/g, member.guild.memberCount);
 
         await channel.send({ content: message });
-        logger.info('GREETER', `Đã gửi tin nhắn chào mừng cho ${member.user.tag} ở server ${member.guild.name}`);
+        logger.info('greeter', `Sent welcome message to ${member.user.tag} in server ${member.guild.name}`);
     } catch (error) {
-        logger.error('GREETER', `Lỗi khi xử lý chào mừng thành viên mới:`, error);
+        logger.error('greeter', `Error processing new member welcome:`, error);
     }
 }
 
 function setupGuildMemberAddEvent(client) {
     client.on(Events.GuildMemberAdd, handleGuildMemberAdd);
-    logger.info("EVENTS", "Đã đăng ký event: GuildMemberAdd");
+    logger.info("events", "Registered event: GuildMemberAdd");
 }
 
 module.exports = { setupGuildMemberAddEvent, handleGuildMemberAdd };

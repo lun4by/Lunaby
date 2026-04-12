@@ -4,14 +4,14 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require('discord.js');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
-const logger = require('../../utils/logger');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
-function buildBannerActionRow(url) {
+function buildBannerActionRow(url, interaction) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setLabel('Mở ảnh gốc')
+      .setLabel(interaction.t('commands.banner.open_original'))
       .setStyle(ButtonStyle.Link)
       .setURL(url),
   );
@@ -41,27 +41,27 @@ module.exports = {
 
       if (!bannerUrl) {
         return interaction.reply({
-          content: `${emojis.error} ${targetUser} chưa cài banner.`,
+          content: `${emojis.error} ${interaction.t('commands.banner.no_banner', { user: targetUser.toString() })}`,
           ephemeral: true,
         });
       }
 
       const embed = createLunabyEmbed()
         .setAuthor({
-          name: `Banner của ${fetchedUser.tag}`,
+          name: interaction.t('commands.banner.title', { tag: fetchedUser.tag }),
           iconURL: fetchedUser.displayAvatarURL({ size: 256 }),
         })
-        .setDescription(`[Nhấn vào đây để mở ảnh gốc](${bannerUrl})`)
+        .setDescription(interaction.t('commands.banner.click_to_open', { url: bannerUrl }))
         .setImage(bannerUrl);
 
       await interaction.reply({
         embeds: [embed],
-        components: [buildBannerActionRow(bannerUrl)],
+        components: [buildBannerActionRow(bannerUrl, interaction)],
       });
     } catch (error) {
-      logger.error('BANNER', 'Error in banner command:', error);
+      logger.error('banner', 'Error in banner command:', error);
       const payload = {
-        content: `${emojis.error} Đã xảy ra lỗi khi tải banner!`,
+        content: `${emojis.error} ${interaction.t('commands.banner.error')}`,
         ephemeral: true,
       };
       const respond = interaction.replied || interaction.deferred

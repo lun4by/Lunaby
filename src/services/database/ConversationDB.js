@@ -1,6 +1,6 @@
 const mongoClient = require('./mongoClient');
-const logger = require('../../utils/logger');
-const Validators = require('../../utils/validators');
+const logger = require('../../utils/core/logger');
+const Validators = require('../../utils/text/validators');
 const {
   MAX_CONVERSATION_LENGTH,
   MAX_CONVERSATION_AGE_MS,
@@ -37,7 +37,7 @@ class ConversationDB {
           content: systemPrompt + ` You are running on ${modelName} model.`
         };
         await this.addMessageToConversation(validUserId, systemMessage.role, systemMessage.content);
-        logger.debug('DATABASE', `New conversation created for user: ${validUserId}`);
+        logger.debug('mongodb', `New conversation created for user: ${validUserId}`);
         return [systemMessage];
       }
 
@@ -53,10 +53,10 @@ class ConversationDB {
         .project({ _id: 0, role: 1, content: 1 })
         .toArray();
 
-      logger.debug('DATABASE', `Retrieved ${messages.length} messages for userId: ${validUserId}`);
+      logger.debug('mongodb', `Retrieved ${messages.length} messages for userId: ${validUserId}`);
 
       if (messages.length === 0) {
-        logger.warn('DATABASE', `Inconsistency detected: ${count} messages found but 0 retrieved for userId: ${validUserId}`);
+        logger.warn('mongodb', `Inconsistency detected: ${count} messages found but 0 retrieved for userId: ${validUserId}`);
         const systemMessage = {
           role: 'system',
           content: systemPrompt + ` You are running on ${modelName} model.`
@@ -67,7 +67,7 @@ class ConversationDB {
 
       return messages;
     } catch (error) {
-      logger.error('DATABASE', 'Error getting conversation history:', error);
+      logger.error('mongodb', 'Error getting conversation history:', error);
       return [{
         role: 'system',
         content: systemPrompt + ` You are running on ${modelName} model.`
@@ -81,12 +81,12 @@ class ConversationDB {
       const validUserId = Validators.normalizeUserId(userId);
 
       if (!role) {
-        logger.error('DATABASE', 'Cannot add message with empty role');
+        logger.error('mongodb', 'Cannot add message with empty role');
         return false;
       }
 
       if (!content) {
-        logger.warn('DATABASE', `Adding message with empty content for userId: ${validUserId}`);
+        logger.warn('mongodb', `Adding message with empty content for userId: ${validUserId}`);
       }
 
       const db = mongoClient.getDb();
@@ -109,24 +109,24 @@ class ConversationDB {
             timestamp: Date.now()
           });
 
-          logger.debug('DATABASE', `Added message (${role}) for userId: ${validUserId}, messageIndex: ${messageIndex}`);
+          logger.debug('mongodb', `Added message (${role}) for userId: ${validUserId}, messageIndex: ${messageIndex}`);
           await this.pruneOldMessages(validUserId);
           return true;
         } catch (insertError) {
           if (insertError.code === 11000) {
-            logger.warn('DATABASE', `Duplicate key detected for userId ${validUserId}, retrying with a fresh messageIndex...`);
+            logger.warn('mongodb', `Duplicate key detected for userId ${validUserId}, retrying with a fresh messageIndex...`);
             continue;
           }
 
-          logger.error('DATABASE', `Error adding message for userId: ${validUserId}`, insertError);
+          logger.error('mongodb', `Error adding message for userId: ${validUserId}`, insertError);
           return false;
         }
       }
 
-      logger.error('DATABASE', `Failed to add message for userId ${validUserId} after multiple retries`);
+      logger.error('mongodb', `Failed to add message for userId ${validUserId} after multiple retries`);
       return false;
     } catch (error) {
-      logger.error('DATABASE', 'Error adding message to MongoDB:', error);
+      logger.error('mongodb', 'Error adding message to MongoDB:', error);
       return false;
     }
   }
@@ -160,11 +160,11 @@ class ConversationDB {
             messageIndex: { $in: messageIndexesToDelete }
           });
 
-          logger.debug('DATABASE', `Pruned ${messageIndexesToDelete.length} old messages for userId: ${userId}`);
+          logger.debug('mongodb', `Pruned ${messageIndexesToDelete.length} old messages for userId: ${userId}`);
         }
       }
     } catch (error) {
-      logger.error('DATABASE', `Error pruning conversation for userId: ${userId}`, error);
+      logger.error('mongodb', `Error pruning conversation for userId: ${userId}`, error);
     }
   }
 
@@ -176,7 +176,7 @@ class ConversationDB {
       const db = mongoClient.getDb();
 
       await db.collection(COLLECTIONS.CONVERSATIONS).deleteMany({ userId: validUserId });
-      logger.info('DATABASE', `Cleared conversation history for userId: ${validUserId}`);
+      logger.info('mongodb', `Cleared conversation history for userId: ${validUserId}`);
 
       const systemMessage = {
         role: 'system',
@@ -191,14 +191,14 @@ class ConversationDB {
           { $set: { lastUpdated: Date.now() } },
           { upsert: true }
         );
-        logger.debug('DATABASE', `Conversation reinitialized for user: ${validUserId}`);
+        logger.debug('mongodb', `Conversation reinitialized for user: ${validUserId}`);
         return true;
       } else {
-        logger.error('DATABASE', `Failed to add system prompt after clearing for userId: ${validUserId}`);
+        logger.error('mongodb', `Failed to add system prompt after clearing for userId: ${validUserId}`);
         return false;
       }
     } catch (error) {
-      logger.error('DATABASE', `Error clearing conversation history: ${error.message}`, error);
+      logger.error('mongodb', `Error clearing conversation history: ${error.message}`, error);
       return false;
     }
   }
@@ -209,7 +209,7 @@ class ConversationDB {
       const now = Date.now();
       const cutoffTime = now - this.maxConversationAge;
 
-      logger.debug('DATABASE', `Finding conversations older than ${Math.round(this.maxConversationAge / (1000 * 60 * 60))} hours...`);
+      logger.debug('mongodb', `Finding conversations older than ${Math.round(this.maxConversationAge / (1000 * 60 * 60))} hours...`);
 
       const oldUsers = await db.collection(COLLECTIONS.CONVERSATION_META)
         .find({ lastUpdated: { $lt: cutoffTime } })
@@ -218,24 +218,24 @@ class ConversationDB {
 
       if (oldUsers.length > 0) {
         const userIds = oldUsers.map(user => user.userId);
-        logger.info('DATABASE', `Found ${oldUsers.length} old conversations to cleanup`);
+        logger.info('mongodb', `Found ${oldUsers.length} old conversations to cleanup`);
 
         oldUsers.forEach(user => {
           const inactiveDuration = Math.round((now - user.lastUpdated) / (1000 * 60 * 60));
-          logger.debug('DATABASE', `Conversation for userId: ${user.userId} inactive for ${inactiveDuration} hours`);
+          logger.debug('mongodb', `Conversation for userId: ${user.userId} inactive for ${inactiveDuration} hours`);
         });
 
         const deleteResult = await db.collection(COLLECTIONS.CONVERSATIONS).deleteMany({ userId: { $in: userIds } });
         const metaDeleteResult = await db.collection(COLLECTIONS.CONVERSATION_META).deleteMany({ userId: { $in: userIds } });
 
-        logger.info('DATABASE', `Cleaned up ${oldUsers.length} old conversations (deleted ${deleteResult.deletedCount} messages, ${metaDeleteResult.deletedCount} metadata records)`);
+        logger.info('mongodb', `Cleaned up ${oldUsers.length} old conversations (deleted ${deleteResult.deletedCount} messages, ${metaDeleteResult.deletedCount} metadata records)`);
         return oldUsers.length;
       } else {
-        logger.debug('DATABASE', 'No old conversations to cleanup');
+        logger.debug('mongodb', 'No old conversations to cleanup');
         return 0;
       }
     } catch (error) {
-      logger.error('DATABASE', `Error cleaning up old conversations: ${error.message}`, error);
+      logger.error('mongodb', `Error cleaning up old conversations: ${error.message}`, error);
       return 0;
     }
   }

@@ -1,4 +1,4 @@
-const logger = require("../../utils/logger.js");
+const logger = require("../../utils/core/logger.js");
 const prompts = require("../../config/prompts.js");
 const { Lunaby } = require("lunaby-sdk");
 
@@ -14,10 +14,10 @@ class AICore {
     const apiKey = process.env.LUNABY_API_KEY;
 
     if (!apiKey) {
-      logger.error("AI_CORE", "LUNABY_API_KEY not configured!");
+      logger.error("aicore", "lunaby_api_key not configured!");
     } else {
       this.client = new Lunaby({ apiKey });
-      logger.debug("AI_CORE", "Lunaby client initialized");
+      logger.debug("aicore", "Lunaby client initialized");
     }
   }
 
@@ -318,3 +318,4 @@ class AICore {
 }
 
 module.exports = new AICore();
+

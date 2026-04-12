@@ -1,6 +1,6 @@
 const { Events } = require("discord.js");
 const { handleGuildJoin, handleGuildLeave } = require("../handlers/guildHandler");
-const logger = require("../utils/logger.js");
+const logger = require("../utils/core/logger.js");
 
 function setupGuildEvents(client) {
 
@@ -8,7 +8,7 @@ function setupGuildEvents(client) {
     try {
       await handleGuildJoin(guild, null);
     } catch (error) {
-      logger.error('GUILD_EVENT', `Lỗi khi xử lý GuildCreate cho ${guild.name}:`, error);
+      logger.error('guild_event', `Error handling GuildCreate for ${guild.name}:`, error);
     }
   });
 
@@ -16,11 +16,11 @@ function setupGuildEvents(client) {
     try {
       await handleGuildLeave(guild);
     } catch (error) {
-      logger.error('GUILD_EVENT', `Lỗi khi xử lý GuildDelete cho ${guild.name}:`, error);
+      logger.error('guild_event', `Error handling GuildDelete for ${guild.name}:`, error);
     }
   });
 
-  logger.info("EVENTS", "Đã đăng ký events: GuildCreate, GuildDelete");
+  logger.info("events", "Registered events: GuildCreate, GuildDelete");
 }
 
 module.exports = { setupGuildEvents };

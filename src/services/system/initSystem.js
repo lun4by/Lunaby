@@ -1,5 +1,5 @@
 const EventEmitter = require("events");
-const logger = require("../../utils/logger.js");
+const logger = require("../../utils/core/logger.js");
 
 class InitSystem extends EventEmitter {
   constructor() {
@@ -9,26 +9,26 @@ class InitSystem extends EventEmitter {
       mongodb: false,
       mariadb: false,
       commands: false,
-      providers: false,
+      i18n: false,
       profiles: false,
-      conversationHistory: false,
       guildProfiles: false,
+      conversationHistory: false,
       dashboard: false,
     };
   }
 
   markReady(service) {
     if (!(service in this.services)) {
-      logger.warn("SYSTEM", `Không nhận dạng được service: ${service}`);
+      logger.warn("system", `Unrecognized service: ${service}`);
       return;
     }
 
     this.services[service] = true;
-    logger.info("SYSTEM", `Service ${service} is ready`);
+    logger.info("system", `Service ${service} is ready`);
 
     if (Object.values(this.services).every(Boolean)) {
       this.initialized = true;
-      logger.info("SYSTEM", "All services are ready");
+      logger.info("system", "All services are ready");
       this.emit("ready");
     }
   }

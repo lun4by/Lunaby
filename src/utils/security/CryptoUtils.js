@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const logger = require('./logger');
+const logger = require('../core/logger');
 
 const ALGORITHM = 'aes-256-cbc';
 const IV_LENGTH = 16;
@@ -17,7 +17,7 @@ if (!ENCRYPTION_KEY_HEX) {
 }
 
 if (encryptionError) {
-  logger.error('CRYPTO', `Unsafe encryption configuration: ${encryptionError}`);
+  logger.error('crypto', `Unsafe encryption configuration: ${encryptionError}`);
 }
 
 class CryptoUtils {

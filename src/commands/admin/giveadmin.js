@@ -1,8 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const RoleService = require('../../services/user/RoleService');
 const { USER_ROLES } = require('../../config/constants');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
+const { isSlashCommandInteraction, resolveHybridPrefix } = require('../../utils/discord/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,7 +28,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        const isSlash = interaction.isCommand && interaction.isCommand();
+        const isSlash = isSlashCommandInteraction(interaction);
 
         const targetUser = isSlash
             ? interaction.options.getUser('user')
@@ -40,36 +41,40 @@ module.exports = {
         const role = roleRaw?.toLowerCase();
 
         if (!targetUser || !role) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return interaction.reply(`${emojis.error} **Cách dùng:** \`${prefix}giveadmin @user <role>\`\nCác role hợp lệ: ${Object.values(USER_ROLES).join(', ')}`);
+            const prefix = await resolveHybridPrefix(interaction);
+            return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.giveadmin.usage', { prefix, roles: Object.values(USER_ROLES).join(', ') })}`);
         }
 
         if (!Object.values(USER_ROLES).includes(role)) {
-            return interaction.reply(`${emojis.error} Quyền không hợp lệ! Hãy dùng một trong các quyền sau: ${Object.values(USER_ROLES).join(', ')}`);
+            return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.giveadmin.invalid_role', { roles: Object.values(USER_ROLES).join(', ') })}`);
         }
 
         const executorId = interaction.user.id;
 
         try {
             if (executorId !== process.env.OWNER_ID?.trim()) {
-                return interaction.reply({ content: `${emojis.error} Lệnh này chỉ dành cho Owner của Bot!`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.owner_only')}`, ephemeral: true });
             }
 
             const currentRole = await RoleService.getUserRole(targetUser.id);
             if (currentRole === role) {
-                return interaction.reply({ content: `${emojis.error} Người dùng **${targetUser.tag}** hiện đã có quyền **${role}** rồi.`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.already_has_role', { tag: targetUser.tag, role })}`, ephemeral: true });
             }
 
             await RoleService.setUserRole(targetUser.id, role);
 
-            // Tin nhắn text
-            const successMessage = `${emojis.success} **Cấp quyền thành công!**\nĐã thay đổi quyền của <@${targetUser.id}> (${targetUser.tag}).\n**Từ:** \`${currentRole}\` **Sang:** \`${role}\``;
+            const successMessage = `${emojis.success} ${interaction.t('commands.admin.giveadmin.success', {
+                id: targetUser.id,
+                tag: targetUser.tag,
+                oldRole: currentRole,
+                newRole: role
+            })}`;
 
             await interaction.reply({ content: successMessage });
         } catch (error) {
-            logger.error('ADMIN', 'Error in giveadmin command:', error);
-            await interaction.reply({ content: `${emojis.error} Đã xảy ra lỗi khi cập nhật Quyền cho người dùng này.`, ephemeral: true });
+            logger.error('admin', 'Error in giveadmin command:', error);
+            await interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.error')}`, ephemeral: true });
         }
     }
 };
+

@@ -1,5 +1,5 @@
-const MariaModDB = require("../services/database/MariaModDB.js");
-const logger = require("./logger.js");
+const MariaModDB = require("../../services/database/MariaModDB.js");
+const logger = require("../core/logger.js");
 
 async function logModAction({ guildId, targetId, moderatorId, action, reason, duration, count }) {
   try {
@@ -8,10 +8,10 @@ async function logModAction({ guildId, targetId, moderatorId, action, reason, du
       duration: duration || null,
       count: count || null,
     });
-    if (!success) logger.error("MODERATION", "Không thể lưu hành động moderation vào MariaDB");
+    if (!success) logger.error("moderation", "Failed to save moderation action to database");
     return success;
   } catch (error) {
-    logger.error("MODERATION", "Lỗi khi lưu hành động moderation:", error);
+    logger.error("moderation", "Error while saving moderation action:", error);
     throw error;
   }
 }
@@ -20,7 +20,7 @@ async function getModLogs({ guildId, targetId = null, action = null, limit = 10 
   try {
     return await MariaModDB.getModLogs({ guildId, targetId, action, limit });
   } catch (error) {
-    logger.error("MODERATION", "Lỗi khi lấy danh sách hành động moderation:", error);
+    logger.error("moderation", "Error while fetching moderation action list:", error);
     throw error;
   }
 }

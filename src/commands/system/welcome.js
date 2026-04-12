@@ -1,7 +1,14 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB.js');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
+const {
+    createHybridReply,
+    deferHybridReply,
+    getHybridSubcommand,
+    isSlashCommandInteraction,
+    resolveHybridPrefix,
+} = require('../../utils/discord/hybridCommand');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guild/guildSettings.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,32 +35,27 @@ module.exports = {
     prefix: { name: 'welcome', aliases: ['setwelcome'], description: 'Cài đặt thông báo chào mừng thành viên mới (chỉ Admin)' },
     cooldown: 5,
     async execute(interaction) {
-        const isSlash = interaction.isCommand && interaction.isCommand();
+        const isSlash = isSlashCommandInteraction(interaction);
         const guildId = interaction.guild?.id;
 
         if (!guildId) return;
 
-        const subCommand = interaction.options.getSubcommand();
+        const subCommand = getHybridSubcommand(interaction);
 
         if (!subCommand) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Bật: \`${prefix}welcome set #channel [tin nhắn]\`\n- Tắt: \`${prefix}welcome disable\`` });
+            const prefix = await resolveHybridPrefix(interaction);
+            return (interaction.message || interaction).reply({ content: interaction.t('commands.welcome.usage', { prefix }) });
         }
 
-        if (isSlash && !interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
-        }
-
-        const replyObj = isSlash ? interaction : (interaction.message || interaction);
-        const replyFunc = isSlash ? (data) => interaction.editReply(data) : (data) => replyObj.reply(data);
+        await deferHybridReply(interaction, { ephemeral: true });
+        const replyFunc = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
 
         try {
             if (subCommand === 'disable') {
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'greeter.welcome.isEnabled': false
                 });
-                return replyFunc({ content: `${emojis.success} Đã tắt tính năng thông báo chào mừng thành viên mới.` });
+                return replyFunc({ content: `${emojis.success} ${interaction.t('commands.welcome.disable_success')}` });
             }
 
             if (subCommand === 'set') {
@@ -75,22 +77,21 @@ module.exports = {
                 }
 
                 if (!channel || !message) {
-                    const PrefixDB = require('../../services/database/PrefixDB');
-                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-                    return replyFunc({ content: `Vui lòng cung cấp kênh và lời chào mừng hợp lệ.\nVí dụ: \`${prefix}welcome set #welcome Chào mừng {user} đến với {server}!\``, ephemeral: true });
+                    const prefix = await resolveHybridPrefix(interaction);
+                    return replyFunc({ content: interaction.t('commands.welcome.no_channel', { prefix }), ephemeral: true });
                 }
 
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'greeter.welcome.isEnabled': true,
                     'greeter.welcome.channel': channel.id,
                     'greeter.welcome.message': message
                 });
 
-                return replyFunc({ content: `${emojis.success} Đã thiết lập thành công thông báo chào mừng tại kênh <#${channel.id}>.\nNội dung: \`${message}\`` });
+                return replyFunc({ content: `${emojis.success} ${interaction.t('commands.welcome.setup_success', { channelId: channel.id, message })}` });
             }
         } catch (error) {
-            logger.error('SYSTEM', 'Error setting welcome:', error);
-            return replyFunc({ content: `${emojis.error} Đã có lỗi xảy ra khi lưu thiết lập chào mừng.`, ephemeral: true });
+            logger.error('system', 'Error setting welcome:', error);
+            return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     }
 };

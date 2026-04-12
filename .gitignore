@@ -22,6 +22,7 @@ logs/
 dist/
 build/
 coverage/
+.nuxt/
 
 # Temporary files
 tmp/
@@ -44,6 +45,9 @@ ssl/
 
 # Thêm MAL Client ID vào gitignore
 mal_config.json
+
+# Commands configuration
+commands.json
 
 # Ignore markdown
 *.md

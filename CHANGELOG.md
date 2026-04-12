@@ -1,5 +1,44 @@
 # Changelog - Lunaby Bot
 
+## [3.0.1-native] - 2026-04-07
+
+### Highlights
+- **V3 update i18n**: Mở rộng hỗ trợ đa ngôn ngữ và hoàn thiện luồng i18n cho command responses, moderation, và command metadata.
+- **Cấu hình runtime rõ ràng hơn**: Chuẩn hóa env cho support URL, website, invite permissions, và tách biệt rõ `development`/`production`.
+
+### Added
+- **I18n verification dev-only**:
+  - Tích hợp verify translation keys vào `i18nManager`
+  - Quét keys dùng trong `src/commands`
+  - Hỗ trợ `I18N_VERIFY_ON_START` và `I18N_STRICT`
+- **Biến môi trường mới / được chuẩn hóa**:
+  - `SUPPORT_SERVER_URL`
+  - `DISCORD_BOT_PERMISSIONS`
+  - `WEBSITE_URL`
+  - `NODE_ENV`
+- **`cross-env`** trong `devDependencies` để set `NODE_ENV` portable trên Windows.
+
+### Changed
+- **V3 i18n flow**:
+  - Hoàn thiện tích hợp i18n trong `i18nManager`
+  - Cập nhật thêm locale/error handling cho moderation commands
+  - Mở rộng multilingual support cho command responses và metadata
+- **`commands/Core/about.js`**: Tiếp tục tinh gọn command, dùng text đa ngôn ngữ, và chuyển support/invite/website URL sang env.
+- **`utils/discord/blacklistUtils.js`**: Nút support server dùng `SUPPORT_SERVER_URL` từ env thay vì hardcode.
+- **Logging**:
+  - Làm rõ và thống nhất log messages ở nhiều service
+  - Dịch nhiều error/log message tiếng Việt sang tiếng Anh để dễ debug hơn
+- **`example.env`**: Đồng bộ lại với các biến môi trường đang được code sử dụng trực tiếp.
+
+### Migration Notes
+- Chạy `npm install` để cài thêm `cross-env`.
+- Cập nhật `.env` theo các biến mới trong `example.env`.
+- Nếu muốn kiểm tra i18n khi phát triển:
+  - bật `I18N_VERIFY_ON_START=true`
+  - bật thêm `I18N_STRICT=true` nếu muốn thiếu key là fail startup
+
+---
+
 ## [2.1.0-native] - 2026-03-28
 
 ### Highlights
@@ -98,7 +137,7 @@
 ### Changed
 - **`commands/Core/lunaby.js`**: Cập nhật sử dụng `createLunabyEmbed()` thay vì `EmbedBuilder` trực tiếp.
 - **`commands/Core/ping.js`**: Cập nhật sử dụng `createLunabyEmbed()`, `createStatusEmbed()`, `createDetailedEmbed()` từ `embedUtils.js`.
-- **`utils/embedUtils.js`**: Tối ưu hóa các hàm tạo embed, loại bỏ icon không cần thiết trong tiêu đề, cải thiện định dạng.
+- **`utils/discord/embedUtils.js`**: Tối ưu hóa các hàm tạo embed, loại bỏ icon không cần thiết trong tiêu đề, cải thiện định dạng.
 
 ### Migration Notes
 - Không cần thay đổi gì.
@@ -145,7 +184,7 @@
 - Chuẩn hóa logging với hệ thống logger thay thế console.error
 
 ### Added
-- `utils/embedUtils.js`: Shared utilities cho Discord embeds (colors, status maps, helpers)
+- `utils/discord/embedUtils.js`: Shared utilities cho Discord embeds (colors, status maps, helpers)
 - Status mapping helpers trong `MyAnimeListAPI.js`: `_getAnimeStatus()`, `_getMangaStatus()`, `_getSeasonName()`
 
 ### Changed

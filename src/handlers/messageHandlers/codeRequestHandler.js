@@ -1,14 +1,13 @@
 const AICore = require('../../services/ai/AICore');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const { sendStreamingMessage } = require('../../services/ai/StreamingService');
 const { splitMessageIntoChunks } = require('./memoryRequestHandler');
 const { DEFAULT_MODEL } = require('../../config/constants');
-const Validators = require('../../utils/validators');
+const Validators = require('../../utils/text/validators');
 const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
-const ErrorHandler = require('../../utils/ErrorHandler');
+const ErrorHandler = require('../../utils/core/ErrorHandler');
 const QuotaService = require('../../services/user/QuotaService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
 
 function formatCodeResponse(text) {
   const { LANGUAGE_DETECTION_PATTERNS } = require('../../config/patterns');
@@ -30,27 +29,26 @@ async function handleCodeRequest(message, content, ConversationService) {
     const conversationId = ConversationService.extractUserId(message);
     const globalUserId = message.author.id;
 
-    const emojis = require('../../config/emojis');
-
     const quotaCheck = await QuotaService.canUseMessages(globalUserId, 1);
     if (!quotaCheck.allowed) {
-      const embed = createLunabyEmbed()
-        .setTitle(`Hết quyền sử dụng`)
-        .setDescription(`> Bạn đã sử dụng hết **${quotaCheck.limit} lượt** Lunaby Pro trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.`)
-        .setColor(0xE74C3C);
-      return message.reply({ embeds: [embed] }).catch(() => { });
+      if (message.t) {
+        return message.reply(message.t('system.quota_exceeded', { limit: quotaCheck.limit })).catch(() => { });
+      }
+      return message.reply(`Hết quyền sử dụng. Bạn đã đạt giới hạn ${quotaCheck.limit} lượt.`).catch(() => { });
     }
 
-    await conversationManager.loadConversationHistory(conversationId, prompts.system.main, DEFAULT_MODEL);
+    const langKey = message.t ? message.t('system.lang_name') : 'Vietnamese';
+    const systemPrompt = prompts.system.main.replace(/\$\{language\}/g, langKey);
+    await conversationManager.loadConversationHistory(conversationId, systemPrompt, DEFAULT_MODEL);
     let messages = conversationManager.getHistory(conversationId);
 
     const isNewConversation = messages.length <= 2;
-    const enhancedPrompt = `
-      ${prompts.chat.responseStyle}
-      ${isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation}
-      ${prompts.chat.generalInstructions}
-      Code request: ${promptContent}
-    `;
+    const enhancedPrompt = [
+      prompts.chat.responseStyle,
+      isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation,
+      prompts.chat.generalInstructions,
+      `Code request: ${promptContent}`,
+    ].join('\n');
 
     await conversationManager.addMessage(conversationId, 'user', enhancedPrompt);
     messages = conversationManager.getHistory(conversationId);
@@ -90,7 +88,7 @@ async function handleCodeRequest(message, content, ConversationService) {
       ErrorHandler.logError('CODE', 'Both streaming and fallback failed', fallbackError);
       const userMessage = ErrorHandler.getUserFriendlyMessage(fallbackError, 'tạo mã');
       await message.reply(userMessage).catch(() => {
-        logger.error('CODE', 'Failed to send error message to user');
+        logger.error('code', 'Failed to send error message to user');
       });
     }
   }

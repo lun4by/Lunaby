@@ -1,10 +1,27 @@
 const consentService = require('../services/user/consentService');
-const logger = require('../utils/logger.js');
+const i18nManager = require('../services/i18n/i18nManager');
+const logger = require('../utils/core/logger.js');
 const emojis = require('../config/emojis.js');
+const { getGuildLocale } = require('../utils/guild/guildLocale.js');
 
+async function getInteractionTranslator(interaction) {
+  let locale = 'vi';
+
+  try {
+    if (interaction.guildId) {
+      locale = await getGuildLocale(interaction.guildId);
+    }
+  } catch (error) {
+    logger.warn('consent_handler', `Failed to resolve locale for consent interaction: ${error.message}`);
+  }
+
+  return (key, options) => i18nManager.t(key, locale, options);
+}
 
 async function handleConsentInteraction(interaction) {
   if (!interaction.isButton()) return;
+
+  const t = await getInteractionTranslator(interaction);
 
   const { customId, user } = interaction;
 
@@ -18,7 +35,7 @@ async function handleConsentInteraction(interaction) {
   // Chặn người khác bấm consent của người khác
   if (user.id !== targetUserId) {
     return interaction.reply({
-      content: `${emojis.error} Bạn không thể thao tác consent của người khác.`,
+      content: `${emojis.error} ${t('system.consent_only_target_user')}`,
       ephemeral: true
     });
   }
@@ -30,8 +47,8 @@ async function handleConsentInteraction(interaction) {
       await consentService.handleConsentDecline(interaction, targetUserId);
     }
   } catch (error) {
-    logger.error('CONSENT_HANDLER', `Lỗi khi xử lý consent interaction cho user ${targetUserId}:`, error);
-    const errPayload = { content: 'Có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại sau!', ephemeral: true };
+    logger.error('consent_handler', `Error handling consent interaction for user ${targetUserId}:`, error);
+    const errPayload = { content: `${emojis.error} ${t('system.consent_process_error')}`, ephemeral: true };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)
       : interaction.reply(errPayload);

@@ -1,8 +1,8 @@
-﻿const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const packageJson = require('../../../package.json');
-const { formatUptime } = require('../../utils/string');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
-const { getSystemMetrics } = require('../../utils/systemMetrics');
+const { formatUptime } = require('../../utils/text/string');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const { getSystemMetrics } = require('../../utils/core/systemMetrics');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,13 +12,14 @@ module.exports = {
     cooldown: 10,
 
     async execute(interaction) {
-        const sent = await interaction.deferReply({ fetchReply: true });
+        await interaction.deferReply();
+        const sent = await interaction.fetchReply();
         const pingLatency = ((sent.createdTimestamp - interaction.createdTimestamp) / 100).toFixed(0);
         const latency = { ping: pingLatency, ws: interaction.client.ws.ping };
 
         const response = await interaction.editReply({
-            embeds: [createStatusEmbed(latency, interaction.client)],
-            components: [createActionRow(true)],
+            embeds: [createStatusEmbed(latency, interaction)],
+            components: [createActionRow(true, interaction)],
         });
 
         const collector = response.createMessageComponentCollector({
@@ -28,25 +29,25 @@ module.exports = {
 
         collector.on('collect', async (i) => {
             if (i.user.id !== interaction.user.id) {
-                return i.reply({ content: 'Chỉ người đã gọi lệnh mới được sử dụng các nút này.', ephemeral: true });
+                return i.reply({ content: interaction.t('system.only_caller_can_use'), ephemeral: true });
             }
 
             if (i.customId === 'refresh_status') {
                 const refreshed = { ping: pingLatency, ws: interaction.client.ws.ping };
                 await i.update({
-                    embeds: [createStatusEmbed(refreshed, interaction.client)],
-                    components: [createActionRow(true)],
+                    embeds: [createStatusEmbed(refreshed, interaction)],
+                    components: [createActionRow(true, interaction)],
                 });
             }
         });
 
         collector.on('end', () => {
-            interaction.editReply({ components: [createActionRow(false)] }).catch(() => { });
+            interaction.editReply({ components: [createActionRow(false, interaction)] }).catch(() => { });
         });
     },
 };
 
-function createStatusEmbed({ ping, ws }, client) {
+function createStatusEmbed({ ping, ws }, interaction) {
     const color = ping < 200 ? 0x57F287 : ping < 400 ? 0xFEE75C : 0xED4245;
     const { cpu, ram } = getSystemMetrics();
 
@@ -54,20 +55,20 @@ function createStatusEmbed({ ping, ws }, client) {
         .setColor(color)
         .setAuthor({
             name: 'Lunaby',
-            iconURL: client.user.displayAvatarURL(),
+            iconURL: interaction.client.user.displayAvatarURL(),
         })
         .addFields(
-            { name: 'Trạng thái hệ thống', value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false },
-            { name: 'Tài nguyên', value: `> **CPU**: \`${cpu}%\`\n> **RAM**: \`${ram}%\``, inline: false },
+            { name: interaction.t('commands.ping.system_status'), value: `> **Bot**: \`${ping}ms\`\n> **WebSocket**: \`${ws}ms\``, inline: false },
+            { name: interaction.t('commands.ping.resources'), value: `> **CPU**: \`${cpu}%\`\n> **RAM**: \`${ram}%\``, inline: false },
         )
         .setFooter({ text: `Lunaby v${packageJson.version} - ${formatUptime(process.uptime())}` });
 }
 
-function createActionRow(enabled = true) {
+function createActionRow(enabled = true, interaction) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId('refresh_status')
-            .setLabel('Làm mới')
+            .setLabel(interaction.t('commands.ping.refresh'))
             .setStyle(ButtonStyle.Primary)
             .setDisabled(!enabled),
     );

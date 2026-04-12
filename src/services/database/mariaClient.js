@@ -1,5 +1,5 @@
 const mariadb = require('mariadb');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 class MariaDBClient {
     constructor() {
@@ -30,7 +30,7 @@ class MariaDBClient {
         let conn;
         try {
             conn = await this.pool.getConnection();
-            logger.info('MARIADB', `Connected to MariaDB`);
+            logger.info('mariadb', `Connected to MariaDB`);
         } finally {
             if (conn) conn.release();
         }
@@ -58,7 +58,7 @@ class MariaDBClient {
         if (this.pool) {
             await this.pool.end();
             this.pool = null;
-            logger.info('MARIADB', 'Connection pool closed');
+            logger.info('mariadb', 'Connection pool closed');
         }
     }
 }

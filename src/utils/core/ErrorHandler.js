@@ -225,7 +225,7 @@ class ErrorHandler {
           throw error;
         }
 
-        logger.warn("RETRY", `Attempt ${attempt}/${maxRetries} failed, retrying in ${delayMs * attempt}ms...`);
+        logger.warn("retry", `Attempt ${attempt}/${maxRetries} failed, retrying in ${delayMs * attempt}ms...`);
         await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
       }
     }

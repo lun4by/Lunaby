@@ -6,8 +6,8 @@ const {
 } = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
 const QuotaService = require('../../services/user/QuotaService');
-const { createLunabyEmbed } = require('../../utils/embedUtils');
-const logger = require('../../utils/logger');
+const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 const {
   QUOTA_COST_CREDITS_PER_MESSAGE,
@@ -32,29 +32,32 @@ function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(value);
 }
 
-function getUsageConfig(type) {
+function getUsageConfig(type, interaction) {
+  const proName = interaction?.t ? interaction.t('commands.shop.quota_pro') : 'Lunaby Pro';
+  const visionName = interaction?.t ? interaction.t('commands.shop.quota_vision') : 'Lunaby Vision';
+
   if (type === 'image') {
     return {
-      productName: 'Lunaby Vision',
+      productName: visionName,
       quotaField: 'imagePeriod',
       costPerUnit: QUOTA_COST_CREDITS_PER_IMAGE,
     };
   }
 
   return {
-    productName: 'Lunaby Pro',
+    productName: proName,
     quotaField: 'period',
     costPerUnit: QUOTA_COST_CREDITS_PER_MESSAGE,
   };
 }
 
-function getItemCost(item) {
-  return item.amount * getUsageConfig(item.type).costPerUnit;
+function getItemCost(item, interaction) {
+  return item.amount * getUsageConfig(item.type, interaction).costPerUnit;
 }
 
-function getItemState(item, credits, stats) {
-  const usageConfig = getUsageConfig(item.type);
-  const totalCost = getItemCost(item);
+function getItemState(item, credits, stats, interaction) {
+  const usageConfig = getUsageConfig(item.type, interaction);
+  const totalCost = getItemCost(item, interaction);
   const currentLimit = stats.limits[usageConfig.quotaField];
   const isUnlimited = currentLimit === -1;
   const isAffordable = credits >= totalCost;
@@ -90,27 +93,28 @@ function getPageItems(page) {
   return items.slice(start, start + ITEMS_PER_PAGE);
 }
 
-function getLimitText(limit, remaining) {
+function getLimitText(limit, remaining, interaction) {
   if (limit === -1) {
-    return 'Không giới hạn';
+    return interaction.t('commands.shop.limit_unlimited');
   }
 
-  return `${formatNumber(limit)} lượt - còn ${formatNumber(remaining)} lượt`;
+  return `${formatNumber(limit)} lượt • còn ${formatNumber(remaining)} lượt`;
 }
 
-function formatShopItemLine(item, credits, stats) {
-  const itemState = getItemState(item, credits, stats);
+function formatShopItemLine(item, credits, stats, interaction) {
+  const itemState = getItemState(item, credits, stats, interaction);
   const statusText = itemState.isUnlimited
     ? 'Đã vô hạn'
     : itemState.isAffordable
       ? 'Mua được'
       : 'Thiếu credits';
+  const statusIcon = itemState.isUnlimited ? '∞' : itemState.isAffordable ? '✓' : '✕';
 
-  return `• **${item.label}** - **${formatNumber(itemState.totalCost)}** credits\n` +
-    `+${formatNumber(item.amount)} lượt - ${statusText}`;
+  return `• **${item.label}** · **${formatNumber(itemState.totalCost)}** credits\n` +
+    `${statusIcon} +${formatNumber(item.amount)} lượt · ${statusText}`;
 }
 
-function buildShopSection(items, type, credits, stats) {
+function buildShopSection(items, type, credits, stats, interaction) {
   const filteredItems = items.filter((item) => item.type === type);
 
   if (filteredItems.length === 0) {
@@ -118,45 +122,53 @@ function buildShopSection(items, type, credits, stats) {
   }
 
   return filteredItems
-    .map((item) => formatShopItemLine(item, credits, stats))
+    .map((item) => formatShopItemLine(item, credits, stats, interaction))
     .join('\n\n');
 }
 
-function buildShopEmbed(user, credits, stats, state) {
+function buildShopEmbed(user, credits, stats, state, interaction) {
   const resetTimestamp = Math.floor(stats.nextReset / 1000);
   const totalPages = getTotalPages();
 
   const embed = createLunabyEmbed()
-    .setTitle('Lunaby Quota Shop')
+    .setTitle('Lunaby Credit Market')
     .setAuthor({
       name: user.globalName || user.username,
       iconURL: user.displayAvatarURL({ size: 128 }),
     })
+    .setThumbnail(user.displayAvatarURL({ size: 256 }))
     .setDescription(
-      `Quản lý lượt sử dụng bằng credits.\n` +
-      `Reset quota sau: <t:${resetTimestamp}:R>`
+      `Mở rộng quota bằng credits ngay trong chat.\n` +
+      `Kỳ reset tiếp theo: <t:${resetTimestamp}:R>`
     )
     .addFields(
       {
-        name: 'Tổng quan',
+        name: 'Ví credits',
         value:
-          `Số dư: **${formatNumber(credits)}** credits\n` +
-          `Trang hiện tại: **${state.page + 1}/${totalPages}**\n` +
-          `Giá Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt\n` +
-          `Giá Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
+          `Số dư hiện tại: **${formatNumber(credits)}** credits\n` +
+          `Trang: **${state.page + 1}/${totalPages}**`,
+        inline: true,
+      },
+      {
+        name: 'Bảng giá',
+        value:
+          `Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt\n` +
+          `Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
+        inline: true,
       },
       {
         name: 'Hạn mức hiện tại',
         value:
-          `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages)}\n` +
-          `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images)}`,
+          `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages, interaction)}\n` +
+          `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction)}`,
+        inline: false,
       },
     )
-    .setFooter({ text: 'Dùng < > để chuyển trang, Làm mới để cập nhật số dư mới nhất' });
+    .setFooter({ text: 'Dùng < > để đổi trang, Làm mới để cập nhật realtime' });
 
   const pageItems = getPageItems(state.page);
-  const proSection = buildShopSection(pageItems, 'chat', credits, stats);
-  const visionSection = buildShopSection(pageItems, 'image', credits, stats);
+  const proSection = buildShopSection(pageItems, 'chat', credits, stats, interaction);
+  const visionSection = buildShopSection(pageItems, 'image', credits, stats, interaction);
 
   embed.addFields(
     {
@@ -174,7 +186,7 @@ function buildShopEmbed(user, credits, stats, state) {
   return embed;
 }
 
-function buildItemRows(state, credits, stats, disabled = false) {
+function buildItemRows(state, credits, stats, interaction, disabled = false) {
   const rows = [];
   const pageItems = getPageItems(state.page);
   const buttonGroups = chunkArray(pageItems, 3);
@@ -183,7 +195,7 @@ function buildItemRows(state, credits, stats, disabled = false) {
     const row = new ActionRowBuilder();
 
     for (const item of group) {
-      const itemState = getItemState(item, credits, stats);
+      const itemState = getItemState(item, credits, stats, interaction);
 
       row.addComponents(
         new ButtonBuilder()
@@ -200,7 +212,7 @@ function buildItemRows(state, credits, stats, disabled = false) {
   return rows;
 }
 
-function buildNavigationRow(state, disabled = false) {
+function buildNavigationRow(state, interaction, disabled = false) {
   const totalPages = getTotalPages();
   const singlePage = totalPages <= 1;
 
@@ -212,7 +224,7 @@ function buildNavigationRow(state, disabled = false) {
       .setDisabled(disabled || singlePage || state.page === 0),
     new ButtonBuilder()
       .setCustomId('shop_refresh')
-      .setLabel('Làm mới')
+      .setLabel(interaction.t('commands.shop.refresh'))
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(disabled),
     new ButtonBuilder()
@@ -223,12 +235,12 @@ function buildNavigationRow(state, disabled = false) {
   );
 }
 
-function buildShopMessage(user, credits, stats, state, disabled = false) {
+function buildShopMessage(user, credits, stats, state, interaction, disabled = false) {
   return {
-    embeds: [buildShopEmbed(user, credits, stats, state)],
+    embeds: [buildShopEmbed(user, credits, stats, state, interaction)],
     components: [
-      ...buildItemRows(state, credits, stats, disabled),
-      buildNavigationRow(state, disabled),
+      ...buildItemRows(state, credits, stats, interaction, disabled),
+      buildNavigationRow(state, interaction, disabled),
     ],
   };
 }
@@ -251,21 +263,21 @@ async function loadShopState(user, state) {
   };
 }
 
-async function purchaseItem(userId, item) {
-  const usageConfig = getUsageConfig(item.type);
-  const totalCost = getItemCost(item);
+async function purchaseItem(userId, item, interaction) {
+  const usageConfig = getUsageConfig(item.type, interaction);
+  const totalCost = getItemCost(item, interaction);
 
   const quotaBefore = await QuotaService.getUserMessageStats(userId);
   const currentLimit = quotaBefore.limits[usageConfig.quotaField];
 
   if (currentLimit === -1) {
-    throw new Error(`Tài khoản của bạn đang có lượt sử dụng ${usageConfig.productName} không giới hạn, không cần mua thêm quota.`);
+    throw new Error(interaction.t('commands.shop.err_unlimited', { product: usageConfig.productName }));
   }
 
   const creditsBefore = await CreditsService.getUserCredits(userId);
   if (creditsBefore.credits < totalCost) {
     throw new Error(
-      `Bạn không đủ credits. Cần **${formatNumber(totalCost)}** credits để mua **${formatNumber(item.amount)}** lượt sử dụng ${usageConfig.productName}.`
+      interaction.t('commands.shop.err_insufficient', { cost: formatNumber(totalCost), amount: formatNumber(item.amount), product: usageConfig.productName })
     );
   }
 
@@ -307,7 +319,8 @@ module.exports = {
         user,
         initialData.credits,
         initialData.quotaStats,
-        initialData.state
+        initialData.state,
+        interaction
       ));
 
       const message = await interaction.fetchReply();
@@ -316,7 +329,7 @@ module.exports = {
       collector.on('collect', async (componentInteraction) => {
         if (componentInteraction.user.id !== user.id) {
           return componentInteraction.reply({
-            content: 'Chỉ người mở shop mới có thể sử dụng giao diện này.',
+            content: interaction.t('system.only_caller_can_use'),
             ephemeral: true,
           });
         }
@@ -333,7 +346,8 @@ module.exports = {
               user,
               refreshedData.credits,
               refreshedData.quotaStats,
-              refreshedData.state
+              refreshedData.state,
+              interaction
             ));
             return;
           }
@@ -345,7 +359,8 @@ module.exports = {
               user,
               refreshedData.credits,
               refreshedData.quotaStats,
-              refreshedData.state
+              refreshedData.state,
+              interaction
             ));
             return;
           }
@@ -356,7 +371,8 @@ module.exports = {
               user,
               refreshedData.credits,
               refreshedData.quotaStats,
-              refreshedData.state
+              refreshedData.state,
+              interaction
             ));
             return;
           }
@@ -367,12 +383,12 @@ module.exports = {
 
             if (!item) {
               return componentInteraction.reply({
-                content: `${emojis.error} Không tìm thấy gói bạn muốn mua.`,
+                content: `${emojis.error} ${interaction.t('commands.shop.package_not_found')}`,
                 ephemeral: true,
               });
             }
 
-            const purchaseResult = await purchaseItem(user.id, item);
+            const purchaseResult = await purchaseItem(user.id, item, interaction);
             const refreshedData = {
               credits: purchaseResult.creditsAfter,
               quotaStats: purchaseResult.quotaAfter,
@@ -385,21 +401,20 @@ module.exports = {
               user,
               refreshedData.credits,
               refreshedData.quotaStats,
-              refreshedData.state
+              refreshedData.state,
+              interaction
             ));
 
             await componentInteraction.followUp({
-              content:
-                `${emojis.success} Bạn đã mua **${formatNumber(item.amount)}** lượt ${purchaseResult.usageConfig.productName} ` +
-                `với giá **${formatNumber(purchaseResult.totalCost)}** credits.`,
+              content: `${emojis.success} ${interaction.t('commands.shop.buy_success', { amount: formatNumber(item.amount), product: purchaseResult.usageConfig.productName, cost: formatNumber(purchaseResult.totalCost) })}`,
               ephemeral: true,
             });
           }
         } catch (error) {
-          logger.error('SHOP', 'Error while handling shop component:', error);
+          logger.error('shop', 'Error while handling shop component:', error);
 
           const payload = {
-            content: `${emojis.error} ${error.message || 'Đã xảy ra lỗi khi xử lý shop.'}`,
+            content: `${emojis.error} ${interaction.t('commands.shop.error_process', { error: error.message || '' })}`,
             ephemeral: true,
           };
 
@@ -419,16 +434,17 @@ module.exports = {
             latestData.credits,
             latestData.quotaStats,
             latestData.state,
+            interaction,
             true
           ));
         } catch (error) {
-          logger.error('SHOP', 'Error while disabling shop components:', error);
+          logger.error('shop', 'Error while disabling shop components:', error);
         }
       });
     } catch (error) {
-      logger.error('SHOP', 'Error in shop command:', error);
+      logger.error('shop', 'Error in shop command:', error);
       const payload = {
-        content: `${emojis.error} Đã xảy ra lỗi khi mở shop. Vui lòng thử lại sau.`,
+        content: `${emojis.error} ${interaction.t('commands.shop.error_open')}`,
         ephemeral: true,
       };
 

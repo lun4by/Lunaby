@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { buildActionEmbed } = require('../../utils/gifAction');
+const { buildActionEmbed } = require('../../utils/discord/gifAction');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,7 +11,8 @@ module.exports = {
 
     async execute(interaction) {
         const target = interaction.options.getUser('user');
-        const embed = buildActionEmbed('poke', interaction.user, target);
+        const embed = buildActionEmbed('poke', interaction.user, target, interaction);
         await interaction.reply({ embeds: [embed] });
     }
 };
+

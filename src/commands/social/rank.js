@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const XPService = require('../../services/user/XPService');
 const generateRankCard = require('../../services/canvas/rankCanvas.js');
-const { ordinalize } = require('../../utils/string.js');
-const logger = require('../../utils/logger');
+const { ordinalize } = require('../../utils/text/string.js');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
 module.exports = {
@@ -30,7 +30,7 @@ module.exports = {
       if (!serverXP || serverXP.xp === 0) {
         const embed = new EmbedBuilder()
           .setColor('#FF0000')
-          .setDescription(`${targetUser} chưa có điểm kinh nghiệm nào trong server này!`);
+          .setDescription(interaction.t('commands.rank.no_xp', { user: targetUser.toString() }));
         return interaction.editReply({ embeds: [embed] });
       }
 
@@ -51,8 +51,8 @@ module.exports = {
 
       await interaction.editReply({ content: '', files: [attachment] });
     } catch (error) {
-      logger.error('RANK', 'Error in rank command:', error);
-      await interaction.editReply({ content: `${emojis.error} Đã xảy ra lỗi khi tạo rank card!`, ephemeral: true });
+      logger.error('rank', 'Error in rank command:', error);
+      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.rank.error')}`, ephemeral: true });
     }
   }
 };

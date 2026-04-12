@@ -1,4 +1,4 @@
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const { DISCORD_MESSAGE_MAX_LENGTH } = require('../../config/constants');
 
 function splitMessageIntoChunks(text, maxLength = DISCORD_MESSAGE_MAX_LENGTH) {
@@ -68,7 +68,7 @@ async function handleMemoryRequest(message, ConversationService, memoryRequest) 
     }
 
   } catch (error) {
-    logger.error('MEMORY', 'Error handling memory request:', error);
+    logger.error('memory', 'Error handling memory request:', error);
     await message.reply('Xin lỗi, mình gặp lỗi khi truy cập trí nhớ của cuộc trò chuyện.').catch(() => { });
   }
 }

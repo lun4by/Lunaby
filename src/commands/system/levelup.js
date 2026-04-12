@@ -1,7 +1,14 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB.js');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
+const {
+    createHybridReply,
+    deferHybridReply,
+    getHybridSubcommand,
+    isSlashCommandInteraction,
+    resolveHybridPrefix,
+} = require('../../utils/discord/hybridCommand');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guild/guildSettings.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,38 +31,28 @@ module.exports = {
     prefix: { name: 'levelup', aliases: ['setlevelup'], description: 'Cài đặt thông báo thăng cấp (chỉ Admin)' },
     cooldown: 5,
     async execute(interaction) {
-        const isSlash = !!interaction.isCommand;
+        const isSlash = isSlashCommandInteraction(interaction);
         const guildId = interaction.guild?.id;
 
         if (!guildId) return;
 
-        let subCommand = null;
-        if (isSlash) {
-            subCommand = interaction.options.getSubcommand();
-        } else if (interaction.args && interaction.args.length > 0) {
-            subCommand = interaction.args[0].toLowerCase();
-        }
+        const subCommand = getHybridSubcommand(interaction);
 
         if (!subCommand || !['set', 'disable'].includes(subCommand)) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Bật hiện kênh: \`${prefix}levelup set #channel\`\n- Tắt thông báo: \`${prefix}levelup disable\`` });
+            const prefix = await resolveHybridPrefix(interaction);
+            return (interaction.message || interaction).reply({ content: interaction.t('commands.levelup.usage', { prefix }) });
         }
 
-        if (isSlash && !interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
-        }
-
-        const replyObj = isSlash ? interaction : (interaction.message || interaction);
-        const replyFunc = isSlash ? (data) => interaction.editReply(data) : (data) => replyObj.reply(data);
+        await deferHybridReply(interaction, { ephemeral: true });
+        const replyFunc = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
 
         try {
             if (subCommand === 'disable') {
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'settings.levelUpNotifications': false,
                     'settings.levelUpChannel': null
                 });
-                return replyFunc({ content: `${emojis.success} Đã tắt chức năng thông báo chúc mừng thăng cấp.` });
+                return replyFunc({ content: `${emojis.success} ${interaction.t('commands.levelup.disable_success')}` });
             }
 
             if (subCommand === 'set') {
@@ -74,21 +71,20 @@ module.exports = {
                 }
 
                 if (!channel) {
-                    const PrefixDB = require('../../services/database/PrefixDB');
-                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-                    return replyFunc({ content: `Vui lòng tag kênh hợp lệ.\nVí dụ: \`${prefix}levelup set #bot-chat\``, ephemeral: true });
+                    const prefix = await resolveHybridPrefix(interaction);
+                    return replyFunc({ content: interaction.t('commands.levelup.no_channel', { prefix }), ephemeral: true });
                 }
 
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'settings.levelUpNotifications': true,
                     'settings.levelUpChannel': channel.id
                 });
 
-                return replyFunc({ content: `${emojis.success} Đã thiết lập thông báo chúc mừng thăng cấp tại kênh <#${channel.id}>.` });
+                return replyFunc({ content: `${emojis.success} ${interaction.t('commands.levelup.setup_success', { channelId: channel.id })}` });
             }
         } catch (error) {
-            logger.error('SYSTEM', 'Error setting levelup:', error);
-            return replyFunc({ content: `${emojis.error} Đã có lỗi xảy ra khi lưu thiết lập.`, ephemeral: true });
+            logger.error('system', 'Error setting levelup:', error);
+            return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     }
 };

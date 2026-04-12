@@ -1,5 +1,5 @@
 const RoleDB = require('../database/RoleDB.js');
-const logger = require('../../utils/logger.js');
+const logger = require('../../utils/core/logger.js');
 const { USER_ROLES } = require('../../config/constants.js');
 
 const VALID_ROLES = Object.values(USER_ROLES);
@@ -13,7 +13,7 @@ class RoleService {
         try {
             await RoleDB.initTables();
         } catch (error) {
-            logger.error('ROLE_SERVICE', 'Lỗi khi khởi tạo bảng MariaDB user_roles:', error);
+            logger.error('role_service', 'Error while initializing MariaDB user_roles table:', error);
             throw error;
         }
     }
@@ -24,7 +24,7 @@ class RoleService {
 
             return await RoleDB.getUserRole(userId);
         } catch (error) {
-            logger.error('ROLE_SERVICE', `Lỗi khi lấy role của ${userId}:`, error);
+            logger.error('role_service', `Error while fetching role for ${userId}:`, error);
             return 'user';
         }
     }
@@ -42,7 +42,7 @@ class RoleService {
 
             return true;
         } catch (error) {
-            logger.error('ROLE_SERVICE', `Lỗi khi đặt role cho ${userId}:`, error);
+            logger.error('role_service', `Error while setting role for ${userId}:`, error);
             throw error;
         }
     }

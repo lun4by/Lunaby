@@ -2,8 +2,11 @@ const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ChannelType } = 
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const { creatorChannels } = require('../../events/voiceStateUpdate.js');
 const emojis = require('../../config/emojis.js');
-const logger = require('../../utils/logger.js');
-const { COLORS } = require('../../utils/embedUtils.js');
+const logger = require('../../utils/core/logger.js');
+const { COLORS } = require('../../utils/discord/embedUtils.js');
+const { formatPermissionList, getMissingPermissions, hasMemberPermission, isMissingPermissionError } = require('../../utils/discord/permissionUtils.js');
+
+const requiredBotPermissions = [PermissionFlagsBits.ManageChannels];
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,9 +30,9 @@ module.exports = {
     cooldown: 10,
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
+        if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ManageChannels)) {
             return interaction.reply({
-                content: `${emojis.error} Bạn cần quyền **Manage Channels** để sử dụng lệnh này!`,
+                content: `${emojis.error} ${interaction.t('commands.lvoice.need_perm')}`,
                 ephemeral: true,
             });
         }
@@ -42,7 +45,7 @@ module.exports = {
             subcommand = null;
         }
 
-        // Prefix fallback: lấy args[0] làm subcommand
+        // Fallback cho prefix: lấy args[0] làm subcommand
         if (!subcommand && interaction.args?.length > 0) {
             subcommand = interaction.args[0]?.toLowerCase();
         }
@@ -55,7 +58,7 @@ module.exports = {
             await handleConfig(interaction);
         } else {
             return interaction.reply({
-                content: `${emojis.error} Subcommand không hợp lệ! Dùng: \`/lvoice setup\`, \`/lvoice disable\`, \`/lvoice config\``,
+                content: `${emojis.error} ${interaction.t('commands.lvoice.invalid_subcmd')}`,
                 ephemeral: true,
             });
         }
@@ -63,6 +66,14 @@ module.exports = {
 };
 
 async function handleSetup(interaction) {
+    const missingPermissions = getMissingPermissions(interaction.guild?.members.me?.permissions, requiredBotPermissions);
+    if (missingPermissions.length > 0) {
+        return interaction.reply({
+            content: `${emojis.error} ${interaction.t('commands.lvoice.bot_missing_perm_detail', { permissions: formatPermissionList(missingPermissions) })}`,
+            ephemeral: true,
+        });
+    }
+
     await interaction.deferReply({ ephemeral: true });
 
     const guild = interaction.guild;
@@ -70,11 +81,11 @@ async function handleSetup(interaction) {
         || (interaction.args?.length > 1 ? interaction.args.slice(1).join(' ') : null)
         || 'Tạo Phòng Riêng';
 
-    // Kiểm tra xem đã setup chưa
+    // Kiểm tra xem đã thiết lập chưa
     const existing = await MariaModDB.getLVoiceConfig(guild.id);
     if (existing) {
         return interaction.editReply({
-            content: `${emojis.error} LVoice đã được thiết lập rồi! Dùng \`/lvoice disable\` để tắt trước khi setup lại.`,
+            content: `${emojis.error} ${interaction.t('commands.lvoice.already_setup')}`,
         });
     }
 
@@ -87,7 +98,7 @@ async function handleSetup(interaction) {
 
         // Tạo kênh voice creator bên trong category
         const creatorChannel = await guild.channels.create({
-            name: '➕ Tạo Kênh Voice',
+            name: `${emojis.lvoice.createChannel} Tạo Kênh Voice`,
             type: ChannelType.GuildVoice,
             parent: category.id,
         });
@@ -114,23 +125,32 @@ async function handleSetup(interaction) {
 
         const embed = new EmbedBuilder()
             .setColor(COLORS.LUNABY)
-            .setTitle('🎙️ LVoice đã được thiết lập!')
-            .setDescription(`Thành viên có thể vào kênh <#${creatorChannel.id}> để tự tạo kênh voice riêng.`)
+            .setTitle(interaction.t('commands.lvoice.setup_title'))
+            .setDescription(interaction.t('commands.lvoice.setup_desc', { creatorId: creatorChannel.id }))
             .addFields(
-                { name: '📁 Category', value: categoryName, inline: true },
-                { name: '🔊 Kênh tạo', value: `<#${creatorChannel.id}>`, inline: true },
-                { name: '📝 Template tên', value: '`{user}`', inline: true },
+                { name: interaction.t('commands.lvoice.category_field'), value: categoryName, inline: true },
+                { name: interaction.t('commands.lvoice.creator_field'), value: `<#${creatorChannel.id}>`, inline: true },
+                { name: interaction.t('commands.lvoice.template_field'), value: '`{user}`', inline: true },
             )
-            .setFooter({ text: 'Kênh sẽ tự xóa khi không còn ai bên trong.' })
+            .setFooter({ text: interaction.t('commands.lvoice.setup_footer') })
             .setTimestamp();
 
         await interaction.editReply({ embeds: [embed] });
 
-        logger.info('LVOICE', `Setup completed in ${guild.name} by ${interaction.user.tag}`);
+        logger.info('lvoice', `Setup completed in ${guild.name} by ${interaction.user.tag}`);
     } catch (error) {
-        logger.error('LVOICE', 'Error during setup:', error);
+        logger.error('lvoice', 'Error during setup:', error);
+        if (isMissingPermissionError(error)) {
+            const missingPermissions = getMissingPermissions(interaction.guild?.members.me?.permissions, requiredBotPermissions);
+            if (missingPermissions.length > 0) {
+                return interaction.editReply({
+                    content: `${emojis.error} ${interaction.t('commands.lvoice.bot_missing_perm_detail', { permissions: formatPermissionList(missingPermissions) })}`,
+                });
+            }
+        }
+
         await interaction.editReply({
-            content: `${emojis.error} Đã xảy ra lỗi khi thiết lập LVoice: ${error.message}`,
+            content: `${emojis.error} ${interaction.t('commands.lvoice.setup_error', { error: error.message })}`,
         });
     }
 }
@@ -143,7 +163,7 @@ async function handleDisable(interaction) {
 
     if (!config) {
         return interaction.editReply({
-            content: `${emojis.error} LVoice chưa được thiết lập trong server này!`,
+            content: `${emojis.error} ${interaction.t('commands.lvoice.not_setup')}`,
         });
     }
 
@@ -152,7 +172,7 @@ async function handleDisable(interaction) {
         try {
             const creatorChannel = await guild.channels.fetch(config.creatorChannelId);
             if (creatorChannel) await creatorChannel.delete('LVoice disabled');
-        } catch (e) { /* channel may already be deleted */ }
+        } catch (e) { /* channel có thể đã bị xóa trước đó */ }
 
         // Xóa category (nếu trống)
         try {
@@ -160,7 +180,7 @@ async function handleDisable(interaction) {
             if (category && category.children.cache.size === 0) {
                 await category.delete('LVoice disabled');
             }
-        } catch (e) { /* category may already be deleted */ }
+        } catch (e) { /* category có thể đã bị xóa trước đó */ }
 
         // Xóa cache
         creatorChannels.delete(config.creatorChannelId);
@@ -169,14 +189,23 @@ async function handleDisable(interaction) {
         await MariaModDB.deleteLVoiceConfig(guild.id);
 
         await interaction.editReply({
-            content: `${emojis.success} Đã tắt LVoice thành công!`,
+            content: `${emojis.success} ${interaction.t('commands.lvoice.disable_success')}`,
         });
 
-        logger.info('LVOICE', `Disabled in ${guild.name} by ${interaction.user.tag}`);
+        logger.info('lvoice', `Disabled in ${guild.name} by ${interaction.user.tag}`);
     } catch (error) {
-        logger.error('LVOICE', 'Error during disable:', error);
+        logger.error('lvoice', 'Error during disable:', error);
+        if (isMissingPermissionError(error)) {
+            const missingPermissions = getMissingPermissions(interaction.guild?.members.me?.permissions, requiredBotPermissions);
+            if (missingPermissions.length > 0) {
+                return interaction.editReply({
+                    content: `${emojis.error} ${interaction.t('commands.lvoice.bot_missing_perm_detail', { permissions: formatPermissionList(missingPermissions) })}`,
+                });
+            }
+        }
+
         await interaction.editReply({
-            content: `${emojis.error} Đã xảy ra lỗi khi tắt LVoice: ${error.message}`,
+            content: `${emojis.error} ${interaction.t('commands.lvoice.disable_error', { error: error.message })}`,
         });
     }
 }
@@ -187,20 +216,20 @@ async function handleConfig(interaction) {
 
     if (!config) {
         return interaction.reply({
-            content: `${emojis.error} LVoice chưa được thiết lập! Dùng \`/lvoice setup\` để bắt đầu.`,
+            content: `${emojis.error} ${interaction.t('commands.lvoice.not_setup')}`,
             ephemeral: true,
         });
     }
 
     const embed = new EmbedBuilder()
         .setColor(COLORS.LUNABY)
-        .setTitle('🎙️ Cấu hình LVoice')
+        .setTitle(interaction.t('commands.lvoice.config_title'))
         .addFields(
-            { name: '🔊 Kênh tạo', value: `<#${config.creatorChannelId}>`, inline: true },
-            { name: '📁 Category', value: `<#${config.categoryId}>`, inline: true },
-            { name: '📝 Template tên', value: `\`${config.defaultName}\``, inline: true },
-            { name: '👥 Giới hạn người', value: config.defaultLimit === 0 ? 'Không giới hạn' : `${config.defaultLimit}`, inline: true },
-            { name: '🔈 Bitrate', value: `${config.defaultBitrate / 1000}kbps`, inline: true },
+            { name: interaction.t('commands.lvoice.creator_field'), value: `<#${config.creatorChannelId}>`, inline: true },
+            { name: interaction.t('commands.lvoice.category_field'), value: `<#${config.categoryId}>`, inline: true },
+            { name: interaction.t('commands.lvoice.template_field'), value: `\`${config.defaultName}\``, inline: true },
+            { name: interaction.t('commands.lvoice.limit_field'), value: config.defaultLimit === 0 ? interaction.t('commands.lvoice.no_limit') : `${config.defaultLimit}`, inline: true },
+            { name: interaction.t('commands.lvoice.bitrate_field'), value: `${config.defaultBitrate / 1000}kbps`, inline: true },
         )
         .setFooter({ text: 'Made by s4ory' })
         .setTimestamp();

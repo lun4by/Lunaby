@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const mariaClient = require('../database/mariaClient');
-const logger = require('../../utils/logger.js');
-const { handlePermissionError, sendEmbedWithFallback, hasPermission } = require('../../utils/permissionUtils');
+const logger = require('../../utils/core/logger.js');
+const { handlePermissionError, sendEmbedWithFallback, isMissingPermissionError } = require('../../utils/discord/permissionUtils');
 
 class ConsentService {
   async hasUserConsented(userId) {
@@ -9,7 +9,7 @@ class ConsentService {
       const rows = await mariaClient.query('SELECT consented FROM user_consents WHERE user_id = ? LIMIT 1', [userId]);
       return rows.length > 0 ? Boolean(rows[0].consented) : false;
     } catch (error) {
-      logger.error('CONSENT', `Lỗi khi kiểm tra consent cho user ${userId}:`, error);
+      logger.error('consent', `Error while checking consent for user ${userId}:`, error);
       return false;
     }
   }
@@ -80,11 +80,13 @@ class ConsentService {
       const success = await sendEmbedWithFallback(interaction, embedData, interaction.user.username, 'embedLinks', 'update');
 
       if (success) {
-        logger.info('CONSENT', `User ${interaction.user.tag} (${userId}) đã chấp thuận sử dụng dịch vụ`);
+        logger.info('consent', `User ${interaction.user.tag} (${userId}) accepted Terms of Service`);
       }
     } catch (error) {
-      logger.error('CONSENT', `Lỗi khi xử lý consent accept cho user ${userId}:`, error);
-      await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
+      logger.error('consent', `Error while processing consent accept for user ${userId}:`, error);
+      if (isMissingPermissionError(error)) {
+        await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
+      }
     }
   }
 
@@ -114,11 +116,13 @@ class ConsentService {
       const success = await sendEmbedWithFallback(interaction, embedData, interaction.user.username, 'embedLinks', 'update');
 
       if (success) {
-        logger.info('CONSENT', `User ${interaction.user.tag} (${userId}) đã từ chối sử dụng dịch vụ`);
+        logger.info('consent', `User ${interaction.user.tag} (${userId}) declined Terms of Service`);
       }
     } catch (error) {
-      logger.error('CONSENT', `Lỗi khi xử lý consent decline cho user ${userId}:`, error);
-      await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
+      logger.error('consent', `Error while processing consent decline for user ${userId}:`, error);
+      if (isMissingPermissionError(error)) {
+        await handlePermissionError(interaction, 'sendMessages', interaction.user.username, 'update');
+      }
     }
   }
 
@@ -133,7 +137,7 @@ class ConsentService {
         version = VALUES(version)
       `, [userId, consented]);
     } catch (error) {
-      logger.error('CONSENT', `Lỗi khi cập nhật consent cho user ${userId}:`, error);
+      logger.error('consent', `Error while updating consent for user ${userId}:`, error);
       throw error;
     }
   }

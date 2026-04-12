@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
 const initSystem = require("../system/initSystem.js");
-const logger = require("../../utils/logger.js");
+const logger = require("../../utils/core/logger.js");
 
 class MongoDBClient {
   constructor() {
@@ -17,12 +17,12 @@ class MongoDBClient {
   async connect() {
     try {
       if (this.db) {
-        logger.info("SYSTEM", "Đã kết nối đến MongoDB rồi.");
+        logger.info("system", "Already connected to MongoDB.");
         return this.db;
       }
 
       if (this.isConnecting) {
-        logger.info("SYSTEM", "Đang trong quá trình kết nối đến MongoDB...");
+        logger.info("system", "Connecting to MongoDB...");
         while (!this.db) {
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
@@ -33,7 +33,7 @@ class MongoDBClient {
       await this.client.connect();
       this.db = this.client.db();
       this.isConnecting = false;
-      logger.debug("DATABASE", "MongoDB connected");
+      logger.info("mongodb", "Connected to MongoDB");
 
       // if (!initSystem.getStatus().services.mongodb) {
       //   console.log('MongoDB đang đợi trong hàng đợi khởi tạo...');
@@ -43,7 +43,7 @@ class MongoDBClient {
       return this.db;
     } catch (error) {
       this.isConnecting = false;
-      logger.error("SYSTEM", "Lỗi khi kết nối đến MongoDB:", error);
+      logger.error("system", "Error while connecting to MongoDB:", error);
       throw error;
     }
   }
@@ -51,9 +51,9 @@ class MongoDBClient {
   async close() {
     try {
       await this.client.close();
-      logger.info("SYSTEM", "Đã đóng kết nối MongoDB");
+      logger.info("system", "Closed MongoDB connection");
     } catch (error) {
-      logger.error("SYSTEM", "Lỗi khi đóng kết nối MongoDB:", error);
+      logger.error("system", "Error while closing MongoDB connection:", error);
     }
   }
 
@@ -69,7 +69,7 @@ class MongoDBClient {
       try {
         await this.connect();
       } catch (error) {
-        logger.error("SYSTEM", "Không thể kết nối đến MongoDB:", error);
+        logger.error("system", "Failed to connect to MongoDB:", error);
         throw new Error(
           "Không thể kết nối đến MongoDB. Vui lòng kiểm tra kết nối và cấu hình."
         );

@@ -2,26 +2,13 @@ const { Events } = require("discord.js");
 const { handleCommand } = require("../handlers/commandHandler");
 const { handleConsentInteraction } = require("../handlers/consentHandler");
 const { handleResetdbInteraction } = require("../handlers/resetdbHandler");
-const {
-  notifyBlacklistedGuildAndLeave,
-  notifyBlacklistedUser,
-  shouldBlockGuild,
-  shouldBlockUser,
-} = require("../utils/blacklistUtils");
-const logger = require("../utils/logger.js");
+const { ensureInteractionAllowed } = require("./eventRuntime");
+const logger = require("../utils/core/logger.js");
 
 function setupInteractionCreateEvent(client) {
   client.on(Events.InteractionCreate, async (interaction) => {
     try {
-      const blockedGuild = interaction.guild ? await shouldBlockGuild(interaction.guild) : null;
-      if (blockedGuild) {
-        await notifyBlacklistedGuildAndLeave(interaction.guild, blockedGuild.reason);
-        return;
-      }
-
-      const blockedUser = await shouldBlockUser(interaction.user);
-      if (blockedUser) {
-        await notifyBlacklistedUser(interaction.user, blockedUser.reason);
+      if (!(await ensureInteractionAllowed(interaction))) {
         return;
       }
 
@@ -35,11 +22,12 @@ function setupInteractionCreateEvent(client) {
         }
       }
     } catch (error) {
-      logger.error("INTERACTION_EVENT", "Lỗi khi xử lý interaction:", error);
+      logger.error("interaction_event", "Error handling interaction:", error);
     }
   });
 
-  logger.info("EVENTS", "Đã đăng ký event: InteractionCreate");
+  logger.info("events", "Registered event: InteractionCreate");
 }
 
 module.exports = { setupInteractionCreateEvent };
+

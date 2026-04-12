@@ -6,15 +6,15 @@ const PrefixDB = require('../services/database/PrefixDB.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 const storageDB = require('../services/database/storagedb.js');
 const initSystem = require('../services/system/initSystem.js');
-const { syncAllGuilds } = require('../handlers/guildHandler');
+const { syncAllGuilds, warmGuildProfiles } = require('../handlers/guildHandler');
 const CommandsJSONService = require('../services/system/CommandsJSONService');
 const QuotaService = require('../services/user/QuotaService.js');
 const RoleService = require('../services/user/RoleService.js');
 const BlacklistService = require('../services/user/BlacklistService.js');
-const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
+const { notifyBlacklistedGuildAndLeave } = require('../utils/discord/blacklistUtils');
 const { loadLVoiceCache, cleanupZombieChannels } = require('./voiceStateUpdate.js');
-const logger = require('../utils/logger.js');
-const { getSystemMetrics } = require('../utils/systemMetrics.js');
+const logger = require('../utils/core/logger.js');
+const { getSystemMetrics } = require('../utils/core/systemMetrics.js');
 const { initializeTopgg } = require('../services/api/topggService.js');
 
 const presenceIntervalMs = 10 * 1000;
@@ -23,7 +23,7 @@ async function runStartupStep(label, task, readyKey = null) {
   try {
     return await task();
   } catch (error) {
-    logger.error('SYSTEM', `${label} failed:`, error.message);
+    logger.error('system', `${label} failed:`, error.message);
     return null;
   } finally {
     if (readyKey) {
@@ -34,7 +34,7 @@ async function runStartupStep(label, task, readyKey = null) {
 
 async function updatePresence(client, shardId) {
   if (!client?.isReady?.() || !client.user) {
-    logger.warn('SYSTEM', `Skipped presence update because client is not ready yet | Shard ${shardId}`);
+    logger.warn('system', `Skipped presence update because client is not ready yet | Shard ${shardId}`);
     return;
   }
 
@@ -50,7 +50,7 @@ async function updatePresence(client, shardId) {
       afk: false,
     });
   } catch (error) {
-    logger.error('SYSTEM', `Presence update failed on shard ${shardId}:`, error.message);
+    logger.error('system', `Presence update failed on shard ${shardId}:`, error.message);
   }
 }
 
@@ -85,18 +85,9 @@ async function initializeMaria() {
 
 async function loadBotCommands(client, loadCommands) {
   const commandCount = await loadCommands(client);
-  logger.info('SYSTEM', `Loaded ${commandCount} commands`);
+  logger.info('system', `Loaded ${commandCount} commands`);
 }
 
-async function warmGuildProfiles(client) {
-  for (const [guildId, guild] of client.guilds.cache) {
-    try {
-      await MariaModDB.getGuildSettings(guildId);
-    } catch (error) {
-      logger.error('SYSTEM', `Guild config error ${guild.name}:`, error.message);
-    }
-  }
-}
 
 async function cleanupBlacklistedGuilds(client) {
   for (const guild of client.guilds.cache.values()) {
@@ -112,6 +103,7 @@ async function initializeReadyState(client, loadCommands) {
     runStartupStep('MongoDB init', initializeMongo, 'mongodb'),
     runStartupStep('MariaDB init', initializeMaria, 'mariadb'),
     runStartupStep('Command loading', () => loadBotCommands(client, loadCommands), 'commands'),
+    runStartupStep('i18n init', () => require('../services/i18n/i18nManager').init(), 'i18n'),
   ]);
 
   await runStartupStep('JSON generation', () => CommandsJSONService.generateCommandsJSON());
@@ -132,7 +124,7 @@ async function initializeReadyState(client, loadCommands) {
 }
 
 async function startbot(client, loadCommands) {
-  client.once('ready', async () => {
+  client.once('clientReady', async () => {
     console.log(`
     ██╗     ██╗   ██╗███╗   ██╗ █████╗ ██████╗ ██╗   ██╗
     ██║     ██║   ██║████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝
@@ -148,7 +140,7 @@ async function startbot(client, loadCommands) {
 
     await initializeReadyState(client, loadCommands);
 
-    logger.info('SYSTEM', `Bot is ready! Logged in as ${client.user.tag} | Shard ${shardId}`);
+    logger.info('system', `Bot is ready! Logged in as ${client.user.tag} | Shard ${shardId}`);
   });
 }
 

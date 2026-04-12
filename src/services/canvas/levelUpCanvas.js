@@ -1,6 +1,6 @@
 const { AttachmentBuilder } = require('discord.js');
 const { LevelUp } = require('lunaby-canvas');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 async function generateLevelUpCard(user, oldLevel, newLevel) {
     try {
@@ -14,7 +14,7 @@ async function generateLevelUpCard(user, oldLevel, newLevel) {
         const buffer = await card.build();
         return new AttachmentBuilder(buffer, { name: 'levelup.png' });
     } catch (err) {
-        logger.error('LEVELUP_CANVAS', 'Failed to build LevelUp canvas:', err);
+        logger.error('levelup_canvas', 'Failed to build LevelUp canvas:', err);
         throw err;
     }
 }

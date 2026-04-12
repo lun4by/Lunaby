@@ -4,10 +4,11 @@ const {
   ButtonStyle,
   ChannelType,
 } = require('discord.js');
-const BlacklistService = require('../services/user/BlacklistService');
-const logger = require('./logger');
+const BlacklistService = require('../../services/user/BlacklistService');
+const logger = require('../core/logger');
+const { hasChannelPermission } = require('./permissionUtils');
 
-const SUPPORT_SERVER_URL = 'https://discord.gg/NFF7tw2zNQ';
+const SUPPORT_SERVER_URL = process.env.SUPPORT_SERVER_URL || 'https://discord.gg/NFF7tw2zNQ';
 const DM_NOTIFY_COOLDOWN_MS = 60 * 60 * 1000;
 
 const notifiedUsers = new Map();
@@ -55,7 +56,7 @@ async function notifyBlacklistedUser(user, reason = null) {
     });
     return true;
   } catch (error) {
-    logger.warn('BLACKLIST', `Không thể gửi DM cho user blacklist ${user.id}: ${error.message}`);
+    logger.warn('blacklist', `Failed to send DM to user blacklist ${user.id}: ${error.message}`);
     return false;
   }
 }
@@ -66,7 +67,7 @@ function findNoticeChannel(guild) {
   const canSend = (channel) =>
     channel &&
     channel.type === ChannelType.GuildText &&
-    channel.permissionsFor(guild.members.me)?.has(['ViewChannel', 'SendMessages']);
+    hasChannelPermission(channel, guild.members.me, ['ViewChannel', 'SendMessages']);
 
   return guild.systemChannel && canSend(guild.systemChannel)
     ? guild.systemChannel
@@ -97,15 +98,15 @@ async function notifyBlacklistedGuildAndLeave(guild, reason = null) {
       }).catch(() => { });
     }
   } catch (error) {
-    logger.warn('BLACKLIST', `Không thể gửi thông báo blacklist cho guild ${guild.id}: ${error.message}`);
+    logger.warn('blacklist', `Failed to send blacklist notice to guild ${guild.id}: ${error.message}`);
   }
 
   try {
     await guild.leave();
-    logger.info('BLACKLIST', `Bot đã rời guild blacklist ${guild.name} (${guild.id})`);
+    logger.info('blacklist', `Bot left blacklisted guild ${guild.name} (${guild.id})`);
     return true;
   } catch (error) {
-    logger.error('BLACKLIST', `Không thể rời guild blacklist ${guild.name} (${guild.id}):`, error);
+    logger.error('blacklist', `Failed to leave blacklisted guild ${guild.name} (${guild.id}):`, error);
     return false;
   }
 }
@@ -122,7 +123,6 @@ async function shouldBlockGuild(guild) {
 
 module.exports = {
   SUPPORT_SERVER_URL,
-  buildSupportServerRow,
   notifyBlacklistedUser,
   notifyBlacklistedGuildAndLeave,
   shouldBlockUser,

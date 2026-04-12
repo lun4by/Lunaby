@@ -1,3 +1,5 @@
+const emojis = require('../../config/emojis');
+
 const STOP_WORDS = new Set([
   "và", "hoặc", "nhưng", "nếu", "vì", "bởi", "với", "từ", "đến", "trong", "ngoài",
   "a", "an", "the", "and", "or", "but", "if", "because", "with", "from", "to", "in", "out"
@@ -91,9 +93,16 @@ module.exports = {
     const completed = Math.floor((percent / 100) * BAR_LENGTH);
 
     const statusIcon =
-      Object.entries({ 0: "⬛", 25: "<:thinking:1050344785153626122>", 50: "<:wao:1050344773698977853>", 75: "🔆", 90: "⏭️", 100: "<:like:1049784377103622218>" })
+      Object.entries({
+        0: emojis.progress.empty,
+        25: emojis.progress.thinking,
+        50: emojis.progress.wao,
+        75: emojis.progress.bright,
+        90: emojis.progress.fastForward,
+        100: emojis.progress.like,
+      })
         .reverse()
-        .find(([t]) => percent >= parseInt(t))?.[1] || "⬛";
+        .find(([t]) => percent >= parseInt(t))?.[1] || emojis.progress.empty;
 
     return `${statusIcon} │${"█".repeat(completed)}${"▒".repeat(BAR_LENGTH - completed)}│ ${percent.toString().padStart(3, " ")}%`;
   }

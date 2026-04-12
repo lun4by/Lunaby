@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
-const enabledUtil = require('../../utils/enabledUtil');
-const logger = require('../../utils/logger');
+const enabledUtil = require('../../utils/guild/enabledUtil');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
 
 module.exports = {
@@ -45,7 +45,7 @@ module.exports = {
                 const allCommands = [...interaction.client.commands.keys()].filter(c => c !== 'disable' && c !== 'enable');
                 await MariaModDB.disableAllCommands(guildId, channelId, allCommands, userId);
                 return interaction.reply({
-                    content: `${emojis.success} Tất cả lệnh đã bị **tắt** trong <#${channelId}>!`,
+                    content: `${emojis.success} ${interaction.t('commands.disable.all_success', { channelId })}`,
                     ephemeral: true
                 });
             }
@@ -59,7 +59,7 @@ module.exports = {
             }
 
             if (validCommands.length === 0) {
-                return interaction.reply({ content: `${emojis.error} Không tìm thấy lệnh hợp lệ nào để tắt.`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.disable.invalid_cmds')}`, ephemeral: true });
             }
 
             await MariaModDB.disableAllCommands(guildId, channelId, validCommands, userId);
@@ -68,8 +68,8 @@ module.exports = {
             return interaction.reply({ embeds: [embed], ephemeral: true });
 
         } catch (error) {
-            logger.error('COMMAND', 'Error in disable command:', error);
-            return interaction.reply({ content: `${emojis.error} Đã xảy ra lỗi. Vui lòng thử lại.`, ephemeral: true });
+            logger.error('command', 'Error in disable command:', error);
+            return interaction.reply({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     },
 };

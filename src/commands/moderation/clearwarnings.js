@@ -1,10 +1,11 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
-const ErrorHandler = require('../../utils/ErrorHandler');
+const ErrorHandler = require('../../utils/core/ErrorHandler');
 const ConversationService = require('../../services/ai/ConversationService.js');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
+const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,21 +29,21 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+        if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
+                content: `${emojis.error} ${interaction.t('system.no_permission')}`,
                 ephemeral: true,
             });
         }
 
         const targetUser = interaction.options.getUser('user');
         const type = interaction.options.getString('type');
-        const reason = interaction.options.getString('reason') || 'Không có lý do cụ thể';
+        const reason = interaction.options.getString('reason') || interaction.t('commands.moderation_common.no_reason');
 
         if (!targetUser || !type) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Xóa cảnh cáo: \`${prefix}clearwarnings @user [all|latest]\`` });
+            return (interaction.message || interaction).reply({ content: interaction.t('commands.clearwarnings.usage', { prefix }) });
         }
 
         await interaction.deferReply();
@@ -55,7 +56,7 @@ module.exports = {
 
             if (warningCount === 0) {
                 return interaction.editReply({
-                    content: `${emojis.success} Người dùng này hiện không có cảnh cáo nào!`,
+                    content: `${emojis.success} ${interaction.t('commands.moderation_common.no_warnings')}`,
                     ephemeral: false,
                 });
             }
@@ -83,37 +84,36 @@ module.exports = {
             );
 
             const prompt = prompts.moderation.clearwarnings
-                .replace('${type}', type === 'all' ? 'tất cả' : 'cảnh cáo mới nhất')
+                .replace('${type}', type === 'all' ? interaction.t('commands.clearwarnings.type_all') : interaction.t('commands.clearwarnings.type_latest'))
                 .replace('${username}', targetUser.username)
                 .replace('${reason}', reason)
                 .replace('${deletedCount}', deletedCount);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
 
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
-
-            await interaction.editReply({ content: aiResponse });
+            const aiResponse = await aiResponsePromise;
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} ${interaction.t('commands.clearwarnings.success_fallback', { count: deletedCount, tag: targetUser.tag })}`,
+            });
 
             try {
+                const typeCap = type === 'all' ? interaction.t('commands.clearwarnings.type_all_cap') : interaction.t('commands.clearwarnings.type_latest_cap');
                 const dmEmbed = new EmbedBuilder()
                     .setColor(0x00ff00)
-                    .setTitle(
-                        `Cảnh cáo của bạn đã được xóa tại ${interaction.guild.name}`,
-                    )
-                    .setDescription(
-                        `${type === 'all' ? 'Tất cả' : 'Cảnh cáo mới nhất'} (${deletedCount}) cảnh cáo của bạn đã được xóa.\nLý do: ${reason}`,
-                    )
+                    .setTitle(interaction.t('commands.clearwarnings.dm_title', { guild: interaction.guild.name }))
+                    .setDescription(interaction.t('commands.clearwarnings.dm_desc', { typeCap, count: deletedCount, reason }))
                     .setFooter({
-                        text: `Bởi ${interaction.user.tag}`,
+                        text: interaction.t('commands.clearwarnings.dm_footer', { user: interaction.user.tag }),
                     })
                     .setTimestamp();
 
                 await targetUser.send({ embeds: [dmEmbed] });
             } catch (error) {
-                logger.error('MODERATION', `Không thể gửi DM cho ${targetUser.tag}`);
+                logger.error('moderation', `Failed to send DM to ${targetUser.tag}`);
             }
         } catch (error) {
-            logger.error('MODERATION', 'Lỗi khi xóa cảnh cáo của thành viên:', error);
+            logger.error('moderation', 'Error clearing member warnings:', error);
             await interaction.editReply({
-                content: `${emojis.error} Đã xảy ra lỗi khi xóa cảnh cáo: ${error.message}`,
+                content: `${emojis.error} ${interaction.t('commands.clearwarnings.error_clearwarnings', { error: error.message })}`,
                 ephemeral: true,
             });
         }

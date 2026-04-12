@@ -3,7 +3,8 @@ const { createCanvas, loadImage } = require('canvas');
 const path = require('path');
 const fs = require('fs');
 const fontManager = require('../fonts/fonts');
-const logger = require('../../utils/logger.js');
+const emojis = require('../../config/emojis.js');
+const logger = require('../../utils/core/logger.js');
 
 const ASSETS_PATH = path.join(__dirname, '../../assets');
 
@@ -17,9 +18,9 @@ class AchievementCanvas {
   async initializeFonts() {
     try {
       await fontManager.initialize(ASSETS_PATH);
-      logger.debug('ACHIEVEMENT', 'Fonts loaded');
+      logger.debug('achievement', 'Fonts loaded');
     } catch (error) {
-      logger.error('ACHIEVEMENT', 'Failed to load fonts:', error);
+      logger.error('achievement', 'Failed to load fonts:', error);
     }
   }
 
@@ -57,9 +58,9 @@ class AchievementCanvas {
       this.imageCache.set(imagePath, image);
       return image;
     } catch (error) {
-      logger.warn('ACHIEVEMENT', `Không thể tải hình ảnh achievement ${path.basename(imagePath)}:`, error.message);
+      logger.warn('achievement', `Failed to load achievement image ${path.basename(imagePath)}:`, error.message);
       
-      // Fallback to default icon
+      // Fallback về icon mặc định
       const fallbackPath = path.join(ASSETS_PATH, 'lunaby-avatar.png');
       if (imagePath !== fallbackPath) {
         return this.loadImageWithCache(fallbackPath);
@@ -219,7 +220,7 @@ class AchievementCanvas {
       ctx.lineWidth = 3;
       ctx.stroke();
     } catch (error) {
-      logger.error('ACHIEVEMENT', 'Lỗi khi vẽ icon achievement:', error);
+      logger.error('achievement', 'Error while drawing achievement icon:', error);
     }
   }
 
@@ -227,7 +228,7 @@ class AchievementCanvas {
   renderContent(ctx, data, contentX, contentY) {
     let currentY = contentY;
 
-    // Achievement Unlocked text
+    // Dòng chữ "Achievement Unlocked"
     this.setFont(ctx, 'SemiBold', 24);
     ctx.textAlign = 'left';
     ctx.fillStyle = '#DDD6FE';
@@ -307,7 +308,7 @@ class AchievementCanvas {
       
       this.renderMainCard(ctx, cardX, cardY, cardW, cardH);
 
-      // Icon achievement
+      // Icon thành tựu
       const iconSize = 160;
       const iconX = 180;
       const iconY = height/2;
@@ -322,7 +323,7 @@ class AchievementCanvas {
 
       return canvas.toBuffer();
     } catch (error) {
-      logger.error('ACHIEVEMENT', 'Lỗi khi tạo achievement canvas:', error);
+      logger.error('achievement', 'Error while creating achievement canvas:', error);
       throw error;
     }
   }
@@ -385,12 +386,12 @@ async function checkAchievements(message, xpResult) {
       });
 
       await message.channel.send({
-        content: `🎉 **${message.author.username}** đã mở khóa thành tựu mới!`,
+        content: `${emojis.achievements.unlocked} **${message.author.username}** đã mở khóa thành tựu mới!`,
         files: [attachment]
       });
     }
   } catch (error) {
-    logger.error('ACHIEVEMENT', 'Lỗi khi kiểm tra thành tựu:', error);
+    logger.error('achievement', 'Error while checking achievements:', error);
   }
 }
 

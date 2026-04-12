@@ -1,93 +1,126 @@
 const { REST, Routes } = require('discord.js');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
 const BlacklistService = require('../services/user/BlacklistService');
-const { notifyBlacklistedGuildAndLeave } = require('../utils/blacklistUtils');
-const logger = require('../utils/logger.js');
+const { notifyBlacklistedGuildAndLeave } = require('../utils/discord/blacklistUtils');
+const logger = require('../utils/core/logger.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
+const { getCachedGuildSettings } = require('../utils/guild/guildLocale.js');
+const { hasChannelPermission } = require('../utils/discord/permissionUtils.js');
+
+const guildCommandDeployDelayMs = 1000;
+const defaultGuildProfile = { xp: { isActive: false, exceptions: [] } };
 
 const sendGlobalLog = async (client, message) => {
-    const logChannelId = await MariaModDB.getBotSetting('global_log_channel');
-    if (!logChannelId) return;
+  const logChannelId = await MariaModDB.getBotSetting('global_log_channel');
+  if (!logChannelId) return;
 
-    const logChannel = await client.channels.fetch(logChannelId).catch(() => null);
-    if (logChannel?.isTextBased()) {
-        await logChannel.send(message);
-    }
+  const logChannel = await client.channels.fetch(logChannelId).catch(() => null);
+  if (logChannel?.isTextBased()) {
+    await logChannel.send(message);
+  }
 };
 
 
 async function storeGuildInDB(guild) {
   try {
-    const guildSettings = await MariaModDB.getGuildSettings(guild.id);
+    const guildSettings = await getCachedGuildSettings(guild.id);
+
+    if (guild.client && !guild.client.guildProfiles) {
+      guild.client.guildProfiles = new Map();
+    }
 
     if (guild.client?.guildProfiles) {
       guild.client.guildProfiles.set(guild.id, {
-        xp: guildSettings?.xp || { isActive: false, exceptions: [] }
+        xp: guildSettings?.xp || defaultGuildProfile.xp
       });
     }
 
-    logger.info('GUILD_DEPLOY', `Đã đồng bộ cấu hình server ${guild.name} vào MariaDB`);
+    logger.info('guild_deploy', `Synchronized server config for ${guild.name} to MariaDB`);
+    return guildSettings;
   } catch (error) {
-    logger.error('GUILD_DEPLOY', `Lỗi khi đồng bộ cấu hình guild vào MariaDB:`, error);
+    logger.error('guild_deploy', `Error while syncing guild config to MariaDB:`, error);
+    throw error;
   }
+}
+
+async function ensureGuildSettings(guild) {
+  return storeGuildInDB(guild);
+}
+
+async function warmGuildProfiles(client) {
+  if (!client?.guilds?.cache) return;
+
+  if (!client.guildProfiles) {
+    client.guildProfiles = new Map();
+  }
+
+  let warmedCount = 0;
+  for (const guild of client.guilds.cache.values()) {
+    try {
+      await ensureGuildSettings(guild);
+      warmedCount++;
+    } catch (error) {
+      logger.error('guild_deploy', `Error while warming guild profile for ${guild.name}:`, error);
+    }
+  }
+
+  logger.info('guild_deploy', `Guild profiles warmup completed: ${warmedCount}/${client.guilds.cache.size}`);
 }
 
 
 async function removeGuildFromDB(guildId) {
   try {
     await MariaModDB.deleteGuildData(guildId);
-    logger.info('GUILD_DEPLOY', `Đã xóa dữ liệu server ID: ${guildId} khỏi MariaDB`);
+    logger.info('guild_deploy', `Deleted server data with ID: ${guildId} from MariaDB`);
   } catch (error) {
-    logger.error('GUILD_DEPLOY', `Lỗi khi xóa dữ liệu guild từ MariaDB:`, error);
+    logger.error('guild_deploy', `Error while deleting guild data from MariaDB:`, error);
   }
 }
 
 
-async function getGuildFromDB(guildId) {
-  try {
-    return await MariaModDB.getGuildSettings(guildId);
-  } catch (error) {
-    logger.error('GUILD_DEPLOY', `Lỗi khi lấy thông tin guild từ MariaDB:`, error);
-    return null;
-  }
-}
-
-async function updateGuildSettings(guildId, settings) {
-  try {
-    await MariaModDB.updateGuildSettings(guildId, settings);
-    logger.info('GUILD_DEPLOY', `Đã cập nhật cài đặt cho server ID: ${guildId}`);
+async function ensureGuildAllowed(guild) {
+  const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
+  if (!blacklistEntry) {
     return true;
-  } catch (error) {
-    logger.error('GUILD_DEPLOY', `Lỗi khi cập nhật cài đặt guild:`, error);
-    return false;
   }
+
+  await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+  return false;
 }
 
+function resolveCommandsToRegister(client, commands) {
+  return commands?.length ? commands : getCommandsJson(client);
+}
+
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function findDefaultChannel(guild) {
   try {
-    const canSend = (ch) => ch.type === 0 && ch.permissionsFor(guild.members.me).has('SendMessages');
-    const nameMatch = (ch) => {
-      const name = ch.name.toLowerCase();
+    const canSend = (channel) =>
+      channel.type === 0 && hasChannelPermission(channel, guild.members.me, 'SendMessages');
+
+    const hasPreferredName = (channel) => {
+      const name = channel.name.toLowerCase();
       return name.includes('general') || name.includes('chung') || name.includes('welcome');
     };
 
-    return guild.channels.cache.find(ch => canSend(ch) && nameMatch(ch))
+    return guild.channels.cache.find((channel) => canSend(channel) && hasPreferredName(channel))
       || guild.channels.cache.find(canSend)
       || null;
   } catch (error) {
-    logger.error('GUILD_DEPLOY', `Lỗi khi tìm kênh mặc định cho guild ${guild.name}:`, error);
+    logger.error('guild_deploy', `Error while finding default channel for guild ${guild.name}:`, error);
     return null;
   }
 }
-
 
 async function handleGuildLeave(guild) {
   await sendGlobalLog(guild.client, `Bot rời khỏi guild: ${guild.name} (${guild.id})`);
   try {
     await removeGuildFromDB(guild.id);
   } catch (error) {
-    logger.error('GUILD_DEPLOY', `Lỗi khi xóa thông tin server ${guild.name}:`, error);
+    logger.error('guild_deploy', `Error while deleting server data for ${guild.name}:`, error);
   }
 }
 
@@ -95,33 +128,33 @@ async function deployCommandsToGuild(guildId, existingCommands = null, client = 
   const token = process.env.DISCORD_TOKEN;
   const clientId = process.env.CLIENT_ID;
 
-  if (!token) throw new Error('DISCORD_TOKEN không được thiết lập trong biến môi trường');
-  if (!clientId) throw new Error('CLIENT_ID không được thiết lập trong biến môi trường');
+  if (!token) throw new Error('DISCORD_TOKEN is not configured');
+  if (!clientId) throw new Error('CLIENT_ID is not configured');
 
   const commands = existingCommands || (client ? getCommandsJson(client) : []);
   if (!commands?.length) {
-    logger.warn('GUILD', `Không có lệnh nào để triển khai cho guild ID: ${guildId}`);
+    logger.warn('guild', `No commands to deploy for guild ID: ${guildId}`);
     return [];
   }
 
   try {
     const rest = new REST({ version: '10' }).setToken(token);
-    logger.info('GUILD_DEPLOY', `Deploying ${commands.length} lệnh cho guild ${guildId}...`);
+    logger.info('guild_deploy', `Deploying ${commands.length} commands for guild ${guildId}...`);
 
     const data = await rest.put(
       Routes.applicationGuildCommands(clientId, guildId),
       { body: commands }
     );
 
-    logger.info('GUILD_DEPLOY', `Deploy thành công ${data.length} lệnh cho guild ${guildId}`);
+    logger.info('guild_deploy', `Deploy succeeded: ${data.length} commands for guild ${guildId}`);
 
     if (data.length !== commands.length) {
-      logger.warn('GUILD_DEPLOY', `Số lệnh deploy (${commands.length}) khác với Discord xác nhận (${data.length})`);
+      logger.warn('guild_deploy', `Deployed command count (${commands.length}) differs from Discord confirmed count (${data.length})`);
     }
 
     return data;
   } catch (error) {
-    logger.error('GUILD_DEPLOY', `Lỗi deploy cho guild ${guildId}:`, error);
+    logger.error('guild_deploy', `Error deploying commands for guild ${guildId}:`, error);
     throw error;
   }
 }
@@ -130,17 +163,15 @@ async function handleGuildJoin(guild, commands) {
   await sendGlobalLog(guild.client, `Bot tham gia guild mới: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
 
   try {
-    const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
-    if (blacklistEntry) {
-      await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+    if (!(await ensureGuildAllowed(guild))) {
       return;
     }
 
-    await storeGuildInDB(guild);
+    await ensureGuildSettings(guild);
 
-    const commandsToRegister = commands?.length ? commands : getCommandsJson(guild.client);
+    const commandsToRegister = resolveCommandsToRegister(guild.client, commands);
     if (!commandsToRegister?.length) {
-      logger.error('GUILD_DEPLOY', `Không có lệnh nào để triển khai cho server ${guild.name}`);
+      logger.error('guild_deploy', `No commands to deploy for server ${guild.name}`);
       return;
     }
 
@@ -149,19 +180,18 @@ async function handleGuildJoin(guild, commands) {
     const defaultChannel = findDefaultChannel(guild);
     if (defaultChannel) {
       await defaultChannel.send({
-        content: `Xin chào! Lunaby đã sẵn sàng hỗ trợ server **${guild.name}**!\n` +
-          `Bạn có thể chat với mình bằng cách @Luna hoặc sử dụng các lệnh slash.\n` +
-          `Cảm ơn đã thêm mình vào server!`
+        content: `Xin chào! Lunaby đã sẵn sàng hỗ trợ server **${guild.name}**!\n`
+          + 'Bạn có thể chat với mình bằng cách @Luna hoặc sử dụng các lệnh slash.\n'
+          + 'Cảm ơn đã thêm mình vào server!',
       });
     }
   } catch (error) {
-    logger.error('GUILD_DEPLOY', `Lỗi khi xử lý guild mới ${guild.name}:`, error);
+    logger.error('guild_deploy', `Error while processing new guild ${guild.name}:`, error);
   }
 }
 
-
 async function syncAllGuilds(client, commands = null) {
-  logger.info('GUILD_DEPLOY', 'Bắt đầu đồng bộ tất cả guilds...');
+  logger.info('guild_deploy', 'Starting synchronization for all guilds...');
 
   try {
     if (!commands && (!client.commands || client.commands.size === 0)) {
@@ -170,13 +200,13 @@ async function syncAllGuilds(client, commands = null) {
 
     const guilds = client.guilds.cache;
     if (guilds.size === 0) {
-      logger.warn('GUILD_DEPLOY', 'Không có guild nào. Bot chưa được thêm vào server nào.');
+      logger.warn('guild_deploy', 'No guilds found. The bot has not been added to any server yet.');
       return;
     }
 
-    const commandsToRegister = commands || getCommandsJson(client);
+    const commandsToRegister = resolveCommandsToRegister(client, commands);
     if (!commandsToRegister?.length) {
-      logger.error('GUILD_DEPLOY', 'Không có lệnh nào để triển khai!');
+      logger.error('guild_deploy', 'No commands to deploy!');
       return;
     }
 
@@ -185,33 +215,31 @@ async function syncAllGuilds(client, commands = null) {
     let deployErrors = 0;
 
     for (const guild of guilds.values()) {
-      const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
-      if (blacklistEntry) {
-        await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+      if (!(await ensureGuildAllowed(guild))) {
         continue;
       }
 
       try {
-        await storeGuildInDB(guild);
+        await ensureGuildSettings(guild);
         syncCount++;
       } catch (error) {
-        logger.error('GUILD_DEPLOY', `Lỗi sync guild ${guild.name}:`, error);
+        logger.error('guild_deploy', `Error syncing guild ${guild.name}:`, error);
       }
 
       try {
         await deployCommandsToGuild(guild.id, commandsToRegister, client);
         deployCount++;
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await sleep(guildCommandDeployDelayMs);
       } catch (error) {
         deployErrors++;
-        logger.error('GUILD_DEPLOY', `Lỗi deploy cho guild ${guild.name}:`, error.message);
+        logger.error('guild_deploy', `Error deploying commands for guild ${guild.name}:`, error.message);
       }
     }
 
-    logger.info('GUILD_DEPLOY', `Đồng bộ hoàn tất: Sync ${syncCount}/${guilds.size}, Deploy ${deployCount}/${guilds.size}${deployErrors > 0 ? `, Lỗi: ${deployErrors}` : ''}`);
+    logger.info('guild_deploy', `Synchronization completed: Sync ${syncCount}/${guilds.size}, Deploy ${deployCount}/${guilds.size}${deployErrors > 0 ? `, Errors: ${deployErrors}` : ''}`);
 
   } catch (error) {
-    logger.error('GUILD_DEPLOY', 'Lỗi nghiêm trọng khi đồng bộ guilds:', error);
+    logger.error('guild_deploy', 'Critical error while syncing guilds:', error);
     throw error;
   }
 }
@@ -220,8 +248,8 @@ module.exports = {
   handleGuildJoin,
   handleGuildLeave,
   deployCommandsToGuild,
+  ensureGuildSettings,
+  warmGuildProfiles,
   syncAllGuilds,
-  getGuildFromDB,
-  updateGuildSettings,
-  storeGuildInDB
 };
+

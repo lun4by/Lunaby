@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
-const MariaModDB = require('../services/database/MariaModDB.js');
-const logger = require("./logger.js");
+const MariaModDB = require('../../services/database/MariaModDB.js');
+const logger = require("../core/logger.js");
 
 const FALLBACK_CHANNEL_NAMES = ["mod-logs", "mod-chat", "admin", "bot-logs"];
 
@@ -15,7 +15,7 @@ async function getModLogChannel(guild, isModAction = true) {
           const channel = await guild.channels.fetch(logSettings.logChannelId);
           if (channel?.isTextBased()) return channel;
         } catch (error) {
-          logger.error("COMMAND", `Không thể tìm thấy kênh log ${logSettings.logChannelId}:`, error);
+          logger.error("command", `Failed to find log channel ${logSettings.logChannelId}:`, error);
         }
       }
     }
@@ -25,7 +25,7 @@ async function getModLogChannel(guild, isModAction = true) {
     );
     return fallback || null;
   } catch (error) {
-    logger.error("COMMAND", "Lỗi khi lấy kênh log moderation:", error);
+    logger.error("command", "Error while fetching moderation log channel:", error);
     return null;
   }
 }
@@ -35,7 +35,7 @@ async function sendModLog(guild, embed, isModAction = true) {
     const logChannel = await getModLogChannel(guild, isModAction);
     return logChannel ? await logChannel.send({ embeds: [embed] }) : null;
   } catch (error) {
-    logger.error("COMMAND", "Lỗi khi gửi log moderation:", error);
+    logger.error("command", "Error while sending moderation log:", error);
     return null;
   }
 }

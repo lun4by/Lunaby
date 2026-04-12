@@ -3,13 +3,31 @@ const { handleMentionMessage } = require("../handlers/messageHandler");
 const { handlePrefixMessage } = require("../handlers/prefixHandler");
 const XPService = require("../services/user/XPService");
 const { generateLevelUpCard } = require("../services/canvas/levelUpCanvas");
-const {
-  notifyBlacklistedGuildAndLeave,
-  notifyBlacklistedUser,
-  shouldBlockGuild,
-  shouldBlockUser,
-} = require("../utils/blacklistUtils");
-const logger = require("../utils/logger.js");
+const { ensureMessageAllowed, resolveMessageContext } = require("./eventRuntime");
+const logger = require("../utils/core/logger.js");
+
+async function sendLevelUpNotification(message, guildSettings, xpResult) {
+  if (!xpResult?.leveledUp || !guildSettings?.settings?.levelUpChannel || !guildSettings?.settings?.levelUpNotifications) {
+    return;
+  }
+
+  const targetChannelId = guildSettings.settings.levelUpChannel;
+  const targetChannel = message.guild.channels.cache.get(targetChannelId)
+    || await message.guild.channels.fetch(targetChannelId).catch(() => null);
+
+  if (!targetChannel?.isTextBased()) {
+    return;
+  }
+
+  const attachment = await generateLevelUpCard(message.author, xpResult.previousLevel, xpResult.level);
+  await targetChannel.send({
+    content: message.t('system.levelup_congrats', {
+      user: message.author.toString(),
+      level: xpResult.level,
+    }),
+    files: [attachment],
+  });
+}
 
 function setupMessageCreateEvent(client) {
   client.on(Events.MessageCreate, async (message) => {
@@ -17,39 +35,16 @@ function setupMessageCreateEvent(client) {
       if (message.author.bot) return;
       if (!message.guild) return;
 
-      const blockedGuild = message.guild ? await shouldBlockGuild(message.guild) : null;
-      if (blockedGuild) {
-        await notifyBlacklistedGuildAndLeave(message.guild, blockedGuild.reason);
-        return;
-      }
-
-      const blockedUser = await shouldBlockUser(message.author);
-      if (blockedUser) {
-        await notifyBlacklistedUser(message.author, blockedUser.reason);
+      const context = await resolveMessageContext(message);
+      if (!(await ensureMessageAllowed(message, context))) {
         return;
       }
 
       const xpResult = await XPService.addXP(message);
-      if (xpResult && xpResult.leveledUp) {
-        try {
-          const MariaModDB = require("../services/database/MariaModDB");
-          const settings = await MariaModDB.getGuildSettings(message.guild.id);
-
-          if (settings?.settings?.levelUpChannel && settings?.settings?.levelUpNotifications) {
-            const targetChannelId = settings.settings.levelUpChannel;
-            const targetChannel = message.guild.channels.cache.get(targetChannelId) || await message.guild.channels.fetch(targetChannelId).catch(() => null);
-
-            if (targetChannel && targetChannel.isTextBased()) {
-              const attachment = await generateLevelUpCard(message.author, xpResult.previousLevel, xpResult.level);
-              await targetChannel.send({
-                content: `🎉 Chúc mừng ${message.author}! Bạn vừa đạt cấp **${xpResult.level}**!`,
-                files: [attachment]
-              });
-            }
-          }
-        } catch (err) {
-          logger.error('LEVELUP', 'Failed to send level up message:', err);
-        }
+      try {
+        await sendLevelUpNotification(message, context.guildSettings, xpResult);
+      } catch (err) {
+        logger.error('levelup', 'Failed to send level up message:', err);
       }
 
       const handled = await handlePrefixMessage(message, client);
@@ -57,11 +52,12 @@ function setupMessageCreateEvent(client) {
 
       await handleMentionMessage(message, client);
     } catch (error) {
-      logger.error("MESSAGE_EVENT", "Lỗi khi xử lý message:", error);
+      logger.error("message_event", "Error handling message:", error);
     }
   });
 
-  logger.info("EVENTS", "Đã đăng ký event: MessageCreate");
+  logger.info("events", "Registered event: MessageCreate");
 }
 
 module.exports = { setupMessageCreateEvent };
+

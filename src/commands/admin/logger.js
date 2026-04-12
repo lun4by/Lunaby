@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const fs = require('fs');
 const emojis = require('../../config/emojis.js');
 
@@ -17,25 +17,26 @@ module.exports = {
         .addSubcommand(sub => sub.setName('level').setDescription('Đặt mức độ ghi log')
             .addStringOption(opt => opt.setName('level').setDescription('Mức độ ghi log').setRequired(true)
                 .addChoices(
-                    { name: 'Debug - Chi tiết nhất', value: 'debug' },
                     { name: 'Info - Thông tin chung', value: 'info' },
+                    { name: 'Debug - Chi tiết nhất', value: 'debug' },
                     { name: 'Warning - Cảnh báo', value: 'warn' },
                     { name: 'Error - Lỗi', value: 'error' }
                 )))
         .addSubcommand(sub => sub.setName('category').setDescription('Bật/tắt ghi log cho một danh mục')
             .addStringOption(opt => opt.setName('category').setDescription('Danh mục ghi log').setRequired(true)
                 .addChoices(
-                    { name: 'MONITOR - Giám sát tin nhắn', value: 'MONITOR' },
-                    { name: 'NEURAL - AI/NeuralNetworks', value: 'NEURAL' },
-                    { name: 'COMMAND - Xử lý lệnh', value: 'COMMAND' },
-                    { name: 'COMMAND_USAGE - User dùng lệnh', value: 'COMMAND_USAGE' },
-                    { name: 'DATABASE - Cơ sở dữ liệu', value: 'DATABASE' },
-                    { name: 'SYSTEM - Hệ thống', value: 'SYSTEM' },
-                    { name: 'GUILD - Guild lifecycle/log', value: 'GUILD' },
-                    { name: 'GUILD_EVENT - Guild event handler', value: 'GUILD_EVENT' },
-                    { name: 'GUILD_DEPLOY - Deploy command guild', value: 'GUILD_DEPLOY' },
-                    { name: 'CHAT - Trò chuyện', value: 'CHAT' },
-                    { name: 'API - Gọi API', value: 'API' }
+                    { name: 'COMMAND - Xử lý lệnh', value: 'command' },
+                    { name: 'COMMAND_USAGE - User dùng lệnh', value: 'command_usage' },
+                    { name: 'MONGODB - Cơ sở dữ liệu MongoDB', value: 'mongodb' },
+                    { name: 'MARIADB - Cơ sở dữ liệu MariaDB', value: 'mariadb' },
+                    { name: 'SYSTEM - Hệ thống', value: 'system' },
+                    { name: 'GUILD - Guild lifecycle/log', value: 'guild' },
+                    { name: 'GUILD_EVENT - Guild event handler', value: 'guild_event' },
+                    { name: 'GUILD_DEPLOY - Deploy command guild', value: 'guild_deploy' },
+                    { name: 'CHAT - Trò chuyện', value: 'chat' },
+                    { name: 'API - Gọi API', value: 'api' },
+                    { name: 'AICORE - AI core', value: 'aicore' },
+                    { name: 'MESSAGE_EVENT - Sự kiện message', value: 'message_event' }
                 ))
             .addBooleanOption(opt => opt.setName('enabled').setDescription('Bật/tắt').setRequired(true)))
         .addSubcommand(sub => sub.setName('reset').setDescription('Khôi phục cài đặt ghi log về mặc định')),
@@ -44,7 +45,7 @@ module.exports = {
 
     async execute(interaction) {
         if (interaction.user.id !== OWNER_ID) {
-            return reply(interaction, 'Bạn không có quyền sử dụng lệnh này!');
+            return reply(interaction, interaction.t('commands.admin.logger.owner_only'));
         }
 
         const sub = interaction.options.getSubcommand();
@@ -52,31 +53,34 @@ module.exports = {
         if (sub === 'status') {
             const config = logger.getConfig();
             const cats = Object.entries(config.categories).map(([k, v]) => `${k}: ${v ? emojis.success : emojis.error}`).join('\n');
-            return reply(interaction,
-                `**Trạng thái hệ thống ghi log:**\n` +
-                `Trạng thái: ${config.enabled ? 'Đang bật' : 'Đã tắt'}\n` +
-                `Mức độ: ${config.level.toUpperCase()}\n` +
-                `Hiển thị thời gian: ${config.showTimestamp ? emojis.success : emojis.error}\n\n` +
-                `**Danh mục:**\n${cats}`
-            );
+            const statusText = config.enabled ? interaction.t('commands.admin.logger.enabled_status') : interaction.t('commands.admin.logger.disabled_status');
+            const timeText = config.showTimestamp ? emojis.success : emojis.error;
+
+            return reply(interaction, interaction.t('commands.admin.logger.status_title', {
+                status: statusText,
+                level: config.level.toUpperCase(),
+                time: timeText,
+                categories: cats
+            }));
         }
 
-        if (sub === 'enable') { logger.setEnabled(true); return reply(interaction, 'Đã bật hệ thống ghi log'); }
-        if (sub === 'disable') { logger.setEnabled(false); return reply(interaction, 'Đã tắt hệ thống ghi log'); }
+        if (sub === 'enable') { logger.setEnabled(true); return reply(interaction, interaction.t('commands.admin.logger.enabled')); }
+        if (sub === 'disable') { logger.setEnabled(false); return reply(interaction, interaction.t('commands.admin.logger.disabled')); }
 
         if (sub === 'level') {
             const level = interaction.options.getString('level');
             logger.setLevel(level);
-            return reply(interaction, `Đã đặt mức độ ghi log thành: ${level.toUpperCase()}`);
+            return reply(interaction, interaction.t('commands.admin.logger.set_level', { level: level.toUpperCase() }));
         }
 
         if (sub === 'category') {
             const category = interaction.options.getString('category');
             const enabled = interaction.options.getBoolean('enabled');
             logger.setCategoryEnabled(category, enabled);
-            return reply(interaction, `Đã ${enabled ? 'bật' : 'tắt'} ghi log cho danh mục: ${category}`);
+            const msg = enabled ? interaction.t('commands.admin.logger.set_category_on', { category }) : interaction.t('commands.admin.logger.set_category_off', { category });
+            return reply(interaction, msg);
         }
 
-        if (sub === 'reset') { logger.resetConfig(); return reply(interaction, 'Đã khôi phục cài đặt ghi log về mặc định'); }
+        if (sub === 'reset') { logger.resetConfig(); return reply(interaction, interaction.t('commands.admin.logger.reset')); }
     },
 };

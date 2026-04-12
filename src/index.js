@@ -1,5 +1,4 @@
-require("dotenv").config();
-console.clear();
+require("dotenv").config({ quiet: true });
 
 const {
 	Client,
@@ -14,7 +13,10 @@ const { setupInteractionCreateEvent } = require("./events/interactionCreate");
 const { setupMessageCreateEvent } = require("./events/messageCreate");
 const { setupVoiceStateEvent } = require("./events/voiceStateUpdate");
 const { setupGuildMemberAddEvent } = require("./events/guildMemberAdd");
-const logger = require("./utils/logger.js");
+const logger = require("./utils/core/logger.js");
+const { initializeFileLogging } = require("./utils/core/logger.js");
+
+void initializeFileLogging();
 
 const client = new Client({
 	intents: [
@@ -42,7 +44,7 @@ setupGuildMemberAddEvent(client);
 startbot(client, () => loadCommands(client));
 
 process.on("unhandledRejection", (error) => {
-	logger.error("SYSTEM", "Lỗi không được xử lý:", error);
+	logger.error("system", "Unhandled error:", error);
 });
 
 client.login(process.env.DISCORD_TOKEN);

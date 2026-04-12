@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
-const enabledUtil = require('../../utils/enabledUtil');
-const logger = require('../../utils/logger');
+const enabledUtil = require('../../utils/guild/enabledUtil');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
 
 module.exports = {
@@ -41,7 +41,7 @@ module.exports = {
             if (commands.includes('all')) {
                 await MariaModDB.enableAllCommands(guildId, channelId);
                 return interaction.reply({
-                    content: `${emojis.success} Tất cả lệnh đã được **bật** trong <#${channelId}>!`,
+                    content: `${emojis.success} ${interaction.t('commands.enable.all_success', { channelId })}`,
                     ephemeral: true
                 });
             }
@@ -58,15 +58,15 @@ module.exports = {
             }
 
             if (validCommands.length === 0) {
-                return interaction.reply({ content: `${emojis.error} Không tìm thấy lệnh hợp lệ nào để bật.`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.enable.invalid_cmds')}`, ephemeral: true });
             }
 
             const embed = await enabledUtil.createEmbed(interaction, channel, guildId, channelId);
             return interaction.reply({ embeds: [embed], ephemeral: true });
 
         } catch (error) {
-            logger.error('COMMAND', 'Error in enable command:', error);
-            return interaction.reply({ content: `${emojis.error} Đã xảy ra lỗi. Vui lòng thử lại.`, ephemeral: true });
+            logger.error('command', 'Error in enable command:', error);
+            return interaction.reply({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     },
 };

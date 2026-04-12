@@ -1,5 +1,5 @@
 const mariaClient = require('./mariaClient');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const { SEVERITY_LEVELS } = require('../../config/constants');
 
 class MariaBlacklistDB {
@@ -35,10 +35,10 @@ class MariaBlacklistDB {
           INDEX idx_created_at (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
-            logger.info('MARIADB', 'image_blacklist table ready');
+            logger.info('mariadb', 'image_blacklist table ready');
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error creating image_blacklist table:', error);
+            logger.error('mariadb', 'Error creating image_blacklist table:', error);
             return false;
         }
     }
@@ -66,7 +66,7 @@ class MariaBlacklistDB {
                 categories: Array.from(categories)
             };
         } catch (error) {
-            logger.error('MARIADB', 'Error checking blacklist:', error);
+            logger.error('mariadb', 'Error checking blacklist:', error);
             return { isBlocked: false, matchedKeywords: [], categories: [] };
         }
     }
@@ -80,7 +80,7 @@ class MariaBlacklistDB {
             return true;
         } catch (error) {
             if (error.code === 'ER_DUP_ENTRY') return false;
-            logger.error('MARIADB', 'Error adding to blacklist:', error);
+            logger.error('mariadb', 'Error adding to blacklist:', error);
             return false;
         }
     }
@@ -93,7 +93,7 @@ class MariaBlacklistDB {
             );
             return result.affectedRows > 0;
         } catch (error) {
-            logger.error('MARIADB', 'Error removing from blacklist:', error);
+            logger.error('mariadb', 'Error removing from blacklist:', error);
             return false;
         }
     }
@@ -104,7 +104,7 @@ class MariaBlacklistDB {
                 'SELECT keyword, category FROM image_blacklist ORDER BY category, keyword'
             );
         } catch (error) {
-            logger.error('MARIADB', 'Error getting blacklist:', error);
+            logger.error('mariadb', 'Error getting blacklist:', error);
             return [];
         }
     }
@@ -184,10 +184,10 @@ class MariaBlacklistDB {
                 values
             );
 
-            logger.info('MARIADB', `Added ${defaults.length} default blacklist keywords`);
+            logger.info('mariadb', `Added ${defaults.length} default blacklist keywords`);
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error initializing default blacklist:', error);
+            logger.error('mariadb', 'Error initializing default blacklist:', error);
             return false;
         }
     }
@@ -200,7 +200,7 @@ class MariaBlacklistDB {
             );
             return rows[0] || null;
         } catch (error) {
-            logger.error('MARIADB', 'Error checking user blacklist:', error);
+            logger.error('mariadb', 'Error checking user blacklist:', error);
             return null;
         }
     }
@@ -213,7 +213,7 @@ class MariaBlacklistDB {
             );
             return result.affectedRows > 0;
         } catch (error) {
-            logger.error('MARIADB', 'Error adding user blacklist:', error);
+            logger.error('mariadb', 'Error adding user blacklist:', error);
             return false;
         }
     }
@@ -226,7 +226,7 @@ class MariaBlacklistDB {
             );
             return result.affectedRows > 0;
         } catch (error) {
-            logger.error('MARIADB', 'Error removing user blacklist:', error);
+            logger.error('mariadb', 'Error removing user blacklist:', error);
             return false;
         }
     }
@@ -238,7 +238,7 @@ class MariaBlacklistDB {
                 [limit]
             );
         } catch (error) {
-            logger.error('MARIADB', 'Error getting user blacklist:', error);
+            logger.error('mariadb', 'Error getting user blacklist:', error);
             return [];
         }
     }
@@ -251,7 +251,7 @@ class MariaBlacklistDB {
             );
             return rows[0] || null;
         } catch (error) {
-            logger.error('MARIADB', 'Error checking guild blacklist:', error);
+            logger.error('mariadb', 'Error checking guild blacklist:', error);
             return null;
         }
     }
@@ -264,7 +264,7 @@ class MariaBlacklistDB {
             );
             return result.affectedRows > 0;
         } catch (error) {
-            logger.error('MARIADB', 'Error adding guild blacklist:', error);
+            logger.error('mariadb', 'Error adding guild blacklist:', error);
             return false;
         }
     }
@@ -277,7 +277,7 @@ class MariaBlacklistDB {
             );
             return result.affectedRows > 0;
         } catch (error) {
-            logger.error('MARIADB', 'Error removing guild blacklist:', error);
+            logger.error('mariadb', 'Error removing guild blacklist:', error);
             return false;
         }
     }
@@ -289,10 +289,11 @@ class MariaBlacklistDB {
                 [limit]
             );
         } catch (error) {
-            logger.error('MARIADB', 'Error getting guild blacklist:', error);
+            logger.error('mariadb', 'Error getting guild blacklist:', error);
             return [];
         }
     }
 }
 
 module.exports = new MariaBlacklistDB();
+

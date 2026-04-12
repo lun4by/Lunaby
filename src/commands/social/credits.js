@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
 function formatCredits(amount) {
@@ -21,12 +21,12 @@ module.exports = {
       const { credits } = await CreditsService.getUserCredits(targetUser.id);
 
       await interaction.reply({
-        content: `Bạn có **${formatCredits(credits)}** credits.`
+        content: interaction.t('commands.credits.balance', { amount: formatCredits(credits) })
       });
     } catch (error) {
-      logger.error('CREDITS', 'Error while running /credits:', error);
+      logger.error('credits', 'Error while running /credits:', error);
       const payload = {
-        content: `${emojis.error} Đã xảy ra lỗi khi tải số dư credits!`,
+        content: `${emojis.error} ${interaction.t('commands.credits.error')}`,
         ephemeral: true
       };
       const respond = interaction.replied || interaction.deferred

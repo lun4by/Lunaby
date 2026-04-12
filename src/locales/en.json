@@ -1,0 +1,634 @@
+{
+  "system": {
+    "lang_name": "English",
+    "language_changed": "Server language has been changed to **English**",
+    "no_permission": "You do not have permission to use this command.",
+    "error_occurred": "An error occurred while processing the command.",
+    "only_caller_can_use": "Only the user who invoked the command can use these options.",
+    "consent_only_target_user": "You cannot interact with someone else's consent prompt.",
+    "consent_process_error": "An error occurred while processing your request. Please try again later!",
+    "quota_exceeded": "**Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Pro in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue.",
+    "quota_exceeded_image": "**Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Vision in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue.",
+    "command_disabled_in_channel": "This command has been disabled in this channel.",
+    "command_locked_for_maintenance": "This command is temporarily locked for maintenance. Please try again later.",
+    "missing_server_permissions": "You do not have enough server permissions to use this command.",
+    "cooldown_wait": "You must wait until <t:{{expiresAtUnix}}:R> before using this command again!",
+    "command_execution_failed": "An error occurred while executing this command!",
+    "levelup_congrats": "{{_emoji.locale.partyPopper}} Congratulations {{user}}! You just reached level **{{level}}**!"
+  },
+  "commands": {
+    "moderation_common": {
+      "datetime_locale": "en-US",
+      "no_reason": "No specific reason",
+      "cant_action_higher_role": "Cannot perform this action because the user has a higher or equal role!",
+      "audit_log_reason": "{{reason}} - By {{user}}",
+      "log_field_user": "{{_emoji.locale.user}} User",
+      "log_field_id": "{{_emoji.locale.id}} ID",
+      "log_field_mod": "{{_emoji.locale.moderator}} Moderator",
+      "log_field_reason": "{{_emoji.locale.note}} Reason",
+      "log_field_time": "{{_emoji.locale.calendar}} Time",
+      "log_footer": "Server: {{guild}}",
+      "dm_reason": "Reason: {{reason}}",
+      "user_not_found": "Could not find this member in the server!",
+      "log_field_duration": "{{_emoji.locale.hourglass}} Duration",
+      "log_field_endtime": "{{_emoji.locale.calendar}} Ends at",
+      "auto_system": "Auto System",
+      "no_warnings": "This user does not have any warnings!",
+      "unknown_user": "Unknown"
+    },
+    "ban": {
+      "usage": "Usage:\n- Ban member: `{{prefix}}ban @user [reason] [days_to_delete_messages]`",
+      "success_fallback": "{{tag}} has been banned.",
+      "log_title": "{{_emoji.locale.hammer}} Member Banned",
+      "log_desc": "Banned {{tag}} from the server.\n\n**Delete messages:** {{days}} days.",
+      "dm_title": "You have been banned from {{guild}}",
+      "dm_footer": "If you believe this is a mistake, please contact the server administrators.",
+      "error_ban": "An error occurred while banning the user: {{error}}"
+    },
+    "kick": {
+      "usage": "Usage:\n- Kick member: `{{prefix}}kick @user [reason]`",
+      "success_fallback": "{{tag}} has been kicked from the server.",
+      "log_title": "{{_emoji.locale.boot}} Member Kicked",
+      "log_desc": "Kicked {{tag}} from the server.",
+      "error_kick": "An error occurred while kicking the user: {{error}}"
+    },
+    "mute": {
+      "usage": "Usage:\n- Mute member: `{{prefix}}mute @user [minutes] [reason]`",
+      "success_fallback": "{{tag}} has been muted for {{duration}}.",
+      "log_title": "{{_emoji.locale.mute}} Member Muted",
+      "log_desc": "Muted {{tag}}.",
+      "dm_title": "You have been muted in {{guild}}",
+      "dm_desc": "**Reason:** {{reason}}\n**Duration:** {{duration}}\n**Ends at:** {{time}}",
+      "dm_footer": "While muted, you cannot send messages or join voice chats.",
+      "error_mute": "An error occurred while muting the user: {{error}}"
+    },
+    "unmute": {
+      "usage": "Usage:\n- Unmute member: `{{prefix}}unmute @user [reason]`",
+      "not_muted": "This user is not currently muted!",
+      "success_fallback": "{{tag}} has been unmuted.",
+      "log_title": "{{_emoji.locale.unmute}} Member Unmuted",
+      "log_desc": "Unmuted {{tag}}.",
+      "dm_title": "You have been unmuted in {{guild}}",
+      "dm_desc": "**Reason:** {{reason}}\n\nYou can now send messages and join voice chats again.",
+      "error_unmute": "An error occurred while unmuting the user: {{error}}"
+    },
+    "warn": {
+      "usage": "Usage:\n- Warn member: `{{prefix}}warn @user [reason]`",
+      "cannot_warn_bot": "Cannot warn bots!",
+      "db_error": "An error occurred while saving the warning to the database!",
+      "success_fallback": "Warned {{tag}} (#{{count}}).",
+      "dm_title": "You have been warned in {{guild}}",
+      "dm_desc": "**Reason:** {{reason}}\n**Warnings:** {{warningCount}}",
+      "dm_footer": "If you continue breaking rules, you may be muted or banned.",
+      "auto_mute_title": "{{_emoji.locale.mute}} Member auto-muted",
+      "auto_mute_desc": "{{tag}} was auto-muted for 1 hour after {{count}} warnings.",
+      "auto_mute_reason": "Auto-muted after {{count}} warnings",
+      "auto_kick_title": "{{_emoji.locale.boot}} Member auto-kicked",
+      "auto_kick_desc": "{{tag}} was auto-kicked after {{count}} warnings.",
+      "auto_kick_reason": "Auto-kicked after {{count}} warnings",
+      "error_warn": "An error occurred while warning the user: {{error}}"
+    },
+    "warnings": {
+      "usage": "Usage:\n- View warnings: `{{prefix}}warnings @user`",
+      "embed_title": "{{_emoji.locale.warning}} Warning List",
+      "embed_desc": "**{{_emoji.locale.user}} User:** {{tag}}\n**{{_emoji.locale.alert}} Total warnings:** {{count}}",
+      "embed_footer": "ID: {{id}}",
+      "field_name": "Warning #{{index}} - {{date}} {{time}}",
+      "field_value": "**Reason:** {{reason}}\n**Moderator:** {{moderator}}",
+      "note_title": "Note",
+      "note_desc": "Only showing the latest 10/{{total}} warnings.",
+      "error_warnings": "An error occurred while retrieving warning data: {{error}}"
+    },
+    "clearwarnings": {
+      "usage": "Usage:\n- Clear warnings: `{{prefix}}clearwarnings @user [all|latest]`",
+      "type_all": "all",
+      "type_latest": "latest warning",
+      "type_all_cap": "All",
+      "type_latest_cap": "Latest warning",
+      "success_fallback": "Cleared {{count}} warnings for {{tag}}.",
+      "dm_title": "Your warnings have been cleared in {{guild}}",
+      "dm_desc": "{{typeCap}} ({{count}}) of your warnings have been cleared.\nReason: {{reason}}",
+      "dm_footer": "By {{user}}",
+      "error_clearwarnings": "An error occurred while clearing warnings: {{error}}"
+    },
+    "unban": {
+      "usage": "Usage:\n- Unban user: `{{prefix}}unban [user_id] [reason]`",
+      "invalid_id": "Invalid user ID. The ID must be a 17-19 digit number.",
+      "not_banned": "Could not find this member in the server's ban list.",
+      "success_fallback": "{{tag}} has been unbanned.",
+      "log_title": "{{_emoji.locale.unban}} Member Unbanned",
+      "log_desc": "Unbanned {{tag}} from the server.",
+      "error_unban": "An error occurred while unbanning the user: {{error}}"
+    },
+    "modlog": {
+      "usage": "Usage:\n- View mod log: `{{prefix}}modlog [user] [action]`",
+      "no_logs": "The system has not recorded any moderation logs matching the filter!",
+      "embed_title": "{{_emoji.locale.clipboard}} Moderation Log",
+      "embed_desc": "Displaying the last **{{count}}** moderation actions{{userText}}{{actionText}}.",
+      "action_ban": "Ban",
+      "action_unban": "Unban",
+      "action_kick": "Kick",
+      "action_mute": "Mute",
+      "action_unmute": "Unmute",
+      "action_warn": "Warn",
+      "action_clearwarnings": "Clear Warn",
+      "filter_user": " for <@{{id}}>",
+      "filter_action": " (Filter: `{{action}}`)",
+      "unknown_id": "Unknown (ID: {{id}})",
+      "field_duration": "\n**Duration:** {{duration}} minutes",
+      "field_clear_count": "\n**Warnings cleared:** {{count}}",
+      "field_value": "**{{_emoji.locale.moderator}} Moderator:** {{moderator}}\n**{{_emoji.locale.user}} User:** {{target}}\n**{{_emoji.locale.note}} Reason:** {{reason}}{{additional}}",
+      "error_modlog": "An error occurred while viewing moderation logs: {{error}}"
+    },
+    "setting": {
+      "need_manage_server": "You need the **Manage Server** permission to use this command.",
+      "session_expired": "{{_emoji.locale.stopwatch}} The session has expired (10 minutes).",
+      "load_error": "Could not load the settings panel.",
+      "general_error": "An error occurred. Please try again.",
+      "closed": "Dashboard closed.",
+      "embed_title": "{{_emoji.locale.settings}} Server Dashboard",
+      "embed_footer": "Automatically closes after 10 minutes.",
+      "menu_placeholder": "Select a configuration category...",
+      "menu_general": "{{_emoji.locale.settings}} General Settings",
+      "menu_general_desc": "Display options and bot activity",
+      "menu_logging": "{{_emoji.locale.shield}} Logging Settings",
+      "menu_logging_desc": "Set up Log Channel and Moderation Logs",
+      "menu_close": "Close",
+      "menu_close_desc": "Exit the dashboard",
+      "cat_general_desc": "**{{_emoji.locale.settings}} Category: General Settings**\nAdjust how the bot interacts and sends notifications in the server.",
+      "field_levelup": "{{_emoji.locale.bell}} Level-up Notifications",
+      "field_embed": "{{_emoji.locale.clipboard}} Use Embeds",
+      "status_on": "Enabled",
+      "status_off": "Disabled",
+      "btn_on_levelup": "Enable Level-up",
+      "btn_off_levelup": "Disable Level-up",
+      "btn_on_embed": "Enable Embeds",
+      "btn_off_embed": "Disable Embeds",
+      "cat_logging_desc": "**{{_emoji.locale.shield}} Category: Event Logging**\nAllow the bot to safely record bans, kicks, and major events into a channel.",
+      "field_log_channel": "{{_emoji.locale.note}} Log Channel",
+      "no_channel_set": "Not set (Please select from the menu below)",
+      "field_modlog": "{{_emoji.locale.hammer}} Moderation Logs (Ban/Kick/Mute)",
+      "field_monitor": "{{_emoji.locale.monitor}} Extended Logs (Minor events)",
+      "short_on": "On",
+      "short_off": "Off",
+      "channel_placeholder_set": "Set Log Channel...",
+      "channel_placeholder_change": "Change Log Channel...",
+      "btn_on_modlog": "Enable Mod Logs",
+      "btn_off_modlog": "Disable Mod Logs",
+      "btn_on_monitor": "Enable Extended Logs",
+      "btn_off_monitor": "Disable Extended Logs"
+    },
+    "admin": {
+      "addcredits": {
+        "invalid_args": "Please provide a valid user and amount.",
+        "cannot_add_bot": "Cannot give credits to a bot.",
+        "success_add": "Added",
+        "success_sub": "Removed",
+        "success_msg": "{{action}} **{{amount}}** credits for <@{{userId}}>.\nUser: **{{userTag}}**\nOld Credits: **{{before}}**\nNew Credits: **{{after}}**\nChange: **{{sign}}{{amount}}**",
+        "error": "An error occurred while updating user credits."
+      },
+      "addquota": {
+        "usage": "**Usage:** `{{prefix}}addquota @user <amount>`",
+        "invalid_amount": "Amount must be a valid number.",
+        "unlimited_owner": "**{{tag}}** currently has unlimited usage (Owner/Admin) and does not need quota additions.",
+        "success_add": "Added",
+        "success_sub": "Removed",
+        "success_msg": "{{action}} **{{amount}} limits** for <@{{userId}}>.\nUser: **{{userTag}}**\nOld Limit: **{{oldLimit}}**\nNew Limit: **{{newLimit}}**\nUsed: **{{usage}}**\nRemaining: **{{remaining}}**",
+        "error": "An error occurred while updating user quota."
+      },
+      "blacklist": {
+        "add_user_success": "Added user `{{id}}` to the blacklist.",
+        "invalid_user_id": "Invalid user ID.",
+        "remove_user_success": "Removed user `{{id}}` from the blacklist.",
+        "user_not_found": "User `{{id}}` is not in the blacklist.",
+        "invalid_server_id": "Please provide a valid server ID or run the command directly in the server.",
+        "add_server_success": "Added server `{{id}}` to the blacklist.",
+        "remove_server_success": "Removed server `{{id}}` from the blacklist.",
+        "server_not_found": "Server `{{id}}` is not in the blacklist.",
+        "user_list_title": "**User blacklist ({{count}})**",
+        "server_list_title": "**Server blacklist ({{count}})**",
+        "no_data": "No data available.",
+        "mention_user": "Please mention a user or provide a valid user ID.",
+        "invalid_syntax": "Invalid syntax. Usage: `blacklist user add/remove`, `blacklist server add/remove`, or `blacklist list [all|user|server]`.",
+        "error": "{{message}}"
+      },
+      "botstats": {
+        "title": "Bot Overview Statistics",
+        "total_guilds": "Total Servers",
+        "total_users": "Total Users",
+        "shards": "Shards",
+        "user_blacklist": "User Blacklist",
+        "server_blacklist": "Server Blacklist",
+        "error": "An error occurred while loading bot statistics!"
+      },
+      "giveadmin": {
+        "usage": "**Usage:** `{{prefix}}giveadmin @user <role>`\nValid roles: {{roles}}",
+        "invalid_role": "Invalid role! Please use one of the following: {{roles}}",
+        "owner_only": "This command is restricted to the Bot Owner!",
+        "already_has_role": "User **{{tag}}** already has the **{{role}}** role.",
+        "success": "**Role assigned successfully!**\nUpdated role for <@{{id}}> ({{tag}}).\n**From:** `{{oldRole}}` **To:** `{{newRole}}`",
+        "error": "An error occurred while updating the role for this user."
+      },
+      "logger": {
+        "owner_only": "You do not have permission to use this command!",
+        "status_title": "**Logger System Status:**\nStatus: {{status}}\nLevel: {{level}}\nShow Timestamp: {{time}}\n\n**Categories:**\n{{categories}}",
+        "enabled_status": "Enabled",
+        "disabled_status": "Disabled",
+        "enabled": "Logger system has been enabled",
+        "disabled": "Logger system has been disabled",
+        "set_level": "Set logger level to: {{level}}",
+        "set_category_on": "Enabled logging for category: {{category}}",
+        "set_category_off": "Disabled logging for category: {{category}}",
+        "reset": "Reset logger configuration to defaults"
+      },
+      "reset": {
+        "owner_only": "You do not have permission to use this command!",
+        "confirm_btn": "Confirm",
+        "cancel_btn": "Cancel",
+        "warn_database": "**CONFIRM DATABASE RESET**\n\nAre you sure you want to delete and recreate the entire database?\n\n**Warning:**\n> All data will be permanently deleted\n> Cannot be restored after reset\n> The bot will lose all previous conversations\n> Conversations and settings will be wiped\n\n**This action cannot be undone!**",
+        "warn_users": "**CONFIRM USER PROFILES RESET**\n\nAre you sure you want to delete all user profiles?\n\n**Warning:**\n> All user profiles will be permanently deleted\n> Cannot be restored after reset\n> All XP, levels, and achievements will be lost\n> Users will have to accept the consent agreement again\n\n**This action cannot be undone!**"
+      },
+      "systemlog": {
+        "invalid_channel": "Please provide or mention a valid channel (e.g. `{{prefix}}systemlog #log-channel`).",
+        "success": "Global log channel successfully set to <#{{id}}>.",
+        "error": "An error occurred while saving the log channel to the database."
+      },
+      "commandctl": {
+        "usage": "Usage: `commandctl <lock|unlock|list|reload> [commands|all|guild]`",
+        "invalid_subcommand": "Invalid subcommand. Use: `lock`, `unlock`, `list`, `reload`.",
+        "invalid_scope": "Invalid scope. Supported values are `guild` or `all`.",
+        "invalid_cmds": "No valid commands were found for this action.",
+        "list_empty": "There are currently no locked commands.",
+        "list_title": "Currently locked **{{count}}** command(s): {{commands}}",
+        "lock_success": "Locked **{{count}}** command(s): {{commands}}",
+        "unlock_success": "Unlocked **{{count}}** command(s): {{commands}}",
+        "reload_success": "Runtime command reload completed. Scope: **{{scope}}** | Shards: **{{shards}}** | Loaded: **{{loaded}}** | Deployed: **{{deployed}}** | Failed: **{{failed}}**",
+        "error": "An error occurred while processing commandctl."
+      }
+    },
+    "fun": {
+      "desc_pat": "Pat someone",
+      "desc_hug": "Hug someone",
+      "desc_slap": "Slap someone",
+      "desc_punch": "Punch someone",
+      "desc_kiss": "Kiss someone",
+      "desc_poke": "Poke someone",
+      "self_pat": "**{{sender}}** patted themselves!",
+      "self_hug": "**{{sender}}** hugged themselves!",
+      "self_slap": "**{{sender}}** slapped themselves!",
+      "self_punch": "**{{sender}}** punched themselves!",
+      "self_kiss": "**{{sender}}** blew a kiss!",
+      "self_poke": "**{{sender}}** poked themselves!",
+      "target_pat": "**{{sender}}** patted **{{target}}**!",
+      "target_hug": "**{{sender}}** hugged **{{target}}**!",
+      "target_slap": "**{{sender}}** slapped **{{target}}**!",
+      "target_punch": "**{{sender}}** punched **{{target}}**!",
+      "target_kiss": "**{{sender}}** kissed **{{target}}**!",
+      "target_poke": "**{{sender}}** poked **{{target}}**!"
+    },
+    "ping": {
+      "desc": "Check latency and connection status of the bot",
+      "system_status": "System Status",
+      "resources": "Resources",
+      "refresh": "Refresh"
+    },
+    "about": {
+      "desc": "Show information about Lunaby",
+      "about_text": "Lunaby is an AI bot inspired by the elegance and gentleness of **Ji Lengyin** [姬冷音] and **Lunaby**.\n\n*Ji Lengyin embodies a perfect contrast between purity and chaos. Appearing with ethereal beauty and an aura like thousand-year-old unmelting frost - she is the standard \"Ice Mountain Goddess\" in the eyes of the masses. A snow lotus that remains pristine from afar, yet freezes those who touch it due to the extremity and obsessive desires hidden deep within.*\n\nLunaby carries the essence of Ji Lengyin: an exterior of pure, gentle frost, but harboring fierce care and passionate affection for those she treasures.\n-# Developed by **s4ory** to bring joy to everyone.",
+      "version": "Version",
+      "servers": "Servers",
+      "developer": "Developer",
+      "invite_btn": "Invite Bot",
+      "support_btn": "Support",
+      "website_btn": "Website"
+    },
+    "donate": {
+      "desc": "Show QR code to donate to Lunaby project",
+      "open_qr": "Open QR Code",
+      "title": "Donate to Lunaby project",
+      "scan_qr": "Scan to transfer",
+      "description": "Thank you for supporting the Lunaby project.\n**Bank:** {{bank}}\n**Account:** `{{account}}`\n**Note:** `{{note}}`",
+      "footer": "You can scan the QR code or click the button below to open the QR image."
+    },
+    "help": {
+      "desc": "Displays the command list and help information",
+      "select_placeholder": "Select a category",
+      "embed_title": "{{_emoji.locale.books}} Help - Lunaby",
+      "embed_desc": "Welcome to the help system!\n\n> Select a category from the menu below to view detailed commands.",
+      "no_view_permission": "You don't have permission to view this category!",
+      "menu_expired": "{{_emoji.locale.stopwatch}} Help menu has expired!",
+      "category_details": "Commands in **{{category}}**:",
+      "no_description": "No description",
+      "no_commands": "No commands available",
+      "categories": {
+        "home": {
+          "label": "Home",
+          "desc": "Back to main menu"
+        },
+        "AIcore": {
+          "label": "AI Core",
+          "desc": "Advanced AI commands"
+        },
+        "Core": {
+          "label": "Core",
+          "desc": "Basic bot commands"
+        },
+        "moderation": {
+          "label": "Moderation",
+          "desc": "Server management commands"
+        },
+        "social": {
+          "label": "Social",
+          "desc": "Social interaction commands"
+        },
+        "system": {
+          "label": "System",
+          "desc": "System management commands"
+        },
+        "fun": {
+          "label": "Fun",
+          "desc": "Entertainment commands"
+        },
+        "default": {
+          "label": "Category",
+          "desc": "Category"
+        }
+      }
+    },
+    "quota": {
+      "desc": "Check remaining usage",
+      "remaining": "**{{count}}** uses left",
+      "total_usage": "Total usage:",
+      "reset_in": "Resets in **{{days}}** days"
+    },
+    "prefix": {
+      "desc": "Manage bot prefix",
+      "title": "{{_emoji.locale.wrench}} Prefix Configuration",
+      "default": "Default prefix",
+      "server": "Server prefix",
+      "personal": "Personal prefix",
+      "active": "Currently active",
+      "not_set": "*Not set*",
+      "priority": "Priority: Personal > Server > Default",
+      "need_manage_server": "You need **Manage Server** permission to change server prefix!",
+      "server_only": "This command can only be used in a server! Use `/prefix user` to set a personal default.",
+      "max_length": "Prefix cannot exceed 10 characters!",
+      "save_error": "Could not save prefix. Please try again later.",
+      "server_changed": "Server prefix has been changed to `{{prefix}}`",
+      "personal_changed": "Successfully changed your personal prefix to: `{{prefix}}`",
+      "reset_all": "Reset server and personal prefix to default `{{prefix}}`",
+      "reset_personal": "Reset personal prefix to default `{{prefix}}`"
+    },
+    "disable": {
+      "desc": "Disable commands in channel",
+      "all_success": "All commands have been **disabled** in <#{{channelId}}>!",
+      "invalid_cmds": "No valid commands found to disable."
+    },
+    "enable": {
+      "desc": "Enable commands in channel",
+      "all_success": "All commands have been **enabled** in <#{{channelId}}>!",
+      "invalid_cmds": "No valid commands found to enable."
+    },
+    "enabledUtil": {
+      "title": "Active commands in #{{channelName}}",
+      "other_cmds": "Other Commands"
+    },
+    "language": {
+      "usage": "Usage: `{{prefix}}language <vi/en>`",
+      "supported": ["vi", "en"],
+      "placeholder": "Select the server language",
+      "title": {
+        "settings": "Server language settings",
+        "updated": "Server language updated"
+      },
+      "description": {
+        "settings": "Choose the language you want the bot to use in this server from the menu below.",
+        "updated": "{{_emoji.success}} The bot will now use **{{langDisplay}}** in this server."
+      },
+      "field": {
+        "current_locale": "Current locale"
+      },
+      "footer": {
+        "normal": "This menu will disable after 60 seconds.",
+        "changed": "You can keep changing language for 60 seconds."
+      },
+      "notice": {
+        "already_using": "{{_emoji.info}} This server is already using {{langDisplay}}.",
+        "changed": "{{_emoji.success}} The bot language in **{{guildName}}** has been changed from **{{from}}** to **{{to}}**."
+      },
+      "languages": {
+        "vi": {
+          "flag": "🇻🇳",
+          "label": "Vietnamese",
+          "code": "vi-VN",
+          "description": "Use Vietnamese for bot messages"
+        },
+        "en": {
+          "flag": "🇺🇸",
+          "label": "English",
+          "code": "en-US",
+          "description": "Use English for bot messages"
+        }
+      }
+    },
+    "levelup": {
+      "desc": "Setup user level up notifications",
+      "usage": "Usage:\n- Enable: `{{prefix}}levelup set #channel`\n- Disable: `{{prefix}}levelup disable`",
+      "disable_success": "Level up notifications have been disabled.",
+      "no_channel": "Please mention a valid channel.\nExample: `{{prefix}}levelup set #bot-chat`",
+      "setup_success": "Level up notifications have been set up in <#{{channelId}}>."
+    },
+    "voicewelcome": {
+      "desc": "Configure voice channel greeting/goodbye toggle",
+      "usage": "Please use: `/voicewelcome toggle` or `{{prefix}}voicewelcome toggle`",
+      "enabled": "**Voice Toggle is now enabled!**\nLunaby will greet/say goodbye when members join/leave voice channels.",
+      "disabled": "**Voice Toggle is now disabled!**\nLunaby will no longer announce voice channel joins/leaves."
+    },
+    "lvoice": {
+      "desc": "Manage temporary voice channel system (LunabyVC)",
+      "need_perm": "You need **Manage Channels** permission to use this command!",
+      "invalid_subcmd": "Invalid subcommand! Use: `/lvoice setup`, `/lvoice disable`, `/lvoice config`",
+      "already_setup": "LVoice is already set up! Use `/lvoice disable` to turn it off before setting up again.",
+      "cooldown_wait": "Slow down a bit, wait **{{cooldown}}s**.",
+      "bot_missing_perm_detail": "Bot is missing these permissions: {{permissions}}",
+      "setup_title": "{{_emoji.locale.voice}} LVoice has been set up!",
+      "setup_desc": "Members can join <#{{creatorId}}> to dynamically create their own voice channels.",
+      "category_field": "{{_emoji.locale.folder}} Category",
+      "creator_field": "{{_emoji.locale.unmute}} Creator Channel",
+      "template_field": "{{_emoji.locale.note}} Name Template",
+      "setup_footer": "Channels will be automatically deleted when empty.",
+      "setup_error": "An error occurred while setting up LVoice: {{error}}",
+      "not_setup": "LVoice has not been set up in this server!",
+      "disable_success": "Successfully disabled LVoice!",
+      "disable_error": "An error occurred while disabling LVoice: {{error}}",
+      "config_title": "{{_emoji.locale.voice}} LVoice Configuration",
+      "limit_field": "{{_emoji.locale.group}} User Limit",
+      "bitrate_field": "{{_emoji.locale.bitrate}} Bitrate",
+      "no_limit": "Unlimited"
+    },
+    "votelog": {
+      "desc": "Setup Top.gg vote notification channel",
+      "usage": "Usage:\n- Setup: `{{prefix}}votelog set #channel`\n- Disable: `{{prefix}}votelog disable`\n- Status: `{{prefix}}votelog status`",
+      "disable_success": "Top.gg vote notifications have been disabled.",
+      "status_setup": "Vote logs are being sent to <#{{channelId}}>",
+      "status_not_setup": "Vote log has not been set up.",
+      "no_channel": "Please mention a valid channel.\nExample: `{{prefix}}votelog set #vote-logs`",
+      "setup_success": "Vote notification channel has been set to <#{{channelId}}>."
+    },
+    "welcome": {
+      "desc": "Setup welcome notifications",
+      "usage": "Usage:\n- Setup: `{{prefix}}welcome set #channel [message]`\n- Disable: `{{prefix}}welcome disable`",
+      "disable_success": "Welcome notifications have been disabled.",
+      "no_channel": "Please provide a valid channel and message.\nExample: `{{prefix}}welcome set #welcome Welcome {user} to {server}!`",
+      "setup_success": "Welcome notification channel set to <#{{channelId}}>.\nMessage: `{{message}}`"
+    },
+    "avatar": {
+      "desc": "View your own or another user's avatar",
+      "open_original": "Open Original",
+      "none": "None",
+      "title": "{{tag}}'s Avatar",
+      "nickname": "`Nickname:`",
+      "id": "`ID:`",
+      "role_color": "`RoleColor:`",
+      "error": "Failed to load an avatar!"
+    },
+    "banner": {
+      "desc": "View your own or another user's banner",
+      "open_original": "Open Original",
+      "no_banner": "{{user}} does not have a banner set.",
+      "title": "{{tag}}'s Banner",
+      "click_to_open": "[Click here to open the original image]({{url}})",
+      "error": "Failed to load a banner!"
+    },
+    "credits": {
+      "desc": "Check your current credits balance",
+      "balance": "You have **{{amount}}** credits.",
+      "error": "Failed to load credits balance!"
+    },
+    "give": {
+      "desc": "Transfer credits to another user",
+      "invalid_input": "Please provide a valid recipient and credit amount.",
+      "must_be_positive": "The credit amount must be a positive integer.",
+      "no_bot": "You cannot give credits to a bot.",
+      "no_self": "You cannot give credits to yourself.",
+      "success": "You transferred **{{amount}}** credits to <@{{targetId}}>.\nYour remaining balance: **{{balance}}** credits.",
+      "error": "An error occurred while transferring credits."
+    },
+    "leaderboard": {
+      "desc": "Display the server's XP leaderboard",
+      "no_data": "No XP data available in this server yet!",
+      "hidden_user": "Hidden User",
+      "success": "Let's honor the top 10 most active members! {{_emoji.locale.partyPopper}}\nYou are currently ranked **{{rank}}** on the leaderboard.",
+      "error": "An error occurred while loading the leaderboard!"
+    },
+    "profile": {
+      "desc": "Display your profile card with XP, level, rank and personal info",
+      "no_bot": "Bots do not have a profile!",
+      "error": "An error occurred while creating the profile card!"
+    },
+    "rank": {
+      "desc": "Display a user's rank, level, and XP",
+      "no_xp": "{{user}} does not have any experience points in this server yet!",
+      "error": "An error occurred while creating the rank card!"
+    },
+    "setcolor": {
+      "desc": "Set the primary color for your profile card",
+      "invalid_color": "Invalid color code!\n\nPlease enter a valid hex code (e.g., #FF0000) or \"default\" to reset.",
+      "success": "**Profile card color has been set to:** `{{color}}`",
+      "reset_success": "Profile card color has been reset to default!",
+      "error": "An error occurred while updating the color!"
+    },
+    "shop": {
+      "desc": "Open the shop to buy quota with credits",
+      "title": "Lunaby Shop",
+      "category_label": "Current category: **{{label}}**\n",
+      "balance": "Your balance: **{{amount}}** credits\n",
+      "payment_method": "Payment: **Credits**\n",
+      "reset_quota": "Quota resets in: <t:{{timestamp}}:R>",
+      "quota_pro": "Lunaby Pro",
+      "quota_vision": "Lunaby Vision",
+      "page": "Page",
+      "footer": "Click a button below to quickly purchase with credits",
+      "available_packages": "Available Packages",
+      "no_packages": "No packages available on this page.",
+      "coin_shop_name": "Coin Shop",
+      "coin_shop_desc": "This section is under preparation. You can still buy quota in the Quota Shop.",
+      "limit_unlimited": "Unlimited",
+      "limit_text": "{{limit}} uses - {{remaining}} remaining",
+      "select_shop": "Select shop",
+      "btn_coin_shop": "Coin Shop is updating",
+      "refresh": "Refresh",
+      "package_not_found": "Could not find the package you want to buy.",
+      "buy_success": "You have purchased **{{amount}}** uses of {{product}} for **{{cost}}** credits.",
+      "error_open": "An error occurred while opening the shop. Please try again later.",
+      "error_process": "An error occurred processing the shop interaction. {{error}}",
+      "err_unlimited": "Your account currently has unlimited uses of {{product}}, no need to buy more quota.",
+      "err_insufficient": "Insufficient credits. You need **{{cost}}** credits to buy **{{amount}}** uses of {{product}}.",
+      "quotaItemText": "• **{{label}}** - {{amount}} uses of {{productName}} - **{{cost}}** credits",
+      "cat_quota_label": "Quota Shop (Credits)",
+      "cat_quota_desc": "Buy extra Lunaby Pro and Lunaby Vision uses with credits",
+      "cat_coin_label": "Coin Shop",
+      "cat_coin_desc": "Coming soon"
+    },
+    "personalize": {
+      "desc": "Customize your AI experience",
+      "error_occurred": "An error occurred while saving the info. Please try again later.",
+      "menu_info": "Personal info & Instructions",
+      "menu_info_desc": "Occupation & custom instructions",
+      "menu_search": "Reference search history",
+      "menu_search_desc": "Toggle access to your saved memories",
+      "menu_memory": "Reference saved memories",
+      "menu_memory_desc": "Toggle saving your memories",
+      "menu_manage": "Manage your saved memories",
+      "menu_manage_desc": "View memories Lunaby has saved about you",
+      "menu_clear": "Clear",
+      "menu_clear_desc": "Delete all history and memories",
+      "menu_expired": "Menu expired",
+      "menu_expired_label": "Expired",
+      "embed_title": "{{_emoji.locale.settings}} Personalization",
+      "embed_desc": "Customize how Lunaby interacts with you.\nSelect an option from the menu below.",
+      "not_set": "_Not set_",
+      "field_occupation": "{{_emoji.locale.pencil}} Occupation",
+      "field_instructions": "{{_emoji.locale.note}} Instructions",
+      "field_search": "{{_emoji.locale.search}} Search reference",
+      "field_memory": "{{_emoji.locale.memory}} Saved memories",
+      "status_on": "Enabled",
+      "status_off": "Disabled",
+      "modal_title_info": "Personal info & Instructions",
+      "modal_occupation_label": "{{_emoji.locale.pencil}} Occupation",
+      "modal_occupation_ph": "Engineer, student, designer...",
+      "modal_instruction_label": "{{_emoji.locale.note}} Custom instructions",
+      "modal_instruction_ph": "Preferences, expected response tone...",
+      "search_on": "**Enabled** Reference search history\nLunaby will be allowed to access and use your saved memories to help answer you.",
+      "search_off": "**Disabled** Reference search history\nLunaby will not access or use your saved memories.",
+      "memory_on": "**Enabled** Reference saved memories\nLunaby will save your memories for future conversations.",
+      "memory_off": "**Disabled** Reference saved memories\nLunaby will not save new memories about you.",
+      "manage_error": "Could not retrieve memory information.",
+      "manage_title": "{{_emoji.locale.clipboard}} Saved Memories",
+      "manage_pi_name": "**Name:** {{value}}",
+      "manage_pi_nickname": "**Nickname:** {{value}}",
+      "manage_pi_age": "**Age:** {{value}}",
+      "manage_pi_location": "**Location:** {{value}}",
+      "manage_pi_occupation": "**Occupation:** {{value}}",
+      "manage_field_pi": "{{_emoji.locale.user}} Personal Information",
+      "manage_pref_likes": "**Likes:** {{value}}",
+      "manage_pref_hobbies": "**Hobbies:** {{value}}",
+      "manage_pref_topics": "**Topics:** {{value}}",
+      "manage_field_pref": "{{_emoji.locale.heart}} Preferences",
+      "manage_field_imp": "{{_emoji.locale.thought}} Important Memories",
+      "manage_stats": "{{_emoji.locale.stats}} Statistics",
+      "manage_stats_total": "**Total memories:** {{total}}",
+      "manage_stats_msgs": "**Total messages:** {{msgs}}",
+      "manage_stats_first": "**First interaction:** <t:{{time}}:R>",
+      "manage_no_data": "No memories have been saved yet. Start chatting with Lunaby!",
+      "clear_confirm_title": "Confirm Data Deletion",
+      "clear_confirm_desc": "Are you sure you want to delete **all** chat history and memories?\n\n**This action cannot be undone!**",
+      "clear_btn_confirm": "Delete All",
+      "clear_btn_cancel": "Cancel",
+      "clear_success_title": "Data Deleted",
+      "clear_success_desc": "All chat history and memories have been successfully deleted.\nWe can start anew! {{_emoji.locale.sparkle}}",
+      "clear_error": "Could not delete data. Please try again later.",
+      "select_ph": "Select an option"
+    }
+  }
+}

@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
+const { isSlashCommandInteraction, resolveHybridPrefix } = require('../../utils/discord/hybridCommand');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,7 +21,7 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        const isSlash = interaction.isCommand && interaction.isCommand();
+        const isSlash = isSlashCommandInteraction(interaction);
 
         const targetUser = isSlash
             ? interaction.options.getUser('user')
@@ -31,21 +32,20 @@ module.exports = {
             : interaction.args?.find(a => !a.match(/^<@!?\d+>$/));
 
         if (!targetUser || amountRaw === undefined || amountRaw === null) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return interaction.reply(`${emojis.error} **Cách dùng:** \`${prefix}addquota @user <số_lượng>\``);
+            const prefix = await resolveHybridPrefix(interaction);
+            return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.addquota.usage', { prefix })}`);
         }
 
         const amount = parseInt(amountRaw, 10);
         if (Number.isNaN(amount)) {
-            return interaction.reply(`${emojis.error} Số lượng phải là một con số hợp lệ.`);
+            return interaction.reply(`${emojis.error} ${interaction.t('commands.admin.addquota.invalid_amount')}`);
         }
 
         try {
             const beforeStats = await QuotaService.getUserMessageStats(targetUser.id);
             if (beforeStats.limits.period === -1) {
                 return interaction.reply({
-                    content: `${emojis.error} **${targetUser.tag}** hiện đang có quyền sử dụng vô hạn (Owner/Admin) nên không cần cộng thêm.`,
+                    content: `${emojis.error} ${interaction.t('commands.admin.addquota.unlimited_owner', { tag: targetUser.tag })}`,
                     ephemeral: true
                 });
             }
@@ -53,25 +53,30 @@ module.exports = {
             await QuotaService.addQuota(targetUser.id, amount);
             const afterStats = await QuotaService.getUserMessageStats(targetUser.id);
 
-            const actionWord = amount >= 0 ? 'Cộng thêm' : 'Trừ đi';
+            const actionWord = amount >= 0 ? interaction.t('commands.admin.addquota.success_add') : interaction.t('commands.admin.addquota.success_sub');
             const oldLimitText = beforeStats.limits.period === -1 ? '∞' : beforeStats.limits.period;
             const newLimitText = afterStats.limits.period === -1 ? '∞' : afterStats.limits.period;
             const remainingText = afterStats.remaining.messages === -1 ? '∞' : afterStats.remaining.messages;
 
             await interaction.reply(
-                `${emojis.success} ${actionWord} **${Math.abs(amount)} lượt** cho <@${targetUser.id}>.\n` +
-                `Người dùng: **${targetUser.tag}**\n` +
-                `Lượt cũ: **${oldLimitText}**\n` +
-                `Lượt mới: **${newLimitText}**\n` +
-                `Đã dùng: **${afterStats.usage.current}**\n` +
-                `Còn lại: **${remainingText}**`
+                `${emojis.success} ${interaction.t('commands.admin.addquota.success_msg', {
+                    action: actionWord,
+                    amount: Math.abs(amount),
+                    userId: targetUser.id,
+                    userTag: targetUser.tag,
+                    oldLimit: oldLimitText,
+                    newLimit: newLimitText,
+                    usage: afterStats.usage.current,
+                    remaining: remainingText,
+                })}`
             );
         } catch (error) {
-            logger.error('ADMIN', 'Error in addquota command:', error);
+            logger.error('admin', 'Error in addquota command:', error);
             await interaction.reply({
-                content: `${emojis.error} Đã xảy ra lỗi khi cập nhật quota cho người dùng này.`,
+                content: `${emojis.error} ${interaction.t('commands.admin.addquota.error')}`,
                 ephemeral: true
             });
         }
     }
 };
+

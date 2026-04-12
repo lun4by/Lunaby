@@ -1,5 +1,5 @@
 const MariaModDB = require('../database/MariaModDB');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 
 const COOLDOWN_MS = 60000;
 
@@ -63,7 +63,7 @@ class XPService {
 
       return { xpAdded: true, xpGained, totalXP: newXP, level: newLevel, leveledUp, previousLevel };
     } catch (error) {
-      logger.error('XP', 'Lỗi khi thêm XP:', error);
+      logger.error('xp', 'Error while adding XP:', error);
       return null;
     }
   }
@@ -82,7 +82,7 @@ class XPService {
         percentage: Math.round((currentLevelXP / maxLevelXP) * 100)
       };
     } catch (error) {
-      logger.error('XP', 'Lỗi khi lấy thông tin XP:', error);
+      logger.error('xp', 'Error while fetching XP information:', error);
       return null;
     }
   }
@@ -91,7 +91,7 @@ class XPService {
     try {
       return await MariaModDB.getGuildLeaderboard(guildId, limit);
     } catch (error) {
-      logger.error('XP', 'Lỗi khi lấy leaderboard:', error);
+      logger.error('xp', 'Error while fetching leaderboard:', error);
       return [];
     }
   }
@@ -100,7 +100,7 @@ class XPService {
     try {
         return await MariaModDB.getUserRank(guildId, userId);
     } catch (error) {
-      logger.error('XP', 'Lỗi khi lấy rank:', error);
+      logger.error('xp', 'Error while fetching rank:', error);
       return 0;
     }
   }

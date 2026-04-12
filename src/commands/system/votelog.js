@@ -1,7 +1,15 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const MariaModDB = require('../../services/database/MariaModDB.js');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
+const {
+    createHybridReply,
+    deferHybridReply,
+    getHybridSubcommand,
+    isSlashCommandInteraction,
+    resolveHybridPrefix,
+} = require('../../utils/discord/hybridCommand');
+const { getCachedGuildSettings } = require('../../utils/guild/guildLocale.js');
+const { updateGuildSettingsAndInvalidate } = require('../../utils/guild/guildSettings.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,44 +36,39 @@ module.exports = {
     prefix: { name: 'votelog', aliases: ['setvotelog', 'topgglog'], description: 'Cài đặt kênh thông báo vote Top.gg (chỉ Admin)' },
     cooldown: 5,
     async execute(interaction) {
-        const isSlash = interaction.isCommand && interaction.isCommand();
+        const isSlash = isSlashCommandInteraction(interaction);
         const guildId = interaction.guild?.id;
 
         if (!guildId) return;
 
-        const subCommand = interaction.options.getSubcommand();
+        const subCommand = getHybridSubcommand(interaction);
 
         if (!subCommand) {
-            const PrefixDB = require('../../services/database/PrefixDB');
-            const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+            const prefix = await resolveHybridPrefix(interaction);
             return (interaction.message || interaction).reply({
-                content: `Cách dùng:\n- Bật: \`${prefix}votelog set #channel\`\n- Tắt: \`${prefix}votelog disable\`\n- Xem trạng thái: \`${prefix}votelog status\``
+                content: interaction.t('commands.votelog.usage', { prefix })
             });
         }
 
-        if (isSlash && !interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
-        }
-
-        const replyObj = isSlash ? interaction : (interaction.message || interaction);
-        const replyFunc = isSlash ? (data) => interaction.editReply(data) : (data) => replyObj.reply(data);
+        await deferHybridReply(interaction, { ephemeral: true });
+        const replyFunc = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
 
         try {
             if (subCommand === 'disable') {
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'channels.voteLog': null
                 });
-                return replyFunc({ content: `${emojis.success} Đã tắt thông báo vote Top.gg.` });
+                return replyFunc({ content: `${emojis.success} ${interaction.t('commands.votelog.disable_success')}` });
             }
 
             if (subCommand === 'status') {
-                const settings = await MariaModDB.getGuildSettings(guildId);
+                const settings = await getCachedGuildSettings(guildId);
                 const channelId = settings.channels?.voteLog;
 
                 if (channelId) {
-                    return replyFunc({ content: `${emojis.info} Vote log đang được gửi tại <#${channelId}>` });
+                    return replyFunc({ content: `${emojis.info} ${interaction.t('commands.votelog.status_setup', { channelId })}` });
                 } else {
-                    return replyFunc({ content: `${emojis.info} Vote log chưa được thiết lập.` });
+                    return replyFunc({ content: `${emojis.info} ${interaction.t('commands.votelog.status_not_setup')}` });
                 }
             }
 
@@ -79,25 +82,24 @@ module.exports = {
                 }
 
                 if (!channel) {
-                    const PrefixDB = require('../../services/database/PrefixDB');
-                    const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
+                    const prefix = await resolveHybridPrefix(interaction);
                     return replyFunc({
-                        content: `Vui lòng cung cấp kênh hợp lệ.\nVí dụ: \`${prefix}votelog set #vote-logs\``,
+                        content: interaction.t('commands.votelog.no_channel', { prefix }),
                         ephemeral: true
                     });
                 }
 
-                await MariaModDB.updateGuildSettings(guildId, {
+                await updateGuildSettingsAndInvalidate(guildId, {
                     'channels.voteLog': channel.id
                 });
 
                 return replyFunc({
-                    content: `${emojis.success} Đã thiết lập kênh thông báo vote tại <#${channel.id}>.`
+                    content: `${emojis.success} ${interaction.t('commands.votelog.setup_success', { channelId: channel.id })}`
                 });
             }
         } catch (error) {
-            logger.error('SYSTEM', 'Error setting vote log:', error);
-            return replyFunc({ content: `${emojis.error} Đã có lỗi xảy ra khi lưu thiết lập vote log.`, ephemeral: true });
+            logger.error('system', 'Error setting vote log:', error);
+            return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
         }
     }
 };

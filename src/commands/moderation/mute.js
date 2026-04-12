@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
-const { logModAction, formatDuration } = require('../../utils/modUtils.js');
-const { sendModLog, createModActionEmbed } = require('../../utils/modLogUtils.js');
-const { handlePermissionError } = require('../../utils/permissionUtils');
-const logger = require('../../utils/logger.js');
+const { logModAction, formatDuration } = require('../../utils/moderation/modUtils.js');
+const { sendModLog, createModActionEmbed } = require('../../utils/moderation/modLogUtils.js');
+const { handlePermissionError, hasMemberPermission } = require('../../utils/discord/permissionUtils');
+const logger = require('../../utils/core/logger.js');
 const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
 
@@ -30,9 +30,9 @@ module.exports = {
     cooldown: 5,
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+        if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
-                content: `${emojis.error} Bạn không có quyền sử dụng lệnh này!`,
+                content: `${emojis.error} ${interaction.t('system.no_permission')}`,
                 ephemeral: true
             });
         }
@@ -40,24 +40,24 @@ module.exports = {
         const targetUser = interaction.options.getUser('user');
         const targetMember = interaction.options.getMember('user');
         const duration = interaction.options.getInteger('duration'); // Thời gian tính bằng phút
-        const reason = interaction.options.getString('reason') || 'Không có lý do được cung cấp';
+        const reason = interaction.options.getString('reason') || interaction.t('commands.moderation_common.no_reason');
 
         if (!targetUser || !duration) {
             const PrefixDB = require('../../services/database/PrefixDB');
             const prefix = await PrefixDB.resolvePrefix(interaction.user?.id, interaction.guild?.id);
-            return (interaction.message || interaction).reply({ content: `Cách dùng:\n- Cấm ngôn (mute): \`${prefix}mute @user [số_phút] [lý do]\`` });
+            return (interaction.message || interaction).reply({ content: interaction.t('commands.mute.usage', { prefix }) });
         }
 
         if (!targetMember) {
             return interaction.reply({
-                content: `${emojis.error} Không tìm thấy thành viên này trong server!`,
+                content: `${emojis.error} ${interaction.t('commands.moderation_common.user_not_found')}`,
                 ephemeral: true
             });
         }
 
         if (!targetMember.moderatable) {
             return interaction.reply({
-                content: `${emojis.error} Không thể thực hiện hành động này do người dùng có quyền bảo vệ cao hơn!`,
+                content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
                 ephemeral: true
             });
         }
@@ -75,8 +75,7 @@ module.exports = {
                 .replace('${username}', targetUser.username)
                 .replace('${duration}', formattedDuration)
                 .replace('${reason}', reason);
-
-            const aiResponse = await ConversationService.getOneTimeCompletion(prompt);
+            const aiResponsePromise = ConversationService.getOneTimeCompletion(prompt);
 
             await targetMember.timeout(durationMs, reason);
 
@@ -89,21 +88,24 @@ module.exports = {
                 duration: duration
             });
 
-            await interaction.editReply({ content: aiResponse });
+            const aiResponse = await aiResponsePromise;
+            await interaction.editReply({
+                content: aiResponse || `${emojis.success} ${interaction.t('commands.mute.success_fallback', { tag: targetUser.tag, duration: formattedDuration })}`,
+            });
 
             const logEmbed = createModActionEmbed({
-                title: `🔇 Đã cấm ngôn (Mute)`,
-                description: `Đã cấm ngôn ${targetUser.tag}.`,
+                title: interaction.t('commands.mute.log_title'),
+                description: interaction.t('commands.mute.log_desc', { tag: targetUser.tag }),
                 color: 0xffff00,
                 fields: [
-                    { name: '👤 Người dùng', value: `${targetUser.tag} (<@${targetUser.id}>)`, inline: true },
-                    { name: '🆔 ID', value: targetUser.id, inline: true },
-                    { name: '👮 Người xử lý', value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
-                    { name: '⏳ Thời gian phạt', value: formattedDuration, inline: true },
-                    { name: '📅 Kết thúc lúc', value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>`, inline: true },
-                    { name: '📝 Lý do', value: reason, inline: false }
+                    { name: interaction.t('commands.moderation_common.log_field_user'), value: `${targetUser.tag} (<@${targetUser.id}>)`, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_id'), value: targetUser.id, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_mod'), value: `${interaction.user.tag} (<@${interaction.user.id}>)`, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_duration'), value: formattedDuration, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_endtime'), value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>`, inline: true },
+                    { name: interaction.t('commands.moderation_common.log_field_reason'), value: reason, inline: false }
                 ],
-                footer: `Server: ${interaction.guild.name}`
+                footer: interaction.t('commands.moderation_common.log_footer', { guild: interaction.guild.name })
             });
 
             await sendModLog(interaction.guild, logEmbed, true);
@@ -111,20 +113,20 @@ module.exports = {
             try {
                 const dmEmbed = new EmbedBuilder()
                     .setColor(0xFFA500)
-                    .setTitle(`Bạn đã bị mute trong ${interaction.guild.name}`)
-                    .setDescription(`**Lý do:** ${reason}\n**Thời gian:** ${formattedDuration}\n**Kết thúc lúc:** <t:${Math.floor(endTime.getTime() / 1000)}:F>`)
-                    .setFooter({ text: `Trong thời gian mute, bạn không thể gửi tin nhắn hoặc tham gia voice chat.` })
+                    .setTitle(interaction.t('commands.mute.dm_title', { guild: interaction.guild.name }))
+                    .setDescription(interaction.t('commands.mute.dm_desc', { reason, duration: formattedDuration, time: `<t:${Math.floor(endTime.getTime() / 1000)}:F>` }))
+                    .setFooter({ text: interaction.t('commands.mute.dm_footer') })
                     .setTimestamp();
 
                 await targetUser.send({ embeds: [dmEmbed] });
             } catch (error) {
-                logger.error('MODERATION', `Không thể gửi DM cho ${targetUser.tag}`);
+                logger.error('moderation', `Failed to send DM to ${targetUser.tag}`);
             }
 
         } catch (error) {
-            logger.error('MODERATION', 'Lỗi khi mute thành viên:', error);
+            logger.error('moderation', 'Error muting member:', error);
             await interaction.editReply({
-                content: `${emojis.error} Đã xảy ra lỗi khi cấm ngôn người dùng: ${error.message}`,
+                content: `${emojis.error} ${interaction.t('commands.mute.error_mute', { error: error.message })}`,
                 ephemeral: true
             });
         }

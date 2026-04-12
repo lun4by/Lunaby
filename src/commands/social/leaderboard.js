@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const XPService = require('../../services/user/XPService');
-const { ordinalize } = require('../../utils/string.js');
+const { ordinalize } = require('../../utils/text/string.js');
 const { generateLeaderboardCard } = require('../../services/canvas/leaderboardCanvas');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
       if (leaderboard.length === 0) {
         const embed = new EmbedBuilder()
           .setColor('#FF0000')
-          .setDescription('Chưa có dữ liệu XP trong server này!');
+          .setDescription(interaction.t('commands.leaderboard.no_data'));
         return interaction.editReply({ embeds: [embed] });
       }
 
@@ -32,7 +32,7 @@ module.exports = {
           user = await interaction.client.users.fetch(leaderboard[i].userId);
         } catch (e) {
           user = {
-            tag: `Người dùng ẩn`,
+            tag: interaction.t('commands.leaderboard.hidden_user'),
             displayAvatarURL: () => 'https://cdn.discordapp.com/embed/avatars/0.png'
           };
         }
@@ -50,13 +50,13 @@ module.exports = {
       const userRank = await XPService.getUserRank(interaction.guild.id, interaction.user.id);
 
       await interaction.editReply({
-        content: `Cùng vinh danh top 10 thành viên năng động nhất server! 🎉\nBạn đang đứng thứ **${ordinalize(userRank)}** trong bảng xếp hạng.`,
+        content: interaction.t('commands.leaderboard.success', { rank: ordinalize(userRank) }),
         files: [attachment]
       });
 
     } catch (error) {
-      logger.error('LEADERBOARD', 'Error in leaderboard command:', error);
-      await interaction.editReply({ content: `${emojis.error} Đã xảy ra lỗi khi tải bảng xếp hạng!`, ephemeral: true });
+      logger.error('leaderboard', 'Error in leaderboard command:', error);
+      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.leaderboard.error')}`, ephemeral: true });
     }
   }
 };

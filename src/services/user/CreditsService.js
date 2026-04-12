@@ -1,6 +1,6 @@
 const MariaModDB = require('../database/MariaModDB');
-const logger = require('../../utils/logger');
-const Validators = require('../../utils/validators');
+const logger = require('../../utils/core/logger');
+const Validators = require('../../utils/text/validators');
 
 class CreditsService {
   async getUserCredits(userId) {
@@ -14,7 +14,7 @@ class CreditsService {
         credits
       };
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Lỗi khi lấy credits cho ${userId}:`, error);
+      logger.error('credits_service', `Error while fetching credits for ${userId}:`, error);
       throw error;
     }
   }
@@ -35,7 +35,7 @@ class CreditsService {
 
       return this.getUserCredits(userId);
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Lỗi khi cộng credits cho ${userId}:`, error);
+      logger.error('credits_service', `Error while adding credits for ${userId}:`, error);
       throw error;
     }
   }
@@ -56,7 +56,7 @@ class CreditsService {
 
       return this.getUserCredits(userId);
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Lỗi khi đặt credits cho ${userId}:`, error);
+      logger.error('credits_service', `Error while setting credits for ${userId}:`, error);
       throw error;
     }
   }
@@ -77,7 +77,7 @@ class CreditsService {
 
       return await MariaModDB.transferUserCredits(fromUserId, toUserId, normalizedAmount);
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Lỗi khi chuyển credits từ ${fromUserId} sang ${toUserId}:`, error);
+      logger.error('credits_service', `Error while transferring credits from ${fromUserId} to ${toUserId}:`, error);
       throw error;
     }
   }
@@ -104,10 +104,11 @@ class CreditsService {
 
       return await MariaModDB.purchaseQuotaWithCredits(userId, normalizedType, normalizedQuota, normalizedCost);
     } catch (error) {
-      logger.error('CREDITS_SERVICE', `Lỗi khi mua quota bằng credits cho ${userId}:`, error);
+      logger.error('credits_service', `Error while purchasing quota with credits for ${userId}:`, error);
       throw error;
     }
   }
 }
 
 module.exports = new CreditsService();
+

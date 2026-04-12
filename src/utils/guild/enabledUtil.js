@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
-const MariaModDB = require('../services/database/MariaModDB');
-const emojis = require('../config/emojis.js');
-const { COLORS } = require('./embedUtils');
+const MariaModDB = require('../../services/database/MariaModDB');
+const emojis = require('../../config/emojis.js');
+const { COLORS } = require('../discord/embedUtils');
 
 const CHECK = emojis.success;
 const CROSS = emojis.error;
@@ -11,14 +11,14 @@ exports.createEmbed = async function (interaction, channel, guildId, channelId) 
     const disabledSet = new Set(disabledCommands);
 
     const embed = new EmbedBuilder()
-        .setAuthor({ name: `Lệnh đang hoạt động tại #${channel.name}` })
+        .setAuthor({ name: interaction.t('commands.enabledUtil.title', { channelName: channel.name }) })
         .setColor(COLORS.LUNABY);
 
     const allCommands = [...interaction.client.commands.values()].filter(c => c.data.name !== 'disable' && c.data.name !== 'enable');
     const groups = {};
 
     for (const cmd of allCommands) {
-        let category = cmd.category || 'Các Lệnh Khác';
+        let category = cmd.category || interaction.t('commands.enabledUtil.other_cmds');
         category = category.charAt(0).toUpperCase() + category.slice(1);
         if (!groups[category]) groups[category] = [];
         groups[category].push(cmd.data.name);

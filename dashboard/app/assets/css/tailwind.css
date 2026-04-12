@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-paper font-sans text-ink antialiased;
+  }
+
+  * {
+    @apply border-line;
+  }
+}
+
+@layer components {
+  .dash-input {
+    @apply w-full rounded-2xl border border-line bg-white/90 px-4 py-3 text-sm text-ink outline-none transition focus:border-rose focus:ring-2 focus:ring-rose/15;
+  }
+
+  .dash-textarea {
+    @apply dash-input min-h-28 resize-y;
+  }
+
+  .dash-toggle {
+    @apply h-6 w-11 cursor-pointer appearance-none rounded-full bg-stone-300 transition after:block after:h-5 after:w-5 after:translate-x-0.5 after:rounded-full after:bg-white after:shadow after:transition after:content-[''];
+  }
+
+  .dash-toggle:checked {
+    @apply bg-rose;
+  }
+
+  .dash-toggle:checked::after {
+    transform: translateX(1.25rem);
+  }
+}

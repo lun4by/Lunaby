@@ -1,5 +1,5 @@
 const mariaClient = require('./mariaClient');
-const logger = require('../../utils/logger');
+const logger = require('../../utils/core/logger');
 const { ROLE_LIMITS, ROLE_IMAGE_LIMITS, USER_ROLES } = require('../../config/constants');
 
 const DEFAULT_QUOTA_ROLE = USER_ROLES.USER;
@@ -25,7 +25,7 @@ class QuotaDB {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
             
-            // Alter existing table to add new columns if they do not exist
+            // Sửa bảng hiện có để thêm cột mới nếu chúng chưa tồn tại
             try {
                 await mariaClient.query(`
                     ALTER TABLE user_quotas 
@@ -33,12 +33,12 @@ class QuotaDB {
                     ADD COLUMN IF NOT EXISTS total_image_usage INT DEFAULT 0, 
                     ADD COLUMN IF NOT EXISTS image_limit_period INT DEFAULT ${DEFAULT_IMAGE_LIMIT_PERIOD}
                 `);
-            } catch(e) { /* Ignore error if columns already exist (some MariaDB versions don't support IF NOT EXISTS on ALTER) */ }
+            } catch(e) { /* Bỏ qua lỗi nếu cột đã tồn tại (một số phiên bản MariaDB không hỗ trợ IF NOT EXISTS trong ALTER) */ }
             
-            logger.info('MARIADB', 'user_quotas table ready');
+            logger.info('mariadb', 'user_quotas table ready');
             return true;
         } catch (error) {
-            logger.error('MARIADB', 'Error creating user_quotas table:', error);
+            logger.error('mariadb', 'Error creating user_quotas table:', error);
             return false;
         }
     }
@@ -65,7 +65,7 @@ class QuotaDB {
                 updatedAt: Number(row.updated_at)
             };
         } catch (error) {
-            logger.error('QUOTA_DB', `Error getting user quota for ${userId}:`, error);
+            logger.error('quota_db', `Error getting user quota for ${userId}:`, error);
             throw error;
         }
     }
@@ -79,7 +79,7 @@ class QuotaDB {
             );
             return await this.getUserQuota(userId);
         } catch (error) {
-            logger.error('QUOTA_DB', `Error creating quota for ${userId}:`, error);
+            logger.error('quota_db', `Error creating quota for ${userId}:`, error);
             throw error;
         }
     }
@@ -92,7 +92,7 @@ class QuotaDB {
             );
             return true;
         } catch (error) {
-            logger.error('QUOTA_DB', `Error resetting current usage for ${userId}:`, error);
+            logger.error('quota_db', `Error resetting current usage for ${userId}:`, error);
             return false;
         }
     }
@@ -105,7 +105,7 @@ class QuotaDB {
             );
             return true;
         } catch (error) {
-            logger.error('QUOTA_DB', `Error recording usage for ${userId}:`, error);
+            logger.error('quota_db', `Error recording usage for ${userId}:`, error);
             return false;
         }
     }
@@ -118,7 +118,7 @@ class QuotaDB {
             );
             return true;
         } catch (error) {
-            logger.error('QUOTA_DB', `Error recording image usage for ${userId}:`, error);
+            logger.error('quota_db', `Error recording image usage for ${userId}:`, error);
             return false;
         }
     }
@@ -127,7 +127,7 @@ class QuotaDB {
         try {
             return await mariaClient.query('SELECT * FROM user_quotas');
         } catch (error) {
-            logger.error('QUOTA_DB', 'Error getting all users:', error);
+            logger.error('quota_db', 'Error getting all users:', error);
             throw error;
         }
     }
@@ -139,7 +139,7 @@ class QuotaDB {
             );
             return true;
         } catch (error) {
-            logger.error('QUOTA_DB', `Error adding quota for ${userId}:`, error);
+            logger.error('quota_db', `Error adding quota for ${userId}:`, error);
             throw error;
         }
     }
@@ -152,10 +152,11 @@ class QuotaDB {
             );
             return true;
         } catch (error) {
-            logger.error('QUOTA_DB', `Error setting quota limit for ${userId}:`, error);
+            logger.error('quota_db', `Error setting quota limit for ${userId}:`, error);
             throw error;
         }
     }
 }
 
 module.exports = new QuotaDB();
+
