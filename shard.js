@@ -1,6 +1,6 @@
 require('dotenv').config({ quiet: true });
 const { ShardingManager } = require('discord.js');
-const logger = require('./src/utils/logger.js');
+const logger = require('./src/utils/core/logger.js');
 
 const manager = new ShardingManager('./src/index.js', {
     token: process.env.DISCORD_TOKEN,
