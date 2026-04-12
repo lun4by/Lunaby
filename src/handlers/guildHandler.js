@@ -8,6 +8,7 @@ const { getCachedGuildSettings } = require('../utils/guildLocale.js');
 const { hasChannelPermission } = require('../utils/permissionUtils.js');
 
 const guildCommandDeployDelayMs = 1000;
+const defaultGuildProfile = { xp: { isActive: false, exceptions: [] } };
 
 const sendGlobalLog = async (client, message) => {
   const logChannelId = await MariaModDB.getBotSetting('global_log_channel');
@@ -30,7 +31,7 @@ async function storeGuildInDB(guild) {
 
     if (guild.client?.guildProfiles) {
       guild.client.guildProfiles.set(guild.id, {
-        xp: guildSettings?.xp || { isActive: false, exceptions: [] }
+        xp: guildSettings?.xp || defaultGuildProfile.xp
       });
     }
 
@@ -77,13 +78,22 @@ async function removeGuildFromDB(guildId) {
 }
 
 
-async function getGuildFromDB(guildId) {
-  try {
-    return await getCachedGuildSettings(guildId);
-  } catch (error) {
-    logger.error('guild_deploy', `Error while fetching guild data from MariaDB:`, error);
-    return null;
+async function ensureGuildAllowed(guild) {
+  const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
+  if (!blacklistEntry) {
+    return true;
   }
+
+  await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+  return false;
+}
+
+function resolveCommandsToRegister(client, commands) {
+  return commands?.length ? commands : getCommandsJson(client);
+}
+
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function findDefaultChannel(guild) {
@@ -153,15 +163,13 @@ async function handleGuildJoin(guild, commands) {
   await sendGlobalLog(guild.client, `Bot tham gia guild mới: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
 
   try {
-    const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
-    if (blacklistEntry) {
-      await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+    if (!(await ensureGuildAllowed(guild))) {
       return;
     }
 
     await ensureGuildSettings(guild);
 
-    const commandsToRegister = commands?.length ? commands : getCommandsJson(guild.client);
+    const commandsToRegister = resolveCommandsToRegister(guild.client, commands);
     if (!commandsToRegister?.length) {
       logger.error('guild_deploy', `No commands to deploy for server ${guild.name}`);
       return;
@@ -196,7 +204,7 @@ async function syncAllGuilds(client, commands = null) {
       return;
     }
 
-    const commandsToRegister = commands || getCommandsJson(client);
+    const commandsToRegister = resolveCommandsToRegister(client, commands);
     if (!commandsToRegister?.length) {
       logger.error('guild_deploy', 'No commands to deploy!');
       return;
@@ -207,9 +215,7 @@ async function syncAllGuilds(client, commands = null) {
     let deployErrors = 0;
 
     for (const guild of guilds.values()) {
-      const blacklistEntry = await BlacklistService.isGuildBlacklisted(guild.id);
-      if (blacklistEntry) {
-        await notifyBlacklistedGuildAndLeave(guild, blacklistEntry.reason);
+      if (!(await ensureGuildAllowed(guild))) {
         continue;
       }
 
@@ -223,7 +229,7 @@ async function syncAllGuilds(client, commands = null) {
       try {
         await deployCommandsToGuild(guild.id, commandsToRegister, client);
         deployCount++;
-        await new Promise((resolve) => setTimeout(resolve, guildCommandDeployDelayMs));
+        await sleep(guildCommandDeployDelayMs);
       } catch (error) {
         deployErrors++;
         logger.error('guild_deploy', `Error deploying commands for guild ${guild.name}:`, error.message);
