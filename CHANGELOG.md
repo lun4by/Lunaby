@@ -24,7 +24,7 @@
   - Cập nhật thêm locale/error handling cho moderation commands
   - Mở rộng multilingual support cho command responses và metadata
 - **`commands/Core/about.js`**: Tiếp tục tinh gọn command, dùng text đa ngôn ngữ, và chuyển support/invite/website URL sang env.
-- **`utils/blacklistUtils.js`**: Nút support server dùng `SUPPORT_SERVER_URL` từ env thay vì hardcode.
+- **`utils/discord/blacklistUtils.js`**: Nút support server dùng `SUPPORT_SERVER_URL` từ env thay vì hardcode.
 - **Logging**:
   - Làm rõ và thống nhất log messages ở nhiều service
   - Dịch nhiều error/log message tiếng Việt sang tiếng Anh để dễ debug hơn
@@ -137,7 +137,7 @@
 ### Changed
 - **`commands/Core/lunaby.js`**: Cập nhật sử dụng `createLunabyEmbed()` thay vì `EmbedBuilder` trực tiếp.
 - **`commands/Core/ping.js`**: Cập nhật sử dụng `createLunabyEmbed()`, `createStatusEmbed()`, `createDetailedEmbed()` từ `embedUtils.js`.
-- **`utils/embedUtils.js`**: Tối ưu hóa các hàm tạo embed, loại bỏ icon không cần thiết trong tiêu đề, cải thiện định dạng.
+- **`utils/discord/embedUtils.js`**: Tối ưu hóa các hàm tạo embed, loại bỏ icon không cần thiết trong tiêu đề, cải thiện định dạng.
 
 ### Migration Notes
 - Không cần thay đổi gì.
@@ -184,7 +184,7 @@
 - Chuẩn hóa logging với hệ thống logger thay thế console.error
 
 ### Added
-- `utils/embedUtils.js`: Shared utilities cho Discord embeds (colors, status maps, helpers)
+- `utils/discord/embedUtils.js`: Shared utilities cho Discord embeds (colors, status maps, helpers)
 - Status mapping helpers trong `MyAnimeListAPI.js`: `_getAnimeStatus()`, `_getMangaStatus()`, `_getSeasonName()`
 
 ### Changed
