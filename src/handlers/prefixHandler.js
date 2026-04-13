@@ -15,6 +15,7 @@ const {
 } = require('./commands/commandGuards');
 const { findCommandByPrefix } = require('./commands/commandRegistry');
 const { PseudoInteraction } = require('./commands/prefixCommandRuntime');
+const CommandNoticeService = require('../services/system/CommandNoticeService');
 
 async function handlePrefixMessage(message, client) {
   if (message.author.bot) {
@@ -105,6 +106,7 @@ async function handlePrefixMessage(message, client) {
     await command.execute(interaction);
 
     setCommandCooldown(message.author.id, resolvedCommandName, cooldownSeconds);
+    await CommandNoticeService.appendActiveNotice(interaction);
   } catch (error) {
     logger.error('prefix', `Error executing prefix command ${resolvedCommandName}:`, error);
     await message.reply(`${emojis.error} ${message.t('system.command_execution_failed')}`).catch(() => { });

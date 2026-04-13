@@ -337,6 +337,10 @@
           "label": "Moderation",
           "desc": "Các lệnh quản lý server"
         },
+        "economy": {
+          "label": "Economy",
+          "desc": "Các lệnh credits và cờ bạc"
+        },
         "social": {
           "label": "Social",
           "desc": "Các lệnh tương tác xã hội"
@@ -513,6 +517,73 @@
       "no_self": "Bạn không thể tự chuyển credits cho chính mình.",
       "success": "Bạn đã chuyển **{{amount}}** credits cho <@{{targetId}}>.\nSố dư của bạn: **{{balance}}** credits.",
       "error": "Đã xảy ra lỗi khi chuyển credits."
+    },
+    "daily": {
+      "desc": "Nhận thưởng credits hằng ngày",
+      "already_claimed": "Bạn đã nhận daily hôm nay. Thử lại vào <t:{{nextClaimAtUnix}}:R>.",
+      "claimed": "Bạn nhận **{{reward}}** credits.",
+      "streak_current": "Streak hiện tại: **{{streak}}**",
+      "streak_bonus": "Thưởng streak: **{{streakBonus}}**",
+      "balance": "Số dư mới: **{{balance}}**",
+      "next_daily": "Daily tiếp theo: <t:{{nextClaimAtUnix}}:R>",
+      "error": "Không thể nhận daily lúc này."
+    },
+    "coinflip": {
+      "desc": "Tung đồng xu để nhận hoặc mất credits",
+      "syntax": "Cú pháp: coinflip <heads|tails> <bet|all>",
+      "win": "Bạn thắng **+{{amount}}** credits!",
+      "lose": "Bạn thua **-{{amount}}** credits.",
+      "choice_vs_outcome": "Lựa chọn: **{{choice}}** | Kết quả: **{{outcome}}**",
+      "balance": "Số dư mới: **{{balance}}**",
+      "error": "Không thể xử lý coinflip lúc này."
+    },
+    "blackjack": {
+      "desc": "Đánh blackjack theo lượt hit hoặc stand",
+      "syntax": "Cú pháp: blackjack <bet|all>",
+      "started": "Ván blackjack đã bắt đầu. Chọn **Hit** hoặc **Stand**.",
+      "resumed": "Đã tiếp tục ván blackjack đang chơi.",
+      "in_progress_other_channel": "Bạn đang có một ván blackjack ở kênh khác. Hãy hoàn tất hoặc chờ timeout.",
+      "button_hit": "Hit",
+      "button_stand": "Stand",
+      "embed_title": "Blackjack",
+      "embed_bet": "Tiền cược: **{{bet}}** credits",
+      "dealer_field": "Nhà cái `[{{score}}]`",
+      "player_field": "{{user}} `[{{score}}]`",
+      "dealer_score_hidden": "{{shown}}+?",
+      "embed_footer_progress": "🎲 Ván đấu đang diễn ra",
+      "embed_footer_resumed": "🎲 Đã tiếp tục ván trước",
+      "embed_footer_timeout": "⏱ Hết thời gian, tự động stand",
+      "embed_footer_win": "🎲 Bạn thắng!",
+      "embed_footer_lose": "🎲 Bạn thua!",
+      "embed_footer_push": "🎲 Hòa tiền",
+      "embed_footer_both_bust": "🎲 Cả hai cùng quắc",
+      "result_blackjack": "BLACKJACK!",
+      "result_win": "Bạn thắng!",
+      "result_lose": "Bạn thua!",
+      "result_push": "Hòa tiền (push).",
+      "result_both_bust": "Cả hai cùng quắc, hoàn tiền cược.",
+      "bet_and_change": "Cược: **{{bet}}** | Thay đổi: **{{delta}}**",
+      "player_hand": "Bạn: **{{cards}}** ({{score}})",
+      "dealer_hand": "Nhà cái: **{{cards}}** ({{score}})",
+      "balance": "Số dư mới: **{{balance}}**",
+      "error": "Không thể xử lý blackjack lúc này."
+    },
+    "notice": {
+      "desc": "Quản lý thông báo hiển thị bên dưới mọi lệnh",
+      "syntax_create": "Cú pháp: notice create <hours> <guild|global> <message>",
+      "create_success": "Đã tạo notice #{{id}}\nPhạm vi: **{{scope}}**\nHết hạn: <t:{{expiresAtUnix}}:R>\nNội dung: {{message}}",
+      "remove_success": "Đã tắt notice #{{id}}.",
+      "remove_not_found": "Không tìm thấy notice #{{id}} hoặc notice đã tắt.",
+      "no_notice": "Không có notice nào.",
+      "status_active": "đang bật",
+      "status_inactive": "đã tắt",
+      "line": "#{{id}} [{{status}}] [{{scope}}] <t:{{expiresAtUnix}}:R> - {{message}}",
+      "error": "Không thể quản lý notice lúc này.",
+      "errors": {
+        "invalid_hours": "Thời hạn phải trong khoảng 1-720 giờ.",
+        "empty_message": "Nội dung thông báo không được để trống.",
+        "invalid_id": "ID thông báo không hợp lệ."
+      }
     },
     "leaderboard": {
       "desc": "Hiển thị bảng xếp hạng XP của server",

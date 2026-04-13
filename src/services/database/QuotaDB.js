@@ -1,6 +1,7 @@
 const mariaClient = require('./mariaClient');
 const logger = require('../../utils/core/logger');
 const { ROLE_LIMITS, ROLE_IMAGE_LIMITS, USER_ROLES } = require('../../config/constants');
+const { ensureMariaTables } = require('./mariaSchemaValidator');
 
 const DEFAULT_QUOTA_ROLE = USER_ROLES.USER;
 const DEFAULT_LIMIT_PERIOD = ROLE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
@@ -9,36 +10,11 @@ const DEFAULT_IMAGE_LIMIT_PERIOD = ROLE_IMAGE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
 class QuotaDB {
     async initTables() {
         try {
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS user_quotas (
-          user_id VARCHAR(32) PRIMARY KEY,
-          current_usage INT DEFAULT 0,
-          total_usage INT DEFAULT 0,
-          limit_period INT DEFAULT ${DEFAULT_LIMIT_PERIOD},
-          current_image_usage INT DEFAULT 0,
-          total_image_usage INT DEFAULT 0,
-          image_limit_period INT DEFAULT ${DEFAULT_IMAGE_LIMIT_PERIOD},
-          period_start BIGINT,
-          created_at BIGINT,
-          updated_at BIGINT,
-          INDEX idx_total_usage (total_usage)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-            
-            // Sửa bảng hiện có để thêm cột mới nếu chúng chưa tồn tại
-            try {
-                await mariaClient.query(`
-                    ALTER TABLE user_quotas 
-                    ADD COLUMN IF NOT EXISTS current_image_usage INT DEFAULT 0, 
-                    ADD COLUMN IF NOT EXISTS total_image_usage INT DEFAULT 0, 
-                    ADD COLUMN IF NOT EXISTS image_limit_period INT DEFAULT ${DEFAULT_IMAGE_LIMIT_PERIOD}
-                `);
-            } catch(e) { /* Bỏ qua lỗi nếu cột đã tồn tại (một số phiên bản MariaDB không hỗ trợ IF NOT EXISTS trong ALTER) */ }
-            
-            logger.info('mariadb', 'user_quotas table ready');
+            await ensureMariaTables(['user_quotas'], 'QuotaDB');
+            logger.info('mariadb', 'user_quotas table validated');
             return true;
         } catch (error) {
-            logger.error('mariadb', 'Error creating user_quotas table:', error);
+            logger.error('mariadb', 'Error validating user_quotas table:', error);
             return false;
         }
     }

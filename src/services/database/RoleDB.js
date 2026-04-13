@@ -1,22 +1,15 @@
 const mariaClient = require('./mariaClient');
 const logger = require('../../utils/core/logger');
+const { ensureMariaTables } = require('./mariaSchemaValidator');
 
 class RoleDB {
     async initTables() {
         try {
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS user_roles (
-          user_id VARCHAR(32) PRIMARY KEY,
-          role ENUM('owner', 'admin', 'pro', 'user') DEFAULT 'user',
-          created_at BIGINT,
-          updated_at BIGINT,
-          INDEX idx_role (role)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-            logger.info('mariadb', 'user_roles table ready');
+            await ensureMariaTables(['user_roles'], 'RoleDB');
+            logger.info('mariadb', 'user_roles table validated');
             return true;
         } catch (error) {
-            logger.error('mariadb', 'Error creating user_roles table:', error);
+            logger.error('mariadb', 'Error validating user_roles table:', error);
             return false;
         }
     }

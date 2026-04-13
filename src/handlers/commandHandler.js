@@ -17,6 +17,7 @@ const {
   getCommandsJson,
   loadCommands,
 } = require('./commands/commandRegistry');
+const CommandNoticeService = require('../services/system/CommandNoticeService');
 
 const handleCommand = async (interaction, client) => {
   if (!client.commands.size) {
@@ -108,6 +109,7 @@ const handleCommand = async (interaction, client) => {
     await command.execute(interaction);
 
     setCommandCooldown(interaction.user.id, commandName, cooldownSeconds);
+    await CommandNoticeService.appendActiveNotice(interaction);
   } catch (error) {
     logger.error(
       'command',

@@ -1,44 +1,16 @@
 const mariaClient = require('./mariaClient');
 const logger = require('../../utils/core/logger');
 const { SEVERITY_LEVELS } = require('../../config/constants');
+const { ensureMariaTables } = require('./mariaSchemaValidator');
 
 class MariaBlacklistDB {
     async initTables() {
         try {
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS image_blacklist (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          keyword VARCHAR(255) NOT NULL UNIQUE,
-          category VARCHAR(50) NOT NULL,
-          description TEXT,
-          severity ENUM('low','medium','high') DEFAULT 'medium',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          INDEX idx_category (category),
-          INDEX idx_keyword (keyword)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS user_blacklist (
-          user_id VARCHAR(32) NOT NULL PRIMARY KEY,
-          reason TEXT,
-          created_by VARCHAR(32),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          INDEX idx_created_at (created_at)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS guild_blacklist (
-          guild_id VARCHAR(32) NOT NULL PRIMARY KEY,
-          reason TEXT,
-          created_by VARCHAR(32),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          INDEX idx_created_at (created_at)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-            logger.info('mariadb', 'image_blacklist table ready');
+                        await ensureMariaTables(['image_blacklist', 'user_blacklist', 'guild_blacklist'], 'MariaBlacklistDB');
+                        logger.info('mariadb', 'Blacklist tables validated');
             return true;
         } catch (error) {
-            logger.error('mariadb', 'Error creating image_blacklist table:', error);
+                        logger.error('mariadb', 'Error validating blacklist tables:', error);
             return false;
         }
     }

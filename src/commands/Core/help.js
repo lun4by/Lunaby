@@ -183,6 +183,7 @@ function getCategoryMetadata(category, interaction) {
         'AIcore': { emoji: emojis.categories.aiCore },
         'Core': { emoji: emojis.categories.core },
         'moderation': { emoji: emojis.categories.moderation },
+        'economy': { emoji: emojis.categories.economy },
         'social': { emoji: emojis.categories.social },
         'system': { emoji: emojis.categories.system },
         'fun': { emoji: emojis.categories.fun },

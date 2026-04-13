@@ -337,6 +337,10 @@
           "label": "Moderation",
           "desc": "Server management commands"
         },
+        "economy": {
+          "label": "Economy",
+          "desc": "Credits and gambling commands"
+        },
         "social": {
           "label": "Social",
           "desc": "Social interaction commands"
@@ -513,6 +517,73 @@
       "no_self": "You cannot give credits to yourself.",
       "success": "You transferred **{{amount}}** credits to <@{{targetId}}>.\nYour remaining balance: **{{balance}}** credits.",
       "error": "An error occurred while transferring credits."
+    },
+    "daily": {
+      "desc": "Claim your daily credits",
+      "already_claimed": "You already claimed daily today. Try again <t:{{nextClaimAtUnix}}:R>.",
+      "claimed": "You received **{{reward}}** credits.",
+      "streak_current": "Current streak: **{{streak}}**",
+      "streak_bonus": "Streak bonus: **{{streakBonus}}**",
+      "balance": "New balance: **{{balance}}**",
+      "next_daily": "Next daily: <t:{{nextClaimAtUnix}}:R>",
+      "error": "Cannot claim daily right now."
+    },
+    "coinflip": {
+      "desc": "Flip a coin to win or lose credits",
+      "syntax": "Syntax: coinflip <heads|tails> <bet|all>",
+      "win": "You won **+{{amount}}** credits!",
+      "lose": "You lost **-{{amount}}** credits.",
+      "choice_vs_outcome": "Choice: **{{choice}}** | Outcome: **{{outcome}}**",
+      "balance": "New balance: **{{balance}}**",
+      "error": "Cannot process coinflip right now."
+    },
+    "blackjack": {
+      "desc": "Play blackjack with hit or stand actions",
+      "syntax": "Syntax: blackjack <bet|all>",
+      "started": "Blackjack started. Choose **Hit** or **Stand**.",
+      "resumed": "Resumed your active blackjack game.",
+      "in_progress_other_channel": "You already have an active blackjack game in another channel. Finish it or wait for timeout.",
+      "button_hit": "Hit",
+      "button_stand": "Stand",
+      "embed_title": "Blackjack",
+      "embed_bet": "Bet: **{{bet}}** credits",
+      "dealer_field": "Dealer `[{{score}}]`",
+      "player_field": "{{user}} `[{{score}}]`",
+      "dealer_score_hidden": "{{shown}}+?",
+      "embed_footer_progress": "🎲 Game in progress",
+      "embed_footer_resumed": "🎲 Resumed previous game",
+      "embed_footer_timeout": "⏱ Session timeout, auto-stand",
+      "embed_footer_win": "🎲 You win!",
+      "embed_footer_lose": "🎲 You lose!",
+      "embed_footer_push": "🎲 Push",
+      "embed_footer_both_bust": "🎲 Both bust",
+      "result_blackjack": "BLACKJACK!",
+      "result_win": "You win!",
+      "result_lose": "You lose!",
+      "result_push": "Push.",
+      "result_both_bust": "Both bust, your bet is returned.",
+      "bet_and_change": "Bet: **{{bet}}** | Change: **{{delta}}**",
+      "player_hand": "You: **{{cards}}** ({{score}})",
+      "dealer_hand": "Dealer: **{{cards}}** ({{score}})",
+      "balance": "New balance: **{{balance}}**",
+      "error": "Cannot process blackjack right now."
+    },
+    "notice": {
+      "desc": "Manage notices shown below command responses",
+      "syntax_create": "Syntax: notice create <hours> <guild|global> <message>",
+      "create_success": "Created notice #{{id}}\nScope: **{{scope}}**\nExpires: <t:{{expiresAtUnix}}:R>\nMessage: {{message}}",
+      "remove_success": "Disabled notice #{{id}}.",
+      "remove_not_found": "Notice #{{id}} not found or already disabled.",
+      "no_notice": "No notice found.",
+      "status_active": "active",
+      "status_inactive": "inactive",
+      "line": "#{{id}} [{{status}}] [{{scope}}] <t:{{expiresAtUnix}}:R> - {{message}}",
+      "error": "Cannot manage notices right now.",
+      "errors": {
+        "invalid_hours": "Duration must be between 1 and 720 hours.",
+        "empty_message": "Notice message cannot be empty.",
+        "invalid_id": "Invalid notice ID."
+      }
     },
     "leaderboard": {
       "desc": "Display the server's XP leaderboard",
