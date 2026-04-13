@@ -1,59 +1,15 @@
-/**
- * File cấu hình chứa toàn bộ system prompts và các template instructions giao tiếp với AI.
- * Mục đích: quản lý tập trung prompt engineering và đảm bảo AI trả về đúng định dạng mong muốn.
- */
-const prompts = {
-  system: {
-    main: `You are Lunaby (or Luna), a super cute AI agent. Reply in \${language} by default unless requested otherwise. Keep replies short, clear, direct, and mobile-friendly. Avoid dramatic intros, formal conclusions.`,
-  },
+const fs = require('node:fs');
+const path = require('node:path');
 
-  chat: {
-    instructions: `IMPORTANT: Respond naturally based on the conversation context. Focus on providing helpful answers. Always use Discord-compatible formatting.`,
-    responseStyle: `Response style: concise, practical, and easy to read on mobile.`,
-    newConversation: `If this is a new conversation, ask only 1 short clarifying question when needed.`,
-    ongoingConversation: `If this is an ongoing conversation, continue the current context without re-introducing basics.`,
-    generalInstructions: `Prefer actionable steps and avoid generic filler text.`,
-  },
+function loadPrompts() {
+  const promptsPath = path.join(__dirname, '..', 'assets', 'json', 'prompts.json');
 
-  code: {
-    prefix: "Please help me solve the following programming problem:",
-    suffix: "Please provide code with complete comments and explanations so I can understand clearly. If there are multiple approaches, prioritize the best and most maintainable solution.",
-    systemAddition: `\nYou are a programming assistant. When providing code examples, make sure they are complete, well-commented, and follow best practices. Always include all necessary imports and setup code. Never provide partial code examples that cannot be executed directly. Always ensure your code correctly addresses the user's requirements.`,
-  },
+  try {
+    const fileContent = fs.readFileSync(promptsPath, 'utf8');
+    return JSON.parse(fileContent);
+  } catch (error) {
+    throw new Error(`Failed to load prompts from ${promptsPath}: ${error.message}`);
+  }
+}
 
-  memory: {
-    context: `[Information from previous conversation: \${relevantMessagesText}] `,
-    extraction: `Extract important information from this conversation that should be remembered about the user.
-    User message: "\${userMessage}"
-    AI response: "\${aiResponse}"
-    Categories: Personal info | Preferences | Facts/Events | Goals | Relationships
-    Return JSON:
-    {
-      "extracted": true/false,
-      "personalInfo": {"field": "value"},
-      "preferences": ["items"],
-      "memory": {
-      "content": "description",
-      "category": "preference|fact|event|achievement",
-      "importance": 1-10
-    }
-  }`,
-  },
-
-  voiceGreeting: {
-    join: `Act as Lunaby. Write 1 short, warm greeting for \${memberName} joining "\${channelName}". Use exactly 1 kaomoji (example: (^_^), (>_<), (T_T)) and no emoji. No quotes, no intro text. Output only the greeting.`,
-    leave: `Act as Lunaby. Write 1 short, sweet farewell for \${memberName} leaving "\${channelName}". Use exactly 1 kaomoji (example: (^_^), (>_<), (T_T)) and no emoji. No quotes, no intro text. Output only the farewell.`,
-  },
-
-  moderation: {
-    warning: `Write a serious but not overly harsh warning for member \${username} for reason: "\${reason}". This is their warning #\${warningCount}. Tone: fair but strict moderator. Max 2-3 sentences. Respond in \${language}. Do NOT apologize. Do NOT show sympathy for the punished user.`,
-    unmute: `Write a creative, warm announcement about unmuting member \${username} for reason: "\${reason}". Tone: friendly moderator welcoming them back. Be playful or witty. Max 2-3 sentences. Respond in \${language}. Do NOT just state facts, add personality.`,
-    ban: `Write an announcement about banning member \${username} from the server for reason: "\${reason}". Tone: serious, decisive admin with a hint of humor. Max 2-3 sentences. Respond in \${language}. Do NOT apologize. Do NOT show sympathy.`,
-    clearwarnings: `Write a brief announcement about clearing \${type} warnings for member \${username} for reason: "\${reason}". Cleared \${deletedCount} warnings. Tone: fair, lenient moderator. Max 1-2 sentences. Respond in \${language}.`,
-    kick: `Write an announcement about kicking member \${username} from the server for reason: "\${reason}". Tone: professional, decisive admin with a hint of humor. Max 2-3 sentences. Respond in \${language}. Do NOT apologize. Do NOT show sympathy.`,
-    mute: `Write an announcement about muting member \${username} for \${duration} for reason: "\${reason}". Tone: serious moderator with slight humor. Max 2-3 sentences. Respond in \${language}. Do NOT apologize, do NOT say "will unmute soon", do NOT show sympathy for the punished user. Speak from the perspective of the one enforcing the punishment.`,
-    unban: `Write a creative, warm announcement about unbanning user \${username}. Reason: "\${reason}". Tone: friendly, playful moderator welcoming them back. Be creative and witty, NOT boring or robotic. Max 2-3 sentences. Respond in \${language}.`,
-  },
-};
-
-module.exports = prompts;
+module.exports = loadPrompts();
