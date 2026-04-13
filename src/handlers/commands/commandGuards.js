@@ -71,20 +71,6 @@ async function ensureCommandEnabledInChannel({
   return false;
 }
 
-async function ensureCommandUnlocked({
-  commandName,
-  isPrivileged,
-  deny,
-}) {
-  const isLocked = await MariaModDB.isCommandLocked(commandName);
-  if (!isLocked || isPrivileged) {
-    return true;
-  }
-
-  await deny();
-  return false;
-}
-
 function getRequiredMemberPermissions(command) {
   return command?.data?.default_member_permissions
     ? BigInt(command.data.default_member_permissions)
@@ -141,7 +127,6 @@ module.exports = {
   bindTranslator,
   ensureCommandCooldown,
   ensureCommandEnabledInChannel,
-  ensureCommandUnlocked,
   ensureMemberPermissions,
   ensureUserConsent,
   getCommandCooldownSeconds,

@@ -3,7 +3,6 @@ const emojis = require('../config/emojis');
 const {
   ensureCommandCooldown,
   ensureCommandEnabledInChannel,
-  ensureCommandUnlocked,
   ensureMemberPermissions,
   ensureUserConsent,
   getCommandCooldownSeconds,
@@ -59,14 +58,6 @@ const handleCommand = async (interaction, client) => {
       channelId: interaction.channelId,
       commandName,
       deny: () => deny(interaction.t('system.command_disabled_in_channel')),
-    }))) {
-      return;
-    }
-
-    if (!(await ensureCommandUnlocked({
-      commandName,
-      isPrivileged,
-      deny: () => deny(interaction.t('system.command_locked_for_maintenance')),
     }))) {
       return;
     }

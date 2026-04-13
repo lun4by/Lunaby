@@ -4,7 +4,6 @@ const emojis = require('../config/emojis');
 const {
   ensureCommandCooldown,
   ensureCommandEnabledInChannel,
-  ensureCommandUnlocked,
   ensureMemberPermissions,
   ensureUserConsent,
   getCommandCooldownSeconds,
@@ -67,14 +66,6 @@ async function handlePrefixMessage(message, client) {
       member: message.member,
       requiredPermissions: getRequiredMemberPermissions(command),
       deny: () => message.reply(`${emojis.error} ${message.t('system.missing_server_permissions')}`).catch(() => { }),
-    }))) {
-      return true;
-    }
-
-    if (!(await ensureCommandUnlocked({
-      commandName: resolvedCommandName,
-      isPrivileged,
-      deny: () => message.reply(`${emojis.error} ${message.t('system.command_locked_for_maintenance')}`).catch(() => { }),
     }))) {
       return true;
     }

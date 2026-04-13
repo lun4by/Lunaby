@@ -49,4 +49,3 @@ module.exports = {
         return replyFunc({ content: responseMessage });
     },
 };
-

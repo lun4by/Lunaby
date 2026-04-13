@@ -129,13 +129,6 @@ CREATE TABLE IF NOT EXISTS command_toggles (
   INDEX idx_guild_channel (guild_id, channel_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS command_locks (
-  command_name VARCHAR(50) PRIMARY KEY,
-  reason VARCHAR(255) DEFAULT NULL,
-  updated_by VARCHAR(32),
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 CREATE TABLE IF NOT EXISTS bot_settings (
   setting_key VARCHAR(50) PRIMARY KEY,
   setting_value VARCHAR(255),

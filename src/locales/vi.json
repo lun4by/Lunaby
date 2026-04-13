@@ -10,7 +10,6 @@
     "quota_exceeded": "**Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Pro trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.",
     "quota_exceeded_image": "**Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Vision trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.",
     "command_disabled_in_channel": "Lệnh này đã bị tắt trong kênh này.",
-    "command_locked_for_maintenance": "Lệnh này đang bị khóa để bảo trì, vui lòng thử lại sau.",
     "missing_server_permissions": "Bạn không có đủ quyền trong server để sử dụng lệnh này.",
     "cooldown_wait": "Bạn phải chờ <t:{{expiresAtUnix}}:R> mới được dùng lệnh tiếp!",
     "command_execution_failed": "Đã xảy ra lỗi khi thực thi lệnh này!",
@@ -252,18 +251,6 @@
         "invalid_channel": "Vui lòng cung cấp hoặc mention một kênh hợp lệ (VD: `{{prefix}}systemlog #log-channel`).",
         "success": "Đã thiết lập kênh log global thành công tại <#{{id}}>.",
         "error": "Đã xảy ra lỗi khi lưu thiết lập kênh log vào database."
-      },
-      "commandctl": {
-        "usage": "Cú pháp: `commandctl <lock|unlock|list|reload> [commands|all|guild]`",
-        "invalid_subcommand": "Subcommand không hợp lệ. Dùng: `lock`, `unlock`, `list`, `reload`.",
-        "invalid_scope": "Scope không hợp lệ. Chỉ hỗ trợ `guild` hoặc `all`.",
-        "invalid_cmds": "Không tìm thấy lệnh hợp lệ để thao tác.",
-        "list_empty": "Hiện không có lệnh nào đang bị khóa.",
-        "list_title": "Đang khóa **{{count}}** lệnh: {{commands}}",
-        "lock_success": "Đã khóa **{{count}}** lệnh: {{commands}}",
-        "unlock_success": "Đã mở khóa **{{count}}** lệnh: {{commands}}",
-        "reload_success": "Reload command runtime thành công. Scope: **{{scope}}** | Shards: **{{shards}}** | Loaded: **{{loaded}}** | Deployed: **{{deployed}}** | Failed: **{{failed}}**",
-        "error": "Đã xảy ra lỗi khi xử lý commandctl."
       }
     },
     "fun": {
