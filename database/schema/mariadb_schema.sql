@@ -1,6 +1,6 @@
 -- Lunaby MariaDB schema
 -- Apply manually before starting bot:
---   mariadb -h <host> -u <user> -p <database> < src/database/schema/mariadb_schema.sql
+--   mariadb -h <host> -u <user> -p <database> < database/schema/mariadb_schema.sql
 
 CREATE TABLE IF NOT EXISTS image_blacklist (
   id INT AUTO_INCREMENT PRIMARY KEY,

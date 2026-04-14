@@ -1,7 +1,7 @@
 const path = require('path');
 const mariaClient = require('./mariaClient');
 
-const SCHEMA_SQL_PATH = path.join('src', 'database', 'schema', 'mariadb_schema.sql');
+const SCHEMA_SQL_PATH = path.join('database', 'schema', 'mariadb_schema.sql');
 
 async function findMissingTables(tables) {
   const missing = [];

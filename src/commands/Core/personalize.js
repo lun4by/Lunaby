@@ -27,12 +27,18 @@ function isPrivacyEnabled(value) {
     return true;
 }
 
-const ACTION_BUTTONS = [
-    { customId: 'personalize_personal_info', labelKey: 'commands.personalize.menu_info', emoji: emojis.personalize.info, style: ButtonStyle.Secondary },
-    { customId: 'personalize_toggle_search', labelKey: 'commands.personalize.menu_search', emoji: emojis.personalize.search, style: ButtonStyle.Secondary },
-    { customId: 'personalize_toggle_memory', labelKey: 'commands.personalize.menu_memory', emoji: emojis.personalize.memory, style: ButtonStyle.Secondary },
-    { customId: 'personalize_clear', labelKey: 'commands.personalize.menu_clear', emoji: emojis.personalize.clear, style: ButtonStyle.Danger },
-];
+function truncateText(text, maxLength = 120) {
+    if (!text) return text;
+    return text.length > maxLength ? `${text.substring(0, maxLength - 3)}...` : text;
+}
+
+function formatProfileValue(value, fallback) {
+    if (!value || value === fallback) {
+        return `*${fallback}*`;
+    }
+
+    return truncateText(value, 120);
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -47,7 +53,7 @@ module.exports = {
         const memory = await MemoryService.getUserMemory(userId);
 
         const mainEmbed = buildMainEmbed(memory, interaction);
-        const rows = buildActionButtonRows(interaction);
+        const rows = buildActionButtonRows(interaction, memory);
 
         await interaction.reply({
             embeds: [mainEmbed],
@@ -86,45 +92,98 @@ module.exports = {
 
         collector.on('end', async () => {
             try {
-                await interaction.editReply({ components: buildActionButtonRows(interaction, true) });
+                const latestMemory = await MemoryService.getUserMemory(userId);
+                await interaction.editReply({ components: buildActionButtonRows(interaction, latestMemory, true) });
             } catch { }
         });
     },
 };
 
 function buildMainEmbed(memory, interaction) {
-    const occupation = memory?.personalInfo?.occupation || interaction.t('commands.personalize.not_set');
-    const instructions = memory?.personalInfo?.customInstructions || interaction.t('commands.personalize.not_set');
+    const baseDescription = interaction
+        .t('commands.personalize.embed_desc')
+        .replace('menu bên dưới', 'các nút bên dưới');
+    const notSetText = interaction.t('commands.personalize.not_set');
+    const occupation = memory?.personalInfo?.occupation || notSetText;
+    const instructions = memory?.personalInfo?.customInstructions || notSetText;
     const searchHistory = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
     const savedMemory = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
+
+    const occupationValue = formatProfileValue(occupation, notSetText);
+    const instructionsValue = formatProfileValue(instructions, notSetText);
+    const searchStatus = searchHistory
+        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
+        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
+    const memoryStatus = savedMemory
+        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
+        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
 
     return new EmbedBuilder()
         .setColor(COLORS.LUNABY)
         .setTitle(interaction.t('commands.personalize.embed_title'))
-        .setDescription(interaction.t('commands.personalize.embed_desc'))
+        .setDescription([
+            baseDescription,
+            '',
+            `${emojis.personalize.info} Cập nhật hồ sơ cá nhân để Lunaby trả lời phù hợp hơn.`,
+            `${emojis.personalize.memory} Dùng các nút bên dưới để bật/tắt từng chế độ ngay lập tức.`
+        ].join('\n'))
         .addFields(
-            { name: interaction.t('commands.personalize.field_occupation'), value: occupation, inline: true },
-            { name: interaction.t('commands.personalize.field_instructions'), value: instructions.length > 80 ? instructions.substring(0, 80) + '...' : instructions, inline: true },
+            {
+                name: `${emojis.personalize.info} ${interaction.t('commands.personalize.field_occupation')}`,
+                value: occupationValue,
+                inline: true,
+            },
+            {
+                name: `${emojis.personalize.manage} ${interaction.t('commands.personalize.field_instructions')}`,
+                value: instructionsValue,
+                inline: true,
+            },
             { name: '\u200B', value: '\u200B' },
-            { name: interaction.t('commands.personalize.field_search'), value: searchHistory ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}` : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`, inline: true },
-            { name: interaction.t('commands.personalize.field_memory'), value: savedMemory ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}` : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`, inline: true },
+            {
+                name: `${emojis.personalize.search} ${interaction.t('commands.personalize.field_search')}`,
+                value: searchStatus,
+                inline: true,
+            },
+            {
+                name: `${emojis.personalize.memory} ${interaction.t('commands.personalize.field_memory')}`,
+                value: memoryStatus,
+                inline: true,
+            },
         )
+        .setThumbnail(interaction.user.displayAvatarURL({ size: 128 }))
+        .setFooter({ text: `@${interaction.user.username}` })
         .setTimestamp();
 }
 
-function buildActionButtonRows(interaction, disabled = false) {
-    const row = new ActionRowBuilder();
-
-    for (const button of ACTION_BUTTONS) {
-        row.addComponents(
-            new ButtonBuilder()
-                .setCustomId(button.customId)
-                .setLabel(interaction.t(button.labelKey))
-                .setEmoji(button.emoji)
-                .setStyle(button.style)
-                .setDisabled(disabled)
-        );
-    }
+function buildActionButtonRows(interaction, memory = null, disabled = false) {
+    const searchEnabled = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
+    const memoryEnabled = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('personalize_personal_info')
+            .setLabel(interaction.t('commands.personalize.menu_info'))
+            .setEmoji(emojis.personalize.info)
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(disabled),
+        new ButtonBuilder()
+            .setCustomId('personalize_toggle_search')
+            .setLabel(interaction.t('commands.personalize.menu_search'))
+            .setEmoji(emojis.personalize.search)
+            .setStyle(searchEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
+            .setDisabled(disabled),
+        new ButtonBuilder()
+            .setCustomId('personalize_toggle_memory')
+            .setLabel(interaction.t('commands.personalize.menu_memory'))
+            .setEmoji(emojis.personalize.memory)
+            .setStyle(memoryEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
+            .setDisabled(disabled),
+        new ButtonBuilder()
+            .setCustomId('personalize_clear')
+            .setLabel(interaction.t('commands.personalize.menu_clear'))
+            .setEmoji(emojis.personalize.clear)
+            .setStyle(ButtonStyle.Danger)
+            .setDisabled(disabled)
+    );
 
     return [row];
 }
@@ -180,7 +239,7 @@ async function showPersonalInfoModal(i, userId, interaction) {
         const updatedMemory = await MemoryService.getUserMemory(userId);
         await modalInteraction.update({
             embeds: [buildMainEmbed(updatedMemory, interaction)],
-            components: buildActionButtonRows(interaction),
+            components: buildActionButtonRows(interaction, updatedMemory),
         });
     } catch { }
 }
@@ -198,7 +257,7 @@ async function handleToggleSearch(i, userId, interaction) {
                 buildMainEmbed(latestMemory, interaction),
                 new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.error_occurred')).setTimestamp(),
             ],
-            components: buildActionButtonRows(interaction),
+            components: buildActionButtonRows(interaction, latestMemory),
         });
     }
 
@@ -214,7 +273,7 @@ async function handleToggleSearch(i, userId, interaction) {
 
     await i.update({
         embeds: [buildMainEmbed(updatedMemory, interaction), embed],
-        components: buildActionButtonRows(interaction),
+        components: buildActionButtonRows(interaction, updatedMemory),
     });
 
     autoRemoveNotification(i, updatedMemory, interaction);
@@ -233,7 +292,7 @@ async function handleToggleMemory(i, userId, interaction) {
                 buildMainEmbed(latestMemory, interaction),
                 new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.error_occurred')).setTimestamp(),
             ],
-            components: buildActionButtonRows(interaction),
+            components: buildActionButtonRows(interaction, latestMemory),
         });
     }
 
@@ -249,7 +308,7 @@ async function handleToggleMemory(i, userId, interaction) {
 
     await i.update({
         embeds: [buildMainEmbed(updatedMemory, interaction), embed],
-        components: buildActionButtonRows(interaction),
+        components: buildActionButtonRows(interaction, updatedMemory),
     });
 
     autoRemoveNotification(i, updatedMemory, interaction);
@@ -314,7 +373,7 @@ async function handleButtonClick(i, userId, interaction) {
             const updatedMemory = await MemoryService.getUserMemory(userId);
             await i.update({
                 embeds: [buildMainEmbed(updatedMemory, interaction), successEmbed],
-                components: buildActionButtonRows(interaction),
+                components: buildActionButtonRows(interaction, updatedMemory),
             });
 
             autoRemoveNotification(i, updatedMemory, interaction);
@@ -322,16 +381,17 @@ async function handleButtonClick(i, userId, interaction) {
             logger.info('personalize', `User ${interaction.user.tag} cleared all data`);
         } catch (error) {
             logger.error('personalize', 'Error clearing data:', error);
+            const latestMemory = await MemoryService.getUserMemory(userId);
             await i.update({
                 embeds: [new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.clear_error'))],
-                components: buildActionButtonRows(interaction),
+                components: buildActionButtonRows(interaction, latestMemory),
             });
         }
     } else if (i.customId === 'personalize_clear_cancel') {
         const updatedMemory = await MemoryService.getUserMemory(userId);
         await i.update({
             embeds: [buildMainEmbed(updatedMemory, interaction)],
-            components: buildActionButtonRows(interaction),
+            components: buildActionButtonRows(interaction, updatedMemory),
         });
     }
 }
@@ -341,7 +401,7 @@ function autoRemoveNotification(i, memory, interaction) {
         try {
             await i.editReply({
                 embeds: [buildMainEmbed(memory, interaction)],
-                components: buildActionButtonRows(interaction),
+                components: buildActionButtonRows(interaction, memory),
             });
         } catch { }
     }, 5000);
