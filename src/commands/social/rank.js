@@ -1,4 +1,4 @@
-const {SlashCommandBuilder, MessageFlags} = require('discord.js');
+const {SlashCommandBuilder} = require('discord.js');
 const XPService = require('../../services/user/XPService');
 const generateRankCard = require('../../services/canvas/rankCanvas.js');
 const { ordinalize } = require('../../utils/text/string.js');
@@ -53,7 +53,7 @@ module.exports = {
       await interaction.editReply({ content: '', files: [attachment] });
     } catch (error) {
       logger.error('rank', 'Error in rank command:', error);
-      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.rank.error')}`, flags: MessageFlags.Ephemeral });
+      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.rank.error')}` });
     }
   }
 };

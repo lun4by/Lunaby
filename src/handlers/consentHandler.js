@@ -1,3 +1,4 @@
+const { MessageFlags } = require('discord.js');
 const consentService = require('../services/user/consentService');
 const i18nManager = require('../services/i18n/i18nManager');
 const logger = require('../utils/core/logger.js');

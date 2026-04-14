@@ -1,3 +1,4 @@
+const { MessageFlags } = require('discord.js');
 const logger = require('../utils/core/logger.js');
 const emojis = require('../config/emojis');
 const {

@@ -1,3 +1,4 @@
+const { MessageFlags } = require('discord.js');
 const storageDB = require('../services/database/storagedb.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 const emojis = require('../config/emojis.js');

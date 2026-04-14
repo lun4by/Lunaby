@@ -1,3 +1,5 @@
+const { MessageFlags } = require('discord.js');
+
 function isSlashCommandInteraction(interaction) {
   return Boolean(interaction?.isChatInputCommand?.());
 }
@@ -7,7 +9,8 @@ function normalizeHybridPayload(payload, isSlash) {
     return payload;
   }
 
-  const { ephemeral, ...safePayload } = payload;
+  // Prefix/message replies do not support interaction-specific visibility flags.
+  const { ephemeral, flags, ...safePayload } = payload;
   return safePayload;
 }
 
