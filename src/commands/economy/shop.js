@@ -1,12 +1,13 @@
 const {
   SlashCommandBuilder,
-  ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ContainerBuilder,
+  MessageFlags,
 } = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
 const QuotaService = require('../../services/user/QuotaService');
-const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
+const { COLORS } = require('../../utils/discord/embedUtils');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 const {
@@ -126,78 +127,44 @@ function buildShopSection(items, type, credits, stats, interaction) {
     .join('\n\n');
 }
 
-function buildShopEmbed(user, credits, stats, state, interaction) {
+function buildShopHeaderText(user, credits, stats, state, interaction) {
   const resetTimestamp = Math.floor(stats.nextReset / 1000);
   const totalPages = getTotalPages();
+  const pageLabel = interaction.t('commands.shop.page');
 
-  const embed = createLunabyEmbed()
-    .setTitle('Lunaby Credit Market')
-    .setAuthor({
-      name: user.globalName || user.username,
-      iconURL: user.displayAvatarURL({ size: 128 }),
-    })
-    .setThumbnail(user.displayAvatarURL({ size: 256 }))
-    .setDescription(
-      `Mở rộng quota bằng credits ngay trong chat.\n` +
-      `Kỳ reset tiếp theo: <t:${resetTimestamp}:R>`
-    )
-    .addFields(
-      {
-        name: 'Ví credits',
-        value:
-          `Số dư hiện tại: **${formatNumber(credits)}** credits\n` +
-          `Trang: **${state.page + 1}/${totalPages}**`,
-        inline: true,
-      },
-      {
-        name: 'Bảng giá',
-        value:
-          `Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt\n` +
-          `Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
-        inline: true,
-      },
-      {
-        name: 'Hạn mức hiện tại',
-        value:
-          `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages, interaction)}\n` +
-          `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction)}`,
-        inline: false,
-      },
-    )
-    .setFooter({ text: 'Dùng < > để đổi trang, Làm mới để cập nhật realtime' });
-
-  const pageItems = getPageItems(state.page);
-  const proSection = buildShopSection(pageItems, 'chat', credits, stats, interaction);
-  const visionSection = buildShopSection(pageItems, 'image', credits, stats, interaction);
-
-  embed.addFields(
-    {
-      name: 'Gói Lunaby Pro',
-      value: proSection,
-      inline: false,
-    },
-    {
-      name: 'Gói Lunaby Vision',
-      value: visionSection,
-      inline: false,
-    }
-  );
-
-  return embed;
+  return [
+    `## Lunaby Credit Market`,
+    `Mở rộng quota bằng credits ngay trong chat.`,
+    `Kỳ reset tiếp theo: <t:${resetTimestamp}:R>`,
+    '',
+    `**Ví credits**`,
+    `Số dư hiện tại: **${formatNumber(credits)}** credits`,
+    `${pageLabel}: **${state.page + 1}/${totalPages}**`,
+    '',
+    `**Bảng giá**`,
+    `Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt`,
+    `Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
+    '',
+    `**Hạn mức hiện tại**`,
+    `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages, interaction)}`,
+    `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction)}`,
+    '',
+    `Dùng < > để đổi trang, Làm mới để cập nhật realtime • ${user.globalName || user.username}`,
+  ].join('\n');
 }
 
-function buildItemRows(state, credits, stats, interaction, disabled = false) {
+function buildItemButtonRows(state, credits, stats, interaction, disabled = false) {
   const rows = [];
   const pageItems = getPageItems(state.page);
   const buttonGroups = chunkArray(pageItems, 3);
 
   for (const group of buttonGroups) {
-    const row = new ActionRowBuilder();
+    const rowButtons = [];
 
     for (const item of group) {
       const itemState = getItemState(item, credits, stats, interaction);
 
-      row.addComponents(
+      rowButtons.push(
         new ButtonBuilder()
           .setCustomId(`shop_buy_${item.id}`)
           .setLabel(`${item.label} (${formatNumber(itemState.totalCost)})`)
@@ -206,17 +173,17 @@ function buildItemRows(state, credits, stats, interaction, disabled = false) {
       );
     }
 
-    rows.push(row);
+    rows.push(rowButtons);
   }
 
   return rows;
 }
 
-function buildNavigationRow(state, interaction, disabled = false) {
+function buildNavigationButtons(state, interaction, disabled = false) {
   const totalPages = getTotalPages();
   const singlePage = totalPages <= 1;
 
-  return new ActionRowBuilder().addComponents(
+  return [
     new ButtonBuilder()
       .setCustomId('shop_prev')
       .setLabel('<')
@@ -232,16 +199,42 @@ function buildNavigationRow(state, interaction, disabled = false) {
       .setLabel('>')
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(disabled || singlePage || state.page >= totalPages - 1)
+  ];
+}
+
+function buildShopComponents(user, credits, stats, state, interaction, disabled = false) {
+  const pageItems = getPageItems(state.page);
+  const proSection = buildShopSection(pageItems, 'chat', credits, stats, interaction);
+  const visionSection = buildShopSection(pageItems, 'image', credits, stats, interaction);
+
+  const container = new ContainerBuilder()
+    .setAccentColor(COLORS.LUNABY)
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(buildShopHeaderText(user, credits, stats, state, interaction))
+    )
+    .addSeparatorComponents((separator) => separator)
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(`### Gói Lunaby Pro\n${proSection}`)
+    )
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(`### Gói Lunaby Vision\n${visionSection}`)
+    );
+
+  const itemRows = buildItemButtonRows(state, credits, stats, interaction, disabled);
+  for (const rowButtons of itemRows) {
+    container.addActionRowComponents((actionRow) => actionRow.setComponents(...rowButtons));
+  }
+
+  container.addActionRowComponents((actionRow) =>
+    actionRow.setComponents(...buildNavigationButtons(state, interaction, disabled))
   );
+
+  return [container];
 }
 
 function buildShopMessage(user, credits, stats, state, interaction, disabled = false) {
   return {
-    embeds: [buildShopEmbed(user, credits, stats, state, interaction)],
-    components: [
-      ...buildItemRows(state, credits, stats, interaction, disabled),
-      buildNavigationRow(state, interaction, disabled),
-    ],
+    components: buildShopComponents(user, credits, stats, state, interaction, disabled),
   };
 }
 
@@ -315,13 +308,16 @@ module.exports = {
     try {
       const initialData = await loadShopState(user, currentState);
 
-      await interaction.reply(buildShopMessage(
-        user,
-        initialData.credits,
-        initialData.quotaStats,
-        initialData.state,
-        interaction
-      ));
+      await interaction.reply({
+        ...buildShopMessage(
+          user,
+          initialData.credits,
+          initialData.quotaStats,
+          initialData.state,
+          interaction
+        ),
+        flags: MessageFlags.IsComponentsV2,
+      });
 
       const message = await interaction.fetchReply();
       const collector = message.createMessageComponentCollector({ time: SHOP_TIMEOUT_MS });
