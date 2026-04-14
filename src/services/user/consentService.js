@@ -1,9 +1,9 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const mariaClient = require('../database/mariaClient');
 const logger = require('../../utils/core/logger.js');
 const { handlePermissionError, sendEmbedWithFallback, isMissingPermissionError } = require('../../utils/discord/permissionUtils');
 
-const { createEmbed } = require('../../utils/discord/builderFactory');
+const { createEmbed, createContainer } = require('../../utils/discord/builderFactory');
 class ConsentService {
   async hasUserConsented(userId) {
     try {
@@ -17,44 +17,51 @@ class ConsentService {
 
 
   createConsentEmbed(user) {
-    const embed = createEmbed()
-      .setTitle('Chào mừng bạn đến với Lunaby AI')
-      .setDescription(
-        `Xin chào **${user.username}**!\n\n` +
-        `Mình là **Lunaby**, AI assistant sẵn sàng hỗ trợ bạn.\n\n` +
-        `Để sử dụng dịch vụ, bạn cần đồng ý với các điều khoản sau:\n\n` +
-        `**Dữ liệu được thu thập**\n` +
-        `> Tin nhắn trò chuyện・Thông tin cơ bản (username, ID)・Dữ liệu XP và level\n\n` +
-        `**Cam kết bảo mật**\n` +
-        `> Dữ liệu được mã hóa và bảo mật\n` +
-        `> Không chia sẻ với bên thứ ba\n` +
-        `> Có thể xóa dữ liệu bất cứ lúc nào\n\n` +
-        `**Bạn có đồng ý sử dụng dịch vụ Lunaby AI không?**`
+    const consentContainer = createContainer()
+      .setAccentColor(0x5865F2)
+      .addSectionComponents((section) =>
+        section
+          .addTextDisplayComponents(
+            (textDisplay) => textDisplay.setContent(`## Chào mừng bạn đến với Lunaby AI`),
+            (textDisplay) => textDisplay.setContent(`Xin chào **${user.username}**!`)
+          )
+          .setThumbnailAccessory((thumbnail) =>
+            thumbnail.setURL(user.displayAvatarURL({ extension: 'png', size: 512 }))
+          )
       )
-      .setColor(0x5865F2)
-      .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512 }))
-      .setFooter({ text: 'Lunaby AI • Developed by s4ory' })
-      .setTimestamp();
-
-    const row = new ActionRowBuilder()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(`consent_accept_${user.id}`)
-          .setLabel('Chấp thuận')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(`consent_decline_${user.id}`)
-          .setLabel('Từ chối')
-          .setStyle(ButtonStyle.Danger)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          `Mình là **Lunaby**, AI assistant sẵn sàng hỗ trợ bạn.\n\n` +
+          `Để sử dụng dịch vụ, bạn cần đồng ý với các điều khoản sau:\n\n` +
+          `**Dữ liệu được thu thập**\n` +
+          `> Tin nhắn trò chuyện・Thông tin cơ bản (username, ID)・Dữ liệu XP và level\n\n` +
+          `**Cam kết bảo mật**\n` +
+          `> Dữ liệu được mã hóa và bảo mật\n` +
+          `> Không chia sẻ với bên thứ ba\n` +
+          `> Có thể xóa dữ liệu bất cứ lúc nào\n\n` +
+          `**Bạn có đồng ý sử dụng dịch vụ Lunaby AI không?**`
+        )
+      )
+      .addActionRowComponents((actionRow) =>
+        actionRow.setComponents(
+          new ButtonBuilder()
+            .setCustomId(`consent_accept_${user.id}`)
+            .setLabel('Chấp thuận')
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`consent_decline_${user.id}`)
+            .setLabel('Từ chối')
+            .setStyle(ButtonStyle.Danger)
+        )
       );
 
-    return { embeds: [embed], components: [row] };
+    return { components: [consentContainer], flags: MessageFlags.IsComponentsV2 };
   }
 
 
   async sendConsentEmbed(interaction, user) {
     const embedData = this.createConsentEmbed(user);
-    return await sendEmbedWithFallback(interaction, embedData, user.username, 'embedLinks', 'reply');
+    return await sendEmbedWithFallback(interaction, embedData, user.username, 'sendMessages', 'reply');
   }
 
 

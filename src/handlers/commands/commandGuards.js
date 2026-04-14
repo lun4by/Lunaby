@@ -42,7 +42,7 @@ async function ensureUserConsent(target, user) {
     await target.reply(consentData);
   } catch (error) {
     if (isMissingPermissionError(error)) {
-      await handlePermissionError(target, 'embedLinks', user.username, 'reply');
+      await handlePermissionError(target, 'sendMessages', user.username, 'reply');
       return false;
     }
 
