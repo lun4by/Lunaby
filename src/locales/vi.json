@@ -299,7 +299,7 @@
       "desc": "Hiển thị danh sách lệnh và thông tin trợ giúp",
       "select_placeholder": "Chọn một danh mục",
       "embed_title": "{{_emoji.locale.books}} Trợ Giúp - Lunaby",
-      "embed_desc": "Chào mừng bạn đến với hệ thống trợ giúp!\n\n> Chọn một danh mục từ menu bên dưới để xem chi tiết các lệnh.",
+      "embed_desc": "Chào mừng bạn đến với hệ thống trợ giúp!\n\n> Chọn một danh mục từ menu phía trên để xem chi tiết các lệnh.",
       "no_view_permission": "Bạn không có quyền xem danh mục này!",
       "menu_expired": "{{_emoji.locale.stopwatch}} Menu trợ giúp đã hết hạn!",
       "category_details": "Chi tiết các lệnh trong danh mục **{{category}}**:",

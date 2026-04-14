@@ -299,7 +299,7 @@
       "desc": "Displays the command list and help information",
       "select_placeholder": "Select a category",
       "embed_title": "{{_emoji.locale.books}} Help - Lunaby",
-      "embed_desc": "Welcome to the help system!\n\n> Select a category from the menu below to view detailed commands.",
+      "embed_desc": "Welcome to the help system!\n\n> Select a category from the menu above to view detailed commands.",
       "no_view_permission": "You don't have permission to view this category!",
       "menu_expired": "{{_emoji.locale.stopwatch}} Help menu has expired!",
       "category_details": "Commands in **{{category}}**:",
