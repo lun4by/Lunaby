@@ -98,25 +98,8 @@ function getLimitText(limit, remaining, interaction) {
   return `${formatNumber(limit)} lượt • còn ${formatNumber(remaining)} lượt`;
 }
 
-function getItemStatus(itemState) {
-  if (itemState.isUnlimited) {
-    return { icon: '∞', text: 'Đã vô hạn' };
-  }
-
-  if (itemState.isAffordable) {
-    return { icon: '✓', text: 'Mua được' };
-  }
-
-  return { icon: '✕', text: 'Thiếu credits' };
-}
-
 function buildShopItemSectionText(item, itemState) {
-  const status = getItemStatus(itemState);
-
-  return [
-    `• **${item.label}** · **${formatNumber(itemState.totalCost)}** credits`,
-    `${status.icon} +${formatNumber(item.amount)} lượt · ${status.text}`,
-  ].join('\n');
+  return `> - **${item.label}** · **${formatNumber(itemState.totalCost)}** credits`;
 }
 
 function addShopHeaderSection(container, user, stats) {
@@ -182,7 +165,6 @@ function addShopPackageSection(container, group, pageItems, credits, stats, inte
 }
 
 async function updateShopMessage(componentInteraction, user, state, interaction) {
-  // Giữ hành vi làm mới trang nhất quán cho các nút prev/next/refresh.
   const refreshedData = await loadShopState(user, state);
   await componentInteraction.update(buildShopMessage(
     user,
