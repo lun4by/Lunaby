@@ -130,8 +130,7 @@ function addShopOverviewSection(container, credits, stats, state, interaction) {
     )
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(buildShopLimitsText(stats, interaction))
-    )
-    .addSeparatorComponents((separator) => separator);
+    );
 }
 
 function addShopPackageSection(container, group, pageItems, credits, stats, interaction, disabled) {
@@ -237,6 +236,7 @@ function buildShopComponents(user, credits, stats, state, interaction, disabled 
   addShopHeaderSection(container, user, stats);
   addShopOverviewSection(container, credits, stats, state, interaction);
   addShopPackageSection(container, pageGroup, pageItems, credits, stats, interaction, disabled);
+  container.addSeparatorComponents((separator) => separator);
 
   container.addActionRowComponents((actionRow) =>
     actionRow.setComponents(...buildNavigationButtons(state, interaction, disabled))
