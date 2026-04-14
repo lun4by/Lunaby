@@ -310,6 +310,10 @@
           "label": "Home",
           "desc": "Back to main menu"
         },
+        "admin": {
+          "label": "Admin",
+          "desc": "Owner-only administration commands"
+        },
         "AIcore": {
           "label": "AI Core",
           "desc": "Advanced AI commands"

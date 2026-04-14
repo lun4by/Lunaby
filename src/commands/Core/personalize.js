@@ -16,7 +16,7 @@ const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/core/logger.js');
 const { COLORS } = require('../../utils/discord/embedUtils.js');
 
-const { createContainer } = require('../../utils/discord/builderFactory');
+const { createContainer } = require('../../utils/discord/builderFactory.js');
 function isPrivacyEnabled(value) {
     if (value === false || value === 0) return false;
     if (typeof value === 'string') {

@@ -184,8 +184,6 @@ function getCategoryMetadata(category, interaction) {
     const categoryMap = {
         'home': { emoji: emojis.categories.home },
         'admin': { emoji: emojis.categories.folder },
-        'AIcore': { emoji: emojis.categories.aiCore },
-        'Core': { emoji: emojis.categories.core },
         'core': { emoji: emojis.categories.core },
         'moderation': { emoji: emojis.categories.moderation },
         'economy': { emoji: emojis.categories.economy },

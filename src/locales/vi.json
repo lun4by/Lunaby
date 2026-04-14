@@ -310,6 +310,10 @@
           "label": "Trang chủ",
           "desc": "Quay lại menu trợ giúp chính"
         },
+        "admin": {
+          "label": "Admin",
+          "desc": "Các lệnh quản trị dành cho chủ bot"
+        },
         "AIcore": {
           "label": "AI Core",
           "desc": "Các lệnh AI nâng cao"
