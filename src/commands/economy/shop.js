@@ -208,21 +208,15 @@ function buildShopWalletAndPricingText(credits, state, interaction) {
   const pageLabel = interaction.t('commands.shop.page');
 
   return [
-    '**Ví credits**',
-    `Số dư hiện tại: **${formatNumber(credits)}** credits`,
-    `${pageLabel}: **${state.page + 1}/${totalPages}**`,
-    '',
-    '**Bảng giá**',
-    `Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt`,
-    `Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
+    `> - Số dư hiện tại: **${formatNumber(credits)}** credits`,
   ].join('\n');
 }
 
 function buildShopLimitsText(stats, interaction) {
   return [
-    `**Hạn mức hiện tại**`,
-    `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages, interaction)}`,
-    `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction)}`,
+    `> - **Hạn mức hiện tại**`,
+    `> - Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages, interaction)}`,
+    `> - Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction)}`,
   ].join('\n');
 }
 
