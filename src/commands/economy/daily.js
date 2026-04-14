@@ -34,9 +34,9 @@ module.exports = {
       const nextClaimAtUnix = Math.floor(Number(result.nextClaimAt) / 1000);
       await interaction.reply(
         `${emojis.success} | ${interaction.t('commands.daily.claimed', { reward: formatNumber(result.reward) })}\n` +
-        `${interaction.t('commands.daily.streak_current', { streak: formatNumber(result.streak) })}\n` +
-        `${interaction.t('commands.daily.streak_bonus', { streakBonus: formatNumber(result.streakBonus) })}\n` +
-        `${interaction.t('commands.daily.next_daily', { nextClaimAtUnix })}`
+        `${emojis.black} | ${interaction.t('commands.daily.streak_current', { streak: formatNumber(result.streak) })}\n` +
+        `${emojis.black} | ${interaction.t('commands.daily.streak_bonus', { streakBonus: formatNumber(result.streakBonus) })}\n` +
+        `${emojis.black} | ${interaction.t('commands.daily.next_daily', { nextClaimAtUnix })}`
       );
     } catch (error) {
       logger.error('daily', 'Error in daily command:', error);

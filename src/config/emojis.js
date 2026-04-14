@@ -6,6 +6,8 @@ module.exports = {
     warning: '⚠️',
     time: '⏱',
     info: 'ℹ️',
+    black: '◼️',
+    white: '◻️',
     categories: {
         home: '🏠',
         aiCore: '🤖',
