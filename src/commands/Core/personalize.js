@@ -1,12 +1,13 @@
 const {
     SlashCommandBuilder,
-    EmbedBuilder,
     ActionRowBuilder,
     ModalBuilder,
     TextInputBuilder,
     TextInputStyle,
     ButtonBuilder,
     ButtonStyle,
+    ContainerBuilder,
+    MessageFlags,
 } = require('discord.js');
 const MemoryService = require('../../services/ai/MemoryService.js');
 const conversationManager = require('../../handlers/conversationManager.js');
@@ -38,14 +39,11 @@ module.exports = {
         const userId = interaction.user.id;
 
         const memory = await MemoryService.getUserMemory(userId);
-
-        const mainEmbed = buildMainEmbed(memory, interaction);
-        const rows = buildActionButtonRows(interaction, memory);
+        const components = buildPersonalizeComponents(interaction, memory);
 
         await interaction.reply({
-            embeds: [mainEmbed],
-            components: rows,
-            ephemeral: true,
+            components,
+            flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
         });
 
         const message = await interaction.fetchReply();
@@ -80,36 +78,49 @@ module.exports = {
         collector.on('end', async () => {
             try {
                 const latestMemory = await MemoryService.getUserMemory(userId);
-                await interaction.editReply({ components: buildActionButtonRows(interaction, latestMemory, true) });
+                await interaction.editReply({
+                    components: buildPersonalizeComponents(interaction, latestMemory, { disabled: true }),
+                });
             } catch { }
         });
     },
 };
 
-function buildMainEmbed(memory, interaction) {
+function buildMainCardText(memory, interaction) {
     const occupation = memory?.personalInfo?.occupation || interaction.t('commands.personalize.not_set');
     const instructions = memory?.personalInfo?.customInstructions || interaction.t('commands.personalize.not_set');
     const searchHistory = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
     const savedMemory = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
 
-    return new EmbedBuilder()
-        .setColor(COLORS.LUNABY)
-        .setTitle(interaction.t('commands.personalize.embed_title'))
-        .setDescription(interaction.t('commands.personalize.embed_desc'))
-        .addFields(
-            { name: interaction.t('commands.personalize.field_occupation'), value: occupation, inline: true },
-            { name: interaction.t('commands.personalize.field_instructions'), value: instructions.length > 80 ? instructions.substring(0, 80) + '...' : instructions, inline: true },
-            { name: '\u200B', value: '\u200B' },
-            { name: interaction.t('commands.personalize.field_search'), value: searchHistory ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}` : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`, inline: true },
-            { name: interaction.t('commands.personalize.field_memory'), value: savedMemory ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}` : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`, inline: true },
-        )
-        .setTimestamp();
+    const safeInstructions = instructions.length > 80 ? `${instructions.substring(0, 80)}...` : instructions;
+    const searchStatus = searchHistory
+        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
+        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
+    const memoryStatus = savedMemory
+        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
+        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
+
+    return [
+        `## ${interaction.t('commands.personalize.embed_title')}`,
+        interaction.t('commands.personalize.embed_desc'),
+        '',
+        `**${interaction.t('commands.personalize.field_occupation')}**`,
+        occupation,
+        '',
+        `**${interaction.t('commands.personalize.field_instructions')}**`,
+        safeInstructions,
+        '',
+        `**${interaction.t('commands.personalize.field_search')}**`,
+        searchStatus,
+        `**${interaction.t('commands.personalize.field_memory')}**`,
+        memoryStatus,
+    ].join('\n');
 }
 
-function buildActionButtonRows(interaction, memory = null, disabled = false) {
+function buildActionButtons(interaction, memory = null, disabled = false) {
     const searchEnabled = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
     const memoryEnabled = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
-    const row = new ActionRowBuilder().addComponents(
+    return [
         new ButtonBuilder()
             .setCustomId('personalize_personal_info')
             .setLabel(interaction.t('commands.personalize.menu_info'))
@@ -133,9 +144,58 @@ function buildActionButtonRows(interaction, memory = null, disabled = false) {
             .setLabel(interaction.t('commands.personalize.menu_clear'))
             .setStyle(ButtonStyle.Danger)
             .setDisabled(disabled)
-    );
+    ];
+}
 
-    return [row];
+function buildPersonalizeComponents(interaction, memory, options = {}) {
+    const { disabled = false, notice = null } = options;
+    const components = [];
+
+    const mainContainer = new ContainerBuilder()
+        .setAccentColor(COLORS.LUNABY)
+        .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(buildMainCardText(memory, interaction))
+        )
+        .addActionRowComponents((actionRow) =>
+            actionRow.setComponents(...buildActionButtons(interaction, memory, disabled))
+        );
+
+    components.push(mainContainer);
+
+    if (notice?.text) {
+        const noticeContainer = new ContainerBuilder()
+            .setAccentColor(notice.color || COLORS.LUNABY)
+            .addTextDisplayComponents((textDisplay) => textDisplay.setContent(notice.text));
+
+        components.push(noticeContainer);
+    }
+
+    return components;
+}
+
+function buildClearConfirmComponents(interaction) {
+    const confirmText = [
+        `## ${interaction.t('commands.personalize.clear_confirm_title')}`,
+        interaction.t('commands.personalize.clear_confirm_desc'),
+    ].join('\n');
+
+    return [
+        new ContainerBuilder()
+            .setAccentColor(0xE74C3C)
+            .addTextDisplayComponents((textDisplay) => textDisplay.setContent(confirmText))
+            .addActionRowComponents((actionRow) =>
+                actionRow.setComponents(
+                    new ButtonBuilder()
+                        .setCustomId('personalize_clear_confirm')
+                        .setLabel(interaction.t('commands.personalize.clear_btn_confirm'))
+                        .setStyle(ButtonStyle.Danger),
+                    new ButtonBuilder()
+                        .setCustomId('personalize_clear_cancel')
+                        .setLabel(interaction.t('commands.personalize.clear_btn_cancel'))
+                        .setStyle(ButtonStyle.Secondary)
+                )
+            ),
+    ];
 }
 
 async function showPersonalInfoModal(i, userId, interaction) {
@@ -188,8 +248,7 @@ async function showPersonalInfoModal(i, userId, interaction) {
 
         const updatedMemory = await MemoryService.getUserMemory(userId);
         await modalInteraction.update({
-            embeds: [buildMainEmbed(updatedMemory, interaction)],
-            components: buildActionButtonRows(interaction, updatedMemory),
+            components: buildPersonalizeComponents(interaction, updatedMemory),
         });
     } catch { }
 }
@@ -203,11 +262,12 @@ async function handleToggleSearch(i, userId, interaction) {
     if (!updated) {
         const latestMemory = await MemoryService.getUserMemory(userId);
         return i.update({
-            embeds: [
-                buildMainEmbed(latestMemory, interaction),
-                new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.error_occurred')).setTimestamp(),
-            ],
-            components: buildActionButtonRows(interaction, latestMemory),
+            components: buildPersonalizeComponents(interaction, latestMemory, {
+                notice: {
+                    color: 0xE74C3C,
+                    text: interaction.t('commands.personalize.error_occurred'),
+                },
+            }),
         });
     }
 
@@ -216,14 +276,13 @@ async function handleToggleSearch(i, userId, interaction) {
         ? `${emojis.statusOn} ${interaction.t('commands.personalize.search_on')}`
         : `${emojis.statusOff} ${interaction.t('commands.personalize.search_off')}`;
 
-    const embed = new EmbedBuilder()
-        .setColor(newValue ? 0x2ECC71 : 0xE74C3C)
-        .setDescription(statusText)
-        .setTimestamp();
-
     await i.update({
-        embeds: [buildMainEmbed(updatedMemory, interaction), embed],
-        components: buildActionButtonRows(interaction, updatedMemory),
+        components: buildPersonalizeComponents(interaction, updatedMemory, {
+            notice: {
+                color: newValue ? 0x2ECC71 : 0xE74C3C,
+                text: statusText,
+            },
+        }),
     });
 
     autoRemoveNotification(i, updatedMemory, interaction);
@@ -238,11 +297,12 @@ async function handleToggleMemory(i, userId, interaction) {
     if (!updated) {
         const latestMemory = await MemoryService.getUserMemory(userId);
         return i.update({
-            embeds: [
-                buildMainEmbed(latestMemory, interaction),
-                new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.error_occurred')).setTimestamp(),
-            ],
-            components: buildActionButtonRows(interaction, latestMemory),
+            components: buildPersonalizeComponents(interaction, latestMemory, {
+                notice: {
+                    color: 0xE74C3C,
+                    text: interaction.t('commands.personalize.error_occurred'),
+                },
+            }),
         });
     }
 
@@ -251,40 +311,21 @@ async function handleToggleMemory(i, userId, interaction) {
         ? `${emojis.statusOn} ${interaction.t('commands.personalize.memory_on')}`
         : `${emojis.statusOff} ${interaction.t('commands.personalize.memory_off')}`;
 
-    const embed = new EmbedBuilder()
-        .setColor(newValue ? 0x2ECC71 : 0xE74C3C)
-        .setDescription(statusText)
-        .setTimestamp();
-
     await i.update({
-        embeds: [buildMainEmbed(updatedMemory, interaction), embed],
-        components: buildActionButtonRows(interaction, updatedMemory),
+        components: buildPersonalizeComponents(interaction, updatedMemory, {
+            notice: {
+                color: newValue ? 0x2ECC71 : 0xE74C3C,
+                text: statusText,
+            },
+        }),
     });
 
     autoRemoveNotification(i, updatedMemory, interaction);
 }
 
 async function handleClear(i, userId, interaction) {
-    const confirmEmbed = new EmbedBuilder()
-        .setColor(0xE74C3C)
-        .setTitle(interaction.t('commands.personalize.clear_confirm_title'))
-        .setDescription(interaction.t('commands.personalize.clear_confirm_desc'))
-        .setTimestamp();
-
-    const buttonRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-            .setCustomId('personalize_clear_confirm')
-            .setLabel(interaction.t('commands.personalize.clear_btn_confirm'))
-            .setStyle(ButtonStyle.Danger),
-        new ButtonBuilder()
-            .setCustomId('personalize_clear_cancel')
-            .setLabel(interaction.t('commands.personalize.clear_btn_cancel'))
-            .setStyle(ButtonStyle.Secondary),
-    );
-
     await i.update({
-        embeds: [confirmEmbed],
-        components: [buttonRow],
+        components: buildClearConfirmComponents(interaction),
     });
 }
 
@@ -314,16 +355,14 @@ async function handleButtonClick(i, userId, interaction) {
                 throw new Error('Không thể xóa toàn bộ dữ liệu người dùng');
             }
 
-            const successEmbed = new EmbedBuilder()
-                .setColor(0x2ECC71)
-                .setTitle(interaction.t('commands.personalize.clear_success_title'))
-                .setDescription(interaction.t('commands.personalize.clear_success_desc'))
-                .setTimestamp();
-
             const updatedMemory = await MemoryService.getUserMemory(userId);
             await i.update({
-                embeds: [buildMainEmbed(updatedMemory, interaction), successEmbed],
-                components: buildActionButtonRows(interaction, updatedMemory),
+                components: buildPersonalizeComponents(interaction, updatedMemory, {
+                    notice: {
+                        color: 0x2ECC71,
+                        text: `${interaction.t('commands.personalize.clear_success_title')}\n${interaction.t('commands.personalize.clear_success_desc')}`,
+                    },
+                }),
             });
 
             autoRemoveNotification(i, updatedMemory, interaction);
@@ -333,15 +372,18 @@ async function handleButtonClick(i, userId, interaction) {
             logger.error('personalize', 'Error clearing data:', error);
             const latestMemory = await MemoryService.getUserMemory(userId);
             await i.update({
-                embeds: [new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.clear_error'))],
-                components: buildActionButtonRows(interaction, latestMemory),
+                components: buildPersonalizeComponents(interaction, latestMemory, {
+                    notice: {
+                        color: 0xE74C3C,
+                        text: interaction.t('commands.personalize.clear_error'),
+                    },
+                }),
             });
         }
     } else if (i.customId === 'personalize_clear_cancel') {
         const updatedMemory = await MemoryService.getUserMemory(userId);
         await i.update({
-            embeds: [buildMainEmbed(updatedMemory, interaction)],
-            components: buildActionButtonRows(interaction, updatedMemory),
+            components: buildPersonalizeComponents(interaction, updatedMemory),
         });
     }
 }
@@ -350,8 +392,7 @@ function autoRemoveNotification(i, memory, interaction) {
     setTimeout(async () => {
         try {
             await i.editReply({
-                embeds: [buildMainEmbed(memory, interaction)],
-                components: buildActionButtonRows(interaction, memory),
+                components: buildPersonalizeComponents(interaction, memory),
             });
         } catch { }
     }, 5000);
