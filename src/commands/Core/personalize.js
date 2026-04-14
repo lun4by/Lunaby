@@ -114,7 +114,7 @@ function buildPersonalInfoCardText(memory, interaction) {
     const instructions = memory?.personalInfo?.customInstructions?.trim();
     const hasPersonalInfo = Boolean(occupation || instructions);
     return [
-        `**${interaction.t('commands.personalize.menu_info')}**`,
+        `**${interaction.t('commands.personalize.instructions_title')}**`,
         hasPersonalInfo ? 'Đã thiết lập' : interaction.t('commands.personalize.not_set'),
     ].join('\n');
 }
@@ -169,7 +169,7 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                 .setButtonAccessory((button) =>
                     button
                         .setCustomId('personalize_personal_info')
-                        .setLabel(interaction.t('commands.personalize.menu_info'))
+                        .setLabel(interaction.t('commands.personalize.btn_customize'))
                         .setStyle(ButtonStyle.Secondary)
                         .setDisabled(disabled)
                 )

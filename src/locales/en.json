@@ -634,6 +634,8 @@
       "error_occurred": "An error occurred while saving the info. Please try again later.",
       "menu_info": "Personal info & Instructions",
       "menu_info_desc": "Occupation & custom instructions",
+      "instructions_title": "Instructions",
+      "btn_customize": "Customize",
       "menu_search": "Reference search history",
       "menu_search_desc": "Toggle access to your saved memories",
       "menu_memory": "Reference saved memories",

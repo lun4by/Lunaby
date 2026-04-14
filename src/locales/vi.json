@@ -634,6 +634,8 @@
       "error_occurred": "Đã xảy ra lỗi khi lưu thông tin. Vui lòng thử lại sau.",
       "menu_info": "Personal info & Instructions",
       "menu_info_desc": "Nghề nghiệp & hướng dẫn tùy chỉnh",
+      "instructions_title": "Instructions",
+      "btn_customize": "Tùy chỉnh",
       "menu_search": "Reference search history",
       "menu_search_desc": "Bật/tắt truy cập memory đã lưu của bạn",
       "menu_memory": "Reference saved memories",
