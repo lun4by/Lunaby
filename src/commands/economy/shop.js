@@ -80,14 +80,17 @@ function getShopItems() {
 }
 
 function getTotalPages() {
-  const items = getShopItems();
-  return Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+  return SHOP_PACKAGE_GROUPS.length;
+}
+
+function getPageGroup(page) {
+  const safeIndex = Math.min(Math.max(page, 0), getTotalPages() - 1);
+  return SHOP_PACKAGE_GROUPS[safeIndex];
 }
 
 function getPageItems(page) {
-  const items = getShopItems();
-  const start = page * ITEMS_PER_PAGE;
-  return items.slice(start, start + ITEMS_PER_PAGE);
+  const group = getPageGroup(page);
+  return getShopItems().filter((item) => item.type === group.type);
 }
 
 function getLimitText(limit, remaining, interaction) {
@@ -227,15 +230,13 @@ function buildNavigationButtons(state, interaction, disabled = false) {
 
 function buildShopComponents(user, credits, stats, state, interaction, disabled = false) {
   // Dựng shop.
+  const pageGroup = getPageGroup(state.page);
   const pageItems = getPageItems(state.page);
   const container = createContainer().setAccentColor(COLORS.LUNABY);
 
   addShopHeaderSection(container, user, stats);
   addShopOverviewSection(container, credits, stats, state, interaction);
-
-  for (const group of SHOP_PACKAGE_GROUPS) {
-    addShopPackageSection(container, group, pageItems, credits, stats, interaction, disabled);
-  }
+  addShopPackageSection(container, pageGroup, pageItems, credits, stats, interaction, disabled);
 
   container.addActionRowComponents((actionRow) =>
     actionRow.setComponents(...buildNavigationButtons(state, interaction, disabled))
