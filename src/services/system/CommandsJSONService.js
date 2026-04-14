@@ -20,7 +20,7 @@ const PERMISSION_FLAGS = {
 };
 class CommandsJSONService {
   constructor() {
-    this.outputDir = path.join(__dirname, '../../assets');
+    this.outputDir = path.join(__dirname, '../../assets/json');
     this.outputPath = path.join(this.outputDir, 'commands.json');
   }
 

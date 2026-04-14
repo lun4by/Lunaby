@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, PermissionsBitField } = require('discord.js');
+const {SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, PermissionsBitField, MessageFlags} = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/core/logger');
@@ -8,6 +8,7 @@ const { updateGuildSettingsAndInvalidate } = require('../../utils/guild/guildSet
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 const { isSlashCommandInteraction } = require('../../utils/discord/hybridCommand');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('setting')
@@ -18,13 +19,13 @@ module.exports = {
 
     async execute(interaction) {
         if (!hasMemberPermission(interaction.member, PermissionsBitField.Flags.ManageGuild)) {
-            const replyOptions = { content: `${emojis.error} ${interaction.t('commands.setting.need_manage_server')}`, ephemeral: true };
+            const replyOptions = { content: `${emojis.error} ${interaction.t('commands.setting.need_manage_server')}`, flags: MessageFlags.Ephemeral };
             return interaction.replied || interaction.deferred ? interaction.editReply(replyOptions) : interaction.reply(replyOptions);
         }
 
         const isSlash = isSlashCommandInteraction(interaction);
         if (isSlash && !interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         }
 
         const guildId = interaction.guild?.id || interaction.guildId;
@@ -54,7 +55,7 @@ module.exports = {
             collector.on('collect', async (i) => {
                 try {
                     if (!hasMemberPermission(i.member, PermissionsBitField.Flags.ManageGuild)) {
-                        return i.reply({ content: `${emojis.error} ${i.t('commands.setting.need_manage_server')}`, ephemeral: true });
+                        return i.reply({ content: `${emojis.error} ${i.t('commands.setting.need_manage_server')}`, flags: MessageFlags.Ephemeral });
                     }
 
                     const { customId } = i;
@@ -120,7 +121,7 @@ module.exports = {
                     logger.error('setting', `Collector error: ${err.message}`);
                     try {
                         if (!i.replied && !i.deferred) {
-                            await i.reply({ content: `${emojis.error} ${i.t('commands.setting.general_error')}`, ephemeral: true });
+                            await i.reply({ content: `${emojis.error} ${i.t('commands.setting.general_error')}`, flags: MessageFlags.Ephemeral });
                         }
                     } catch (e) { /* bỏ qua */ }
                 }
@@ -165,7 +166,7 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
 
     const t = interactionOrMessage.t;
 
-    const embed = new EmbedBuilder()
+    const embed = createEmbed()
         .setTitle(t('commands.setting.embed_title'))
         .setColor(COLORS.LUNABY)
         .setTimestamp()

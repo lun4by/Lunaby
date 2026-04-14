@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const RoleService = require('../../services/user/RoleService');
 const { USER_ROLES } = require('../../config/constants');
 const logger = require('../../utils/core/logger');
@@ -53,12 +53,12 @@ module.exports = {
 
         try {
             if (executorId !== process.env.OWNER_ID?.trim()) {
-                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.owner_only')}`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.owner_only')}`, flags: MessageFlags.Ephemeral });
             }
 
             const currentRole = await RoleService.getUserRole(targetUser.id);
             if (currentRole === role) {
-                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.already_has_role', { tag: targetUser.tag, role })}`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.already_has_role', { tag: targetUser.tag, role })}`, flags: MessageFlags.Ephemeral });
             }
 
             await RoleService.setUserRole(targetUser.id, role);
@@ -73,8 +73,7 @@ module.exports = {
             await interaction.reply({ content: successMessage });
         } catch (error) {
             logger.error('admin', 'Error in giveadmin command:', error);
-            await interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.error')}`, ephemeral: true });
+            await interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.giveadmin.error')}`, flags: MessageFlags.Ephemeral });
         }
     }
 };
-

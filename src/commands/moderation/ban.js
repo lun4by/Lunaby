@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const { logModAction } = require('../../utils/moderation/modUtils.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/moderation/modLogUtils.js');
@@ -7,6 +7,7 @@ const logger = require('../../utils/core/logger.js');
 const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('ban')
@@ -33,7 +34,7 @@ module.exports = {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.BanMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -53,7 +54,7 @@ module.exports = {
         if (targetMember && !targetMember.bannable) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -102,7 +103,7 @@ module.exports = {
             await sendModLog(interaction.guild, logEmbed, true);
 
             try {
-                const dmEmbed = new EmbedBuilder()
+                const dmEmbed = createEmbed()
                     .setColor(0xff0000)
                     .setTitle(interaction.t('commands.ban.dm_title', { guild: interaction.guild.name }))
                     .setDescription(interaction.t('commands.moderation_common.dm_reason', { reason }))
@@ -123,7 +124,7 @@ module.exports = {
             );
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.ban.error_ban', { error: error.message })}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     },

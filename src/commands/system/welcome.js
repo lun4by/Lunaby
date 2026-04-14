@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags} = require('discord.js');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
 const {
@@ -47,7 +47,7 @@ module.exports = {
             return (interaction.message || interaction).reply({ content: interaction.t('commands.welcome.usage', { prefix }) });
         }
 
-        await deferHybridReply(interaction, { ephemeral: true });
+        await deferHybridReply(interaction, { flags: MessageFlags.Ephemeral });
         const replyFunc = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
 
         try {
@@ -78,7 +78,7 @@ module.exports = {
 
                 if (!channel || !message) {
                     const prefix = await resolveHybridPrefix(interaction);
-                    return replyFunc({ content: interaction.t('commands.welcome.no_channel', { prefix }), ephemeral: true });
+                    return replyFunc({ content: interaction.t('commands.welcome.no_channel', { prefix }), flags: MessageFlags.Ephemeral });
                 }
 
                 await updateGuildSettingsAndInvalidate(guildId, {
@@ -91,7 +91,7 @@ module.exports = {
             }
         } catch (error) {
             logger.error('system', 'Error setting welcome:', error);
-            return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
+            return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, flags: MessageFlags.Ephemeral });
         }
     }
 };

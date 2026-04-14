@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const {SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags} = require('discord.js');
 const packageJson = require('../../../package.json');
 const { formatUptime } = require('../../utils/text/string');
 const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
@@ -29,7 +29,7 @@ module.exports = {
 
         collector.on('collect', async (i) => {
             if (i.user.id !== interaction.user.id) {
-                return i.reply({ content: interaction.t('system.only_caller_can_use'), ephemeral: true });
+                return i.reply({ content: interaction.t('system.only_caller_can_use'), flags: MessageFlags.Ephemeral });
             }
 
             if (i.customId === 'refresh_status') {

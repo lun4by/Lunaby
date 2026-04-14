@@ -3,6 +3,7 @@ const MariaModDB = require('../../services/database/MariaModDB');
 const emojis = require('../../config/emojis.js');
 const { COLORS } = require('../discord/embedUtils');
 
+const { createEmbed } = require('../discord/builderFactory');
 const CHECK = emojis.success;
 const CROSS = emojis.error;
 
@@ -10,7 +11,7 @@ exports.createEmbed = async function (interaction, channel, guildId, channelId) 
     const disabledCommands = await MariaModDB.getDisabledCommands(guildId, channelId);
     const disabledSet = new Set(disabledCommands);
 
-    const embed = new EmbedBuilder()
+    const embed = createEmbed()
         .setAuthor({ name: interaction.t('commands.enabledUtil.title', { channelName: channel.name }) })
         .setColor(COLORS.LUNABY);
 

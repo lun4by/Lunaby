@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const { logModAction } = require('../../utils/moderation/modUtils.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
@@ -8,6 +8,7 @@ const { sendModLog, createModActionEmbed } = require('../../utils/moderation/mod
 const prompts = require('../../config/prompts.js');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('unmute')
@@ -28,7 +29,7 @@ module.exports = {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -45,21 +46,21 @@ module.exports = {
         if (!targetMember) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.moderation_common.user_not_found')}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (!targetMember.moderatable) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (!targetMember.communicationDisabledUntil) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.unmute.not_muted')}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -103,7 +104,7 @@ module.exports = {
             await sendModLog(interaction.guild, logEmbed, true);
 
             try {
-                const dmEmbed = new EmbedBuilder()
+                const dmEmbed = createEmbed()
                     .setColor(0x00FF00)
                     .setTitle(interaction.t('commands.unmute.dm_title', { guild: interaction.guild.name }))
                     .setDescription(interaction.t('commands.unmute.dm_desc', { reason }))
@@ -118,7 +119,7 @@ module.exports = {
             logger.error('moderation', 'Error unmuting member:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.unmute.error_unmute', { error: error.message })}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },

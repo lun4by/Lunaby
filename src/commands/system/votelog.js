@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags} = require('discord.js');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
 const {
@@ -50,7 +50,7 @@ module.exports = {
             });
         }
 
-        await deferHybridReply(interaction, { ephemeral: true });
+        await deferHybridReply(interaction, { flags: MessageFlags.Ephemeral });
         const replyFunc = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
 
         try {
@@ -85,7 +85,7 @@ module.exports = {
                     const prefix = await resolveHybridPrefix(interaction);
                     return replyFunc({
                         content: interaction.t('commands.votelog.no_channel', { prefix }),
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     });
                 }
 
@@ -99,7 +99,7 @@ module.exports = {
             }
         } catch (error) {
             logger.error('system', 'Error setting vote log:', error);
-            return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
+            return replyFunc({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, flags: MessageFlags.Ephemeral });
         }
     }
 };

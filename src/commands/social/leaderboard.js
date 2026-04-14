@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const {SlashCommandBuilder} = require('discord.js');
 const XPService = require('../../services/user/XPService');
 const { ordinalize } = require('../../utils/text/string.js');
 const { generateLeaderboardCard } = require('../../services/canvas/leaderboardCanvas');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
@@ -19,7 +20,7 @@ module.exports = {
       const leaderboard = await XPService.getLeaderboard(interaction.guild.id, 10);
 
       if (leaderboard.length === 0) {
-        const embed = new EmbedBuilder()
+        const embed = createEmbed()
           .setColor('#FF0000')
           .setDescription(interaction.t('commands.leaderboard.no_data'));
         return interaction.editReply({ embeds: [embed] });
@@ -56,7 +57,7 @@ module.exports = {
 
     } catch (error) {
       logger.error('leaderboard', 'Error in leaderboard command:', error);
-      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.leaderboard.error')}`, ephemeral: true });
+      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.leaderboard.error')}` });
     }
   }
 };

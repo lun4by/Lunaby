@@ -8,6 +8,22 @@ const CryptoUtils = require('../../utils/security/CryptoUtils.js');
 
 const CACHE_EXPIRY = 30 * 60 * 1000;
 
+function coerceBoolean(value, fallback = undefined) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['false', '0', 'off', 'no'].includes(normalized)) return false;
+    if (['true', '1', 'on', 'yes'].includes(normalized)) return true;
+  }
+  return fallback;
+}
+
+function toTimestamp(value) {
+  const ts = new Date(value).getTime();
+  return Number.isFinite(ts) ? ts : 0;
+}
+
 class MemoryService {
   constructor() {
     this.memoryCache = new Map();
@@ -24,10 +40,11 @@ class MemoryService {
       return {
         personalInfo: extra.personalInfo || {},
         privacy: extra.privacy || {},
+        updatedAt: profile?.updated_at || null,
       };
     } catch (error) {
       logger.error('memory_service', `Error reading MariaDB personalization for ${userId}:`, error);
-      return { personalInfo: {}, privacy: {} };
+      return { personalInfo: {}, privacy: {}, updatedAt: null };
     }
   }
 
@@ -180,14 +197,26 @@ class MemoryService {
       }
 
       const mariaPersonalization = await this._getMariaPersonalization(userId);
-      memory.personalInfo.occupation = mariaPersonalization.personalInfo.occupation ?? memory.personalInfo.occupation;
-      memory.personalInfo.customInstructions = mariaPersonalization.personalInfo.customInstructions ?? memory.personalInfo.customInstructions;
-      memory.privacy.allowSearchHistoryReference = mariaPersonalization.privacy.allowSearchHistoryReference !== undefined
-        ? mariaPersonalization.privacy.allowSearchHistoryReference
-        : memory.privacy.allowSearchHistoryReference;
-      memory.privacy.allowMemoryStorage = mariaPersonalization.privacy.allowMemoryStorage !== undefined
-        ? mariaPersonalization.privacy.allowMemoryStorage
-        : memory.privacy.allowMemoryStorage;
+      const mongoUpdatedAt = toTimestamp(memory?.lastUpdated || memory?.createdAt);
+      const mariaUpdatedAt = toTimestamp(mariaPersonalization?.updatedAt);
+      const useMariaOverride = mariaUpdatedAt > mongoUpdatedAt;
+
+      if (useMariaOverride) {
+        memory.personalInfo.occupation = mariaPersonalization.personalInfo.occupation ?? memory.personalInfo.occupation;
+        memory.personalInfo.customInstructions = mariaPersonalization.personalInfo.customInstructions ?? memory.personalInfo.customInstructions;
+      }
+
+      const mongoSearchPref = coerceBoolean(memory?.privacy?.allowSearchHistoryReference, true);
+      const mongoStoragePref = coerceBoolean(memory?.privacy?.allowMemoryStorage, true);
+      const mariaSearchPref = coerceBoolean(mariaPersonalization?.privacy?.allowSearchHistoryReference);
+      const mariaStoragePref = coerceBoolean(mariaPersonalization?.privacy?.allowMemoryStorage);
+
+      memory.privacy.allowSearchHistoryReference = (useMariaOverride && mariaSearchPref !== undefined)
+        ? mariaSearchPref
+        : mongoSearchPref;
+      memory.privacy.allowMemoryStorage = (useMariaOverride && mariaStoragePref !== undefined)
+        ? mariaStoragePref
+        : mongoStoragePref;
 
       this.memoryCache.set(userId, { data: memory, timestamp: Date.now() });
       return memory;
@@ -245,11 +274,22 @@ class MemoryService {
   async updatePrivacySettings(userId, privacySettings) {
     try {
       const updates = {};
+      const mariaPrivacyUpdates = {};
       for (const [key, value] of Object.entries(privacySettings)) {
-        updates[`privacy.${key}`] = value;
+        const normalized = coerceBoolean(value, true);
+        updates[`privacy.${key}`] = normalized;
+        mariaPrivacyUpdates[key] = normalized;
       }
-      await this.updateUserMemory(userId, updates);
-      return true;
+
+      const mongoUpdated = await this.updateUserMemory(userId, updates);
+      if (mongoUpdated) return true;
+
+      const mariaUpdated = await this._saveMariaPersonalization(userId, { privacy: mariaPrivacyUpdates });
+      if (mariaUpdated) {
+        this.memoryCache.delete(userId);
+      }
+
+      return mariaUpdated;
     } catch (error) {
       logger.error('memory_service', `Error updating privacy settings for ${userId}:`, error);
       return false;
@@ -299,6 +339,7 @@ class MemoryService {
   async extractMemoryFromConversation(userId, userMessage, aiResponse) {
     try {
       const memory = await this.getUserMemory(userId);
+      if (memory?.privacy?.allowMemoryStorage === false) return null;
       if (!memory.privacy.allowPersonalInfoExtraction) return null;
 
       const extractionPrompt = prompts.memory.extraction

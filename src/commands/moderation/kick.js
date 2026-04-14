@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags} = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const { logModAction } = require('../../utils/moderation/modUtils.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/moderation/modLogUtils.js');
@@ -25,7 +25,7 @@ module.exports = {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.KickMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -41,7 +41,7 @@ module.exports = {
         if (!targetMember) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.moderation_common.user_not_found')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -50,7 +50,7 @@ module.exports = {
         if (!targetMember.kickable) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -96,7 +96,7 @@ module.exports = {
             logger.error('moderation', `Error kicking ${targetUser.tag}: ${error.message}`);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.kick.error_kick', { error: error.message })}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },

@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const {SlashCommandBuilder} = require('discord.js');
 const XPService = require('../../services/user/XPService');
 const generateRankCard = require('../../services/canvas/rankCanvas.js');
 const { ordinalize } = require('../../utils/text/string.js');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('rank')
@@ -28,7 +29,7 @@ module.exports = {
       const serverXP = await XPService.getUserXP(interaction.guild.id, targetUser.id);
 
       if (!serverXP || serverXP.xp === 0) {
-        const embed = new EmbedBuilder()
+        const embed = createEmbed()
           .setColor('#FF0000')
           .setDescription(interaction.t('commands.rank.no_xp', { user: targetUser.toString() }));
         return interaction.editReply({ embeds: [embed] });
@@ -52,7 +53,7 @@ module.exports = {
       await interaction.editReply({ content: '', files: [attachment] });
     } catch (error) {
       logger.error('rank', 'Error in rank command:', error);
-      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.rank.error')}`, ephemeral: true });
+      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.rank.error')}` });
     }
   }
 };

@@ -111,4 +111,3 @@ class CreditsService {
 }
 
 module.exports = new CreditsService();
-

@@ -1,7 +1,6 @@
 {
   "system": {
     "lang_name": "English",
-    "language_changed": "Server language has been changed to **English**",
     "no_permission": "You do not have permission to use this command.",
     "error_occurred": "An error occurred while processing the command.",
     "only_caller_can_use": "Only the user who invoked the command can use these options.",
@@ -10,7 +9,6 @@
     "quota_exceeded": "**Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Pro in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue.",
     "quota_exceeded_image": "**Quota Exceeded**\n> You have exhausted your **{{limit}} uses** for Lunaby Vision in the current cycle.\n> Please upgrade your account or wait for the next cycle to continue.",
     "command_disabled_in_channel": "This command has been disabled in this channel.",
-    "command_locked_for_maintenance": "This command is temporarily locked for maintenance. Please try again later.",
     "missing_server_permissions": "You do not have enough server permissions to use this command.",
     "cooldown_wait": "You must wait until <t:{{expiresAtUnix}}:R> before using this command again!",
     "command_execution_failed": "An error occurred while executing this command!",
@@ -121,7 +119,6 @@
       "error_unban": "An error occurred while unbanning the user: {{error}}"
     },
     "modlog": {
-      "usage": "Usage:\n- View mod log: `{{prefix}}modlog [user] [action]`",
       "no_logs": "The system has not recorded any moderation logs matching the filter!",
       "embed_title": "{{_emoji.locale.clipboard}} Moderation Log",
       "embed_desc": "Displaying the last **{{count}}** moderation actions{{userText}}{{actionText}}.",
@@ -252,18 +249,6 @@
         "invalid_channel": "Please provide or mention a valid channel (e.g. `{{prefix}}systemlog #log-channel`).",
         "success": "Global log channel successfully set to <#{{id}}>.",
         "error": "An error occurred while saving the log channel to the database."
-      },
-      "commandctl": {
-        "usage": "Usage: `commandctl <lock|unlock|list|reload> [commands|all|guild]`",
-        "invalid_subcommand": "Invalid subcommand. Use: `lock`, `unlock`, `list`, `reload`.",
-        "invalid_scope": "Invalid scope. Supported values are `guild` or `all`.",
-        "invalid_cmds": "No valid commands were found for this action.",
-        "list_empty": "There are currently no locked commands.",
-        "list_title": "Currently locked **{{count}}** command(s): {{commands}}",
-        "lock_success": "Locked **{{count}}** command(s): {{commands}}",
-        "unlock_success": "Unlocked **{{count}}** command(s): {{commands}}",
-        "reload_success": "Runtime command reload completed. Scope: **{{scope}}** | Shards: **{{shards}}** | Loaded: **{{loaded}}** | Deployed: **{{deployed}}** | Failed: **{{failed}}**",
-        "error": "An error occurred while processing commandctl."
       }
     },
     "fun": {
@@ -325,6 +310,10 @@
           "label": "Home",
           "desc": "Back to main menu"
         },
+        "admin": {
+          "label": "Admin",
+          "desc": "Owner-only administration commands"
+        },
         "AIcore": {
           "label": "AI Core",
           "desc": "Advanced AI commands"
@@ -336,6 +325,10 @@
         "moderation": {
           "label": "Moderation",
           "desc": "Server management commands"
+        },
+        "economy": {
+          "label": "Economy",
+          "desc": "Credits and gambling commands"
         },
         "social": {
           "label": "Social",
@@ -359,6 +352,7 @@
       "desc": "Check remaining usage",
       "remaining": "**{{count}}** uses left",
       "total_usage": "Total usage:",
+      "current_cycle": "Current cycle:",
       "reset_in": "Resets in **{{days}}** days"
     },
     "prefix": {
@@ -395,7 +389,10 @@
     },
     "language": {
       "usage": "Usage: `{{prefix}}language <vi/en>`",
-      "supported": ["vi", "en"],
+      "supported": [
+        "vi",
+        "en"
+      ],
       "placeholder": "Select the server language",
       "title": {
         "settings": "Server language settings",
@@ -514,6 +511,72 @@
       "success": "You transferred **{{amount}}** credits to <@{{targetId}}>.\nYour remaining balance: **{{balance}}** credits.",
       "error": "An error occurred while transferring credits."
     },
+    "daily": {
+      "desc": "Claim your daily credits",
+      "already_claimed": "You already claimed daily today. Try again <t:{{nextClaimAtUnix}}:R>.",
+      "claimed": "You received **{{reward}}** credits.",
+      "streak_current": "Current streak: **{{streak}}**",
+      "streak_bonus": "Streak bonus: **{{streakBonus}}**",
+      "balance": "New balance: **{{balance}}**",
+      "next_daily": "Next daily: <t:{{nextClaimAtUnix}}:R>",
+      "error": "Cannot claim daily right now."
+    },
+    "coinflip": {
+      "desc": "Flip a coin to win or lose credits",
+      "maintenance": "This command is currently under maintenance.",
+      "syntax": "Syntax: coinflip <heads|tails> <bet|all>",
+      "win": "You won **+{{amount}}** credits!",
+      "lose": "You lost **-{{amount}}** credits.",
+      "choice_vs_outcome": "Choice: **{{choice}}** | Outcome: **{{outcome}}**",
+      "balance": "New balance: **{{balance}}**",
+      "error": "Cannot process coinflip right now."
+    },
+    "blackjack": {
+      "desc": "Play blackjack with hit or stand actions",
+      "maintenance": "This command is currently under maintenance.",
+      "syntax": "Syntax: blackjack <bet|all>",
+      "started": "Blackjack started. Choose **Hit** or **Stand**.",
+      "resumed": "Resumed your active blackjack game.",
+      "in_progress_other_channel": "You already have an active blackjack game in another channel. Finish it or wait for timeout.",
+      "button_hit": "Hit",
+      "button_stand": "Stand",
+      "embed_title": "Blackjack",
+      "embed_bet": "Bet: **{{bet}}** credits",
+      "dealer_field": "Dealer `[{{score}}]`",
+      "player_field": "{{user}} `[{{score}}]`",
+      "dealer_score_hidden": "{{shown}}+?",
+      "embed_footer_progress": "🎲 Game in progress",
+      "embed_footer_resumed": "🎲 Resumed previous game",
+      "embed_footer_timeout": "⏱ Session timeout, auto-stand",
+      "embed_footer_win": "🎲 You win!",
+      "embed_footer_lose": "🎲 You lose!",
+      "embed_footer_push": "🎲 Push",
+      "embed_footer_both_bust": "🎲 Both bust",
+      "result_win": "You win!",
+      "result_lose": "You lose!",
+      "result_push": "Push.",
+      "result_both_bust": "Both bust, your bet is returned.",
+      "bet_and_change": "Bet: **{{bet}}** | Change: **{{delta}}**",
+      "balance": "New balance: **{{balance}}**",
+      "error": "Cannot process blackjack right now."
+    },
+    "notice": {
+      "desc": "Manage notices shown below command responses",
+      "syntax_create": "Syntax: notice create <hours> <guild|global> <message>",
+      "create_success": "Created notice #{{id}}\nScope: **{{scope}}**\nExpires: <t:{{expiresAtUnix}}:R>\nMessage: {{message}}",
+      "remove_success": "Disabled notice #{{id}}.",
+      "remove_not_found": "Notice #{{id}} not found or already disabled.",
+      "no_notice": "No notice found.",
+      "status_active": "active",
+      "status_inactive": "inactive",
+      "line": "#{{id}} [{{status}}] [{{scope}}] <t:{{expiresAtUnix}}:R> - {{message}}",
+      "error": "Cannot manage notices right now.",
+      "errors": {
+        "invalid_hours": "Duration must be between 1 and 720 hours.",
+        "empty_message": "Notice message cannot be empty.",
+        "invalid_id": "Invalid notice ID."
+      }
+    },
     "leaderboard": {
       "desc": "Display the server's XP leaderboard",
       "no_data": "No XP data available in this server yet!",
@@ -540,95 +603,48 @@
     },
     "shop": {
       "desc": "Open the shop to buy quota with credits",
-      "title": "Lunaby Shop",
-      "category_label": "Current category: **{{label}}**\n",
-      "balance": "Your balance: **{{amount}}** credits\n",
-      "payment_method": "Payment: **Credits**\n",
-      "reset_quota": "Quota resets in: <t:{{timestamp}}:R>",
       "quota_pro": "Lunaby Pro",
       "quota_vision": "Lunaby Vision",
       "page": "Page",
-      "footer": "Click a button below to quickly purchase with credits",
-      "available_packages": "Available Packages",
       "no_packages": "No packages available on this page.",
-      "coin_shop_name": "Coin Shop",
-      "coin_shop_desc": "This section is under preparation. You can still buy quota in the Quota Shop.",
       "limit_unlimited": "Unlimited",
-      "limit_text": "{{limit}} uses - {{remaining}} remaining",
-      "select_shop": "Select shop",
-      "btn_coin_shop": "Coin Shop is updating",
       "refresh": "Refresh",
+      "buy_button": "Buy",
       "package_not_found": "Could not find the package you want to buy.",
       "buy_success": "You have purchased **{{amount}}** uses of {{product}} for **{{cost}}** credits.",
       "error_open": "An error occurred while opening the shop. Please try again later.",
       "error_process": "An error occurred processing the shop interaction. {{error}}",
       "err_unlimited": "Your account currently has unlimited uses of {{product}}, no need to buy more quota.",
-      "err_insufficient": "Insufficient credits. You need **{{cost}}** credits to buy **{{amount}}** uses of {{product}}.",
-      "quotaItemText": "• **{{label}}** - {{amount}} uses of {{productName}} - **{{cost}}** credits",
-      "cat_quota_label": "Quota Shop (Credits)",
-      "cat_quota_desc": "Buy extra Lunaby Pro and Lunaby Vision uses with credits",
-      "cat_coin_label": "Coin Shop",
-      "cat_coin_desc": "Coming soon"
+      "err_insufficient": "Insufficient credits. You need **{{cost}}** credits to buy **{{amount}}** uses of {{product}}."
     },
     "personalize": {
       "desc": "Customize your AI experience",
       "error_occurred": "An error occurred while saving the info. Please try again later.",
-      "menu_info": "Personal info & Instructions",
-      "menu_info_desc": "Occupation & custom instructions",
-      "menu_search": "Reference search history",
-      "menu_search_desc": "Toggle access to your saved memories",
-      "menu_memory": "Reference saved memories",
-      "menu_memory_desc": "Toggle saving your memories",
-      "menu_manage": "Manage your saved memories",
-      "menu_manage_desc": "View memories Lunaby has saved about you",
-      "menu_clear": "Clear",
-      "menu_clear_desc": "Delete all history and memories",
-      "menu_expired": "Menu expired",
-      "menu_expired_label": "Expired",
+      "instructions_title": "Instructions",
+      "btn_customize": "Customize",
+      "menu_clear": "Format",
+      "menu_close": "Close",
       "embed_title": "{{_emoji.locale.settings}} Personalization",
       "embed_desc": "Customize how Lunaby interacts with you.\nSelect an option from the menu below.",
       "not_set": "_Not set_",
-      "field_occupation": "{{_emoji.locale.pencil}} Occupation",
-      "field_instructions": "{{_emoji.locale.note}} Instructions",
       "field_search": "{{_emoji.locale.search}} Search reference",
       "field_memory": "{{_emoji.locale.memory}} Saved memories",
       "status_on": "Enabled",
       "status_off": "Disabled",
+      "toggle_btn_on": "On",
+      "toggle_btn_off": "Off",
       "modal_title_info": "Personal info & Instructions",
-      "modal_occupation_label": "{{_emoji.locale.pencil}} Occupation",
+      "modal_occupation_label": "Occupation",
       "modal_occupation_ph": "Engineer, student, designer...",
-      "modal_instruction_label": "{{_emoji.locale.note}} Custom instructions",
+      "modal_instruction_label": "Custom instructions",
       "modal_instruction_ph": "Preferences, expected response tone...",
-      "search_on": "**Enabled** Reference search history\nLunaby will be allowed to access and use your saved memories to help answer you.",
-      "search_off": "**Disabled** Reference search history\nLunaby will not access or use your saved memories.",
-      "memory_on": "**Enabled** Reference saved memories\nLunaby will save your memories for future conversations.",
-      "memory_off": "**Disabled** Reference saved memories\nLunaby will not save new memories about you.",
-      "manage_error": "Could not retrieve memory information.",
-      "manage_title": "{{_emoji.locale.clipboard}} Saved Memories",
-      "manage_pi_name": "**Name:** {{value}}",
-      "manage_pi_nickname": "**Nickname:** {{value}}",
-      "manage_pi_age": "**Age:** {{value}}",
-      "manage_pi_location": "**Location:** {{value}}",
-      "manage_pi_occupation": "**Occupation:** {{value}}",
-      "manage_field_pi": "{{_emoji.locale.user}} Personal Information",
-      "manage_pref_likes": "**Likes:** {{value}}",
-      "manage_pref_hobbies": "**Hobbies:** {{value}}",
-      "manage_pref_topics": "**Topics:** {{value}}",
-      "manage_field_pref": "{{_emoji.locale.heart}} Preferences",
-      "manage_field_imp": "{{_emoji.locale.thought}} Important Memories",
-      "manage_stats": "{{_emoji.locale.stats}} Statistics",
-      "manage_stats_total": "**Total memories:** {{total}}",
-      "manage_stats_msgs": "**Total messages:** {{msgs}}",
-      "manage_stats_first": "**First interaction:** <t:{{time}}:R>",
-      "manage_no_data": "No memories have been saved yet. Start chatting with Lunaby!",
       "clear_confirm_title": "Confirm Data Deletion",
       "clear_confirm_desc": "Are you sure you want to delete **all** chat history and memories?\n\n**This action cannot be undone!**",
       "clear_btn_confirm": "Delete All",
       "clear_btn_cancel": "Cancel",
       "clear_success_title": "Data Deleted",
       "clear_success_desc": "All chat history and memories have been successfully deleted.\nWe can start anew! {{_emoji.locale.sparkle}}",
-      "clear_error": "Could not delete data. Please try again later.",
-      "select_ph": "Select an option"
+      "clear_error": "Could not delete data. Please try again later."
     }
   }
 }

@@ -5,6 +5,7 @@ const {
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
     ComponentType,
+MessageFlags,
 } = require('discord.js');
 const emojis = require('../../config/emojis');
 const i18nManager = require('../../services/i18n/i18nManager');
@@ -78,7 +79,7 @@ module.exports = {
         if (!interaction.guildId || !hasMemberPermission(interaction.member, PermissionsBitField.Flags.ManageGuild)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -99,7 +100,7 @@ module.exports = {
             if (i.user.id !== interaction.user.id) {
                 await i.reply({
                     content: interaction.t('system.only_caller_can_use'),
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
@@ -111,7 +112,7 @@ module.exports = {
                     content: tByLang(selectedLang, 'commands.language.notice.already_using', {
                         langDisplay: getLanguageDisplay(selectedLang, selectedLang),
                     }),
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
@@ -127,7 +128,7 @@ module.exports = {
 
             await i.followUp({
                 content: buildLanguageChangedText(selectedLang, previousLang, interaction.guild?.name),
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             }).catch(() => { });
         });
 

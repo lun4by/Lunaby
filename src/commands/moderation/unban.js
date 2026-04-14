@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags} = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const { logModAction } = require('../../utils/moderation/modUtils.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/moderation/modLogUtils.js');
@@ -25,7 +25,7 @@ module.exports = {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.BanMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -41,7 +41,7 @@ module.exports = {
         if (!/^\d{17,19}$/.test(userId)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.unban.invalid_id')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -54,7 +54,7 @@ module.exports = {
             if (!bannedUser) {
                 return interaction.editReply({
                     content: `${emojis.error} ${interaction.t('commands.unban.not_banned')}`,
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
 
@@ -99,7 +99,7 @@ module.exports = {
             logger.error('moderation', 'Error unbanning user:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.unban.error_unban', { error: error.message })}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     },

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
@@ -24,11 +24,11 @@ module.exports = {
     const amount = interaction.options.getInteger('amount');
 
     if (!targetUser || amount === null) {
-      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.addcredits.invalid_args')}`, ephemeral: true });
+      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.addcredits.invalid_args')}`, flags: MessageFlags.Ephemeral });
     }
 
     if (targetUser.bot) {
-      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.addcredits.cannot_add_bot')}`, ephemeral: true });
+      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.addcredits.cannot_add_bot')}`, flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -51,7 +51,7 @@ module.exports = {
       logger.error('admin', 'Error in addcredits command:', error);
       await interaction.reply({
         content: `${emojis.error} ${interaction.t('commands.admin.addcredits.error')}`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       }).catch(() => { });
     }
   }

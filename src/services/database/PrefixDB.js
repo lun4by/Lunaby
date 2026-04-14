@@ -1,6 +1,7 @@
 const mariaClient = require('./mariaClient');
 const logger = require('../../utils/core/logger');
 const { DEFAULT_PREFIX } = require('../../config/constants');
+const { ensureMariaTables } = require('./mariaSchemaValidator');
 
 class PrefixDB {
     constructor() {
@@ -11,26 +12,11 @@ class PrefixDB {
 
     async initTables() {
         try {
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS user_prefixes (
-          user_id VARCHAR(32) PRIMARY KEY,
-          prefix VARCHAR(10) NOT NULL,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS server_prefixes (
-          guild_id VARCHAR(32) PRIMARY KEY,
-          prefix VARCHAR(10) NOT NULL,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            logger.info('mariadb', 'Prefix tables ready');
+                        await ensureMariaTables(['user_prefixes', 'server_prefixes'], 'PrefixDB');
+                        logger.info('mariadb', 'Prefix tables validated');
             return true;
         } catch (error) {
-            logger.error('mariadb', 'Error creating prefix tables:', error);
+                        logger.error('mariadb', 'Error validating prefix tables:', error);
             return false;
         }
     }

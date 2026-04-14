@@ -3,6 +3,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+MessageFlags,
 } = require('discord.js');
 const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
 const logger = require('../../utils/core/logger');
@@ -42,7 +43,7 @@ module.exports = {
       if (!bannerUrl) {
         return interaction.reply({
           content: `${emojis.error} ${interaction.t('commands.banner.no_banner', { user: targetUser.toString() })}`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -62,7 +63,7 @@ module.exports = {
       logger.error('banner', 'Error in banner command:', error);
       const payload = {
         content: `${emojis.error} ${interaction.t('commands.banner.error')}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       };
       const respond = interaction.replied || interaction.deferred
         ? interaction.followUp(payload)

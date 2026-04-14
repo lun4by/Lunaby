@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/core/logger.js');
@@ -6,6 +6,7 @@ const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('warn')
@@ -24,7 +25,7 @@ module.exports = {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -41,14 +42,14 @@ module.exports = {
         if (!targetMember) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.moderation_common.user_not_found')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
         if (targetUser.bot) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.warn.cannot_warn_bot')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -58,7 +59,7 @@ module.exports = {
         ) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -75,7 +76,7 @@ module.exports = {
             if (!success) {
                 return interaction.editReply({
                     content: `${emojis.error} ${interaction.t('commands.warn.db_error')}`,
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
 
@@ -105,7 +106,7 @@ module.exports = {
             });
 
             try {
-                const dmEmbed = new EmbedBuilder()
+                const dmEmbed = createEmbed()
                     .setColor(0xffff00)
                     .setTitle(interaction.t('commands.warn.dm_title', { guild: interaction.guild.name }))
                     .setDescription(interaction.t('commands.warn.dm_desc', { reason, warningCount }))
@@ -124,7 +125,7 @@ module.exports = {
                         interaction.t('commands.warn.auto_mute_reason', { count: warningCount }),
                     );
 
-                    const autoMuteEmbed = new EmbedBuilder()
+                    const autoMuteEmbed = createEmbed()
                         .setColor(0xffa500)
                         .setTitle(interaction.t('commands.warn.auto_mute_title'))
                         .setDescription(interaction.t('commands.warn.auto_mute_desc', { tag: targetUser.tag, count: warningCount }))
@@ -139,7 +140,7 @@ module.exports = {
                 try {
                     await targetMember.kick(interaction.t('commands.warn.auto_kick_reason', { count: warningCount }));
 
-                    const autoKickEmbed = new EmbedBuilder()
+                    const autoKickEmbed = createEmbed()
                         .setColor(0xff5555)
                         .setTitle(interaction.t('commands.warn.auto_kick_title'))
                         .setDescription(interaction.t('commands.warn.auto_kick_desc', { tag: targetUser.tag, count: warningCount }))
@@ -155,7 +156,7 @@ module.exports = {
             logger.error('moderation', 'Error warning member:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.warn.error_warn', { error: error.message })}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     },

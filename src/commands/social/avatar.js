@@ -3,6 +3,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+MessageFlags,
 } = require('discord.js');
 const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
 const logger = require('../../utils/core/logger');
@@ -80,7 +81,7 @@ module.exports = {
       logger.error('avatar', 'Error in avatar command:', error);
       const payload = {
         content: `${emojis.error} ${interaction.t('commands.avatar.error')}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       };
       const respond = interaction.replied || interaction.deferred
         ? interaction.followUp(payload)

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
@@ -46,11 +46,11 @@ module.exports = {
     }
 
     if (targetUser.bot) {
-      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.give.no_bot')}`, ephemeral: true });
+      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.give.no_bot')}`, flags: MessageFlags.Ephemeral });
     }
 
     if (targetUser.id === interaction.user.id) {
-      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.give.no_self')}`, ephemeral: true });
+      return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.give.no_self')}`, flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -63,7 +63,7 @@ module.exports = {
       logger.error('give', 'Error in give command:', error);
       await interaction.reply({
         content: `${emojis.error} ${interaction.t('commands.give.error')}`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       }).catch(() => { });
     }
   }

@@ -1,11 +1,11 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const logger = require('../../utils/core/logger');
 const fs = require('fs');
 const emojis = require('../../config/emojis.js');
 
 const OWNER_ID = process.env.OWNER_ID;
 
-const reply = (interaction, content) => interaction.reply({ content, ephemeral: true });
+const reply = (interaction, content) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
 
 module.exports = {
     data: new SlashCommandBuilder()

@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const PrefixDB = require('../../services/database/PrefixDB');
 const { DEFAULT_PREFIX } = require('../../config/constants');
 const { COLORS } = require('../../utils/discord/embedUtils');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('prefix')
@@ -55,7 +56,7 @@ async function handleView(interaction) {
     const activePrefix = await PrefixDB.resolvePrefix(userId, guildId);
 
     const notSet = interaction.t('commands.prefix.not_set');
-    const embed = new EmbedBuilder()
+    const embed = createEmbed()
         .setColor(COLORS.LUNABY)
         .setTitle(interaction.t('commands.prefix.title'))
         .addFields(
@@ -74,7 +75,7 @@ async function handleSet(interaction) {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ManageGuild)) {
             return await interaction.reply({
                 content: interaction.t('commands.prefix.need_manage_server'),
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }
@@ -82,7 +83,7 @@ async function handleSet(interaction) {
     if (!interaction.guild) {
         return await interaction.reply({
             content: interaction.t('commands.prefix.server_only'),
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -91,7 +92,7 @@ async function handleSet(interaction) {
     if (newPrefix.length > 10) {
         return await interaction.reply({
             content: interaction.t('commands.prefix.max_length'),
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -99,7 +100,7 @@ async function handleSet(interaction) {
     if (success) {
         await interaction.reply(interaction.t('commands.prefix.server_changed', { prefix: newPrefix }));
     } else {
-        await interaction.reply({ content: interaction.t('commands.prefix.save_error'), ephemeral: true });
+        await interaction.reply({ content: interaction.t('commands.prefix.save_error'), flags: MessageFlags.Ephemeral });
     }
 }
 
@@ -109,7 +110,7 @@ async function handleUser(interaction) {
     if (newPrefix.length > 10) {
         return await interaction.reply({
             content: interaction.t('commands.prefix.max_length'),
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -117,7 +118,7 @@ async function handleUser(interaction) {
     if (success) {
         await interaction.reply(interaction.t('commands.prefix.personal_changed', { prefix: newPrefix }));
     } else {
-        await interaction.reply({ content: interaction.t('commands.prefix.save_error'), ephemeral: true });
+        await interaction.reply({ content: interaction.t('commands.prefix.save_error'), flags: MessageFlags.Ephemeral });
     }
 }
 

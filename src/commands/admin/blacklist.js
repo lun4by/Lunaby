@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const BlacklistService = require('../../services/user/BlacklistService');
 const { notifyBlacklistedGuildAndLeave } = require('../../utils/discord/blacklistUtils');
 const logger = require('../../utils/core/logger');
@@ -151,7 +151,7 @@ module.exports = {
           await BlacklistService.addUser(targetUser.id, reason, interaction.user.id);
           return reply(interaction, {
             content: `${emojis.success} ${interaction.t('commands.admin.blacklist.add_user_success', { id: targetUser.id })}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -160,7 +160,7 @@ module.exports = {
           if (!isSnowflake(userId)) {
             return reply(interaction, {
               content: `${emojis.error} ${interaction.t('commands.admin.blacklist.invalid_user_id')}`,
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
           }
 
@@ -169,7 +169,7 @@ module.exports = {
             content: removed
               ? `${emojis.success} ${interaction.t('commands.admin.blacklist.remove_user_success', { id: userId })}`
               : `${emojis.error} ${interaction.t('commands.admin.blacklist.user_not_found', { id: userId })}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -180,14 +180,14 @@ module.exports = {
           if (!isSnowflake(guildId)) {
             return reply(interaction, {
               content: `${emojis.error} ${interaction.t('commands.admin.blacklist.invalid_server_id')}`,
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
           }
 
           await BlacklistService.addGuild(guildId, reason, interaction.user.id);
           await reply(interaction, {
             content: `${emojis.success} ${interaction.t('commands.admin.blacklist.add_server_success', { id: guildId })}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
           const liveGuild = interaction.client.guilds.cache.get(guildId);
@@ -202,7 +202,7 @@ module.exports = {
           if (!isSnowflake(guildId)) {
             return reply(interaction, {
               content: `${emojis.error} ${interaction.t('commands.admin.blacklist.invalid_server_id')}`,
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
           }
 
@@ -211,7 +211,7 @@ module.exports = {
             content: removed
               ? `${emojis.success} ${interaction.t('commands.admin.blacklist.remove_server_success', { id: guildId })}`
               : `${emojis.error} ${interaction.t('commands.admin.blacklist.server_not_found', { id: guildId })}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -230,7 +230,7 @@ module.exports = {
 
           return reply(interaction, {
             content: blocks.join('\n\n'),
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
       }
@@ -308,7 +308,7 @@ module.exports = {
       logger.error('blacklist', 'Error in blacklist command:', error);
       return reply(interaction, {
         content: `${emojis.error} ${interaction.t('commands.admin.blacklist.error', { message: error.message || '' })}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       }).catch(() => { });
     }
   },

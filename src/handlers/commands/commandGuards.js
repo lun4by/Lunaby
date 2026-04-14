@@ -42,7 +42,7 @@ async function ensureUserConsent(target, user) {
     await target.reply(consentData);
   } catch (error) {
     if (isMissingPermissionError(error)) {
-      await handlePermissionError(target, 'embedLinks', user.username, 'reply');
+      await handlePermissionError(target, 'sendMessages', user.username, 'reply');
       return false;
     }
 
@@ -64,20 +64,6 @@ async function ensureCommandEnabledInChannel({
 
   const isDisabled = await MariaModDB.isCommandDisabled(guildId, channelId, commandName);
   if (!isDisabled) {
-    return true;
-  }
-
-  await deny();
-  return false;
-}
-
-async function ensureCommandUnlocked({
-  commandName,
-  isPrivileged,
-  deny,
-}) {
-  const isLocked = await MariaModDB.isCommandLocked(commandName);
-  if (!isLocked || isPrivileged) {
     return true;
   }
 
@@ -141,7 +127,6 @@ module.exports = {
   bindTranslator,
   ensureCommandCooldown,
   ensureCommandEnabledInChannel,
-  ensureCommandUnlocked,
   ensureMemberPermissions,
   ensureUserConsent,
   getCommandCooldownSeconds,

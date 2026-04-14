@@ -1,10 +1,10 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 
 const OWNER_ID = process.env.OWNER_ID;
 
 const WARNINGS = (t) => ({
-    database: t('admin.reset.warn_database'),
-    users: t('admin.reset.warn_users'),
+    database: t('commands.admin.reset.warn_database'),
+    users: t('commands.admin.reset.warn_users'),
 });
 
 module.exports = {
@@ -21,7 +21,10 @@ module.exports = {
 
     async execute(interaction) {
         if (interaction.user.id !== OWNER_ID) {
-            return interaction.reply({ content: interaction.t('commands.admin.reset.owner_only'), ephemeral: true });
+            return interaction.reply({
+                content: interaction.t('commands.admin.reset.owner_only'),
+                flags: MessageFlags.Ephemeral,
+            });
         }
 
         const type = interaction.options.getString('type');
@@ -31,6 +34,10 @@ module.exports = {
             new ButtonBuilder().setCustomId(`reset_${type}_cancel`).setLabel(interaction.t('commands.admin.reset.cancel_btn')).setStyle(ButtonStyle.Danger),
         );
 
-        await interaction.reply({ content: WARNINGS(interaction.t)[type], components: [row], ephemeral: true });
+        await interaction.reply({
+            content: WARNINGS(interaction.t)[type],
+            components: [row],
+            flags: MessageFlags.Ephemeral,
+        });
     },
 };

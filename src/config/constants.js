@@ -1,5 +1,5 @@
 module.exports = {
-  DEFAULT_PREFIX: '.',
+  DEFAULT_PREFIX: 'l.',
   DISCORD_MESSAGE_MAX_LENGTH: 2000,
   SUMMARY_MESSAGE_TRUNCATE_LENGTH: 150,
   MAX_CONVERSATION_LENGTH: 15,
@@ -28,8 +28,8 @@ module.exports = {
   ROLE_LIMITS: {
     owner: -1,
     admin: -1,
-    pro: 125,
-    user: 75
+    pro: 120,
+    user: 60
   },
   ROLE_IMAGE_LIMITS: {
     owner: -1,

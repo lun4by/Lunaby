@@ -1,9 +1,9 @@
+const { MessageFlags } = require('discord.js');
 const logger = require('../utils/core/logger.js');
 const emojis = require('../config/emojis');
 const {
   ensureCommandCooldown,
   ensureCommandEnabledInChannel,
-  ensureCommandUnlocked,
   ensureMemberPermissions,
   ensureUserConsent,
   getCommandCooldownSeconds,
@@ -17,6 +17,7 @@ const {
   getCommandsJson,
   loadCommands,
 } = require('./commands/commandRegistry');
+const CommandNoticeService = require('../services/system/CommandNoticeService');
 
 const handleCommand = async (interaction, client) => {
   if (!client.commands.size) {
@@ -51,21 +52,13 @@ const handleCommand = async (interaction, client) => {
     logger.info('command', `Role resolved for ${interaction.user.id}: ${userRole}`);
 
     const commandName = command.data?.name || interaction.commandName;
-    const deny = (message) => interaction.reply({ content: `${emojis.error} ${message}`, ephemeral: true });
+    const deny = (message) => interaction.reply({ content: `${emojis.error} ${message}`, flags: MessageFlags.Ephemeral });
 
     if (!(await ensureCommandEnabledInChannel({
       guildId: interaction.guildId,
       channelId: interaction.channelId,
       commandName,
       deny: () => deny(interaction.t('system.command_disabled_in_channel')),
-    }))) {
-      return;
-    }
-
-    if (!(await ensureCommandUnlocked({
-      commandName,
-      isPrivileged,
-      deny: () => deny(interaction.t('system.command_locked_for_maintenance')),
     }))) {
       return;
     }
@@ -92,7 +85,7 @@ const handleCommand = async (interaction, client) => {
       deny: async ({ remaining, expiresAtUnix }) => {
         await interaction.reply({
           content: interaction.t('system.cooldown_wait', { expiresAtUnix }),
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         setTimeout(() => interaction.deleteReply().catch(() => { }), remaining * 1000);
       },
@@ -108,6 +101,7 @@ const handleCommand = async (interaction, client) => {
     await command.execute(interaction);
 
     setCommandCooldown(interaction.user.id, commandName, cooldownSeconds);
+    await CommandNoticeService.appendActiveNotice(interaction);
   } catch (error) {
     logger.error(
       'command',
@@ -124,7 +118,7 @@ const handleCommand = async (interaction, client) => {
       error,
     );
 
-    const errPayload = { content: `${emojis.error} ${interaction.t('system.command_execution_failed')}`, ephemeral: true };
+    const errPayload = { content: `${emojis.error} ${interaction.t('system.command_execution_failed')}`, flags: MessageFlags.Ephemeral };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)
       : interaction.reply(errPayload);

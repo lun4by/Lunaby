@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
@@ -46,7 +46,7 @@ module.exports = {
             if (beforeStats.limits.period === -1) {
                 return interaction.reply({
                     content: `${emojis.error} ${interaction.t('commands.admin.addquota.unlimited_owner', { tag: targetUser.tag })}`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -74,7 +74,7 @@ module.exports = {
             logger.error('admin', 'Error in addquota command:', error);
             await interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.admin.addquota.error')}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

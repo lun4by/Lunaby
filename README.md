@@ -51,7 +51,13 @@ Khác với các bot sử dụng API Cloud mất phí, việc host Lunaby trên 
    - Sao chép file `example.env` thành `.env`
    - Điền đầy đủ các thông số cấu hình
 
-4. **Khởi chạy Bot:**
+4. **Import schema MariaDB (bắt buộc):**
+   ```bash
+   mariadb -h <host> -u <user> -p <database> < database/schema/mariadb_schema.sql
+   ```
+   > Lunaby không còn tự tạo bảng MariaDB trong runtime. Toàn bộ schema nằm tại `database/schema/mariadb_schema.sql`.
+
+5. **Khởi chạy Bot:**
    ```bash
    npm start
    ```

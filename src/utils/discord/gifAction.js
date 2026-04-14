@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const emojis = require('../../config/emojis');
 
+const { createEmbed } = require('./builderFactory');
 const ACTION_MESSAGES = {
     pat: { verb: 'xoa đầu', emoji: emojis.gifActions.pat, color: 0xFFD700, selfMsg: 'tự xoa đầu mình' },
     hug: { verb: 'ôm', emoji: emojis.gifActions.hug, color: 0xFF69B4, selfMsg: 'tự ôm mình' },
@@ -36,7 +37,7 @@ function buildActionEmbed(action, sender, target, interaction) {
         description = `${info.emoji} ${interaction.t(`commands.fun.target_${action}`, { sender: senderName, target: resolveDisplayName(target) })}`;
     }
 
-    const embed = new EmbedBuilder()
+    const embed = createEmbed()
         .setColor(info.color)
         .setDescription(description);
 

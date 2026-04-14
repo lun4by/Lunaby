@@ -54,4 +54,3 @@ class BlacklistService {
 }
 
 module.exports = new BlacklistService();
-

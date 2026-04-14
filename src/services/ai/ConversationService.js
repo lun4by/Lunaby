@@ -61,7 +61,10 @@ class ConversationService {
     try {
       originalPrompt = SecurityUtils.sanitizeInput(originalPrompt);
       const memory = await MemoryService.getUserMemory(userId);
-      const memoryContext = await MemoryService.buildMemoryContext(userId, originalPrompt);
+      const canReferenceSavedMemories = memory?.privacy?.allowSearchHistoryReference !== false;
+      const memoryContext = canReferenceSavedMemories
+        ? await MemoryService.buildMemoryContext(userId, originalPrompt)
+        : '';
 
       const customInstructions = memory?.personalInfo?.customInstructions
         ? SecurityUtils.sanitizeInput(memory.personalInfo.customInstructions)
@@ -71,7 +74,7 @@ class ConversationService {
         : "";
 
       let conversationContext = "";
-      if (memory?.privacy?.allowSearchHistoryReference !== false) {
+      if (canReferenceSavedMemories) {
         const fullHistory = await storageDB.getConversationHistory(userId, prompts.system.main, DEFAULT_MODEL);
 
         if (fullHistory?.length >= 3) {

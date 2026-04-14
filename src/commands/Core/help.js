@@ -1,16 +1,19 @@
 const {
     SlashCommandBuilder,
-    EmbedBuilder,
     ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
-    ComponentType,
+    MessageFlags,
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 const { COLORS } = require('../../utils/discord/embedUtils');
+
+const { createEmbed } = require('../../utils/discord/builderFactory');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -29,87 +32,86 @@ module.exports = {
 
         const visibleCategories = commandFolders.filter((folder) => {
             if (isOwner) return true;
-            return folder !== 'setting';
+            return folder !== 'admin';
         });
-
-        // Thêm mục Trang chủ lên đầu danh sách
-        visibleCategories.unshift('home');
-
-        const select = new StringSelectMenuBuilder()
-            .setCustomId('category-select')
-            .setPlaceholder(interaction.t('commands.help.select_placeholder'))
-            .addOptions(buildSelectOptions(visibleCategories, interaction));
-
-        const row = new ActionRowBuilder().addComponents(select);
+        let isHomeView = true;
         const banner = 'https://cdn.lunie.dev/Lunaby/Lunaby_Help.jpg';
 
-        const welcomeEmbed = new EmbedBuilder()
+        const welcomeEmbed = createEmbed()
             .setColor(COLORS.LUNABY)
             .setTitle(interaction.t('commands.help.embed_title'))
             .setDescription(interaction.t('commands.help.embed_desc'))
             .setImage(banner)
-            .setFooter({ text: 'Made by s4ory' })
+            .setFooter({ text: 'Powered & Developer by s4ory' })
             .setTimestamp();
 
         await interaction.reply({
             embeds: [welcomeEmbed],
-            components: [row],
+            components: [buildCategoryMenuRow(visibleCategories, interaction)],
         });
 
         const message = await interaction.fetchReply();
 
         const collector = message.createMessageComponentCollector({
-            time: 60000,
-            componentType: ComponentType.StringSelect,
+            time: 120000,
         });
 
         collector.on('collect', async (i) => {
             if (i.user.id !== interaction.user.id) {
                 return i.reply({
                     content: interaction.t('system.only_caller_can_use'),
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
+            }
+
+            if (i.isButton() && i.customId === 'help_home') {
+                isHomeView = true;
+                return i.update({
+                    embeds: [welcomeEmbed],
+                    components: [buildCategoryMenuRow(visibleCategories, interaction)],
+                });
+            }
+
+            if (!i.isStringSelectMenu()) {
+                return;
             }
 
             const category = i.values[0];
 
-            if (category === 'setting' && !isOwner) {
+            if (category === 'admin' && !isOwner) {
                 return i.reply({
                     content: interaction.t('commands.help.no_view_permission'),
-                    ephemeral: true,
-                });
-            }
-
-            // Nếu người dùng chọn Trang chủ, quay lại embed chào mừng
-            if (category === 'home') {
-                return i.update({
-                    embeds: [welcomeEmbed],
-                    components: [row],
+                    flags: MessageFlags.Ephemeral,
                 });
             }
 
             const helpEmbed = buildHelpEmbed(category, visibleCategories, commandsPath, interaction);
+            isHomeView = false;
 
             await i.update({
                 embeds: [helpEmbed],
-                components: [row],
+                components: [
+                    buildCategoryMenuRow(visibleCategories, interaction),
+                    buildHomeButtonRow(interaction),
+                ],
             });
         });
 
         collector.on('end', async (collected) => {
             try {
-                const disabledRow = new ActionRowBuilder().addComponents(
-                    select.setDisabled(true),
-                );
+                const disabledRows = [buildCategoryMenuRow(visibleCategories, interaction, true)];
+                if (!isHomeView) {
+                    disabledRows.push(buildHomeButtonRow(interaction, true));
+                }
 
                 if (collected.size === 0) {
                     await interaction.editReply({
                         content: interaction.t('commands.help.menu_expired'),
-                        components: [disabledRow],
+                        components: disabledRows,
                     });
                 } else {
                     await interaction.editReply({
-                        components: [disabledRow],
+                        components: disabledRows,
                     });
                 }
             } catch (error) {
@@ -119,11 +121,34 @@ module.exports = {
     },
 };
 
+function buildCategoryMenuRow(categories, interaction, disabled = false) {
+    const select = new StringSelectMenuBuilder()
+        .setCustomId('category-select')
+        .setPlaceholder(interaction.t('commands.help.select_placeholder'))
+        .setDisabled(disabled)
+        .addOptions(buildSelectOptions(categories, interaction));
+
+    return new ActionRowBuilder().addComponents(select);
+}
+
+function buildHomeButtonRow(interaction, disabled = false) {
+    const homeMetadata = getCategoryMetadata('home', interaction);
+
+    return new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('help_home')
+            .setLabel(homeMetadata.label)
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(disabled),
+    );
+}
+
 function buildSelectOptions(categories, interaction) {
     const options = [];
 
     for (const folder of categories) {
         const metadata = getCategoryMetadata(folder, interaction);
+
         options.push(
             new StringSelectMenuOptionBuilder()
                 .setLabel(metadata.label)
@@ -136,8 +161,8 @@ function buildSelectOptions(categories, interaction) {
     return options;
 }
 
-function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) {
-    const embed = new EmbedBuilder()
+function buildHelpEmbed(category, _visibleCategories, commandsPath, interaction) {
+    const embed = createEmbed()
         .setColor(COLORS.LUNABY)
         .setTimestamp();
 
@@ -150,12 +175,28 @@ function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) 
     const folderPath = path.join(commandsPath, category);
     const commandFiles = fs.readdirSync(folderPath).filter((file) => file.endsWith('.js'));
 
-    const commandList = commandFiles.map((file) => {
-        const command = require(path.join(folderPath, file));
-        const description = interaction.t(`commands.${command.data.name}.desc`, { returnObjects: true });
-        const textDesc = typeof description === 'string' ? description : (command.data.description || interaction.t('commands.help.no_description'));
-        return `/${command.data.name} : ${textDesc}`;
-    }).join('\n');
+    const commandList = commandFiles
+        .map((file) => {
+            try {
+                const modulePath = path.join(folderPath, file);
+                const command = require(modulePath);
+                const commandName = command?.data?.name;
+
+                // Skip helper files that are not slash command modules.
+                if (!commandName) {
+                    return null;
+                }
+
+                const textDesc = resolveCommandDescription(category, commandName, command, interaction);
+
+                return `/${commandName} : ${textDesc}`;
+            } catch (error) {
+                logger.warn('help', `Skipping invalid help module ${category}/${file}: ${error.message}`);
+                return null;
+            }
+        })
+        .filter(Boolean)
+        .join('\n');
 
     embed.addFields({
         name: '\u200B',
@@ -163,6 +204,22 @@ function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) 
     });
 
     return embed;
+}
+
+function resolveCommandDescription(category, commandName, command, interaction) {
+    const candidateKeys = [
+        `commands.${commandName}.desc`,
+        `commands.${category}.desc_${commandName}`,
+    ];
+
+    for (const key of candidateKeys) {
+        const translated = interaction.t(key);
+        if (typeof translated === 'string' && translated !== key) {
+            return translated;
+        }
+    }
+
+    return command?.prefix?.description || command?.data?.description || interaction.t('commands.help.no_description');
 }
 
 function getCategoryMetadata(category, interaction) {
@@ -179,10 +236,10 @@ function getCategoryMetadata(category, interaction) {
     }
 
     const categoryMap = {
-        'home': { emoji: emojis.categories.home },
-        'AIcore': { emoji: emojis.categories.aiCore },
-        'Core': { emoji: emojis.categories.core },
+        'admin': { emoji: emojis.categories.folder },
+        'core': { emoji: emojis.categories.core },
         'moderation': { emoji: emojis.categories.moderation },
+        'economy': { emoji: emojis.categories.economy },
         'social': { emoji: emojis.categories.social },
         'system': { emoji: emojis.categories.system },
         'fun': { emoji: emojis.categories.fun },

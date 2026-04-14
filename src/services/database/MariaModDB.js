@@ -1,193 +1,104 @@
 const mariaClient = require('./mariaClient');
 const logger = require('../../utils/core/logger');
 const { ROLE_LIMITS, ROLE_IMAGE_LIMITS, USER_ROLES } = require('../../config/constants');
+const { ensureMariaTables } = require('./mariaSchemaValidator');
 
 const DEFAULT_QUOTA_ROLE = USER_ROLES.USER;
 const DEFAULT_LIMIT_PERIOD = ROLE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
 const DEFAULT_IMAGE_LIMIT_PERIOD = ROLE_IMAGE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const DAILY_RESET_HOUR = 5;
+const DAILY_TIMEZONE_OFFSET_HOURS = 7;
+const DAILY_TIMEZONE_OFFSET_MS = DAILY_TIMEZONE_OFFSET_HOURS * HOUR_MS;
+const DAILY_BASE_REWARD = 500;
+const DAILY_STREAK_BONUS = 50;
+const DAILY_STREAK_BONUS_CAP = 1000;
+
+const CARD_RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const CARD_SUITS = ['S', 'H', 'D', 'C'];
+
+function createShuffledDeck() {
+    const deck = [];
+    for (const suit of CARD_SUITS) {
+        for (const rank of CARD_RANKS) {
+            deck.push({ rank, suit });
+        }
+    }
+
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+
+    return deck;
+}
+
+function drawCard(deck) {
+    return deck.pop();
+}
+
+function cardPoint(card) {
+    if (!card) return 0;
+    if (['J', 'Q', 'K'].includes(card.rank)) return 10;
+    if (card.rank === 'A') return 11;
+    return Number(card.rank);
+}
+
+function handScore(hand) {
+    let total = hand.reduce((sum, card) => sum + cardPoint(card), 0);
+    let aces = hand.filter((card) => card.rank === 'A').length;
+
+    while (total > 21 && aces > 0) {
+        total -= 10;
+        aces--;
+    }
+
+    return total;
+}
+
+function isBlackjack(hand) {
+    return hand.length === 2 && handScore(hand) === 21;
+}
+
+function handToText(hand) {
+    return hand.map((card) => `${card.rank}${card.suit}`).join(' ');
+}
+
+function getDailyWindowId(timestamp) {
+    const shifted = Number(timestamp) + DAILY_TIMEZONE_OFFSET_MS - (DAILY_RESET_HOUR * HOUR_MS);
+    return Math.floor(shifted / DAY_MS);
+}
+
+function getNextDailyResetAt(timestamp) {
+    const shifted = Number(timestamp) + DAILY_TIMEZONE_OFFSET_MS - (DAILY_RESET_HOUR * HOUR_MS);
+    const nextBoundaryShifted = (Math.floor(shifted / DAY_MS) + 1) * DAY_MS;
+    return nextBoundaryShifted - DAILY_TIMEZONE_OFFSET_MS + (DAILY_RESET_HOUR * HOUR_MS);
+}
 
 class MariaModDB {
     async initTables() {
         try {
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS mod_settings (
-          guild_id VARCHAR(32) PRIMARY KEY,
-          log_channel_id VARCHAR(32),
-          mod_action_logs BOOLEAN DEFAULT TRUE,
-          monitor_logs BOOLEAN DEFAULT TRUE,
-          updated_by VARCHAR(32),
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
+                        await ensureMariaTables([
+                                'mod_settings',
+                                'mod_warnings',
+                                'mod_logs',
+                                'guild_settings',
+                                'command_toggles',
+                                'bot_settings',
+                                'user_levels',
+                                'user_consents',
+                                'user_profiles',
+                                'user_economy',
+                                'lvoice_config',
+                                'lvoice_active',
+                                'system_notices',
+                        ], 'MariaModDB');
 
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS mod_warnings (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          guild_id VARCHAR(32) NOT NULL,
-          user_id VARCHAR(32) NOT NULL,
-          moderator_id VARCHAR(32) NOT NULL,
-          reason TEXT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          INDEX idx_user_guild (guild_id, user_id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS mod_logs (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          guild_id VARCHAR(32) NOT NULL,
-          target_id VARCHAR(32),
-          moderator_id VARCHAR(32),
-          action VARCHAR(50) NOT NULL,
-          reason TEXT,
-          duration INT DEFAULT NULL,
-          count INT DEFAULT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          INDEX idx_guild_target (guild_id, target_id),
-          INDEX idx_guild_action (guild_id, action)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS guild_settings (
-          guild_id VARCHAR(32) PRIMARY KEY,
-          prefix VARCHAR(10) DEFAULT NULL,
-          xp_active BOOLEAN DEFAULT FALSE,
-          xp_exceptions JSON DEFAULT ('[]'),
-          welcome_enabled BOOLEAN DEFAULT FALSE,
-          welcome_channel VARCHAR(32),
-          welcome_message TEXT,
-          leaving_enabled BOOLEAN DEFAULT FALSE,
-          leaving_channel VARCHAR(32),
-          leaving_message TEXT,
-          muted_role VARCHAR(32),
-          suggest_channel VARCHAR(32),
-          level_up_notifications BOOLEAN DEFAULT TRUE,
-          use_embeds BOOLEAN DEFAULT TRUE,
-          voice_toggle_enabled BOOLEAN DEFAULT FALSE,
-          language VARCHAR(10) DEFAULT 'vi',
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS command_toggles (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          guild_id VARCHAR(32) NOT NULL,
-          channel_id VARCHAR(32) NOT NULL,
-          command_name VARCHAR(50) NOT NULL,
-          updated_by VARCHAR(32),
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          UNIQUE KEY uk_guild_channel_cmd (guild_id, channel_id, command_name),
-          INDEX idx_guild_channel (guild_id, channel_id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS command_locks (
-          command_name VARCHAR(50) PRIMARY KEY,
-          reason VARCHAR(255) DEFAULT NULL,
-          updated_by VARCHAR(32),
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS bot_settings (
-          setting_key VARCHAR(50) PRIMARY KEY,
-          setting_value VARCHAR(255),
-          updated_by VARCHAR(32),
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS user_levels (
-          guild_id VARCHAR(32) NOT NULL,
-          user_id VARCHAR(32) NOT NULL,
-          xp INT DEFAULT 0,
-          level INT DEFAULT 1,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (guild_id, user_id),
-          INDEX idx_guild_xp (guild_id, xp DESC)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS user_consents (
-          user_id VARCHAR(32) PRIMARY KEY,
-          consented BOOLEAN DEFAULT FALSE,
-          version VARCHAR(10) DEFAULT '1.0',
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS user_profiles (
-          user_id VARCHAR(32) PRIMARY KEY,
-          global_xp INT DEFAULT 0,
-          global_level INT DEFAULT 1,
-          bio TEXT,
-          color VARCHAR(20),
-          background VARCHAR(255),
-          inventory JSON DEFAULT ('[]'),
-          badges JSON DEFAULT ('[]'),
-          social JSON DEFAULT ('{}'),
-          cosmetics JSON DEFAULT ('{}'),
-          extra_data JSON DEFAULT ('{}'),
-          language VARCHAR(10) DEFAULT NULL,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS user_economy (
-          user_id VARCHAR(32) PRIMARY KEY,
-          wallet INT DEFAULT 0,
-          bank INT DEFAULT 0,
-          shards INT DEFAULT 0,
-          streak_current INT DEFAULT 0,
-          streak_alltime INT DEFAULT 0,
-          streak_timestamp BIGINT DEFAULT 0,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS lvoice_config (
-          guild_id VARCHAR(32) PRIMARY KEY,
-          creator_channel_id VARCHAR(32),
-          category_id VARCHAR(32),
-          default_name VARCHAR(100) DEFAULT '{user}',
-          default_limit INT DEFAULT 0,
-          default_bitrate INT DEFAULT 64000,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            await mariaClient.query(`
-        CREATE TABLE IF NOT EXISTS lvoice_active (
-          channel_id VARCHAR(32) PRIMARY KEY,
-          guild_id VARCHAR(32) NOT NULL,
-          owner_id VARCHAR(32) NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          INDEX idx_guild (guild_id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-      `);
-
-            logger.info('mariadb', 'All tables ready');
-
-            try {
-                await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS voice_toggle_enabled BOOLEAN DEFAULT FALSE`);
-                await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS level_up_channel VARCHAR(32) DEFAULT NULL`);
-                await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS vote_log_channel VARCHAR(32) DEFAULT NULL`);
-                await mariaClient.query(`ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT 'vi'`);
-            } catch (e) {
-            }
-
+                        logger.info('mariadb', 'Core MariaDB tables validated');
             return true;
         } catch (error) {
-            logger.error('mariadb', 'Error creating tables:', error);
+                        logger.error('mariadb', 'Error validating MariaDB schema:', error);
             return false;
         }
     }
@@ -615,99 +526,6 @@ class MariaModDB {
         }
     }
 
-    async lockCommand(commandName, updatedBy, reason = null) {
-        try {
-            await mariaClient.query(
-                `INSERT INTO command_locks (command_name, reason, updated_by)
-                 VALUES (?, ?, ?)
-                 ON DUPLICATE KEY UPDATE
-                 reason = VALUES(reason),
-                 updated_by = VALUES(updated_by)`,
-                [commandName, reason, updatedBy]
-            );
-            return true;
-        } catch (error) {
-            logger.error('mariadb', 'Error locking command:', error);
-            return false;
-        }
-    }
-
-    async lockCommands(commandNames, updatedBy, reason = null) {
-        try {
-            if (!Array.isArray(commandNames) || commandNames.length === 0) return true;
-
-            const values = commandNames.map((name) => [name, reason, updatedBy]);
-            const placeholders = values.map(() => '(?, ?, ?)').join(', ');
-
-            await mariaClient.query(
-                `INSERT INTO command_locks (command_name, reason, updated_by)
-                 VALUES ${placeholders}
-                 ON DUPLICATE KEY UPDATE
-                 reason = VALUES(reason),
-                 updated_by = VALUES(updated_by)`,
-                values.flat()
-            );
-            return true;
-        } catch (error) {
-            logger.error('mariadb', 'Error locking commands:', error);
-            return false;
-        }
-    }
-
-    async unlockCommand(commandName) {
-        try {
-            await mariaClient.query(
-                'DELETE FROM command_locks WHERE command_name = ?',
-                [commandName]
-            );
-            return true;
-        } catch (error) {
-            logger.error('mariadb', 'Error unlocking command:', error);
-            return false;
-        }
-    }
-
-    async unlockCommands(commandNames) {
-        try {
-            if (!Array.isArray(commandNames) || commandNames.length === 0) return true;
-
-            const placeholders = commandNames.map(() => '?').join(', ');
-            await mariaClient.query(
-                `DELETE FROM command_locks WHERE command_name IN (${placeholders})`,
-                commandNames
-            );
-            return true;
-        } catch (error) {
-            logger.error('mariadb', 'Error unlocking commands:', error);
-            return false;
-        }
-    }
-
-    async getLockedCommands() {
-        try {
-            const rows = await mariaClient.query(
-                'SELECT command_name FROM command_locks ORDER BY command_name ASC'
-            );
-            return rows.map((row) => row.command_name);
-        } catch (error) {
-            logger.error('mariadb', 'Error getting locked commands:', error);
-            return [];
-        }
-    }
-
-    async isCommandLocked(commandName) {
-        try {
-            const rows = await mariaClient.query(
-                'SELECT 1 FROM command_locks WHERE command_name = ? LIMIT 1',
-                [commandName]
-            );
-            return rows.length > 0;
-        } catch (error) {
-            logger.error('mariadb', 'Error checking command lock status:', error);
-            return false;
-        }
-    }
-
     async getUserXP(guildId, userId) {
         try {
             const rows = await mariaClient.query(
@@ -914,6 +732,323 @@ class MariaModDB {
         }
     }
 
+    async claimDailyCredits(userId) {
+        let conn;
+        try {
+            await mariaClient.connect();
+            conn = await mariaClient.pool.getConnection();
+            await conn.beginTransaction();
+
+            await conn.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [userId]);
+            const rows = await conn.query(
+                'SELECT wallet, streak_current, streak_alltime, streak_timestamp FROM user_economy WHERE user_id = ? FOR UPDATE',
+                [userId]
+            );
+
+            const economy = rows[0] || {};
+            const now = Date.now();
+            const lastClaimAt = Number(economy.streak_timestamp || 0);
+            const nowWindowId = getDailyWindowId(now);
+            const lastWindowId = lastClaimAt > 0 ? getDailyWindowId(lastClaimAt) : null;
+            const nextClaimAt = getNextDailyResetAt(now);
+
+            if (lastWindowId !== null && lastWindowId === nowWindowId) {
+                await conn.rollback();
+                return {
+                    claimed: false,
+                    remainingMs: Math.max(0, nextClaimAt - now),
+                    nextClaimAt,
+                };
+            }
+
+            const previousStreak = Number(economy.streak_current || 0);
+            const missedWindows = lastWindowId === null ? 0 : (nowWindowId - lastWindowId);
+            const resetStreak = lastWindowId !== null && missedWindows > 1;
+            const streak = resetStreak ? 1 : previousStreak + 1;
+            const streakBonus = Math.min(DAILY_STREAK_BONUS_CAP, Math.max(0, streak - 1) * DAILY_STREAK_BONUS);
+            const reward = DAILY_BASE_REWARD + streakBonus;
+            const walletBefore = Number(economy.wallet || 0);
+            const walletAfter = walletBefore + reward;
+
+            await conn.query(
+                `UPDATE user_economy
+                 SET wallet = wallet + ?,
+                     streak_current = ?,
+                     streak_alltime = GREATEST(streak_alltime, ?),
+                     streak_timestamp = ?,
+                     updated_at = CURRENT_TIMESTAMP
+                 WHERE user_id = ?`,
+                [reward, streak, streak, now, userId]
+            );
+
+            await conn.commit();
+
+            return {
+                claimed: true,
+                reward,
+                streak,
+                streakBonus,
+                walletBefore,
+                walletAfter,
+                nextClaimAt,
+            };
+        } catch (error) {
+            if (conn) {
+                try { await conn.rollback(); } catch { }
+            }
+            logger.error('mariadb', 'Error claiming daily credits:', error);
+            throw error;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
+    async playCoinflip(userId, amount, choice) {
+        let conn;
+        try {
+            const bet = Math.trunc(Number(amount) || 0);
+            const normalizedChoice = String(choice || '').toLowerCase();
+
+            if (bet <= 0) {
+                throw new Error('Số tiền cược phải lớn hơn 0.');
+            }
+
+            if (!['heads', 'tails', 'h', 't'].includes(normalizedChoice)) {
+                throw new Error('Lựa chọn phải là heads hoặc tails.');
+            }
+
+            const userChoice = normalizedChoice.startsWith('h') ? 'heads' : 'tails';
+            const outcome = Math.random() < 0.5 ? 'heads' : 'tails';
+            const win = userChoice === outcome;
+
+            await mariaClient.connect();
+            conn = await mariaClient.pool.getConnection();
+            await conn.beginTransaction();
+
+            await conn.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [userId]);
+            const rows = await conn.query('SELECT wallet FROM user_economy WHERE user_id = ? FOR UPDATE', [userId]);
+            const walletBefore = Number(rows[0]?.wallet || 0);
+
+            if (walletBefore < bet) {
+                throw new Error('Bạn không đủ credits để đặt cược.');
+            }
+
+            const delta = win ? bet : -bet;
+            const walletAfter = walletBefore + delta;
+
+            await conn.query(
+                'UPDATE user_economy SET wallet = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [walletAfter, userId]
+            );
+
+            await conn.commit();
+
+            return {
+                win,
+                outcome,
+                userChoice,
+                bet,
+                delta,
+                walletBefore,
+                walletAfter,
+            };
+        } catch (error) {
+            if (conn) {
+                try { await conn.rollback(); } catch { }
+            }
+            logger.error('mariadb', 'Error running coinflip:', error);
+            throw error;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
+    async playBlackjack(userId, amount) {
+        let conn;
+        try {
+            const bet = Math.trunc(Number(amount) || 0);
+            if (bet <= 0) {
+                throw new Error('Số tiền cược phải lớn hơn 0.');
+            }
+
+            await mariaClient.connect();
+            conn = await mariaClient.pool.getConnection();
+            await conn.beginTransaction();
+
+            await conn.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [userId]);
+            const rows = await conn.query('SELECT wallet FROM user_economy WHERE user_id = ? FOR UPDATE', [userId]);
+            const walletBefore = Number(rows[0]?.wallet || 0);
+
+            if (walletBefore < bet) {
+                throw new Error('Bạn không đủ credits để đặt cược.');
+            }
+
+            const deck = createShuffledDeck();
+            const player = [drawCard(deck), drawCard(deck)];
+            const dealer = [drawCard(deck), drawCard(deck)];
+
+            const playerBlackjack = isBlackjack(player);
+            const dealerBlackjack = isBlackjack(dealer);
+
+            if (!playerBlackjack) {
+                while (handScore(player) < 17) {
+                    player.push(drawCard(deck));
+                }
+            }
+
+            if (!dealerBlackjack) {
+                while (handScore(dealer) < 17) {
+                    dealer.push(drawCard(deck));
+                }
+            }
+
+            const playerScore = handScore(player);
+            const dealerScore = handScore(dealer);
+            const playerBust = playerScore > 21;
+            const dealerBust = dealerScore > 21;
+
+            let outcome = 'lose';
+            let delta = -bet;
+
+            if (playerBlackjack && dealerBlackjack) {
+                outcome = 'push';
+                delta = 0;
+            } else if (playerBlackjack) {
+                outcome = 'blackjack';
+                delta = Math.floor(bet * 1.5);
+            } else if (dealerBlackjack) {
+                outcome = 'lose';
+                delta = -bet;
+            } else if (playerBust && dealerBust) {
+                outcome = 'push';
+                delta = 0;
+            } else if (playerBust) {
+                outcome = 'lose';
+                delta = -bet;
+            } else if (dealerBust) {
+                outcome = 'win';
+                delta = bet;
+            } else if (playerScore > dealerScore) {
+                outcome = 'win';
+                delta = bet;
+            } else if (playerScore < dealerScore) {
+                outcome = 'lose';
+                delta = -bet;
+            } else {
+                outcome = 'push';
+                delta = 0;
+            }
+
+            const walletAfter = Math.max(0, walletBefore + delta);
+
+            await conn.query(
+                'UPDATE user_economy SET wallet = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [walletAfter, userId]
+            );
+
+            await conn.commit();
+
+            return {
+                outcome,
+                bet,
+                delta,
+                walletBefore,
+                walletAfter,
+                player: {
+                    cards: handToText(player),
+                    score: playerScore,
+                    blackjack: playerBlackjack,
+                    bust: playerBust,
+                },
+                dealer: {
+                    cards: handToText(dealer),
+                    score: dealerScore,
+                    blackjack: dealerBlackjack,
+                    bust: dealerBust,
+                },
+            };
+        } catch (error) {
+            if (conn) {
+                try { await conn.rollback(); } catch { }
+            }
+            logger.error('mariadb', 'Error running blackjack:', error);
+            throw error;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
+    async beginBlackjackBet(userId, amount) {
+        let conn;
+        try {
+            const bet = Math.trunc(Number(amount) || 0);
+            if (bet <= 0) {
+                throw new Error('Số tiền cược phải lớn hơn 0.');
+            }
+
+            await mariaClient.connect();
+            conn = await mariaClient.pool.getConnection();
+            await conn.beginTransaction();
+
+            await conn.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [userId]);
+            const rows = await conn.query('SELECT wallet FROM user_economy WHERE user_id = ? FOR UPDATE', [userId]);
+            const walletBefore = Number(rows[0]?.wallet || 0);
+
+            if (walletBefore < bet) {
+                throw new Error('Bạn không đủ credits để đặt cược.');
+            }
+
+            const walletAfter = walletBefore - bet;
+            await conn.query(
+                'UPDATE user_economy SET wallet = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [walletAfter, userId]
+            );
+
+            await conn.commit();
+            return { bet, walletBefore, walletAfter };
+        } catch (error) {
+            if (conn) {
+                try { await conn.rollback(); } catch { }
+            }
+            logger.error('mariadb', 'Error beginning blackjack bet:', error);
+            throw error;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
+    async settleBlackjackBet(userId, amountToAdd = 0) {
+        let conn;
+        try {
+            const payout = Math.max(0, Math.trunc(Number(amountToAdd) || 0));
+
+            await mariaClient.connect();
+            conn = await mariaClient.pool.getConnection();
+            await conn.beginTransaction();
+
+            await conn.query('INSERT IGNORE INTO user_economy (user_id) VALUES (?)', [userId]);
+            const rows = await conn.query('SELECT wallet FROM user_economy WHERE user_id = ? FOR UPDATE', [userId]);
+            const walletBefore = Number(rows[0]?.wallet || 0);
+            const walletAfter = walletBefore + payout;
+
+            await conn.query(
+                'UPDATE user_economy SET wallet = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [walletAfter, userId]
+            );
+
+            await conn.commit();
+            return { payout, walletBefore, walletAfter };
+        } catch (error) {
+            if (conn) {
+                try { await conn.rollback(); } catch { }
+            }
+            logger.error('mariadb', 'Error settling blackjack bet:', error);
+            throw error;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
     async purchaseQuotaWithCredits(userId, usageType, quotaAmount, creditCost) {
         let conn;
         try {
@@ -987,6 +1122,105 @@ class MariaModDB {
             return true;
         } catch (error) {
             logger.error('mariadb', 'Error updating user economy:', error);
+            return false;
+        }
+    }
+
+    async createSystemNotice({ message, guildId = null, startsAt, expiresAt, createdBy }) {
+        try {
+            await mariaClient.query(
+                `INSERT INTO system_notices (guild_id, message, starts_at, expires_at, is_active, created_by)
+                 VALUES (?, ?, ?, ?, 1, ?)`,
+                [guildId, message, startsAt, expiresAt, createdBy]
+            );
+
+            const [row] = await mariaClient.query('SELECT LAST_INSERT_ID() AS id');
+            return Number(row?.id || 0);
+        } catch (error) {
+            logger.error('mariadb', 'Error creating system notice:', error);
+            throw error;
+        }
+    }
+
+    async getActiveSystemNotice(guildId = null) {
+        try {
+            const rows = await mariaClient.query(
+                `SELECT id, guild_id, message, starts_at, expires_at, created_by, created_at
+                 FROM system_notices
+                 WHERE is_active = 1
+                   AND starts_at <= NOW()
+                   AND expires_at > NOW()
+                   AND (guild_id IS NULL OR guild_id = ?)
+                 ORDER BY CASE WHEN guild_id = ? THEN 0 ELSE 1 END, id DESC
+                 LIMIT 1`,
+                [guildId, guildId]
+            );
+
+            if (!rows.length) {
+                return null;
+            }
+
+            const notice = rows[0];
+            return {
+                id: notice.id,
+                guildId: notice.guild_id,
+                message: notice.message,
+                startsAt: notice.starts_at,
+                expiresAt: notice.expires_at,
+                createdBy: notice.created_by,
+                createdAt: notice.created_at,
+            };
+        } catch (error) {
+            logger.error('mariadb', 'Error getting active system notice:', error);
+            return null;
+        }
+    }
+
+    async listSystemNotices({ guildId = null, limit = 10 } = {}) {
+        try {
+            const safeLimit = Math.max(1, Math.min(50, Math.trunc(Number(limit) || 10)));
+            const rows = guildId
+                ? await mariaClient.query(
+                    `SELECT id, guild_id, message, starts_at, expires_at, is_active, created_by, created_at
+                     FROM system_notices
+                     WHERE guild_id = ? OR guild_id IS NULL
+                     ORDER BY id DESC
+                     LIMIT ?`,
+                    [guildId, safeLimit]
+                )
+                : await mariaClient.query(
+                    `SELECT id, guild_id, message, starts_at, expires_at, is_active, created_by, created_at
+                     FROM system_notices
+                     ORDER BY id DESC
+                     LIMIT ?`,
+                    [safeLimit]
+                );
+
+            return rows.map((row) => ({
+                id: row.id,
+                guildId: row.guild_id,
+                message: row.message,
+                startsAt: row.starts_at,
+                expiresAt: row.expires_at,
+                isActive: !!row.is_active,
+                createdBy: row.created_by,
+                createdAt: row.created_at,
+            }));
+        } catch (error) {
+            logger.error('mariadb', 'Error listing system notices:', error);
+            return [];
+        }
+    }
+
+    async deactivateSystemNotice(noticeId) {
+        try {
+            const result = await mariaClient.query(
+                'UPDATE system_notices SET is_active = 0 WHERE id = ? AND is_active = 1',
+                [noticeId]
+            );
+            return Number(result?.affectedRows || 0) > 0;
+        } catch (error) {
+            logger.error('mariadb', 'Error deactivating system notice:', error);
             return false;
         }
     }

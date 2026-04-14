@@ -1,7 +1,6 @@
 {
   "system": {
     "lang_name": "Vietnamese",
-    "language_changed": "Đã đổi ngôn ngữ máy chủ thành **Tiếng Việt**",
     "no_permission": "Bạn không có quyền sử dụng lệnh này.",
     "error_occurred": "Đã xảy ra lỗi trong quá trình xử lý lệnh.",
     "only_caller_can_use": "Chỉ người đã gọi lệnh mới được sử dụng tùy chọn này.",
@@ -10,7 +9,6 @@
     "quota_exceeded": "**Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Pro trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.",
     "quota_exceeded_image": "**Hết quyền sử dụng**\n> Bạn đã sử dụng hết **{{limit}} lượt** Lunaby Vision trong chu kỳ giới hạn.\n> Vui lòng nâng cấp tài khoản hoặc đợi chu kỳ tiếp theo để tiếp tục sử dụng.",
     "command_disabled_in_channel": "Lệnh này đã bị tắt trong kênh này.",
-    "command_locked_for_maintenance": "Lệnh này đang bị khóa để bảo trì, vui lòng thử lại sau.",
     "missing_server_permissions": "Bạn không có đủ quyền trong server để sử dụng lệnh này.",
     "cooldown_wait": "Bạn phải chờ <t:{{expiresAtUnix}}:R> mới được dùng lệnh tiếp!",
     "command_execution_failed": "Đã xảy ra lỗi khi thực thi lệnh này!",
@@ -121,7 +119,6 @@
       "error_unban": "Đã xảy ra lỗi khi gỡ cấm người dùng: {{error}}"
     },
     "modlog": {
-      "usage": "Cách dùng:\n- Xem log: `{{prefix}}modlog [user] [action]`",
       "no_logs": "Hệ thống chưa ghi nhận lược sử báo cáo nào phù hợp với bộ lọc!",
       "embed_title": "{{_emoji.locale.clipboard}} Lược sử Báo cáo Kiểm duyệt",
       "embed_desc": "Hiển thị **{{count}}** hành động kiểm duyệt gần nhất{{userText}}{{actionText}}.",
@@ -252,18 +249,6 @@
         "invalid_channel": "Vui lòng cung cấp hoặc mention một kênh hợp lệ (VD: `{{prefix}}systemlog #log-channel`).",
         "success": "Đã thiết lập kênh log global thành công tại <#{{id}}>.",
         "error": "Đã xảy ra lỗi khi lưu thiết lập kênh log vào database."
-      },
-      "commandctl": {
-        "usage": "Cú pháp: `commandctl <lock|unlock|list|reload> [commands|all|guild]`",
-        "invalid_subcommand": "Subcommand không hợp lệ. Dùng: `lock`, `unlock`, `list`, `reload`.",
-        "invalid_scope": "Scope không hợp lệ. Chỉ hỗ trợ `guild` hoặc `all`.",
-        "invalid_cmds": "Không tìm thấy lệnh hợp lệ để thao tác.",
-        "list_empty": "Hiện không có lệnh nào đang bị khóa.",
-        "list_title": "Đang khóa **{{count}}** lệnh: {{commands}}",
-        "lock_success": "Đã khóa **{{count}}** lệnh: {{commands}}",
-        "unlock_success": "Đã mở khóa **{{count}}** lệnh: {{commands}}",
-        "reload_success": "Reload command runtime thành công. Scope: **{{scope}}** | Shards: **{{shards}}** | Loaded: **{{loaded}}** | Deployed: **{{deployed}}** | Failed: **{{failed}}**",
-        "error": "Đã xảy ra lỗi khi xử lý commandctl."
       }
     },
     "fun": {
@@ -325,6 +310,10 @@
           "label": "Trang chủ",
           "desc": "Quay lại menu trợ giúp chính"
         },
+        "admin": {
+          "label": "Admin",
+          "desc": "Các lệnh quản trị dành cho chủ bot"
+        },
         "AIcore": {
           "label": "AI Core",
           "desc": "Các lệnh AI nâng cao"
@@ -336,6 +325,10 @@
         "moderation": {
           "label": "Moderation",
           "desc": "Các lệnh quản lý server"
+        },
+        "economy": {
+          "label": "Economy",
+          "desc": "Các lệnh credits và cờ bạc"
         },
         "social": {
           "label": "Social",
@@ -359,6 +352,7 @@
       "desc": "Kiểm tra số lượt sử dụng",
       "remaining": "Còn **{{count}}** lượt",
       "total_usage": "Tổng lượt sử dụng:",
+      "current_cycle": "Chu kỳ hiện tại:",
       "reset_in": "Làm mới sau **{{days}}** ngày"
     },
     "prefix": {
@@ -395,7 +389,10 @@
     },
     "language": {
       "usage": "Cú pháp: `{{prefix}}language <vi/en>`",
-      "supported": ["vi", "en"],
+      "supported": [
+        "vi",
+        "en"
+      ],
       "placeholder": "Chọn ngôn ngữ cho server",
       "title": {
         "settings": "Thiết lập ngôn ngữ server",
@@ -514,6 +511,72 @@
       "success": "Bạn đã chuyển **{{amount}}** credits cho <@{{targetId}}>.\nSố dư của bạn: **{{balance}}** credits.",
       "error": "Đã xảy ra lỗi khi chuyển credits."
     },
+    "daily": {
+      "desc": "Nhận thưởng credits hằng ngày",
+      "already_claimed": "Bạn đã nhận daily hôm nay. Thử lại vào <t:{{nextClaimAtUnix}}:R>.",
+      "claimed": "Bạn nhận **{{reward}}** credits.",
+      "streak_current": "Streak hiện tại: **{{streak}}**",
+      "streak_bonus": "Thưởng streak: **{{streakBonus}}**",
+      "balance": "Số dư mới: **{{balance}}**",
+      "next_daily": "Daily tiếp theo: <t:{{nextClaimAtUnix}}:R>",
+      "error": "Không thể nhận daily lúc này."
+    },
+    "coinflip": {
+      "desc": "Tung đồng xu để nhận hoặc mất credits",
+      "maintenance": "Lệnh hiện đang bảo trì.",
+      "syntax": "Cú pháp: coinflip <heads|tails> <bet|all>",
+      "win": "Bạn thắng **+{{amount}}** credits!",
+      "lose": "Bạn thua **-{{amount}}** credits.",
+      "choice_vs_outcome": "Lựa chọn: **{{choice}}** | Kết quả: **{{outcome}}**",
+      "balance": "Số dư mới: **{{balance}}**",
+      "error": "Không thể xử lý coinflip lúc này."
+    },
+    "blackjack": {
+      "desc": "Đánh blackjack theo lượt hit hoặc stand",
+      "maintenance": "Lệnh hiện đang bảo trì.",
+      "syntax": "Cú pháp: blackjack <bet|all>",
+      "started": "Ván blackjack đã bắt đầu. Chọn **Hit** hoặc **Stand**.",
+      "resumed": "Đã tiếp tục ván blackjack đang chơi.",
+      "in_progress_other_channel": "Bạn đang có một ván blackjack ở kênh khác. Hãy hoàn tất hoặc chờ timeout.",
+      "button_hit": "Hit",
+      "button_stand": "Stand",
+      "embed_title": "Blackjack",
+      "embed_bet": "Tiền cược: **{{bet}}** credits",
+      "dealer_field": "Nhà cái `[{{score}}]`",
+      "player_field": "{{user}} `[{{score}}]`",
+      "dealer_score_hidden": "{{shown}}+?",
+      "embed_footer_progress": "🎲 Ván đấu đang diễn ra",
+      "embed_footer_resumed": "🎲 Đã tiếp tục ván trước",
+      "embed_footer_timeout": "⏱ Hết thời gian, tự động stand",
+      "embed_footer_win": "🎲 Bạn thắng!",
+      "embed_footer_lose": "🎲 Bạn thua!",
+      "embed_footer_push": "🎲 Hòa tiền",
+      "embed_footer_both_bust": "🎲 Cả hai cùng quắc",
+      "result_win": "Bạn thắng!",
+      "result_lose": "Bạn thua!",
+      "result_push": "Hòa tiền (push).",
+      "result_both_bust": "Cả hai cùng quắc, hoàn tiền cược.",
+      "bet_and_change": "Cược: **{{bet}}** | Thay đổi: **{{delta}}**",
+      "balance": "Số dư mới: **{{balance}}**",
+      "error": "Không thể xử lý blackjack lúc này."
+    },
+    "notice": {
+      "desc": "Quản lý thông báo hiển thị bên dưới mọi lệnh",
+      "syntax_create": "Cú pháp: notice create <hours> <guild|global> <message>",
+      "create_success": "Đã tạo notice #{{id}}\nPhạm vi: **{{scope}}**\nHết hạn: <t:{{expiresAtUnix}}:R>\nNội dung: {{message}}",
+      "remove_success": "Đã tắt notice #{{id}}.",
+      "remove_not_found": "Không tìm thấy notice #{{id}} hoặc notice đã tắt.",
+      "no_notice": "Không có notice nào.",
+      "status_active": "đang bật",
+      "status_inactive": "đã tắt",
+      "line": "#{{id}} [{{status}}] [{{scope}}] <t:{{expiresAtUnix}}:R> - {{message}}",
+      "error": "Không thể quản lý notice lúc này.",
+      "errors": {
+        "invalid_hours": "Thời hạn phải trong khoảng 1-720 giờ.",
+        "empty_message": "Nội dung thông báo không được để trống.",
+        "invalid_id": "ID thông báo không hợp lệ."
+      }
+    },
     "leaderboard": {
       "desc": "Hiển thị bảng xếp hạng XP của server",
       "no_data": "Chưa có dữ liệu XP trong server này!",
@@ -540,95 +603,48 @@
     },
     "shop": {
       "desc": "Mở cửa hàng để mua quota bằng credits",
-      "title": "Lunaby Shop",
-      "category_label": "Danh mục hiện tại: **{{label}}**\n",
-      "balance": "Số dư của bạn: **{{amount}}** credits\n",
-      "payment_method": "Thanh toán: **Credits**\n",
-      "reset_quota": "Reset quota sau: <t:{{timestamp}}:R>",
       "quota_pro": "Lunaby Pro",
       "quota_vision": "Lunaby Vision",
       "page": "Trang",
-      "footer": "Nhấn nút để mua nhanh bằng credits",
-      "available_packages": "Các gói hiện có",
       "no_packages": "Chưa có gói nào trong trang này.",
-      "coin_shop_name": "Coin Shop",
-      "coin_shop_desc": "Mục này đang được chuẩn bị. Hiện tại bạn vẫn có thể mua quota trong Quota Shop.",
       "limit_unlimited": "Không giới hạn",
-      "limit_text": "{{limit}} lượt - còn {{remaining}} lượt",
-      "select_shop": "Chọn cửa hàng",
-      "btn_coin_shop": "Coin Shop đang được cập nhật",
       "refresh": "Làm mới",
+      "buy_button": "Mua",
       "package_not_found": "Không tìm thấy gói bạn muốn mua.",
       "buy_success": "Bạn đã mua **{{amount}}** lượt {{product}} với giá **{{cost}}** credits.",
       "error_open": "Đã xảy ra lỗi khi mở shop. Vui lòng thử lại sau.",
       "error_process": "Đã xảy ra lỗi khi xử lý shop. {{error}}",
       "err_unlimited": "Tài khoản của bạn đang có lượt sử dụng {{product}} không giới hạn, không cần mua thêm quota.",
-      "err_insufficient": "Bạn không đủ credits. Cần **{{cost}}** credits để mua **{{amount}}** lượt sử dụng {{product}}.",
-      "quotaItemText": "• **{{label}}** - {{amount}} lượt {{productName}} - **{{cost}}** credits",
-      "cat_quota_label": "Quota Shop (Credits)",
-      "cat_quota_desc": "Mua thêm lượt sử dụng Lunaby Pro và Lunaby Vision bằng credits",
-      "cat_coin_label": "Coin Shop",
-      "cat_coin_desc": "Sắp ra mắt"
+      "err_insufficient": "Bạn không đủ credits. Cần **{{cost}}** credits để mua **{{amount}}** lượt sử dụng {{product}}."
     },
     "personalize": {
       "desc": "Tùy chỉnh trải nghiệm AI của bạn",
       "error_occurred": "Đã xảy ra lỗi khi lưu thông tin. Vui lòng thử lại sau.",
-      "menu_info": "Personal info & Instructions",
-      "menu_info_desc": "Nghề nghiệp & hướng dẫn tùy chỉnh",
-      "menu_search": "Reference search history",
-      "menu_search_desc": "Bật/tắt truy cập memory đã lưu của bạn",
-      "menu_memory": "Reference saved memories",
-      "menu_memory_desc": "Bật/tắt lưu trữ memory của bạn",
-      "menu_manage": "Manage your saved memories",
-      "menu_manage_desc": "Xem trí nhớ Lunaby đã lưu về bạn",
-      "menu_clear": "Clear",
-      "menu_clear_desc": "Xóa toàn bộ lịch sử và trí nhớ",
-      "menu_expired": "Menu đã hết hạn",
-      "menu_expired_label": "Hết hạn",
+      "instructions_title": "Instructions",
+      "btn_customize": "Tùy chỉnh",
+      "menu_clear": "Format",
+      "menu_close": "Đóng",
       "embed_title": "{{_emoji.locale.settings}} Personalization",
       "embed_desc": "Tùy chỉnh cách Lunaby tương tác với bạn.\nChọn một mục từ menu bên dưới.",
       "not_set": "_Chưa thiết lập_",
-      "field_occupation": "{{_emoji.locale.pencil}} Nghề nghiệp",
-      "field_instructions": "{{_emoji.locale.note}} Tùy chỉnh",
       "field_search": "{{_emoji.locale.search}} Tham chiếu trí nhớ",
       "field_memory": "{{_emoji.locale.memory}} Lưu trữ trí nhớ",
       "status_on": "Bật",
       "status_off": "Tắt",
+      "toggle_btn_on": "Bật",
+      "toggle_btn_off": "Tắt",
       "modal_title_info": "Personal info & Instructions",
-      "modal_occupation_label": "{{_emoji.locale.pencil}} Nghề nghiệp",
+      "modal_occupation_label": "Nghề nghiệp",
       "modal_occupation_ph": "Engineer, student, designer...",
-      "modal_instruction_label": "{{_emoji.locale.note}} Hướng dẫn tùy chỉnh",
+      "modal_instruction_label": "Hướng dẫn tùy chỉnh",
       "modal_instruction_ph": "Sở thích, phong cách trả lời mong muốn...",
-      "search_on": "**Đã bật** Reference search history\nLunaby sẽ được phép truy cập và sử dụng memory đã lưu của bạn để hỗ trợ trả lời.",
-      "search_off": "**Đã tắt** Reference search history\nLunaby sẽ không truy cập hoặc sử dụng memory đã lưu của bạn.",
-      "memory_on": "**Đã bật** Reference saved memories\nLunaby sẽ lưu trữ memory của bạn để dùng cho các lần trò chuyện sau.",
-      "memory_off": "**Đã tắt** Reference saved memories\nLunaby sẽ không lưu trữ memory mới của bạn.",
-      "manage_error": "Không thể lấy thông tin trí nhớ.",
-      "manage_title": "{{_emoji.locale.clipboard}} Trí nhớ đã lưu",
-      "manage_pi_name": "**Tên:** {{value}}",
-      "manage_pi_nickname": "**Nickname:** {{value}}",
-      "manage_pi_age": "**Tuổi:** {{value}}",
-      "manage_pi_location": "**Vị trí:** {{value}}",
-      "manage_pi_occupation": "**Nghề nghiệp:** {{value}}",
-      "manage_field_pi": "{{_emoji.locale.user}} Thông tin cá nhân",
-      "manage_pref_likes": "**Thích:** {{value}}",
-      "manage_pref_hobbies": "**Sở thích:** {{value}}",
-      "manage_pref_topics": "**Chủ đề:** {{value}}",
-      "manage_field_pref": "{{_emoji.locale.heart}} Sở thích",
-      "manage_field_imp": "{{_emoji.locale.thought}} Trí nhớ quan trọng",
-      "manage_stats": "{{_emoji.locale.stats}} Thống kê",
-      "manage_stats_total": "**Tổng trí nhớ:** {{total}}",
-      "manage_stats_msgs": "**Tổng tin nhắn:** {{msgs}}",
-      "manage_stats_first": "**Lần đầu:** <t:{{time}}:R>",
-      "manage_no_data": "Chưa có trí nhớ nào được lưu. Hãy bắt đầu trò chuyện với Lunaby!",
       "clear_confirm_title": "Xác nhận xóa dữ liệu",
       "clear_confirm_desc": "Bạn có chắc chắn muốn xóa **toàn bộ** lịch sử trò chuyện và trí nhớ?\n\n**Hành động này không thể hoàn tác!**",
       "clear_btn_confirm": "Xóa toàn bộ",
       "clear_btn_cancel": "Hủy",
       "clear_success_title": "Đã xóa dữ liệu",
       "clear_success_desc": "Toàn bộ lịch sử trò chuyện và trí nhớ đã được xóa.\nChúng ta có thể bắt đầu lại từ đầu! {{_emoji.locale.sparkle}}",
-      "clear_error": "Không thể xóa dữ liệu. Vui lòng thử lại sau.",
-      "select_ph": "Chọn một tùy chọn"
+      "clear_error": "Không thể xóa dữ liệu. Vui lòng thử lại sau."
     }
   }
 }

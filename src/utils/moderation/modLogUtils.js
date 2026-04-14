@@ -2,6 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require("../core/logger.js");
 
+const { createEmbed } = require('../discord/builderFactory');
 const FALLBACK_CHANNEL_NAMES = ["mod-logs", "mod-chat", "admin", "bot-logs"];
 
 async function getModLogChannel(guild, isModAction = true) {
@@ -41,7 +42,7 @@ async function sendModLog(guild, embed, isModAction = true) {
 }
 
 function createModActionEmbed(options) {
-  const embed = new EmbedBuilder()
+  const embed = createEmbed()
     .setColor(options.color || 0x3498db)
     .setTitle(options.title || "Hành động Moderation")
     .setDescription(options.description || "")
@@ -53,4 +54,8 @@ function createModActionEmbed(options) {
   return embed;
 }
 
-module.exports = { sendModLog, createModActionEmbed, getModLogChannel };
+module.exports = { 
+  sendModLog, 
+  createModActionEmbed, 
+  getModLogChannel 
+};

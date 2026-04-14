@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const UserProfileDB = require('../../services/database/UserProfileDB');
 const { generateProfileCard } = require('../../services/canvas/profileCanvas');
 const logger = require('../../utils/core/logger');
@@ -36,7 +36,7 @@ module.exports = {
       if (targetUser.bot) {
         return interaction.editReply({
           content: `${emojis.error} ${interaction.t('commands.profile.no_bot')}`,
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
 
