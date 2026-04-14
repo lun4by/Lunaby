@@ -7,7 +7,7 @@ const {
     MessageFlags,
 } = require('discord.js');
 const EconomyService = require('../../services/user/EconomyService');
-const bjUtil = require('./blackjackUtil');
+const bjUtil = require('../../utils/economy/blackjackUtil');
 const emojis = require('../../config/emojis');
 const logger = require('../../utils/core/logger');
 
