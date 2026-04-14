@@ -64,9 +64,7 @@ module.exports = {
 
         const message = await interaction.fetchReply();
 
-        const collector = message.createMessageComponentCollector({
-            time: 120000,
-        });
+        const collector = message.createMessageComponentCollector();
 
         collector.on('collect', async (i) => {
             if (i.user.id !== interaction.user.id) {
@@ -78,7 +76,7 @@ module.exports = {
 
             try {
                 if (i.isButton()) {
-                    await handleButtonClick(i, userId, interaction);
+                    await handleButtonClick(i, userId, interaction, collector);
                 }
             } catch (error) {
                 logger.error('personalize', 'Error handling interaction:', error);
@@ -89,15 +87,6 @@ module.exports = {
                     await i.reply({ content: errMsg, ephemeral: true }).catch(() => { });
                 }
             }
-        });
-
-        collector.on('end', async () => {
-            try {
-                const latestMemory = await MemoryService.getUserMemory(userId);
-                await interaction.editReply({
-                    components: buildPersonalizeComponents(interaction, latestMemory, { disabled: true }),
-                });
-            } catch { }
         });
     },
 };
@@ -208,6 +197,11 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                     .setCustomId('personalize_clear')
                     .setLabel(interaction.t('commands.personalize.menu_clear'))
                     .setStyle(ButtonStyle.Danger)
+                    .setDisabled(disabled),
+                new ButtonBuilder()
+                    .setCustomId('personalize_close')
+                    .setLabel(interaction.t('commands.personalize.menu_close'))
+                    .setStyle(ButtonStyle.Secondary)
                     .setDisabled(disabled)
             )
         );
@@ -359,7 +353,15 @@ async function handleClear(i, userId, interaction) {
     });
 }
 
-async function handleButtonClick(i, userId, interaction) {
+async function handleClose(i, collector) {
+    if (collector && !collector.ended) {
+        collector.stop('closed');
+    }
+
+    await i.deleteReply().catch(() => { });
+}
+
+async function handleButtonClick(i, userId, interaction, collector) {
     if (i.customId === 'personalize_personal_info') {
         return showPersonalInfoModal(i, userId, interaction);
     }
@@ -374,6 +376,10 @@ async function handleButtonClick(i, userId, interaction) {
 
     if (i.customId === 'personalize_clear') {
         return handleClear(i, userId, interaction);
+    }
+
+    if (i.customId === 'personalize_close') {
+        return handleClose(i, collector);
     }
 
     if (i.customId === 'personalize_clear_confirm') {
