@@ -107,18 +107,15 @@ function buildShopItemSectionText(item, itemState) {
 
 function addShopHeaderSection(container, user, stats) {
   const avatarUrl = user.displayAvatarURL({ extension: 'png', size: 256 });
-  const displayName = user.globalName || user.username;
 
   container.addSectionComponents((section) =>
     section
-      .addTextDisplayComponents(
-        (textDisplay) => textDisplay.setContent(`**${displayName}**`),
-        (textDisplay) => textDisplay.setContent(buildShopHeroText(stats))
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(buildShopHeroText(stats))
       )
       .setThumbnailAccessory((thumbnail) =>
         thumbnail
           .setURL(avatarUrl)
-          .setDescription(displayName)
       )
   );
 }
