@@ -5,8 +5,7 @@ const {
     ButtonStyle,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
-    ComponentType,
-MessageFlags,
+    MessageFlags,
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
@@ -162,7 +161,7 @@ function buildSelectOptions(categories, interaction) {
     return options;
 }
 
-function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) {
+function buildHelpEmbed(category, _visibleCategories, commandsPath, interaction) {
     const embed = createEmbed()
         .setColor(COLORS.LUNABY)
         .setTimestamp();
@@ -237,7 +236,6 @@ function getCategoryMetadata(category, interaction) {
     }
 
     const categoryMap = {
-        'home': { emoji: emojis.categories.home },
         'admin': { emoji: emojis.categories.folder },
         'core': { emoji: emojis.categories.core },
         'moderation': { emoji: emojis.categories.moderation },
