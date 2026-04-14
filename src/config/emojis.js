@@ -4,6 +4,7 @@ module.exports = {
     statusOn: '<:on:1492250052486500413>',
     statusOff: '<:off:1492250012938273002>',
     warning: '⚠️',
+    time: '⏱',
     info: 'ℹ️',
     categories: {
         home: '🏠',

@@ -25,7 +25,7 @@ module.exports = {
       if (!result.claimed) {
         const nextClaimAtUnix = Math.floor(Number(result.nextClaimAt || Date.now()) / 1000);
         await interaction.reply({
-          content: `${emojis.warning} ${interaction.t('commands.daily.already_claimed', { nextClaimAtUnix })}`,
+          content: `${emojis.time} | ${interaction.t('commands.daily.already_claimed', { nextClaimAtUnix })}`,
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -33,7 +33,7 @@ module.exports = {
 
       const nextClaimAtUnix = Math.floor(Number(result.nextClaimAt) / 1000);
       await interaction.reply(
-        `${emojis.success} ${interaction.t('commands.daily.claimed', { reward: formatNumber(result.reward) })}\n` +
+        `${emojis.success} | ${interaction.t('commands.daily.claimed', { reward: formatNumber(result.reward) })}\n` +
         `${interaction.t('commands.daily.streak_current', { streak: formatNumber(result.streak) })}\n` +
         `${interaction.t('commands.daily.streak_bonus', { streakBonus: formatNumber(result.streakBonus) })}\n` +
         `${interaction.t('commands.daily.balance', { balance: formatNumber(result.walletAfter) })}\n` +
