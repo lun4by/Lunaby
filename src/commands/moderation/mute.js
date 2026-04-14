@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const { logModAction, formatDuration } = require('../../utils/moderation/modUtils.js');
 const { sendModLog, createModActionEmbed } = require('../../utils/moderation/modLogUtils.js');
@@ -7,6 +7,7 @@ const logger = require('../../utils/core/logger.js');
 const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('mute')
@@ -111,7 +112,7 @@ module.exports = {
             await sendModLog(interaction.guild, logEmbed, true);
 
             try {
-                const dmEmbed = new EmbedBuilder()
+                const dmEmbed = createEmbed()
                     .setColor(0xFFA500)
                     .setTitle(interaction.t('commands.mute.dm_title', { guild: interaction.guild.name }))
                     .setDescription(interaction.t('commands.mute.dm_desc', { reason, duration: formattedDuration, time: `<t:${Math.floor(endTime.getTime() / 1000)}:F>` }))

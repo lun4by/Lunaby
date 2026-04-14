@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
 const ErrorHandler = require('../../utils/core/ErrorHandler');
 const ConversationService = require('../../services/ai/ConversationService.js');
@@ -7,6 +7,7 @@ const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('clearwarnings')
@@ -97,7 +98,7 @@ module.exports = {
 
             try {
                 const typeCap = type === 'all' ? interaction.t('commands.clearwarnings.type_all_cap') : interaction.t('commands.clearwarnings.type_latest_cap');
-                const dmEmbed = new EmbedBuilder()
+                const dmEmbed = createEmbed()
                     .setColor(0x00ff00)
                     .setTitle(interaction.t('commands.clearwarnings.dm_title', { guild: interaction.guild.name }))
                     .setDescription(interaction.t('commands.clearwarnings.dm_desc', { typeCap, count: deletedCount, reason }))

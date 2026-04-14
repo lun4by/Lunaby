@@ -2,7 +2,6 @@ const {
   SlashCommandBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ContainerBuilder,
   MessageFlags,
 } = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
@@ -15,8 +14,13 @@ const {
   QUOTA_COST_CREDITS_PER_IMAGE,
 } = require('../../config/constants');
 
+const { createContainer } = require('../../utils/discord/builderFactory');
 const SHOP_TIMEOUT_MS = 120000;
 const ITEMS_PER_PAGE = 6;
+const SHOP_PACKAGE_GROUPS = [
+  { type: 'chat', title: '**Gói Lunaby Pro**' },
+  { type: 'image', title: '**Gói Lunaby Vision**' },
+];
 
 const SHOP_ITEMS = [
   { id: 'chat_1', type: 'chat', amount: 1, label: 'Pro x1', style: ButtonStyle.Primary },
@@ -31,28 +35,6 @@ const SHOP_ITEMS = [
 
 function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(value);
-}
-
-function stripMarkdown(text) {
-  return String(text || '').replace(/[*_`~]/g, '');
-}
-
-function buildTwoColumnText(leftLines, rightLines, gap = '   ') {
-  const maxRows = Math.max(leftLines.length, rightLines.length);
-  const normalizedLeft = Array.from({ length: maxRows }, (_, index) => leftLines[index] || '');
-  const normalizedRight = Array.from({ length: maxRows }, (_, index) => rightLines[index] || '');
-
-  const leftWidth = normalizedLeft.reduce((max, line) => {
-    const width = stripMarkdown(line).length;
-    return Math.max(max, width);
-  }, 0);
-
-  return normalizedLeft
-    .map((line, index) => {
-      const padSize = Math.max(0, leftWidth - stripMarkdown(line).length);
-      return `${line}${' '.repeat(padSize)}${gap}${normalizedRight[index]}`.trimEnd();
-    })
-    .join('\n');
 }
 
 function getUsageConfig(type, interaction) {
@@ -116,44 +98,99 @@ function getLimitText(limit, remaining, interaction) {
   return `${formatNumber(limit)} lượt • còn ${formatNumber(remaining)} lượt`;
 }
 
-function formatShopItemLine(item, credits, stats, interaction) {
-  const itemState = getItemState(item, credits, stats, interaction);
-  const statusText = itemState.isUnlimited
-    ? 'Đã vô hạn'
-    : itemState.isAffordable
-      ? 'Mua được'
-      : 'Thiếu credits';
-  const statusIcon = itemState.isUnlimited ? '∞' : itemState.isAffordable ? '✓' : '✕';
+function getItemStatus(itemState) {
+  if (itemState.isUnlimited) {
+    return { icon: '∞', text: 'Đã vô hạn' };
+  }
 
-  return `• **${item.label}** · **${formatNumber(itemState.totalCost)}** credits\n` +
-    `${statusIcon} +${formatNumber(item.amount)} lượt · ${statusText}`;
+  if (itemState.isAffordable) {
+    return { icon: '✓', text: 'Mua được' };
+  }
+
+  return { icon: '✕', text: 'Thiếu credits' };
 }
 
-function buildShopItemSectionText(item, credits, stats, interaction) {
-  const itemState = getItemState(item, credits, stats, interaction);
-  const statusText = itemState.isUnlimited
-    ? 'Đã vô hạn'
-    : itemState.isAffordable
-      ? 'Mua được'
-      : 'Thiếu credits';
-  const statusIcon = itemState.isUnlimited ? '∞' : itemState.isAffordable ? '✓' : '✕';
+function buildShopItemSectionText(item, itemState) {
+  const status = getItemStatus(itemState);
 
   return [
     `• **${item.label}** · **${formatNumber(itemState.totalCost)}** credits`,
-    `${statusIcon} +${formatNumber(item.amount)} lượt · ${statusText}`,
+    `${status.icon} +${formatNumber(item.amount)} lượt · ${status.text}`,
   ].join('\n');
 }
 
-function buildShopSection(items, type, credits, stats, interaction) {
-  const filteredItems = items.filter((item) => item.type === type);
+function addShopHeaderSection(container, user, stats) {
+  const avatarUrl = user.displayAvatarURL({ extension: 'png', size: 256 });
+  const displayName = user.globalName || user.username;
 
-  if (filteredItems.length === 0) {
-    return 'Không có gói trong trang này.';
+  container.addSectionComponents((section) =>
+    section
+      .addTextDisplayComponents(
+        (textDisplay) => textDisplay.setContent(`**${displayName}**`),
+        (textDisplay) => textDisplay.setContent(buildShopHeroText(stats))
+      )
+      .setThumbnailAccessory((thumbnail) =>
+        thumbnail
+          .setURL(avatarUrl)
+          .setDescription(displayName)
+      )
+  );
+}
+
+function addShopOverviewSection(container, credits, stats, state, interaction) {
+  container
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(buildShopWalletAndPricingText(credits, state, interaction))
+    )
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(buildShopLimitsText(stats, interaction))
+    )
+    .addSeparatorComponents((separator) => separator);
+}
+
+function addShopPackageSection(container, group, pageItems, credits, stats, interaction, disabled) {
+  const items = pageItems.filter((item) => item.type === group.type);
+
+  container.addTextDisplayComponents((textDisplay) =>
+    textDisplay.setContent(group.title)
+  );
+
+  if (!items.length) {
+    container.addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(interaction.t('commands.shop.no_packages'))
+    );
+    return;
   }
 
-  return filteredItems
-    .map((item) => formatShopItemLine(item, credits, stats, interaction))
-    .join('\n\n');
+  for (const item of items) {
+    const itemState = getItemState(item, credits, stats, interaction);
+
+    container.addSectionComponents((section) =>
+      section
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(buildShopItemSectionText(item, itemState))
+        )
+        .setButtonAccessory((button) =>
+          button
+            .setCustomId(`shop_buy_${item.id}`)
+            .setLabel(interaction.t('commands.shop.buy_button'))
+            .setStyle(item.style)
+            .setDisabled(disabled || itemState.isUnlimited || !itemState.isAffordable)
+        )
+    );
+  }
+}
+
+async function updateShopMessage(componentInteraction, user, state, interaction) {
+  // Giữ hành vi làm mới trang nhất quán cho các nút prev/next/refresh.
+  const refreshedData = await loadShopState(user, state);
+  await componentInteraction.update(buildShopMessage(
+    user,
+    refreshedData.credits,
+    refreshedData.quotaStats,
+    refreshedData.state,
+    interaction
+  ));
 }
 
 function buildShopHeroText(stats) {
@@ -170,19 +207,15 @@ function buildShopWalletAndPricingText(credits, state, interaction) {
   const totalPages = getTotalPages();
   const pageLabel = interaction.t('commands.shop.page');
 
-  const leftLines = [
+  return [
     '**Ví credits**',
     `Số dư hiện tại: **${formatNumber(credits)}** credits`,
     `${pageLabel}: **${state.page + 1}/${totalPages}**`,
-  ];
-
-  const rightLines = [
+    '',
     '**Bảng giá**',
     `Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt`,
     `Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
-  ];
-
-  return buildTwoColumnText(leftLines, rightLines);
+  ].join('\n');
 }
 
 function buildShopLimitsText(stats, interaction) {
@@ -217,84 +250,15 @@ function buildNavigationButtons(state, interaction, disabled = false) {
 }
 
 function buildShopComponents(user, credits, stats, state, interaction, disabled = false) {
+  // Dựng thẻ shop theo từng khối ổn định để các chỉnh sửa UI sau này không lan rộng.
   const pageItems = getPageItems(state.page);
-  const proItems = pageItems.filter((item) => item.type === 'chat');
-  const visionItems = pageItems.filter((item) => item.type === 'image');
-  const avatarUrl = user.displayAvatarURL({ extension: 'png', size: 256 });
+  const container = createContainer().setAccentColor(COLORS.LUNABY);
 
-  const container = new ContainerBuilder()
-    .setAccentColor(COLORS.LUNABY)
-    .addSectionComponents((section) =>
-      section
-        .addTextDisplayComponents(
-          (textDisplay) => textDisplay.setContent(`**${user.globalName || user.username}**`),
-          (textDisplay) => textDisplay.setContent(buildShopHeroText(stats))
-        )
-        .setThumbnailAccessory((thumbnail) =>
-          thumbnail
-            .setURL(avatarUrl)
-            .setDescription(user.globalName || user.username)
-        )
-    )
-    .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(buildShopWalletAndPricingText(credits, state, interaction))
-    )
-    .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(buildShopLimitsText(stats, interaction))
-    )
-    .addSeparatorComponents((separator) => separator)
-    .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(`**Gói Lunaby Pro**`)
-    );
+  addShopHeaderSection(container, user, stats);
+  addShopOverviewSection(container, credits, stats, state, interaction);
 
-  if (!proItems.length) {
-    container.addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(interaction.t('commands.shop.no_packages'))
-    );
-  } else {
-    for (const item of proItems) {
-      const itemState = getItemState(item, credits, stats, interaction);
-      container.addSectionComponents((section) =>
-        section
-          .addTextDisplayComponents((textDisplay) =>
-            textDisplay.setContent(buildShopItemSectionText(item, credits, stats, interaction))
-          )
-          .setButtonAccessory((button) =>
-            button
-              .setCustomId(`shop_buy_${item.id}`)
-              .setLabel(interaction.t('commands.shop.buy_button'))
-              .setStyle(item.style)
-              .setDisabled(disabled || itemState.isUnlimited || !itemState.isAffordable)
-          )
-      );
-    }
-  }
-
-  container.addTextDisplayComponents((textDisplay) =>
-    textDisplay.setContent(`**Gói Lunaby Vision**`)
-  );
-
-  if (!visionItems.length) {
-    container.addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(interaction.t('commands.shop.no_packages'))
-    );
-  } else {
-    for (const item of visionItems) {
-      const itemState = getItemState(item, credits, stats, interaction);
-      container.addSectionComponents((section) =>
-        section
-          .addTextDisplayComponents((textDisplay) =>
-            textDisplay.setContent(buildShopItemSectionText(item, credits, stats, interaction))
-          )
-          .setButtonAccessory((button) =>
-            button
-              .setCustomId(`shop_buy_${item.id}`)
-              .setLabel(interaction.t('commands.shop.buy_button'))
-              .setStyle(item.style)
-              .setDisabled(disabled || itemState.isUnlimited || !itemState.isAffordable)
-          )
-      );
-    }
+  for (const group of SHOP_PACKAGE_GROUPS) {
+    addShopPackageSection(container, group, pageItems, credits, stats, interaction, disabled);
   }
 
   container.addActionRowComponents((actionRow) =>
@@ -409,39 +373,18 @@ module.exports = {
 
           if (componentInteraction.customId === 'shop_prev') {
             currentState.page = Math.max(0, currentState.page - 1);
-            const refreshedData = await loadShopState(user, currentState);
-            await componentInteraction.update(buildShopMessage(
-              user,
-              refreshedData.credits,
-              refreshedData.quotaStats,
-              refreshedData.state,
-              interaction
-            ));
+            await updateShopMessage(componentInteraction, user, currentState, interaction);
             return;
           }
 
           if (componentInteraction.customId === 'shop_next') {
             currentState.page = Math.min(getTotalPages() - 1, currentState.page + 1);
-            const refreshedData = await loadShopState(user, currentState);
-            await componentInteraction.update(buildShopMessage(
-              user,
-              refreshedData.credits,
-              refreshedData.quotaStats,
-              refreshedData.state,
-              interaction
-            ));
+            await updateShopMessage(componentInteraction, user, currentState, interaction);
             return;
           }
 
           if (componentInteraction.customId === 'shop_refresh') {
-            const refreshedData = await loadShopState(user, currentState);
-            await componentInteraction.update(buildShopMessage(
-              user,
-              refreshedData.credits,
-              refreshedData.quotaStats,
-              refreshedData.state,
-              interaction
-            ));
+            await updateShopMessage(componentInteraction, user, currentState, interaction);
             return;
           }
 

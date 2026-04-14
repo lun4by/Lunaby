@@ -6,7 +6,6 @@ const {
     TextInputStyle,
     ButtonBuilder,
     ButtonStyle,
-    ContainerBuilder,
     MessageFlags,
 } = require('discord.js');
 const MemoryService = require('../../services/ai/MemoryService.js');
@@ -17,6 +16,7 @@ const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/core/logger.js');
 const { COLORS } = require('../../utils/discord/embedUtils.js');
 
+const { createContainer } = require('../../utils/discord/builderFactory');
 function isPrivacyEnabled(value) {
     if (value === false || value === 0) return false;
     if (typeof value === 'string') {
@@ -148,6 +148,7 @@ function buildMemoryStatusText(memory, interaction) {
 }
 
 function buildPersonalizeComponents(interaction, memory, options = {}) {
+    // Dựng UI cài đặt.
     const { disabled = false, notice = null } = options;
     const searchEnabled = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
     const memoryEnabled = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
@@ -159,7 +160,7 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
     );
     const components = [];
 
-    const mainContainer = new ContainerBuilder()
+    const mainContainer = createContainer()
         .setAccentColor(COLORS.LUNABY)
         .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(buildMainCardText(interaction))
@@ -220,7 +221,7 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
     components.push(mainContainer);
 
     if (notice?.text) {
-        const noticeContainer = new ContainerBuilder()
+        const noticeContainer = createContainer()
             .setAccentColor(notice.color || COLORS.LUNABY)
             .addTextDisplayComponents((textDisplay) => textDisplay.setContent(notice.text));
 
@@ -237,7 +238,7 @@ function buildClearConfirmComponents(interaction) {
     ].join('\n');
 
     return [
-        new ContainerBuilder()
+        createContainer()
             .setAccentColor(0xE74C3C)
             .addTextDisplayComponents((textDisplay) => textDisplay.setContent(confirmText))
             .addActionRowComponents((actionRow) =>

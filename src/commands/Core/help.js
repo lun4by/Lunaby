@@ -1,6 +1,5 @@
 const {
     SlashCommandBuilder,
-    EmbedBuilder,
     ActionRowBuilder,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
@@ -12,6 +11,7 @@ const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 const { COLORS } = require('../../utils/discord/embedUtils');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
@@ -43,7 +43,7 @@ module.exports = {
         const row = new ActionRowBuilder().addComponents(select);
         const banner = 'https://cdn.lunie.dev/Lunaby/Lunaby_Help.jpg';
 
-        const welcomeEmbed = new EmbedBuilder()
+        const welcomeEmbed = createEmbed()
             .setColor(COLORS.LUNABY)
             .setTitle(interaction.t('commands.help.embed_title'))
             .setDescription(interaction.t('commands.help.embed_desc'))
@@ -137,7 +137,7 @@ function buildSelectOptions(categories, interaction) {
 }
 
 function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) {
-    const embed = new EmbedBuilder()
+    const embed = createEmbed()
         .setColor(COLORS.LUNABY)
         .setTimestamp();
 

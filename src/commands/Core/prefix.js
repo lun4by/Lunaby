@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const PrefixDB = require('../../services/database/PrefixDB');
 const { DEFAULT_PREFIX } = require('../../config/constants');
 const { COLORS } = require('../../utils/discord/embedUtils');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('prefix')
@@ -55,7 +56,7 @@ async function handleView(interaction) {
     const activePrefix = await PrefixDB.resolvePrefix(userId, guildId);
 
     const notSet = interaction.t('commands.prefix.not_set');
-    const embed = new EmbedBuilder()
+    const embed = createEmbed()
         .setColor(COLORS.LUNABY)
         .setTitle(interaction.t('commands.prefix.title'))
         .addFields(

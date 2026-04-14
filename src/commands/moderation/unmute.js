@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const { logModAction } = require('../../utils/moderation/modUtils.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
@@ -8,6 +8,7 @@ const { sendModLog, createModActionEmbed } = require('../../utils/moderation/mod
 const prompts = require('../../config/prompts.js');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('unmute')
@@ -103,7 +104,7 @@ module.exports = {
             await sendModLog(interaction.guild, logEmbed, true);
 
             try {
-                const dmEmbed = new EmbedBuilder()
+                const dmEmbed = createEmbed()
                     .setColor(0x00FF00)
                     .setTitle(interaction.t('commands.unmute.dm_title', { guild: interaction.guild.name }))
                     .setDescription(interaction.t('commands.unmute.dm_desc', { reason }))

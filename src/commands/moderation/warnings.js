@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/core/logger.js');
 const emojis = require('../../config/emojis.js');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('warnings')
@@ -47,7 +48,7 @@ module.exports = {
                 });
             }
 
-            const warningsEmbed = new EmbedBuilder()
+            const warningsEmbed = createEmbed()
                 .setColor(0xffff00)
                 .setTitle(interaction.t('commands.warnings.embed_title'))
                 .setDescription(interaction.t('commands.warnings.embed_desc', { tag: targetUser.tag, count: warnings.length }))

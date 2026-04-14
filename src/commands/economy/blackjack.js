@@ -4,13 +4,13 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
-  EmbedBuilder,
-} = require('discord.js');
+  } = require('discord.js');
 const EconomyService = require('../../services/user/EconomyService');
 const bjUtil = require('./blackjackUtil');
 const emojis = require('../../config/emojis');
 const logger = require('../../utils/core/logger');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 const BLACKJACK_TIMEOUT_MS = 60000;
 const HIT_CUSTOM_ID = 'blackjack_hit';
 const STAND_CUSTOM_ID = 'blackjack_stand';
@@ -67,7 +67,7 @@ function buildEmbed(interaction, game, options = {}) {
     ? String(dealerInfo.points)
     : interaction.t('commands.blackjack.dealer_score_hidden', { shown: dealerInfo.shownPoints });
 
-  const embed = new EmbedBuilder()
+  const embed = createEmbed()
     .setColor(0x2b2d31)
     .setTitle(interaction.t('commands.blackjack.embed_title'))
     .setDescription(interaction.t('commands.blackjack.embed_bet', { bet: formatNumber(game.bet) }))

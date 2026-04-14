@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const { creatorChannels } = require('../../events/voiceStateUpdate.js');
 const emojis = require('../../config/emojis.js');
@@ -6,6 +6,7 @@ const logger = require('../../utils/core/logger.js');
 const { COLORS } = require('../../utils/discord/embedUtils.js');
 const { formatPermissionList, getMissingPermissions, hasMemberPermission, isMissingPermissionError } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 const requiredBotPermissions = [PermissionFlagsBits.ManageChannels];
 
 module.exports = {
@@ -123,7 +124,7 @@ async function handleSetup(interaction) {
             defaultBitrate: 64000,
         });
 
-        const embed = new EmbedBuilder()
+        const embed = createEmbed()
             .setColor(COLORS.LUNABY)
             .setTitle(interaction.t('commands.lvoice.setup_title'))
             .setDescription(interaction.t('commands.lvoice.setup_desc', { creatorId: creatorChannel.id }))
@@ -221,7 +222,7 @@ async function handleConfig(interaction) {
         });
     }
 
-    const embed = new EmbedBuilder()
+    const embed = createEmbed()
         .setColor(COLORS.LUNABY)
         .setTitle(interaction.t('commands.lvoice.config_title'))
         .addFields(

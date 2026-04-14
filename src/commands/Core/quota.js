@@ -1,8 +1,9 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const QuotaService = require('../../services/user/QuotaService');
 const emojis = require('../../config/emojis');
 const { COLORS } = require('../../utils/discord/embedUtils');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 const ROLE_BADGES = {
     owner: 'Owner',
     admin: 'Admin',
@@ -85,7 +86,7 @@ module.exports = {
         const msgRemainingText = msgMax === -1 ? '∞' : interaction.t('commands.quota.remaining', { count: msgRemaining });
         const imgRemainingText = imgMax === -1 ? '∞' : interaction.t('commands.quota.remaining', { count: imgRemaining });
 
-        const embed = new EmbedBuilder()
+        const embed = createEmbed()
             .setColor(embedColor)
             .setTitle('Lunaby Quota Center')
             .setAuthor({

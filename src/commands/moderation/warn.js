@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/core/logger.js');
@@ -6,6 +6,7 @@ const emojis = require('../../config/emojis.js');
 const prompts = require('../../config/prompts.js');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('warn')
@@ -105,7 +106,7 @@ module.exports = {
             });
 
             try {
-                const dmEmbed = new EmbedBuilder()
+                const dmEmbed = createEmbed()
                     .setColor(0xffff00)
                     .setTitle(interaction.t('commands.warn.dm_title', { guild: interaction.guild.name }))
                     .setDescription(interaction.t('commands.warn.dm_desc', { reason, warningCount }))
@@ -124,7 +125,7 @@ module.exports = {
                         interaction.t('commands.warn.auto_mute_reason', { count: warningCount }),
                     );
 
-                    const autoMuteEmbed = new EmbedBuilder()
+                    const autoMuteEmbed = createEmbed()
                         .setColor(0xffa500)
                         .setTitle(interaction.t('commands.warn.auto_mute_title'))
                         .setDescription(interaction.t('commands.warn.auto_mute_desc', { tag: targetUser.tag, count: warningCount }))
@@ -139,7 +140,7 @@ module.exports = {
                 try {
                     await targetMember.kick(interaction.t('commands.warn.auto_kick_reason', { count: warningCount }));
 
-                    const autoKickEmbed = new EmbedBuilder()
+                    const autoKickEmbed = createEmbed()
                         .setColor(0xff5555)
                         .setTitle(interaction.t('commands.warn.auto_kick_title'))
                         .setDescription(interaction.t('commands.warn.auto_kick_desc', { tag: targetUser.tag, count: warningCount }))

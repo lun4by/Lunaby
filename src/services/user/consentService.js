@@ -1,8 +1,9 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const mariaClient = require('../database/mariaClient');
 const logger = require('../../utils/core/logger.js');
 const { handlePermissionError, sendEmbedWithFallback, isMissingPermissionError } = require('../../utils/discord/permissionUtils');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 class ConsentService {
   async hasUserConsented(userId) {
     try {
@@ -16,7 +17,7 @@ class ConsentService {
 
 
   createConsentEmbed(user) {
-    const embed = new EmbedBuilder()
+    const embed = createEmbed()
       .setTitle('Chào mừng bạn đến với Lunaby AI')
       .setDescription(
         `Xin chào **${user.username}**!\n\n` +
@@ -61,7 +62,7 @@ class ConsentService {
     try {
       await this.updateUserConsent(userId, true);
 
-      const embed = new EmbedBuilder()
+      const embed = createEmbed()
         .setTitle('Cảm ơn bạn đã tin tưởng Lunaby')
         .setDescription(
           `**${interaction.user.username}** đã chấp thuận sử dụng dịch vụ Lunaby AI.\n\n` +
@@ -95,7 +96,7 @@ class ConsentService {
     try {
       await this.updateUserConsent(userId, false);
 
-      const embed = new EmbedBuilder()
+      const embed = createEmbed()
         .setTitle('Lunaby tôn trọng quyết định của bạn')
         .setDescription(
           `**${interaction.user.username}** đã từ chối sử dụng dịch vụ Lunaby AI.\n\n` +

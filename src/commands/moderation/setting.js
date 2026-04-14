@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, PermissionsBitField } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/core/logger');
@@ -8,6 +8,7 @@ const { updateGuildSettingsAndInvalidate } = require('../../utils/guild/guildSet
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 const { isSlashCommandInteraction } = require('../../utils/discord/hybridCommand');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('setting')
@@ -165,7 +166,7 @@ async function renderPage(interactionOrMessage, guildId, page, isUpdate) {
 
     const t = interactionOrMessage.t;
 
-    const embed = new EmbedBuilder()
+    const embed = createEmbed()
         .setTitle(t('commands.setting.embed_title'))
         .setColor(COLORS.LUNABY)
         .setTimestamp()

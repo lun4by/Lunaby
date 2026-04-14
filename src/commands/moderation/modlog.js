@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('modlog')
@@ -71,7 +72,7 @@ module.exports = {
             const userText = targetUser ? interaction.t('commands.modlog.filter_user', { id: targetUser.id }) : '';
             const actionText = actionType ? interaction.t('commands.modlog.filter_action', { action: actionType }) : '';
 
-            const logEmbed = new EmbedBuilder()
+            const logEmbed = createEmbed()
                 .setColor(0x00B0F4)
                 .setTitle(interaction.t('commands.modlog.embed_title'))
                 .setDescription(interaction.t('commands.modlog.embed_desc', { count: logs.length, userText, actionText }))

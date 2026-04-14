@@ -4,6 +4,7 @@ const MariaModDB = require('../database/MariaModDB.js');
 const emojis = require('../../config/emojis.js');
 const { getCachedGuildSettings } = require('../../utils/guild/guildLocale.js');
 
+const { createEmbed } = require('../../utils/discord/builderFactory');
 let autoPoster = null;
 let webhookApp = null;
 
@@ -65,7 +66,7 @@ async function sendVoteNotifications(client, vote) {
         const channel = guild.channels.cache.get(voteLogChannelId);
         if (!channel) continue;
 
-        const embed = new EmbedBuilder()
+        const embed = createEmbed()
           .setColor(0xFF3366)
           .setTitle(`${emojis.topgg.vote} Có người vừa vote!`)
           .setDescription(`**${displayName}** đã vote cho bot trên [Top.gg](https://top.gg/bot/${vote.bot}/vote)!`)
