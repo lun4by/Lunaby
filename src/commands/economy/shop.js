@@ -196,7 +196,7 @@ function buildShopWalletAndPricingText(credits, state, interaction) {
 
 function buildShopLimitsText(stats, interaction) {
   return [
-    `> - **Hạn mức hiện tại**`,
+    `## Hạn mức hiện tại`,
     `> - Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages, interaction)}`,
     `> - Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction)}`,
   ].join('\n');
