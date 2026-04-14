@@ -1,6 +1,8 @@
 const {
     SlashCommandBuilder,
     ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
     ComponentType,
@@ -33,16 +35,7 @@ module.exports = {
             if (isOwner) return true;
             return folder !== 'admin';
         });
-
-        // Thêm mục Trang chủ lên đầu danh sách
-        visibleCategories.unshift('home');
-
-        const select = new StringSelectMenuBuilder()
-            .setCustomId('category-select')
-            .setPlaceholder(interaction.t('commands.help.select_placeholder'))
-            .addOptions(buildSelectOptions(visibleCategories, interaction));
-
-        const row = new ActionRowBuilder().addComponents(select);
+        let isHomeView = true;
         const banner = 'https://cdn.lunie.dev/Lunaby/Lunaby_Help.jpg';
 
         const welcomeEmbed = createEmbed()
@@ -55,14 +48,13 @@ module.exports = {
 
         await interaction.reply({
             embeds: [welcomeEmbed],
-            components: [row],
+            components: [buildCategoryMenuRow(visibleCategories, interaction)],
         });
 
         const message = await interaction.fetchReply();
 
         const collector = message.createMessageComponentCollector({
             time: 60000,
-            componentType: ComponentType.StringSelect,
         });
 
         collector.on('collect', async (i) => {
@@ -71,6 +63,18 @@ module.exports = {
                     content: interaction.t('system.only_caller_can_use'),
                     flags: MessageFlags.Ephemeral,
                 });
+            }
+
+            if (i.isButton() && i.customId === 'help_home') {
+                isHomeView = true;
+                return i.update({
+                    embeds: [welcomeEmbed],
+                    components: [buildCategoryMenuRow(visibleCategories, interaction)],
+                });
+            }
+
+            if (!i.isStringSelectMenu()) {
+                return;
             }
 
             const category = i.values[0];
@@ -82,36 +86,33 @@ module.exports = {
                 });
             }
 
-            // Nếu người dùng chọn Trang chủ, quay lại embed chào mừng
-            if (category === 'home') {
-                return i.update({
-                    embeds: [welcomeEmbed],
-                    components: [row],
-                });
-            }
-
             const helpEmbed = buildHelpEmbed(category, visibleCategories, commandsPath, interaction);
+            isHomeView = false;
 
             await i.update({
                 embeds: [helpEmbed],
-                components: [row],
+                components: [
+                    buildCategoryMenuRow(visibleCategories, interaction),
+                    buildHomeButtonRow(interaction),
+                ],
             });
         });
 
         collector.on('end', async (collected) => {
             try {
-                const disabledRow = new ActionRowBuilder().addComponents(
-                    select.setDisabled(true),
-                );
+                const disabledRows = [buildCategoryMenuRow(visibleCategories, interaction, true)];
+                if (!isHomeView) {
+                    disabledRows.push(buildHomeButtonRow(interaction, true));
+                }
 
                 if (collected.size === 0) {
                     await interaction.editReply({
                         content: interaction.t('commands.help.menu_expired'),
-                        components: [disabledRow],
+                        components: disabledRows,
                     });
                 } else {
                     await interaction.editReply({
-                        components: [disabledRow],
+                        components: disabledRows,
                     });
                 }
             } catch (error) {
@@ -120,6 +121,29 @@ module.exports = {
         });
     },
 };
+
+function buildCategoryMenuRow(categories, interaction, disabled = false) {
+    const select = new StringSelectMenuBuilder()
+        .setCustomId('category-select')
+        .setPlaceholder(interaction.t('commands.help.select_placeholder'))
+        .setDisabled(disabled)
+        .addOptions(buildSelectOptions(categories, interaction));
+
+    return new ActionRowBuilder().addComponents(select);
+}
+
+function buildHomeButtonRow(interaction, disabled = false) {
+    const homeMetadata = getCategoryMetadata('home', interaction);
+
+    return new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('help_home')
+            .setLabel(homeMetadata.label)
+            .setEmoji(homeMetadata.emoji)
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(disabled),
+    );
+}
 
 function buildSelectOptions(categories, interaction) {
     const options = [];
