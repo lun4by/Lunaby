@@ -80,14 +80,6 @@ function getTotalPages() {
   return Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
 }
 
-function chunkArray(items, size) {
-  const chunks = [];
-  for (let index = 0; index < items.length; index += size) {
-    chunks.push(items.slice(index, index + size));
-  }
-  return chunks;
-}
-
 function getPageItems(page) {
   const items = getShopItems();
   const start = page * ITEMS_PER_PAGE;
@@ -115,6 +107,21 @@ function formatShopItemLine(item, credits, stats, interaction) {
     `${statusIcon} +${formatNumber(item.amount)} lượt · ${statusText}`;
 }
 
+function buildShopItemSectionText(item, credits, stats, interaction) {
+  const itemState = getItemState(item, credits, stats, interaction);
+  const statusText = itemState.isUnlimited
+    ? 'Đã vô hạn'
+    : itemState.isAffordable
+      ? 'Mua được'
+      : 'Thiếu credits';
+  const statusIcon = itemState.isUnlimited ? '∞' : itemState.isAffordable ? '✓' : '✕';
+
+  return [
+    `• **${item.label}** · **${formatNumber(itemState.totalCost)}** credits`,
+    `${statusIcon} +${formatNumber(item.amount)} lượt · ${statusText}`,
+  ].join('\n');
+}
+
 function buildShopSection(items, type, credits, stats, interaction) {
   const filteredItems = items.filter((item) => item.type === type);
 
@@ -127,16 +134,21 @@ function buildShopSection(items, type, credits, stats, interaction) {
     .join('\n\n');
 }
 
-function buildShopHeaderText(user, credits, stats, state, interaction) {
+function buildShopHeroText(stats) {
   const resetTimestamp = Math.floor(stats.nextReset / 1000);
-  const totalPages = getTotalPages();
-  const pageLabel = interaction.t('commands.shop.page');
 
   return [
     `## Lunaby Credit Market`,
     `Mở rộng quota bằng credits ngay trong chat.`,
     `Kỳ reset tiếp theo: <t:${resetTimestamp}:R>`,
-    '',
+  ].join('\n');
+}
+
+function buildShopWalletAndPricingText(credits, state, interaction) {
+  const totalPages = getTotalPages();
+  const pageLabel = interaction.t('commands.shop.page');
+
+  return [
     `**Ví credits**`,
     `Số dư hiện tại: **${formatNumber(credits)}** credits`,
     `${pageLabel}: **${state.page + 1}/${totalPages}**`,
@@ -144,39 +156,17 @@ function buildShopHeaderText(user, credits, stats, state, interaction) {
     `**Bảng giá**`,
     `Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt`,
     `Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
-    '',
+  ].join('\n');
+}
+
+function buildShopLimitsText(stats, interaction, user) {
+  return [
     `**Hạn mức hiện tại**`,
     `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages, interaction)}`,
     `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction)}`,
     '',
     `Dùng < > để đổi trang, Làm mới để cập nhật realtime • ${user.globalName || user.username}`,
   ].join('\n');
-}
-
-function buildItemButtonRows(state, credits, stats, interaction, disabled = false) {
-  const rows = [];
-  const pageItems = getPageItems(state.page);
-  const buttonGroups = chunkArray(pageItems, 3);
-
-  for (const group of buttonGroups) {
-    const rowButtons = [];
-
-    for (const item of group) {
-      const itemState = getItemState(item, credits, stats, interaction);
-
-      rowButtons.push(
-        new ButtonBuilder()
-          .setCustomId(`shop_buy_${item.id}`)
-          .setLabel(`${item.label} (${formatNumber(itemState.totalCost)})`)
-          .setStyle(item.style)
-          .setDisabled(disabled || itemState.isUnlimited || !itemState.isAffordable)
-      );
-    }
-
-    rows.push(rowButtons);
-  }
-
-  return rows;
 }
 
 function buildNavigationButtons(state, interaction, disabled = false) {
@@ -204,25 +194,83 @@ function buildNavigationButtons(state, interaction, disabled = false) {
 
 function buildShopComponents(user, credits, stats, state, interaction, disabled = false) {
   const pageItems = getPageItems(state.page);
-  const proSection = buildShopSection(pageItems, 'chat', credits, stats, interaction);
-  const visionSection = buildShopSection(pageItems, 'image', credits, stats, interaction);
+  const proItems = pageItems.filter((item) => item.type === 'chat');
+  const visionItems = pageItems.filter((item) => item.type === 'image');
+  const avatarUrl = user.displayAvatarURL({ extension: 'png', size: 256 });
 
   const container = new ContainerBuilder()
     .setAccentColor(COLORS.LUNABY)
+    .addSectionComponents((section) =>
+      section
+        .addTextDisplayComponents(
+          (textDisplay) => textDisplay.setContent(`### ${user.globalName || user.username}`),
+          (textDisplay) => textDisplay.setContent(buildShopHeroText(stats))
+        )
+        .setThumbnailAccessory((thumbnail) =>
+          thumbnail
+            .setURL(avatarUrl)
+            .setDescription(user.globalName || user.username)
+        )
+    )
     .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(buildShopHeaderText(user, credits, stats, state, interaction))
+      textDisplay.setContent(buildShopWalletAndPricingText(credits, state, interaction))
+    )
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(buildShopLimitsText(stats, interaction, user))
     )
     .addSeparatorComponents((separator) => separator)
     .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(`### Gói Lunaby Pro\n${proSection}`)
-    )
-    .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(`### Gói Lunaby Vision\n${visionSection}`)
+      textDisplay.setContent(`**Gói Lunaby Pro**`)
     );
 
-  const itemRows = buildItemButtonRows(state, credits, stats, interaction, disabled);
-  for (const rowButtons of itemRows) {
-    container.addActionRowComponents((actionRow) => actionRow.setComponents(...rowButtons));
+  if (!proItems.length) {
+    container.addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(interaction.t('commands.shop.no_packages'))
+    );
+  } else {
+    for (const item of proItems) {
+      const itemState = getItemState(item, credits, stats, interaction);
+      container.addSectionComponents((section) =>
+        section
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(buildShopItemSectionText(item, credits, stats, interaction))
+          )
+          .setButtonAccessory((button) =>
+            button
+              .setCustomId(`shop_buy_${item.id}`)
+              .setLabel(interaction.t('commands.shop.buy_button'))
+              .setStyle(item.style)
+              .setDisabled(disabled || itemState.isUnlimited || !itemState.isAffordable)
+          )
+      );
+    }
+  }
+
+  container.addTextDisplayComponents((textDisplay) =>
+    textDisplay.setContent(`**Gói Lunaby Vision**`)
+  );
+
+  if (!visionItems.length) {
+    container.addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(interaction.t('commands.shop.no_packages'))
+    );
+  } else {
+    for (const item of visionItems) {
+      const itemState = getItemState(item, credits, stats, interaction);
+      container.addSectionComponents((section) =>
+        section
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(buildShopItemSectionText(item, credits, stats, interaction))
+          )
+          .setButtonAccessory((button) =>
+            button
+              .setCustomId(`shop_buy_${item.id}`)
+              .setLabel(interaction.t('commands.shop.buy_button'))
+              .setStyle(item.style)
+              .setDisabled(disabled || itemState.isUnlimited || !itemState.isAffordable)
+          )
+      );
+    }
   }
 
   container.addActionRowComponents((actionRow) =>
