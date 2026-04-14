@@ -6,8 +6,11 @@ const { ensureMariaTables } = require('./mariaSchemaValidator');
 const DEFAULT_QUOTA_ROLE = USER_ROLES.USER;
 const DEFAULT_LIMIT_PERIOD = ROLE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
 const DEFAULT_IMAGE_LIMIT_PERIOD = ROLE_IMAGE_LIMITS[DEFAULT_QUOTA_ROLE] ?? 0;
-const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-const DAILY_RESET_STREAK_MS = 48 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const DAILY_RESET_HOUR = 5;
+const DAILY_TIMEZONE_OFFSET_HOURS = 7;
+const DAILY_TIMEZONE_OFFSET_MS = DAILY_TIMEZONE_OFFSET_HOURS * HOUR_MS;
 const DAILY_BASE_REWARD = 500;
 const DAILY_STREAK_BONUS = 50;
 const DAILY_STREAK_BONUS_CAP = 1000;
@@ -60,6 +63,17 @@ function isBlackjack(hand) {
 
 function handToText(hand) {
     return hand.map((card) => `${card.rank}${card.suit}`).join(' ');
+}
+
+function getDailyWindowId(timestamp) {
+    const shifted = Number(timestamp) + DAILY_TIMEZONE_OFFSET_MS - (DAILY_RESET_HOUR * HOUR_MS);
+    return Math.floor(shifted / DAY_MS);
+}
+
+function getNextDailyResetAt(timestamp) {
+    const shifted = Number(timestamp) + DAILY_TIMEZONE_OFFSET_MS - (DAILY_RESET_HOUR * HOUR_MS);
+    const nextBoundaryShifted = (Math.floor(shifted / DAY_MS) + 1) * DAY_MS;
+    return nextBoundaryShifted - DAILY_TIMEZONE_OFFSET_MS + (DAILY_RESET_HOUR * HOUR_MS);
 }
 
 class MariaModDB {
@@ -734,19 +748,22 @@ class MariaModDB {
             const economy = rows[0] || {};
             const now = Date.now();
             const lastClaimAt = Number(economy.streak_timestamp || 0);
-            const elapsed = now - lastClaimAt;
+            const nowWindowId = getDailyWindowId(now);
+            const lastWindowId = lastClaimAt > 0 ? getDailyWindowId(lastClaimAt) : null;
+            const nextClaimAt = getNextDailyResetAt(now);
 
-            if (lastClaimAt > 0 && elapsed < DAILY_COOLDOWN_MS) {
+            if (lastWindowId !== null && lastWindowId === nowWindowId) {
                 await conn.rollback();
                 return {
                     claimed: false,
-                    remainingMs: DAILY_COOLDOWN_MS - elapsed,
-                    nextClaimAt: lastClaimAt + DAILY_COOLDOWN_MS,
+                    remainingMs: Math.max(0, nextClaimAt - now),
+                    nextClaimAt,
                 };
             }
 
             const previousStreak = Number(economy.streak_current || 0);
-            const resetStreak = lastClaimAt > 0 && elapsed > DAILY_RESET_STREAK_MS;
+            const missedWindows = lastWindowId === null ? 0 : (nowWindowId - lastWindowId);
+            const resetStreak = lastWindowId !== null && missedWindows > 1;
             const streak = resetStreak ? 1 : previousStreak + 1;
             const streakBonus = Math.min(DAILY_STREAK_BONUS_CAP, Math.max(0, streak - 1) * DAILY_STREAK_BONUS);
             const reward = DAILY_BASE_REWARD + streakBonus;
@@ -773,7 +790,7 @@ class MariaModDB {
                 streakBonus,
                 walletBefore,
                 walletAfter,
-                nextClaimAt: now + DAILY_COOLDOWN_MS,
+                nextClaimAt,
             };
         } catch (error) {
             if (conn) {
