@@ -353,12 +353,13 @@ async function handleClear(i, userId, interaction) {
     });
 }
 
-async function handleClose(i, collector) {
+async function handleClose(i, collector, interaction) {
     if (collector && !collector.ended) {
         collector.stop('closed');
     }
 
-    await i.deleteReply().catch(() => { });
+    await i.deferUpdate().catch(() => { });
+    await interaction.deleteReply().catch(() => { });
 }
 
 async function handleButtonClick(i, userId, interaction, collector) {
@@ -379,7 +380,7 @@ async function handleButtonClick(i, userId, interaction, collector) {
     }
 
     if (i.customId === 'personalize_close') {
-        return handleClose(i, collector);
+        return handleClose(i, collector, interaction);
     }
 
     if (i.customId === 'personalize_clear_confirm') {
