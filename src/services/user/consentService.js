@@ -3,7 +3,7 @@ const mariaClient = require('../database/mariaClient');
 const logger = require('../../utils/core/logger.js');
 const { handlePermissionError, sendEmbedWithFallback, isMissingPermissionError } = require('../../utils/discord/permissionUtils');
 
-const { createEmbed, createContainer } = require('../../utils/discord/builderFactory');
+const { createContainer } = require('../../utils/discord/builderFactory');
 class ConsentService {
   async hasUserConsented(userId) {
     try {
@@ -14,7 +14,6 @@ class ConsentService {
       return false;
     }
   }
-
 
   createConsentEmbed(user) {
     const consentContainer = createContainer()
@@ -42,6 +41,7 @@ class ConsentService {
           `**Bạn có đồng ý sử dụng dịch vụ Lunaby AI không?**`
         )
       )
+      .addSeparatorComponents((separator) => separator)
       .addActionRowComponents((actionRow) =>
         actionRow.setComponents(
           new ButtonBuilder()
@@ -58,34 +58,45 @@ class ConsentService {
     return { components: [consentContainer], flags: MessageFlags.IsComponentsV2 };
   }
 
-
   async sendConsentEmbed(interaction, user) {
     const embedData = this.createConsentEmbed(user);
     return await sendEmbedWithFallback(interaction, embedData, user.username, 'sendMessages', 'reply');
   }
 
+  createConsentResultMessage(user, accentColor, title, description) {
+    const resultContainer = createContainer()
+      .setAccentColor(accentColor)
+      .addSectionComponents((section) =>
+        section
+          .addTextDisplayComponents(
+            (textDisplay) => textDisplay.setContent(`## ${title}`),
+            (textDisplay) => textDisplay.setContent(description)
+          )
+          .setThumbnailAccessory((thumbnail) =>
+            thumbnail.setURL(user.displayAvatarURL({ extension: 'png', size: 512 }))
+          )
+      );
+
+    return { components: [resultContainer] };
+  }
 
   async handleConsentAccept(interaction, userId) {
     try {
       await this.updateUserConsent(userId, true);
 
-      const embed = createEmbed()
-        .setTitle('Cảm ơn bạn đã tin tưởng Lunaby')
-        .setDescription(
-          `**${interaction.user.username}** đã chấp thuận sử dụng dịch vụ Lunaby AI.\n\n` +
-          `**Bây giờ bạn có thể:**\n` +
-          `> Trò chuyện với Lunaby bằng cách tag @Lunaby\n` +
-          `> Sử dụng các lệnh như \`l.help\`\n` +
-          `> Nhận XP và level up khi hoạt động\n\n` +
-          `Chúc bạn có những trải nghiệm tuyệt vời!`
-        )
-        .setColor(0x57F287)
-        .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true, size: 512 }))
-        .setTimestamp();
+      const messageData = this.createConsentResultMessage(
+        interaction.user,
+        0x57F287,
+        'Cảm ơn bạn đã tin tưởng Lunaby',
+        `**${interaction.user.username}** đã chấp thuận sử dụng dịch vụ Lunaby AI.\n\n` +
+        `**Bây giờ bạn có thể:**\n` +
+        `> Trò chuyện với Lunaby bằng cách tag @Lunaby\n` +
+        `> Sử dụng các lệnh như \`l.help\`\n` +
+        `> Nhận XP và level up khi hoạt động\n\n` +
+        `Chúc bạn có những trải nghiệm tuyệt vời!`
+      );
 
-      const embedData = { embeds: [embed], components: [] };
-
-      const success = await sendEmbedWithFallback(interaction, embedData, interaction.user.username, 'embedLinks', 'update');
+      const success = await sendEmbedWithFallback(interaction, messageData, interaction.user.username, 'sendMessages', 'update');
 
       if (success) {
         logger.info('consent', `User ${interaction.user.tag} (${userId}) accepted Terms of Service`);
@@ -98,30 +109,25 @@ class ConsentService {
     }
   }
 
-
   async handleConsentDecline(interaction, userId) {
     try {
       await this.updateUserConsent(userId, false);
 
-      const embed = createEmbed()
-        .setTitle('Lunaby tôn trọng quyết định của bạn')
-        .setDescription(
-          `**${interaction.user.username}** đã từ chối sử dụng dịch vụ Lunaby AI.\n\n` +
-          `**Dữ liệu của bạn**\n` +
-          `> Không được lưu trữ trong hệ thống\n` +
-          `> Hoàn toàn bảo mật và riêng tư\n\n` +
-          `**Lunaby vẫn sẵn sàng giúp đỡ bạn**\n` +
-          `> Bạn có thể thay đổi quyết định bất cứ lúc nào\n` +
-          `> Chỉ cần tag @Lunaby hoặc sử dụng lệnh để bắt đầu lại\n\n` +
-          `Cảm ơn bạn đã dành thời gian!`
-        )
-        .setColor(0xED4245)
-        .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true, size: 512 }))
-        .setTimestamp();
+      const messageData = this.createConsentResultMessage(
+        interaction.user,
+        0xED4245,
+        'Lunaby tôn trọng quyết định của bạn',
+        `**${interaction.user.username}** đã từ chối sử dụng dịch vụ Lunaby AI.\n\n` +
+        `**Dữ liệu của bạn**\n` +
+        `> Không được lưu trữ trong hệ thống\n` +
+        `> Hoàn toàn bảo mật và riêng tư\n\n` +
+        `**Lunaby vẫn sẵn sàng giúp đỡ bạn**\n` +
+        `> Bạn có thể thay đổi quyết định bất cứ lúc nào\n` +
+        `> Chỉ cần tag @Lunaby hoặc sử dụng lệnh để bắt đầu lại\n\n` +
+        `Cảm ơn bạn đã dành thời gian!`
+      );
 
-      const embedData = { embeds: [embed], components: [] };
-
-      const success = await sendEmbedWithFallback(interaction, embedData, interaction.user.username, 'embedLinks', 'update');
+      const success = await sendEmbedWithFallback(interaction, messageData, interaction.user.username, 'sendMessages', 'update');
 
       if (success) {
         logger.info('consent', `User ${interaction.user.tag} (${userId}) declined Terms of Service`);
@@ -133,7 +139,6 @@ class ConsentService {
       }
     }
   }
-
 
   async updateUserConsent(userId, consented) {
     try {
