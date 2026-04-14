@@ -131,7 +131,6 @@ function buildActionButtonRows(interaction, memory = null, disabled = false) {
         new ButtonBuilder()
             .setCustomId('personalize_clear')
             .setLabel(interaction.t('commands.personalize.menu_clear'))
-            .setEmoji(emojis.personalize.clear)
             .setStyle(ButtonStyle.Danger)
             .setDisabled(disabled)
     );
