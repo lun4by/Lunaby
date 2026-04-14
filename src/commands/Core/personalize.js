@@ -148,7 +148,7 @@ function buildMemoryStatusText(memory, interaction) {
 }
 
 function buildPersonalizeComponents(interaction, memory, options = {}) {
-    // Dựng UI cài đặt.
+    // Dựng UI.
     const { disabled = false, notice = null } = options;
     const searchEnabled = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
     const memoryEnabled = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
@@ -208,6 +208,7 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                         .setDisabled(disabled)
                 )
         )
+        .addSeparatorComponents((separator) => separator)
         .addActionRowComponents((actionRow) =>
             actionRow.setComponents(
                 new ButtonBuilder()
