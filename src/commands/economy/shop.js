@@ -227,7 +227,7 @@ function buildShopComponents(user, credits, stats, state, interaction, disabled 
     .addSectionComponents((section) =>
       section
         .addTextDisplayComponents(
-          (textDisplay) => textDisplay.setContent(`### ${user.globalName || user.username}`),
+          (textDisplay) => textDisplay.setContent(`**${user.globalName || user.username}**`),
           (textDisplay) => textDisplay.setContent(buildShopHeroText(stats))
         )
         .setThumbnailAccessory((thumbnail) =>
