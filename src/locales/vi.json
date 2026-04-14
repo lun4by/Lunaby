@@ -523,6 +523,7 @@
     },
     "coinflip": {
       "desc": "Tung đồng xu để nhận hoặc mất credits",
+      "maintenance": "Lệnh hiện đang bảo trì.",
       "syntax": "Cú pháp: coinflip <heads|tails> <bet|all>",
       "win": "Bạn thắng **+{{amount}}** credits!",
       "lose": "Bạn thua **-{{amount}}** credits.",
@@ -532,6 +533,7 @@
     },
     "blackjack": {
       "desc": "Đánh blackjack theo lượt hit hoặc stand",
+      "maintenance": "Lệnh hiện đang bảo trì.",
       "syntax": "Cú pháp: blackjack <bet|all>",
       "started": "Ván blackjack đã bắt đầu. Chọn **Hit** hoặc **Stand**.",
       "resumed": "Đã tiếp tục ván blackjack đang chơi.",

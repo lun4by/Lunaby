@@ -50,8 +50,19 @@ module.exports = {
   cooldown: 10,
 
   async execute(interaction) {
+    const isSlash = !interaction.message;
+
+    await interaction.reply(
+      isSlash
+        ? {
+          content: `${emojis.warning} ${interaction.t('commands.coinflip.maintenance')}`,
+          flags: MessageFlags.Ephemeral,
+        }
+        : `${emojis.warning} ${interaction.t('commands.coinflip.maintenance')}`
+    );
+    return;
+
     try {
-      const isSlash = !interaction.message;
       const prefixInput = isSlash ? null : parsePrefixInput(interaction.args);
       const choiceRaw = isSlash
         ? interaction.options.getString('choice')

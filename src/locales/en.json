@@ -523,6 +523,7 @@
     },
     "coinflip": {
       "desc": "Flip a coin to win or lose credits",
+      "maintenance": "This command is currently under maintenance.",
       "syntax": "Syntax: coinflip <heads|tails> <bet|all>",
       "win": "You won **+{{amount}}** credits!",
       "lose": "You lost **-{{amount}}** credits.",
@@ -532,6 +533,7 @@
     },
     "blackjack": {
       "desc": "Play blackjack with hit or stand actions",
+      "maintenance": "This command is currently under maintenance.",
       "syntax": "Syntax: blackjack <bet|all>",
       "started": "Blackjack started. Choose **Hit** or **Stand**.",
       "resumed": "Resumed your active blackjack game.",

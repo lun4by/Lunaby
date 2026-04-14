@@ -176,6 +176,13 @@ module.exports = {
 
   async execute(interaction) {
     const isSlash = !interaction.message;
+
+    await interaction.reply(buildErrorPayload(
+      isSlash,
+      `${emojis.warning} ${interaction.t('commands.blackjack.maintenance')}`,
+    ));
+    return;
+
     let reservedBet = 0;
     let sessionCreated = false;
 
