@@ -616,6 +616,7 @@
       "select_shop": "Chọn cửa hàng",
       "btn_coin_shop": "Coin Shop đang được cập nhật",
       "refresh": "Làm mới",
+      "buy_button": "Mua",
       "package_not_found": "Không tìm thấy gói bạn muốn mua.",
       "buy_success": "Bạn đã mua **{{amount}}** lượt {{product}} với giá **{{cost}}** credits.",
       "error_open": "Đã xảy ra lỗi khi mở shop. Vui lòng thử lại sau.",

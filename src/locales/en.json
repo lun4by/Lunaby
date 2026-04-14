@@ -616,6 +616,7 @@
       "select_shop": "Select shop",
       "btn_coin_shop": "Coin Shop is updating",
       "refresh": "Refresh",
+      "buy_button": "Buy",
       "package_not_found": "Could not find the package you want to buy.",
       "buy_success": "You have purchased **{{amount}}** uses of {{product}} for **{{cost}}** credits.",
       "error_open": "An error occurred while opening the shop. Please try again later.",
