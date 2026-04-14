@@ -130,7 +130,8 @@ function addShopOverviewSection(container, credits, stats, state, interaction) {
     )
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(buildShopLimitsText(stats, interaction))
-    );
+    )
+    .addSeparatorComponents((separator) => separator);
 }
 
 function addShopPackageSection(container, group, pageItems, credits, stats, interaction, disabled) {
