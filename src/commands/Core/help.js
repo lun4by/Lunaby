@@ -53,7 +53,7 @@ module.exports = {
         const message = await interaction.fetchReply();
 
         const collector = message.createMessageComponentCollector({
-            time: 60000,
+            time: 120000,
         });
 
         collector.on('collect', async (i) => {
