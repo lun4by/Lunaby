@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags} = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const { creatorChannels } = require('../../events/voiceStateUpdate.js');
 const emojis = require('../../config/emojis.js');
@@ -34,7 +34,7 @@ module.exports = {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ManageChannels)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.lvoice.need_perm')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -60,7 +60,7 @@ module.exports = {
         } else {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.lvoice.invalid_subcmd')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     },
@@ -71,11 +71,11 @@ async function handleSetup(interaction) {
     if (missingPermissions.length > 0) {
         return interaction.reply({
             content: `${emojis.error} ${interaction.t('commands.lvoice.bot_missing_perm_detail', { permissions: formatPermissionList(missingPermissions) })}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const guild = interaction.guild;
     const categoryName = interaction.options.getString('name')
@@ -157,7 +157,7 @@ async function handleSetup(interaction) {
 }
 
 async function handleDisable(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const guild = interaction.guild;
     const config = await MariaModDB.getLVoiceConfig(guild.id);
@@ -218,7 +218,7 @@ async function handleConfig(interaction) {
     if (!config) {
         return interaction.reply({
             content: `${emojis.error} ${interaction.t('commands.lvoice.not_setup')}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
     }
 
@@ -235,5 +235,5 @@ async function handleConfig(interaction) {
         .setFooter({ text: 'Made by s4ory' })
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

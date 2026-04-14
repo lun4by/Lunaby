@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const CreditsService = require('../../services/user/CreditsService');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
@@ -27,7 +27,7 @@ module.exports = {
       logger.error('credits', 'Error while running /credits:', error);
       const payload = {
         content: `${emojis.error} ${interaction.t('commands.credits.error')}`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       };
       const respond = interaction.replied || interaction.deferred
         ? interaction.followUp(payload)

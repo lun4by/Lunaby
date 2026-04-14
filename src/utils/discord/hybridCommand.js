@@ -16,7 +16,7 @@ async function resolveHybridPrefix(interaction) {
   return PrefixDB.resolvePrefix(interaction.user?.id || interaction.author?.id, interaction.guild?.id);
 }
 
-async function deferHybridReply(interaction, options = { ephemeral: true }) {
+async function deferHybridReply(interaction, options = { flags: MessageFlags.Ephemeral }) {
   if (!isSlashCommandInteraction(interaction)) {
     return null;
   }

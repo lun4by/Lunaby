@@ -4,6 +4,7 @@ const {
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
     ComponentType,
+MessageFlags,
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
@@ -67,7 +68,7 @@ module.exports = {
             if (i.user.id !== interaction.user.id) {
                 return i.reply({
                     content: interaction.t('system.only_caller_can_use'),
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
 
@@ -76,7 +77,7 @@ module.exports = {
             if (category === 'setting' && !isOwner) {
                 return i.reply({
                     content: interaction.t('commands.help.no_view_permission'),
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
 

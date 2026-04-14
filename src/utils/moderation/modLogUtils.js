@@ -54,4 +54,8 @@ function createModActionEmbed(options) {
   return embed;
 }
 
-module.exports = { sendModLog, createModActionEmbed, getModLogChannel };
+module.exports = { 
+  sendModLog, 
+  createModActionEmbed, 
+  getModLogChannel 
+};

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const BlacklistService = require('../../services/user/BlacklistService');
 const { createLunabyEmbed } = require('../../utils/discord/embedUtils');
 const logger = require('../../utils/core/logger');
@@ -61,13 +61,13 @@ module.exports = {
 
       await interaction.reply({
         embeds: [embed],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
       logger.error('botstats', 'Error in botstats command:', error);
       await interaction.reply({
         content: `${emojis.error} ${interaction.t('commands.admin.botstats.error')}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       }).catch(() => { });
     }
   },

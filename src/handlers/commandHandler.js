@@ -51,7 +51,7 @@ const handleCommand = async (interaction, client) => {
     logger.info('command', `Role resolved for ${interaction.user.id}: ${userRole}`);
 
     const commandName = command.data?.name || interaction.commandName;
-    const deny = (message) => interaction.reply({ content: `${emojis.error} ${message}`, ephemeral: true });
+    const deny = (message) => interaction.reply({ content: `${emojis.error} ${message}`, flags: MessageFlags.Ephemeral });
 
     if (!(await ensureCommandEnabledInChannel({
       guildId: interaction.guildId,
@@ -84,7 +84,7 @@ const handleCommand = async (interaction, client) => {
       deny: async ({ remaining, expiresAtUnix }) => {
         await interaction.reply({
           content: interaction.t('system.cooldown_wait', { expiresAtUnix }),
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         setTimeout(() => interaction.deleteReply().catch(() => { }), remaining * 1000);
       },
@@ -117,7 +117,7 @@ const handleCommand = async (interaction, client) => {
       error,
     );
 
-    const errPayload = { content: `${emojis.error} ${interaction.t('system.command_execution_failed')}`, ephemeral: true };
+    const errPayload = { content: `${emojis.error} ${interaction.t('system.command_execution_failed')}`, flags: MessageFlags.Ephemeral };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)
       : interaction.reply(errPayload);

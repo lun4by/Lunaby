@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const logger = require('../../utils/core/logger.js');
 const emojis = require('../../config/emojis.js');
 const { resolveHybridPrefix } = require('../../utils/discord/hybridCommand');
@@ -32,7 +32,7 @@ module.exports = {
 };
 
 async function handleVoiceToggle(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
         const guildId = interaction.guild.id;

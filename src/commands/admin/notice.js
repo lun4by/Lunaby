@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const CommandNoticeService = require('../../services/system/CommandNoticeService');
 const emojis = require('../../config/emojis');
 const logger = require('../../utils/core/logger');
@@ -132,7 +132,7 @@ module.exports = {
         if (!message || !hours) {
           await interaction.reply({
             content: `${emojis.error} ${interaction.t('commands.notice.syntax_create')}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -182,7 +182,7 @@ module.exports = {
       logger.error('notice', 'Error in notice command:', error);
       await interaction.reply({
         content: `${emojis.error} ${resolveNoticeErrorMessage(interaction, error)}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       }).catch(() => { });
     }
   },

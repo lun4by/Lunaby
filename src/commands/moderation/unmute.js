@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const ConversationService = require('../../services/ai/ConversationService.js');
 const { logModAction } = require('../../utils/moderation/modUtils.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
@@ -29,7 +29,7 @@ module.exports = {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -46,21 +46,21 @@ module.exports = {
         if (!targetMember) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.moderation_common.user_not_found')}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (!targetMember.moderatable) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.moderation_common.cant_action_higher_role')}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (!targetMember.communicationDisabledUntil) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('commands.unmute.not_muted')}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -119,7 +119,7 @@ module.exports = {
             logger.error('moderation', 'Error unmuting member:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.unmute.error_unmute', { error: error.message })}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },

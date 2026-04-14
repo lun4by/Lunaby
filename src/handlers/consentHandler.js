@@ -36,7 +36,7 @@ async function handleConsentInteraction(interaction) {
   if (user.id !== targetUserId) {
     return interaction.reply({
       content: `${emojis.error} ${t('system.consent_only_target_user')}`,
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -48,7 +48,7 @@ async function handleConsentInteraction(interaction) {
     }
   } catch (error) {
     logger.error('consent_handler', `Error handling consent interaction for user ${targetUserId}:`, error);
-    const errPayload = { content: `${emojis.error} ${t('system.consent_process_error')}`, ephemeral: true };
+    const errPayload = { content: `${emojis.error} ${t('system.consent_process_error')}`, flags: MessageFlags.Ephemeral };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)
       : interaction.reply(errPayload);

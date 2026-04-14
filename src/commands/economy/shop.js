@@ -337,7 +337,7 @@ module.exports = {
         if (componentInteraction.user.id !== user.id) {
           return componentInteraction.reply({
             content: interaction.t('system.only_caller_can_use'),
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -370,7 +370,7 @@ module.exports = {
             if (!item) {
               return componentInteraction.reply({
                 content: `${emojis.error} ${interaction.t('commands.shop.package_not_found')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
               });
             }
 
@@ -393,7 +393,7 @@ module.exports = {
 
             await componentInteraction.followUp({
               content: `${emojis.success} ${interaction.t('commands.shop.buy_success', { amount: formatNumber(item.amount), product: purchaseResult.usageConfig.productName, cost: formatNumber(purchaseResult.totalCost) })}`,
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
           }
         } catch (error) {
@@ -401,7 +401,7 @@ module.exports = {
 
           const payload = {
             content: `${emojis.error} ${interaction.t('commands.shop.error_process', { error: error.message || '' })}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           };
 
           if (componentInteraction.replied || componentInteraction.deferred) {
@@ -431,7 +431,7 @@ module.exports = {
       logger.error('shop', 'Error in shop command:', error);
       const payload = {
         content: `${emojis.error} ${interaction.t('commands.shop.error_open')}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       };
 
       const respond = interaction.replied || interaction.deferred

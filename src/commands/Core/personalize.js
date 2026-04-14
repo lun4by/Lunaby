@@ -70,7 +70,7 @@ module.exports = {
             if (i.user.id !== interaction.user.id) {
                 return i.reply({
                     content: interaction.t('system.only_caller_can_use'),
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
 
@@ -82,9 +82,9 @@ module.exports = {
                 logger.error('personalize', 'Error handling interaction:', error);
                 const errMsg = interaction.t('commands.personalize.error_occurred');
                 if (i.deferred || i.replied) {
-                    await i.followUp({ content: errMsg, ephemeral: true }).catch(() => { });
+                    await i.followUp({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => { });
                 } else {
-                    await i.reply({ content: errMsg, ephemeral: true }).catch(() => { });
+                    await i.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => { });
                 }
             }
         });

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 
@@ -14,7 +14,7 @@ module.exports = {
   cooldown: 5,
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       const colorInput = interaction.options.getString('color');

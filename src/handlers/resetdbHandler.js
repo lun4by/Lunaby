@@ -13,7 +13,7 @@ async function handleResetdbInteraction(interaction) {
   if (user.id !== ownerId) {
     return interaction.reply({
       content: 'Bạn không có quyền thực hiện hành động này!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -114,7 +114,7 @@ async function handleResetdbInteraction(interaction) {
     }
   } catch (error) {
     logger.error('reset', `Error while processing reset interaction:`, error);
-    const errPayload = { content: '**Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại sau!**', ephemeral: true };
+    const errPayload = { content: '**Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại sau!**', flags: MessageFlags.Ephemeral };
     const respond = interaction.replied || interaction.deferred
       ? interaction.followUp(errPayload)
       : interaction.reply(errPayload);

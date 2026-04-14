@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const EconomyService = require('../../services/user/EconomyService');
 const emojis = require('../../config/emojis');
 const logger = require('../../utils/core/logger');
@@ -63,7 +63,7 @@ module.exports = {
       if (!choiceRaw || !betRaw) {
         await interaction.reply({
           content: `${emojis.error} ${interaction.t('commands.coinflip.syntax')}`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -88,7 +88,7 @@ module.exports = {
       logger.error('coinflip', 'Error in coinflip command:', error);
       await interaction.reply({
         content: `${emojis.error} ${error.message || interaction.t('commands.coinflip.error')}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       }).catch(() => { });
     }
   },

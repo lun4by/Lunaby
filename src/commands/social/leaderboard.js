@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const XPService = require('../../services/user/XPService');
 const { ordinalize } = require('../../utils/text/string.js');
 const { generateLeaderboardCard } = require('../../services/canvas/leaderboardCanvas');
@@ -57,7 +57,7 @@ module.exports = {
 
     } catch (error) {
       logger.error('leaderboard', 'Error in leaderboard command:', error);
-      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.leaderboard.error')}`, ephemeral: true });
+      await interaction.editReply({ content: `${emojis.error} ${interaction.t('commands.leaderboard.error')}`, flags: MessageFlags.Ephemeral });
     }
   }
 };

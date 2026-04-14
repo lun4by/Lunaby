@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags} = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
 const enabledUtil = require('../../utils/guild/enabledUtil');
 const logger = require('../../utils/core/logger');
@@ -33,7 +33,7 @@ module.exports = {
 
             if (!commandsStr) {
                 const embed = await enabledUtil.createEmbed(interaction, channel, guildId, channelId);
-                return interaction.reply({ embeds: [embed], ephemeral: true });
+                return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             }
 
             commandsStr = commandsStr.toLowerCase();
@@ -46,7 +46,7 @@ module.exports = {
                 await MariaModDB.disableAllCommands(guildId, channelId, allCommands, userId);
                 return interaction.reply({
                     content: `${emojis.success} ${interaction.t('commands.disable.all_success', { channelId })}`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -59,17 +59,17 @@ module.exports = {
             }
 
             if (validCommands.length === 0) {
-                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.disable.invalid_cmds')}`, ephemeral: true });
+                return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.disable.invalid_cmds')}`, flags: MessageFlags.Ephemeral });
             }
 
             await MariaModDB.disableAllCommands(guildId, channelId, validCommands, userId);
 
             const embed = await enabledUtil.createEmbed(interaction, channel, guildId, channelId);
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         } catch (error) {
             logger.error('command', 'Error in disable command:', error);
-            return interaction.reply({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, ephemeral: true });
+            return interaction.reply({ content: `${emojis.error} ${interaction.t('system.error_occurred')}`, flags: MessageFlags.Ephemeral });
         }
     },
 };

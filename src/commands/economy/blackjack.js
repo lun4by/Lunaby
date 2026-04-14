@@ -4,7 +4,8 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
-  } = require('discord.js');
+    MessageFlags,
+} = require('discord.js');
 const EconomyService = require('../../services/user/EconomyService');
 const bjUtil = require('./blackjackUtil');
 const emojis = require('../../config/emojis');
@@ -155,7 +156,7 @@ async function settleAndRender(game, interaction, source = 'stand') {
 }
 
 function buildErrorPayload(isSlash, content) {
-  return isSlash ? { content, ephemeral: true } : content;
+  return isSlash ? { content, flags: MessageFlags.Ephemeral } : content;
 }
 
 module.exports = {
@@ -222,7 +223,7 @@ module.exports = {
           if (btnInteraction.user.id !== existing.userId) {
             await btnInteraction.reply({
               content: interaction.t('system.only_caller_can_use'),
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
             return;
           }
@@ -261,7 +262,7 @@ module.exports = {
             logger.error('blackjack', 'Error while handling blackjack button (resume):', error);
             await btnInteraction.reply({
               content: `${emojis.error} ${interaction.t('commands.blackjack.error')}`,
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             }).catch(() => { });
           }
         });
@@ -326,7 +327,7 @@ module.exports = {
         if (btnInteraction.user.id !== game.userId) {
           await btnInteraction.reply({
             content: interaction.t('system.only_caller_can_use'),
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -365,7 +366,7 @@ module.exports = {
           logger.error('blackjack', 'Error while handling blackjack button:', error);
           await btnInteraction.reply({
             content: `${emojis.error} ${interaction.t('commands.blackjack.error')}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           }).catch(() => { });
         }
       });

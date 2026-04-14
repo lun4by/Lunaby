@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChannelType } = require('discord.js');
+const {SlashCommandBuilder, ChannelType, MessageFlags} = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const emojis = require('../../config/emojis');
 const {
@@ -34,10 +34,10 @@ module.exports = {
 
         if (!logChannel) {
             const prefix = await resolveHybridPrefix(interaction);
-            return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.systemlog.invalid_channel', { prefix })}`, ephemeral: true });
+            return interaction.reply({ content: `${emojis.error} ${interaction.t('commands.admin.systemlog.invalid_channel', { prefix })}`, flags: MessageFlags.Ephemeral });
         }
 
-        await deferHybridReply(interaction, { ephemeral: true });
+        await deferHybridReply(interaction, { flags: MessageFlags.Ephemeral });
         const replyFunc = createHybridReply(interaction, { useEditReplyForSlash: isSlash });
 
         const isSuccess = await MariaModDB.setBotSetting('global_log_channel', logChannel.id, userId);

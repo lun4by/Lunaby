@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags} = require('discord.js');
 const EconomyService = require('../../services/user/EconomyService');
 const emojis = require('../../config/emojis');
 const logger = require('../../utils/core/logger');
@@ -26,7 +26,7 @@ module.exports = {
         const nextClaimAtUnix = Math.floor(Number(result.nextClaimAt || Date.now()) / 1000);
         await interaction.reply({
           content: `${emojis.warning} ${interaction.t('commands.daily.already_claimed', { nextClaimAtUnix })}`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -43,7 +43,7 @@ module.exports = {
       logger.error('daily', 'Error in daily command:', error);
       await interaction.reply({
         content: `${emojis.error} ${interaction.t('commands.daily.error')}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       }).catch(() => { });
     }
   },

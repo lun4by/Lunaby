@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB.js');
 const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis.js');
@@ -43,7 +43,7 @@ module.exports = {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -65,7 +65,6 @@ module.exports = {
             if (logs.length === 0) {
                 return interaction.editReply({
                     content: `${emojis.success} ${interaction.t('commands.modlog.no_logs')}`,
-                    ephemeral: false,
                 });
             }
 
@@ -132,7 +131,7 @@ module.exports = {
             logger.error('modlog', 'Error viewing moderation logs:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.modlog.error_modlog', { error: error.message })}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     },

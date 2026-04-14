@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags} = require('discord.js');
 const MariaModDB = require('../../services/database/MariaModDB');
 const ErrorHandler = require('../../utils/core/ErrorHandler');
 const ConversationService = require('../../services/ai/ConversationService.js');
@@ -33,7 +33,7 @@ module.exports = {
         if (!hasMemberPermission(interaction.member, PermissionFlagsBits.ModerateMembers)) {
             return interaction.reply({
                 content: `${emojis.error} ${interaction.t('system.no_permission')}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -58,7 +58,6 @@ module.exports = {
             if (warningCount === 0) {
                 return interaction.editReply({
                     content: `${emojis.success} ${interaction.t('commands.moderation_common.no_warnings')}`,
-                    ephemeral: false,
                 });
             }
 
@@ -115,7 +114,7 @@ module.exports = {
             logger.error('moderation', 'Error clearing member warnings:', error);
             await interaction.editReply({
                 content: `${emojis.error} ${interaction.t('commands.clearwarnings.error_clearwarnings', { error: error.message })}`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     },
