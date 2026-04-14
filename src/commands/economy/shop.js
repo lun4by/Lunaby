@@ -244,7 +244,7 @@ function buildNavigationButtons(state, interaction, disabled = false) {
 }
 
 function buildShopComponents(user, credits, stats, state, interaction, disabled = false) {
-  // Dựng thẻ shop theo từng khối ổn định để các chỉnh sửa UI sau này không lan rộng.
+  // Dựng shop.
   const pageItems = getPageItems(state.page);
   const container = createContainer().setAccentColor(COLORS.LUNABY);
 
