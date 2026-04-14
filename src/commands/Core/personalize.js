@@ -28,6 +28,22 @@ function isPrivacyEnabled(value) {
     return true;
 }
 
+function toButtonEmoji(emojiValue) {
+    if (!emojiValue || typeof emojiValue !== 'string') return undefined;
+
+    const customEmojiMatch = emojiValue.match(/^<(a?):([a-zA-Z0-9_]+):(\d+)>$/);
+    if (customEmojiMatch) {
+        const [, animatedFlag, name, id] = customEmojiMatch;
+        return {
+            id,
+            name,
+            animated: animatedFlag === 'a',
+        };
+    }
+
+    return { name: emojiValue };
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('personalize')
@@ -151,7 +167,7 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                     button
                         .setCustomId('personalize_personal_info')
                         .setLabel(interaction.t('commands.personalize.menu_info'))
-                        .setEmoji(emojis.personalize.info)
+                        .setEmoji(toButtonEmoji(emojis.personalize.info))
                         .setStyle(ButtonStyle.Secondary)
                         .setDisabled(disabled)
                 )
@@ -166,7 +182,7 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                     button
                         .setCustomId('personalize_toggle_search')
                         .setLabel(interaction.t('commands.personalize.menu_search'))
-                        .setEmoji(emojis.personalize.search)
+                        .setEmoji(toButtonEmoji(emojis.personalize.search))
                         .setStyle(searchEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
                         .setDisabled(disabled)
                 )
@@ -180,7 +196,7 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                     button
                         .setCustomId('personalize_toggle_memory')
                         .setLabel(interaction.t('commands.personalize.menu_memory'))
-                        .setEmoji(emojis.personalize.memory)
+                        .setEmoji(toButtonEmoji(emojis.personalize.memory))
                         .setStyle(memoryEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
                         .setDisabled(disabled)
                 )
