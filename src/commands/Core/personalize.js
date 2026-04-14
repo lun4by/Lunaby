@@ -174,7 +174,6 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                     button
                         .setCustomId('personalize_personal_info')
                         .setLabel(interaction.t('commands.personalize.menu_info'))
-                        .setEmoji(toButtonEmoji(emojis.personalize.info))
                         .setStyle(ButtonStyle.Secondary)
                         .setDisabled(disabled)
                 )
@@ -189,7 +188,6 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                     button
                         .setCustomId('personalize_toggle_search')
                         .setLabel(searchToggleLabel)
-                        .setEmoji(toButtonEmoji(emojis.personalize.search))
                         .setStyle(searchEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
                         .setDisabled(disabled)
                 )
@@ -203,7 +201,6 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                     button
                         .setCustomId('personalize_toggle_memory')
                         .setLabel(memoryToggleLabel)
-                        .setEmoji(toButtonEmoji(emojis.personalize.memory))
                         .setStyle(memoryEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
                         .setDisabled(disabled)
                 )
