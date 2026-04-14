@@ -33,6 +33,28 @@ function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(value);
 }
 
+function stripMarkdown(text) {
+  return String(text || '').replace(/[*_`~]/g, '');
+}
+
+function buildTwoColumnText(leftLines, rightLines, gap = '   ') {
+  const maxRows = Math.max(leftLines.length, rightLines.length);
+  const normalizedLeft = Array.from({ length: maxRows }, (_, index) => leftLines[index] || '');
+  const normalizedRight = Array.from({ length: maxRows }, (_, index) => rightLines[index] || '');
+
+  const leftWidth = normalizedLeft.reduce((max, line) => {
+    const width = stripMarkdown(line).length;
+    return Math.max(max, width);
+  }, 0);
+
+  return normalizedLeft
+    .map((line, index) => {
+      const padSize = Math.max(0, leftWidth - stripMarkdown(line).length);
+      return `${line}${' '.repeat(padSize)}${gap}${normalizedRight[index]}`.trimEnd();
+    })
+    .join('\n');
+}
+
 function getUsageConfig(type, interaction) {
   const proName = interaction?.t ? interaction.t('commands.shop.quota_pro') : 'Lunaby Pro';
   const visionName = interaction?.t ? interaction.t('commands.shop.quota_vision') : 'Lunaby Vision';
@@ -148,24 +170,26 @@ function buildShopWalletAndPricingText(credits, state, interaction) {
   const totalPages = getTotalPages();
   const pageLabel = interaction.t('commands.shop.page');
 
-  return [
-    `**Ví credits**`,
+  const leftLines = [
+    '**Ví credits**',
     `Số dư hiện tại: **${formatNumber(credits)}** credits`,
     `${pageLabel}: **${state.page + 1}/${totalPages}**`,
-    '',
-    `**Bảng giá**`,
+  ];
+
+  const rightLines = [
+    '**Bảng giá**',
     `Pro: **${formatNumber(QUOTA_COST_CREDITS_PER_MESSAGE)}** credits/lượt`,
     `Vision: **${formatNumber(QUOTA_COST_CREDITS_PER_IMAGE)}** credits/lượt`,
-  ].join('\n');
+  ];
+
+  return buildTwoColumnText(leftLines, rightLines);
 }
 
-function buildShopLimitsText(stats, interaction, user) {
+function buildShopLimitsText(stats, interaction) {
   return [
     `**Hạn mức hiện tại**`,
     `Lunaby Pro: ${getLimitText(stats.limits.period, stats.remaining.messages, interaction)}`,
     `Lunaby Vision: ${getLimitText(stats.limits.imagePeriod, stats.remaining.images, interaction)}`,
-    '',
-    `Dùng < > để đổi trang, Làm mới để cập nhật realtime • ${user.globalName || user.username}`,
   ].join('\n');
 }
 
@@ -216,7 +240,7 @@ function buildShopComponents(user, credits, stats, state, interaction, disabled 
       textDisplay.setContent(buildShopWalletAndPricingText(credits, state, interaction))
     )
     .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(buildShopLimitsText(stats, interaction, user))
+      textDisplay.setContent(buildShopLimitsText(stats, interaction))
     )
     .addSeparatorComponents((separator) => separator)
     .addTextDisplayComponents((textDisplay) =>
