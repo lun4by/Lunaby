@@ -177,12 +177,33 @@ function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) 
     const folderPath = path.join(commandsPath, category);
     const commandFiles = fs.readdirSync(folderPath).filter((file) => file.endsWith('.js'));
 
-    const commandList = commandFiles.map((file) => {
-        const command = require(path.join(folderPath, file));
-        const description = interaction.t(`commands.${command.data.name}.desc`, { returnObjects: true });
-        const textDesc = typeof description === 'string' ? description : (command.data.description || interaction.t('commands.help.no_description'));
-        return `/${command.data.name} : ${textDesc}`;
-    }).join('\n');
+    const commandList = commandFiles
+        .map((file) => {
+            try {
+                const modulePath = path.join(folderPath, file);
+                const command = require(modulePath);
+                const commandName = command?.data?.name;
+
+                // Skip helper files that are not slash command modules.
+                if (!commandName) {
+                    return null;
+                }
+
+                const key = `commands.${commandName}.desc`;
+                const translated = interaction.t(key);
+                const hasTranslation = typeof translated === 'string' && translated !== key;
+                const textDesc = hasTranslation
+                    ? translated
+                    : (command.data.description || interaction.t('commands.help.no_description'));
+
+                return `/${commandName} : ${textDesc}`;
+            } catch (error) {
+                logger.warn('help', `Skipping invalid help module ${category}/${file}: ${error.message}`);
+                return null;
+            }
+        })
+        .filter(Boolean)
+        .join('\n');
 
     embed.addFields({
         name: '\u200B',
