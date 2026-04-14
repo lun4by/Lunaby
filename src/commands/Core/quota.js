@@ -4,42 +4,88 @@ const emojis = require('../../config/emojis');
 const { COLORS } = require('../../utils/discord/embedUtils');
 
 const { createEmbed } = require('../../utils/discord/builderFactory');
-const ROLE_BADGES = {
-    owner: 'Owner',
-    admin: 'Admin',
-    pro: 'Pro',
-    user: 'User'
+const UNLIMITED = -1;
+
+const ROLE_META = {
+    owner: { label: 'Owner', color: 0xF1C40F },
+    admin: { label: 'Admin', color: 0xE74C3C },
+    pro: { label: 'Pro', color: COLORS.LUNABY },
+    user: { label: 'User', color: COLORS.LUNABY },
 };
 
-const ROLE_COLORS = {
-    owner: 0xFFD700,
-    admin: 0xE74C3C,
-    pro: COLORS.LUNABY,
-    user: COLORS.LUNABY
-};
+function createProgressBar(current, max, length = 12) {
+    if (max === UNLIMITED) {
+        return '='.repeat(length);
+    }
 
-function createProgressBar(current, max, length = 10) {
-    if (max === -1) return '`' + '█'.repeat(length) + '` ∞';
     const safeMax = Math.max(max, 1);
     const ratio = Math.min(Math.max(current / safeMax, 0), 1);
-    const filled = Math.round(ratio * length);
+    const filled = Math.max(0, Math.min(length, Math.round(ratio * length)));
     const empty = length - filled;
-    const percent = Math.round(ratio * 100);
-    return '`' + '█'.repeat(filled) + '░'.repeat(empty) + '` ' + percent + '%';
+    return `${'='.repeat(filled)}${'-'.repeat(empty)}`;
 }
 
 function formatQuotaValue(current, max) {
-    if (max === -1) return `**${current}** / ∞`;
+    if (max === UNLIMITED) {
+        return `**${current}** / ∞`;
+    }
+
     return `**${current}** / **${max}**`;
 }
 
-function getUsageStateText(current, max) {
-    if (max === -1) return 'Unlimited';
+function getProgressText(current, max) {
+    if (max === UNLIMITED) {
+        return '∞';
+    }
 
-    const ratio = current / Math.max(max, 1);
-    if (ratio >= 0.95) return 'Nguy hiểm';
-    if (ratio >= 0.75) return 'Cảnh báo';
-    return 'Ổn định';
+    const ratio = Math.min(Math.max(current / Math.max(max, 1), 0), 1);
+    return `${Math.round(ratio * 100)}%`;
+}
+
+function getUsageRatio(current, max) {
+    if (max === UNLIMITED) {
+        return 0;
+    }
+
+    return Math.min(Math.max(current / Math.max(max, 1), 0), 1);
+}
+
+function resolveEmbedColor(baseColor, messageRatio, imageRatio) {
+    const maxRatio = Math.max(messageRatio, imageRatio);
+
+    if (maxRatio >= 0.95) {
+        return 0xE74C3C;
+    }
+
+    if (maxRatio >= 0.75) {
+        return 0xE67E22;
+    }
+
+    return baseColor;
+}
+
+function formatRemaining(interaction, remaining) {
+    if (remaining === UNLIMITED) {
+        return '∞';
+    }
+
+    return interaction.t('commands.quota.remaining', { count: remaining });
+}
+
+function buildUsageField(icon, title, current, max, remaining, interaction) {
+    const bar = createProgressBar(current, max);
+    const progress = getProgressText(current, max);
+    const quota = formatQuotaValue(current, max);
+    const remainingText = formatRemaining(interaction, remaining);
+
+    return {
+        name: `${icon} ${title}`,
+        value: `
+${bar} • ${progress}
+Đã dùng: ${quota}
+Còn lại: ${remainingText}`.trim(),
+        inline: true,
+    };
 }
 
 module.exports = {
@@ -58,8 +104,7 @@ module.exports = {
     },
 
     buildQuotaEmbed(user, stats, interaction) {
-        const roleBadge = ROLE_BADGES[stats.role] || ROLE_BADGES.user;
-        const roleColor = ROLE_COLORS[stats.role] || ROLE_COLORS.user;
+        const roleMeta = ROLE_META[stats.role] || ROLE_META.user;
 
         const msgCurrent = stats.usage.current;
         const msgMax = stats.limits.period;
@@ -72,56 +117,33 @@ module.exports = {
         const resetTimestamp = Math.floor(stats.nextReset / 1000);
         const daysLeft = stats.remaining.days;
 
-        // Màu sắc theo tình trạng sử dụng
-        let embedColor = roleColor;
-        if (msgMax !== -1) {
-            const usageRatio = msgCurrent / msgMax;
-            if (usageRatio >= 0.95) embedColor = 0xE74C3C;      // Đỏ - gần hết
-            else if (usageRatio >= 0.75) embedColor = 0xE67E22;  // Cam - cảnh báo
-        }
-
-        const msgBar = createProgressBar(msgCurrent, msgMax, 12);
-        const imgBar = createProgressBar(imgCurrent, imgMax, 12);
-
-        const msgRemainingText = msgMax === -1 ? '∞' : interaction.t('commands.quota.remaining', { count: msgRemaining });
-        const imgRemainingText = imgMax === -1 ? '∞' : interaction.t('commands.quota.remaining', { count: imgRemaining });
+        const messageRatio = getUsageRatio(msgCurrent, msgMax);
+        const imageRatio = getUsageRatio(imgCurrent, imgMax);
+        const embedColor = resolveEmbedColor(roleMeta.color, messageRatio, imageRatio);
 
         const embed = createEmbed()
             .setColor(embedColor)
-            .setTitle('Lunaby Quota Center')
+            .setTitle('Quota Dashboard')
             .setAuthor({
                 name: user.globalName || user.username,
                 iconURL: user.displayAvatarURL({ size: 64 })
             })
             .setDescription(
-                `Gói hiện tại: **${roleBadge}**\n` +
-                `Reset quota: <t:${resetTimestamp}:R> (${interaction.t('commands.quota.reset_in', { days: daysLeft })})`
+                `Gói hiện tại: **${roleMeta.label}**\n` +
+                `Reset: <t:${resetTimestamp}:R> (${interaction.t('commands.quota.reset_in', { days: daysLeft })})`
             )
             .addFields(
+                buildUsageField(emojis.quota.pro, 'Lunaby Pro', msgCurrent, msgMax, msgRemaining, interaction),
+                buildUsageField(emojis.quota.vision, 'Lunaby Vision', imgCurrent, imgMax, imgRemaining, interaction),
                 {
-                    name: `${emojis.quota.pro} Lunaby Pro`,
+                    name: 'Tổng quan',
                     value:
-                        `${msgBar}\n` +
-                        `${formatQuotaValue(msgCurrent, msgMax)} · ${msgRemainingText}\n` +
-                        `Trạng thái: **${getUsageStateText(msgCurrent, msgMax)}**`,
-                    inline: false,
-                },
-                {
-                    name: `${emojis.quota.vision} Lunaby Vision`,
-                    value:
-                        `${imgBar}\n` +
-                        `${formatQuotaValue(imgCurrent, imgMax)} · ${imgRemainingText}\n` +
-                        `Trạng thái: **${getUsageStateText(imgCurrent, imgMax)}**`,
-                    inline: false,
-                },
-                {
-                    name: 'Tổng sử dụng',
-                    value:
-                        `${interaction.t('commands.quota.total_usage')} **${stats.usage.total}** Lunaby Pro · **${stats.imageUsage.total}** Lunaby Vision`,
+                        `${interaction.t('commands.quota.total_usage')} **${stats.usage.total}** Lunaby Pro · **${stats.imageUsage.total}** Lunaby Vision\n` +
+                        `Chu kỳ hiện tại: **${stats.usage.current}** Pro · **${stats.imageUsage.current}** Vision`,
                     inline: false,
                 },
             )
-            .setFooter({ text: 'Lunaby · Quota Overview' })
+            .setFooter({ text: 'Lunaby Quota' })
             .setTimestamp();
 
         return embed;
