@@ -139,7 +139,6 @@ function buildHomeButtonRow(interaction, disabled = false) {
         new ButtonBuilder()
             .setCustomId('help_home')
             .setLabel(homeMetadata.label)
-            .setEmoji(homeMetadata.emoji)
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(disabled),
     );
@@ -189,12 +188,7 @@ function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) 
                     return null;
                 }
 
-                const key = `commands.${commandName}.desc`;
-                const translated = interaction.t(key);
-                const hasTranslation = typeof translated === 'string' && translated !== key;
-                const textDesc = hasTranslation
-                    ? translated
-                    : (command.data.description || interaction.t('commands.help.no_description'));
+                const textDesc = resolveCommandDescription(category, commandName, command, interaction);
 
                 return `/${commandName} : ${textDesc}`;
             } catch (error) {
@@ -211,6 +205,22 @@ function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) 
     });
 
     return embed;
+}
+
+function resolveCommandDescription(category, commandName, command, interaction) {
+    const candidateKeys = [
+        `commands.${commandName}.desc`,
+        `commands.${category}.desc_${commandName}`,
+    ];
+
+    for (const key of candidateKeys) {
+        const translated = interaction.t(key);
+        if (typeof translated === 'string' && translated !== key) {
+            return translated;
+        }
+    }
+
+    return command?.prefix?.description || command?.data?.description || interaction.t('commands.help.no_description');
 }
 
 function getCategoryMetadata(category, interaction) {
