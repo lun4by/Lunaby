@@ -33,11 +33,13 @@ class ConsentService {
           `Mình là **Lunaby**, AI assistant sẵn sàng hỗ trợ bạn.\n\n` +
           `Để sử dụng dịch vụ, bạn cần đồng ý với các điều khoản sau:\n\n` +
           `**Dữ liệu được thu thập**\n` +
-          `> Tin nhắn trò chuyện・Thông tin cơ bản (username, ID)・Dữ liệu XP và level\n\n` +
+          `> - Tin nhắn trò chuyện\n` +
+          `> - Thông tin cơ bản (username, ID)\n` +
+          `> - Dữ liệu XP và level\n\n` +
           `**Cam kết bảo mật**\n` +
-          `> Dữ liệu được mã hóa và bảo mật\n` +
-          `> Không chia sẻ với bên thứ ba\n` +
-          `> Có thể xóa dữ liệu bất cứ lúc nào\n\n` +
+          `> - Dữ liệu được mã hóa và bảo mật\n` +
+          `> - Không chia sẻ với bên thứ ba\n` +
+          `> - Có thể xóa dữ liệu bất cứ lúc nào\n\n` +
           `**Bạn có đồng ý sử dụng dịch vụ Lunaby AI không?**`
         )
       )
