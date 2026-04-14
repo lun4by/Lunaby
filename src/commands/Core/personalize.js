@@ -27,19 +27,6 @@ function isPrivacyEnabled(value) {
     return true;
 }
 
-function truncateText(text, maxLength = 120) {
-    if (!text) return text;
-    return text.length > maxLength ? `${text.substring(0, maxLength - 3)}...` : text;
-}
-
-function formatProfileValue(value, fallback) {
-    if (!value || value === fallback) {
-        return `*${fallback}*`;
-    }
-
-    return truncateText(value, 120);
-}
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('personalize')
@@ -100,58 +87,22 @@ module.exports = {
 };
 
 function buildMainEmbed(memory, interaction) {
-    const baseDescription = interaction
-        .t('commands.personalize.embed_desc')
-        .replace('menu bên dưới', 'các nút bên dưới');
-    const notSetText = interaction.t('commands.personalize.not_set');
-    const occupation = memory?.personalInfo?.occupation || notSetText;
-    const instructions = memory?.personalInfo?.customInstructions || notSetText;
+    const occupation = memory?.personalInfo?.occupation || interaction.t('commands.personalize.not_set');
+    const instructions = memory?.personalInfo?.customInstructions || interaction.t('commands.personalize.not_set');
     const searchHistory = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
     const savedMemory = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
-
-    const occupationValue = formatProfileValue(occupation, notSetText);
-    const instructionsValue = formatProfileValue(instructions, notSetText);
-    const searchStatus = searchHistory
-        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
-        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
-    const memoryStatus = savedMemory
-        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
-        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
 
     return new EmbedBuilder()
         .setColor(COLORS.LUNABY)
         .setTitle(interaction.t('commands.personalize.embed_title'))
-        .setDescription([
-            baseDescription,
-            '',
-            `${emojis.personalize.info} Cập nhật hồ sơ cá nhân để Lunaby trả lời phù hợp hơn.`,
-            `${emojis.personalize.memory} Dùng các nút bên dưới để bật/tắt từng chế độ ngay lập tức.`
-        ].join('\n'))
+        .setDescription(interaction.t('commands.personalize.embed_desc'))
         .addFields(
-            {
-                name: `${emojis.personalize.info} ${interaction.t('commands.personalize.field_occupation')}`,
-                value: occupationValue,
-                inline: true,
-            },
-            {
-                name: `${emojis.personalize.manage} ${interaction.t('commands.personalize.field_instructions')}`,
-                value: instructionsValue,
-                inline: true,
-            },
+            { name: interaction.t('commands.personalize.field_occupation'), value: occupation, inline: true },
+            { name: interaction.t('commands.personalize.field_instructions'), value: instructions.length > 80 ? instructions.substring(0, 80) + '...' : instructions, inline: true },
             { name: '\u200B', value: '\u200B' },
-            {
-                name: `${emojis.personalize.search} ${interaction.t('commands.personalize.field_search')}`,
-                value: searchStatus,
-                inline: true,
-            },
-            {
-                name: `${emojis.personalize.memory} ${interaction.t('commands.personalize.field_memory')}`,
-                value: memoryStatus,
-                inline: true,
-            },
+            { name: interaction.t('commands.personalize.field_search'), value: searchHistory ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}` : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`, inline: true },
+            { name: interaction.t('commands.personalize.field_memory'), value: savedMemory ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}` : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`, inline: true },
         )
-        .setThumbnail(interaction.user.displayAvatarURL({ size: 128 }))
-        .setFooter({ text: `@${interaction.user.username}` })
         .setTimestamp();
 }
 
