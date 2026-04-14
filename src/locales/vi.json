@@ -348,6 +348,7 @@
       "desc": "Kiểm tra số lượt sử dụng",
       "remaining": "Còn **{{count}}** lượt",
       "total_usage": "Tổng lượt sử dụng:",
+      "current_cycle": "Chu kỳ hiện tại:",
       "reset_in": "Làm mới sau **{{days}}** ngày"
     },
     "prefix": {

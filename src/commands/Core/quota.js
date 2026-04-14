@@ -13,18 +13,6 @@ const ROLE_META = {
     user: { label: 'User', color: COLORS.LUNABY },
 };
 
-function createProgressBar(current, max, length = 12) {
-    if (max === UNLIMITED) {
-        return '='.repeat(length);
-    }
-
-    const safeMax = Math.max(max, 1);
-    const ratio = Math.min(Math.max(current / safeMax, 0), 1);
-    const filled = Math.max(0, Math.min(length, Math.round(ratio * length)));
-    const empty = length - filled;
-    return `${'='.repeat(filled)}${'-'.repeat(empty)}`;
-}
-
 function formatQuotaValue(current, max) {
     if (max === UNLIMITED) {
         return `**${current}** / ∞`;
@@ -73,17 +61,14 @@ function formatRemaining(interaction, remaining) {
 }
 
 function buildUsageField(icon, title, current, max, remaining, interaction) {
-    const bar = createProgressBar(current, max);
     const progress = getProgressText(current, max);
     const quota = formatQuotaValue(current, max);
     const remainingText = formatRemaining(interaction, remaining);
 
     return {
         name: `${icon} ${title}`,
-        value: `
-${bar} • ${progress}
-Đã dùng: ${quota}
-Còn lại: ${remainingText}`.trim(),
+        value: `> - Đã dùng: ${quota} (${progress})
+                > - Còn lại: ${remainingText}`.trim(),
         inline: true,
     };
 }
@@ -138,8 +123,8 @@ module.exports = {
                 {
                     name: 'Tổng quan',
                     value:
-                        `${interaction.t('commands.quota.total_usage')} **${stats.usage.total}** Lunaby Pro · **${stats.imageUsage.total}** Lunaby Vision\n` +
-                        `Chu kỳ hiện tại: **${stats.usage.current}** Pro · **${stats.imageUsage.current}** Vision`,
+                        `> - ${interaction.t('commands.quota.total_usage')} **${stats.usage.total}** Lunaby Pro · **${stats.imageUsage.total}** Lunaby Vision\n` +
+                        `> - ${interaction.t('commands.quota.current_cycle')} **${stats.usage.current}** Pro · **${stats.imageUsage.current}** Vision`,
                     inline: false,
                 },
             )

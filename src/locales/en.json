@@ -348,6 +348,7 @@
       "desc": "Check remaining usage",
       "remaining": "**{{count}}** uses left",
       "total_usage": "Total usage:",
+      "current_cycle": "Current cycle:",
       "reset_in": "Resets in **{{days}}** days"
     },
     "prefix": {
