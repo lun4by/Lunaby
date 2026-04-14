@@ -42,7 +42,7 @@ module.exports = {
             .setTitle(interaction.t('commands.help.embed_title'))
             .setDescription(interaction.t('commands.help.embed_desc'))
             .setImage(banner)
-            .setFooter({ text: 'Made by s4ory' })
+            .setFooter({ text: 'Powered & Developer by s4ory' })
             .setTimestamp();
 
         await interaction.reply({
