@@ -86,78 +86,113 @@ module.exports = {
     },
 };
 
-function buildMainCardText(memory, interaction) {
-    const occupation = memory?.personalInfo?.occupation || interaction.t('commands.personalize.not_set');
-    const instructions = memory?.personalInfo?.customInstructions || interaction.t('commands.personalize.not_set');
-    const searchHistory = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
-    const savedMemory = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
-
-    const safeInstructions = instructions.length > 80 ? `${instructions.substring(0, 80)}...` : instructions;
-    const searchStatus = searchHistory
-        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
-        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
-    const memoryStatus = savedMemory
-        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
-        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
-
+function buildMainCardText(interaction) {
     return [
         `## ${interaction.t('commands.personalize.embed_title')}`,
         interaction.t('commands.personalize.embed_desc'),
-        '',
+    ].join('\n');
+}
+
+function buildPersonalInfoCardText(memory, interaction) {
+    const occupation = memory?.personalInfo?.occupation || interaction.t('commands.personalize.not_set');
+    const instructions = memory?.personalInfo?.customInstructions || interaction.t('commands.personalize.not_set');
+    const safeInstructions = instructions.length > 80 ? `${instructions.substring(0, 80)}...` : instructions;
+
+    return [
         `**${interaction.t('commands.personalize.field_occupation')}**`,
         occupation,
         '',
         `**${interaction.t('commands.personalize.field_instructions')}**`,
         safeInstructions,
-        '',
-        `**${interaction.t('commands.personalize.field_search')}**`,
-        searchStatus,
-        `**${interaction.t('commands.personalize.field_memory')}**`,
-        memoryStatus,
     ].join('\n');
 }
 
-function buildActionButtons(interaction, memory = null, disabled = false) {
+function buildSearchStatusText(memory, interaction) {
     const searchEnabled = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
-    const memoryEnabled = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
+    const status = searchEnabled
+        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
+        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
+
     return [
-        new ButtonBuilder()
-            .setCustomId('personalize_personal_info')
-            .setLabel(interaction.t('commands.personalize.menu_info'))
-            .setEmoji(emojis.personalize.info)
-            .setStyle(ButtonStyle.Secondary)
-            .setDisabled(disabled),
-        new ButtonBuilder()
-            .setCustomId('personalize_toggle_search')
-            .setLabel(interaction.t('commands.personalize.menu_search'))
-            .setEmoji(emojis.personalize.search)
-            .setStyle(searchEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
-            .setDisabled(disabled),
-        new ButtonBuilder()
-            .setCustomId('personalize_toggle_memory')
-            .setLabel(interaction.t('commands.personalize.menu_memory'))
-            .setEmoji(emojis.personalize.memory)
-            .setStyle(memoryEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
-            .setDisabled(disabled),
-        new ButtonBuilder()
-            .setCustomId('personalize_clear')
-            .setLabel(interaction.t('commands.personalize.menu_clear'))
-            .setStyle(ButtonStyle.Danger)
-            .setDisabled(disabled)
-    ];
+        `**${interaction.t('commands.personalize.field_search')}**`,
+        status,
+    ].join('\n');
+}
+
+function buildMemoryStatusText(memory, interaction) {
+    const memoryEnabled = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
+    const status = memoryEnabled
+        ? `${emojis.statusOn} ${interaction.t('commands.personalize.status_on')}`
+        : `${emojis.statusOff} ${interaction.t('commands.personalize.status_off')}`;
+
+    return [
+        `**${interaction.t('commands.personalize.field_memory')}**`,
+        status,
+    ].join('\n');
 }
 
 function buildPersonalizeComponents(interaction, memory, options = {}) {
     const { disabled = false, notice = null } = options;
+    const searchEnabled = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
+    const memoryEnabled = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
     const components = [];
 
     const mainContainer = new ContainerBuilder()
         .setAccentColor(COLORS.LUNABY)
         .addTextDisplayComponents((textDisplay) =>
-            textDisplay.setContent(buildMainCardText(memory, interaction))
+            textDisplay.setContent(buildMainCardText(interaction))
+        )
+        .addSectionComponents((section) =>
+            section
+                .addTextDisplayComponents((textDisplay) =>
+                    textDisplay.setContent(buildPersonalInfoCardText(memory, interaction))
+                )
+                .setButtonAccessory((button) =>
+                    button
+                        .setCustomId('personalize_personal_info')
+                        .setLabel(interaction.t('commands.personalize.menu_info'))
+                        .setEmoji(emojis.personalize.info)
+                        .setStyle(ButtonStyle.Secondary)
+                        .setDisabled(disabled)
+                )
+        )
+        .addSeparatorComponents((separator) => separator)
+        .addSectionComponents((section) =>
+            section
+                .addTextDisplayComponents((textDisplay) =>
+                    textDisplay.setContent(buildSearchStatusText(memory, interaction))
+                )
+                .setButtonAccessory((button) =>
+                    button
+                        .setCustomId('personalize_toggle_search')
+                        .setLabel(interaction.t('commands.personalize.menu_search'))
+                        .setEmoji(emojis.personalize.search)
+                        .setStyle(searchEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
+                        .setDisabled(disabled)
+                )
+        )
+        .addSectionComponents((section) =>
+            section
+                .addTextDisplayComponents((textDisplay) =>
+                    textDisplay.setContent(buildMemoryStatusText(memory, interaction))
+                )
+                .setButtonAccessory((button) =>
+                    button
+                        .setCustomId('personalize_toggle_memory')
+                        .setLabel(interaction.t('commands.personalize.menu_memory'))
+                        .setEmoji(emojis.personalize.memory)
+                        .setStyle(memoryEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
+                        .setDisabled(disabled)
+                )
         )
         .addActionRowComponents((actionRow) =>
-            actionRow.setComponents(...buildActionButtons(interaction, memory, disabled))
+            actionRow.setComponents(
+                new ButtonBuilder()
+                    .setCustomId('personalize_clear')
+                    .setLabel(interaction.t('commands.personalize.menu_clear'))
+                    .setStyle(ButtonStyle.Danger)
+                    .setDisabled(disabled)
+            )
         );
 
     components.push(mainContainer);
