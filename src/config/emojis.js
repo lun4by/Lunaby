@@ -6,7 +6,7 @@ module.exports = {
     warning: '⚠️',
     time: '⏱',
     info: 'ℹ️',
-    black: '◼️',
+    empty: '<:blank:1493742863073415308>',
     white: '◻️',
     categories: {
         home: '🏠',
