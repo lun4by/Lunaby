@@ -36,7 +36,6 @@ module.exports = {
         `${emojis.success} | ${interaction.t('commands.daily.claimed', { reward: formatNumber(result.reward) })}\n` +
         `${interaction.t('commands.daily.streak_current', { streak: formatNumber(result.streak) })}\n` +
         `${interaction.t('commands.daily.streak_bonus', { streakBonus: formatNumber(result.streakBonus) })}\n` +
-        `${interaction.t('commands.daily.balance', { balance: formatNumber(result.walletAfter) })}\n` +
         `${interaction.t('commands.daily.next_daily', { nextClaimAtUnix })}`
       );
     } catch (error) {
