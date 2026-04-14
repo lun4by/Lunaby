@@ -110,16 +110,12 @@ function buildMainCardText(interaction) {
 }
 
 function buildPersonalInfoCardText(memory, interaction) {
-    const occupation = memory?.personalInfo?.occupation || interaction.t('commands.personalize.not_set');
-    const instructions = memory?.personalInfo?.customInstructions || interaction.t('commands.personalize.not_set');
-    const safeInstructions = instructions.length > 80 ? `${instructions.substring(0, 80)}...` : instructions;
-
+    const occupation = memory?.personalInfo?.occupation?.trim();
+    const instructions = memory?.personalInfo?.customInstructions?.trim();
+    const hasPersonalInfo = Boolean(occupation || instructions);
     return [
-        `**${interaction.t('commands.personalize.field_occupation')}**`,
-        occupation,
-        '',
-        `**${interaction.t('commands.personalize.field_instructions')}**`,
-        safeInstructions,
+        `**${interaction.t('commands.personalize.menu_info')}**`,
+        hasPersonalInfo ? 'Đã thiết lập' : interaction.t('commands.personalize.not_set'),
     ].join('\n');
 }
 
