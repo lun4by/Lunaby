@@ -1,9 +1,10 @@
 const {
     SlashCommandBuilder,
+    ActionRowBuilder,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
     ComponentType,
-    MessageFlags,
+MessageFlags,
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
@@ -11,7 +12,7 @@ const logger = require('../../utils/core/logger');
 const emojis = require('../../config/emojis');
 const { COLORS } = require('../../utils/discord/embedUtils');
 
-const { createContainer } = require('../../utils/discord/builderFactory');
+const { createEmbed } = require('../../utils/discord/builderFactory');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -33,18 +34,28 @@ module.exports = {
             return folder !== 'admin';
         });
 
+        // Thêm mục Trang chủ lên đầu danh sách
         visibleCategories.unshift('home');
 
-        let currentCategory = 'home';
+        const select = new StringSelectMenuBuilder()
+            .setCustomId('category-select')
+            .setPlaceholder(interaction.t('commands.help.select_placeholder'))
+            .addOptions(buildSelectOptions(visibleCategories, interaction));
+
+        const row = new ActionRowBuilder().addComponents(select);
+        const banner = 'https://cdn.lunie.dev/Lunaby/Lunaby_Help.jpg';
+
+        const welcomeEmbed = createEmbed()
+            .setColor(COLORS.LUNABY)
+            .setTitle(interaction.t('commands.help.embed_title'))
+            .setDescription(interaction.t('commands.help.embed_desc'))
+            .setImage(banner)
+            .setFooter({ text: 'Made by s4ory' })
+            .setTimestamp();
 
         await interaction.reply({
-            components: buildHelpComponents({
-                category: currentCategory,
-                visibleCategories,
-                commandsPath,
-                interaction,
-            }),
-            flags: MessageFlags.IsComponentsV2,
+            embeds: [welcomeEmbed],
+            components: [row],
         });
 
         const message = await interaction.fetchReply();
@@ -71,30 +82,38 @@ module.exports = {
                 });
             }
 
-            currentCategory = category;
+            // Nếu người dùng chọn Trang chủ, quay lại embed chào mừng
+            if (category === 'home') {
+                return i.update({
+                    embeds: [welcomeEmbed],
+                    components: [row],
+                });
+            }
+
+            const helpEmbed = buildHelpEmbed(category, visibleCategories, commandsPath, interaction);
 
             await i.update({
-                components: buildHelpComponents({
-                    category,
-                    visibleCategories,
-                    commandsPath,
-                    interaction,
-                }),
+                embeds: [helpEmbed],
+                components: [row],
             });
         });
 
-        collector.on('end', async () => {
+        collector.on('end', async (collected) => {
             try {
-                await interaction.editReply({
-                    components: buildHelpComponents({
-                        category: currentCategory,
-                        visibleCategories,
-                        commandsPath,
-                        interaction,
-                        disabled: true,
-                        expired: true,
-                    }),
-                });
+                const disabledRow = new ActionRowBuilder().addComponents(
+                    select.setDisabled(true),
+                );
+
+                if (collected.size === 0) {
+                    await interaction.editReply({
+                        content: interaction.t('commands.help.menu_expired'),
+                        components: [disabledRow],
+                    });
+                } else {
+                    await interaction.editReply({
+                        components: [disabledRow],
+                    });
+                }
             } catch (error) {
                 logger.error('help', 'Error when disabling the help menu:', error);
             }
@@ -102,15 +121,7 @@ module.exports = {
     },
 };
 
-function buildSelectMenu(categories, interaction, selectedCategory, disabled = false) {
-    return new StringSelectMenuBuilder()
-        .setCustomId('category-select')
-        .setPlaceholder(interaction.t('commands.help.select_placeholder'))
-        .setDisabled(disabled)
-        .addOptions(buildSelectOptions(categories, interaction, selectedCategory));
-}
-
-function buildSelectOptions(categories, interaction, selectedCategory) {
+function buildSelectOptions(categories, interaction) {
     const options = [];
 
     for (const folder of categories) {
@@ -121,94 +132,40 @@ function buildSelectOptions(categories, interaction, selectedCategory) {
                 .setLabel(metadata.label)
                 .setDescription(metadata.description)
                 .setValue(folder)
-                .setEmoji(metadata.emoji)
-                .setDefault(folder === selectedCategory),
+                .setEmoji(metadata.emoji),
         );
     }
 
     return options;
 }
 
-function buildHelpComponents({
-    category,
-    visibleCategories,
-    commandsPath,
-    interaction,
-    disabled = false,
-    expired = false,
-}) {
-    const container = createContainer().setAccentColor(COLORS.LUNABY);
-    const select = buildSelectMenu(visibleCategories, interaction, category, disabled);
+function buildHelpEmbed(category, visibleCategories, commandsPath, interaction) {
+    const embed = createEmbed()
+        .setColor(COLORS.LUNABY)
+        .setTimestamp();
 
-    container.addActionRowComponents((actionRow) =>
-        actionRow.setComponents(select)
-    );
-
-    container.addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-            category === 'home'
-                ? buildHomeContent(visibleCategories, interaction)
-                : buildCategoryContent(category, commandsPath, interaction)
-        )
-    );
-
-    if (expired) {
-        container.addSeparatorComponents((separator) => separator);
-        container.addTextDisplayComponents((textDisplay) =>
-            textDisplay.setContent(`> ${interaction.t('commands.help.menu_expired')}`)
-        );
-    }
-
-    return [container];
-}
-
-function buildHomeContent(visibleCategories, interaction) {
-    const categoryLines = visibleCategories
-        .filter((category) => category !== 'home')
-        .map((category) => {
-            const metadata = getCategoryMetadata(category, interaction);
-            return `- ${metadata.emoji} **${metadata.label}**: ${metadata.description}`;
-        })
-        .join('\n');
-
-    return [
-        `## ${interaction.t('commands.help.embed_title')}`,
-        interaction.t('commands.help.embed_desc'),
-        categoryLines,
-    ].filter(Boolean).join('\n\n');
-}
-
-function buildCategoryContent(category, commandsPath, interaction) {
     const metadata = getCategoryMetadata(category, interaction);
+
+    embed
+        .setTitle(`${metadata.emoji} ${metadata.label}`)
+        .setDescription(interaction.t('commands.help.category_details', { category: metadata.label }));
+
     const folderPath = path.join(commandsPath, category);
+    const commandFiles = fs.readdirSync(folderPath).filter((file) => file.endsWith('.js'));
 
-    if (!fs.existsSync(folderPath) || !fs.statSync(folderPath).isDirectory()) {
-        return `## ${metadata.emoji} ${metadata.label}\n\n${interaction.t('commands.help.no_commands')}`;
-    }
+    const commandList = commandFiles.map((file) => {
+        const command = require(path.join(folderPath, file));
+        const description = interaction.t(`commands.${command.data.name}.desc`, { returnObjects: true });
+        const textDesc = typeof description === 'string' ? description : (command.data.description || interaction.t('commands.help.no_description'));
+        return `/${command.data.name} : ${textDesc}`;
+    }).join('\n');
 
-    const commandFiles = fs.readdirSync(folderPath)
-        .filter((file) => file.endsWith('.js'))
-        .sort((a, b) => a.localeCompare(b));
+    embed.addFields({
+        name: '\u200B',
+        value: `\`\`\`${commandList || interaction.t('commands.help.no_commands')}\`\`\``,
+    });
 
-    const commandList = commandFiles
-        .map((file) => {
-            const command = require(path.join(folderPath, file));
-            const key = `commands.${command.data.name}.desc`;
-            const translated = interaction.t(key);
-            const hasTranslation = translated && translated !== key;
-            const description = hasTranslation
-                ? translated
-                : (command.data.description || interaction.t('commands.help.no_description'));
-
-            return `- /${command.data.name}: ${description}`;
-        })
-        .join('\n');
-
-    return [
-        `## ${metadata.emoji} ${metadata.label}`,
-        interaction.t('commands.help.category_details', { category: metadata.label }),
-        commandList || interaction.t('commands.help.no_commands'),
-    ].join('\n\n');
+    return embed;
 }
 
 function getCategoryMetadata(category, interaction) {
@@ -226,8 +183,10 @@ function getCategoryMetadata(category, interaction) {
 
     const categoryMap = {
         'home': { emoji: emojis.categories.home },
+        'admin': { emoji: emojis.categories.folder },
         'AIcore': { emoji: emojis.categories.aiCore },
         'Core': { emoji: emojis.categories.core },
+        'core': { emoji: emojis.categories.core },
         'moderation': { emoji: emojis.categories.moderation },
         'economy': { emoji: emojis.categories.economy },
         'social': { emoji: emojis.categories.social },
