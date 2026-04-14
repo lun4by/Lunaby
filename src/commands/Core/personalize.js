@@ -2,8 +2,6 @@ const {
     SlashCommandBuilder,
     EmbedBuilder,
     ActionRowBuilder,
-    StringSelectMenuBuilder,
-    StringSelectMenuOptionBuilder,
     ModalBuilder,
     TextInputBuilder,
     TextInputStyle,
@@ -18,12 +16,22 @@ const emojis = require('../../config/emojis.js');
 const logger = require('../../utils/core/logger.js');
 const { COLORS } = require('../../utils/discord/embedUtils.js');
 
-const MENU_OPTIONS = [
-    { value: 'personal_info', labelKey: 'commands.personalize.menu_info', descriptionKey: 'commands.personalize.menu_info_desc', emoji: emojis.personalize.info },
-    { value: 'toggle_search', labelKey: 'commands.personalize.menu_search', descriptionKey: 'commands.personalize.menu_search_desc', emoji: emojis.personalize.search },
-    { value: 'toggle_memory', labelKey: 'commands.personalize.menu_memory', descriptionKey: 'commands.personalize.menu_memory_desc', emoji: emojis.personalize.memory },
-    { value: 'manage', labelKey: 'commands.personalize.menu_manage', descriptionKey: 'commands.personalize.menu_manage_desc', emoji: emojis.personalize.manage },
-    { value: 'clear', labelKey: 'commands.personalize.menu_clear', descriptionKey: 'commands.personalize.menu_clear_desc', emoji: emojis.personalize.clear },
+function isPrivacyEnabled(value) {
+    if (value === false || value === 0) return false;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === 'false' || normalized === '0' || normalized === 'off' || normalized === 'no') {
+            return false;
+        }
+    }
+    return true;
+}
+
+const ACTION_BUTTONS = [
+    { customId: 'personalize_personal_info', labelKey: 'commands.personalize.menu_info', emoji: emojis.personalize.info, style: ButtonStyle.Secondary },
+    { customId: 'personalize_toggle_search', labelKey: 'commands.personalize.menu_search', emoji: emojis.personalize.search, style: ButtonStyle.Secondary },
+    { customId: 'personalize_toggle_memory', labelKey: 'commands.personalize.menu_memory', emoji: emojis.personalize.memory, style: ButtonStyle.Secondary },
+    { customId: 'personalize_clear', labelKey: 'commands.personalize.menu_clear', emoji: emojis.personalize.clear, style: ButtonStyle.Danger },
 ];
 
 module.exports = {
@@ -39,11 +47,11 @@ module.exports = {
         const memory = await MemoryService.getUserMemory(userId);
 
         const mainEmbed = buildMainEmbed(memory, interaction);
-        const row = buildSelectMenuRow(interaction);
+        const rows = buildActionButtonRows(interaction);
 
         await interaction.reply({
             embeds: [mainEmbed],
-            components: [row],
+            components: rows,
             ephemeral: true,
         });
 
@@ -62,12 +70,8 @@ module.exports = {
             }
 
             try {
-                if (i.isStringSelectMenu()) {
-                    await handleMenuSelection(i, userId, interaction);
-                } else if (i.isButton()) {
+                if (i.isButton()) {
                     await handleButtonClick(i, userId, interaction);
-                } else if (i.isModalSubmit()) {
-                    await handleModalSubmit(i, userId, interaction);
                 }
             } catch (error) {
                 logger.error('personalize', 'Error handling interaction:', error);
@@ -82,14 +86,7 @@ module.exports = {
 
         collector.on('end', async () => {
             try {
-                const disabledRow = new ActionRowBuilder().addComponents(
-                    new StringSelectMenuBuilder()
-                        .setCustomId('personalize-select')
-                        .setPlaceholder(interaction.t('commands.personalize.menu_expired'))
-                        .setDisabled(true)
-                        .addOptions(new StringSelectMenuOptionBuilder().setLabel(interaction.t('commands.personalize.menu_expired_label')).setValue('expired'))
-                );
-                await interaction.editReply({ components: [disabledRow] });
+                await interaction.editReply({ components: buildActionButtonRows(interaction, true) });
             } catch { }
         });
     },
@@ -98,8 +95,8 @@ module.exports = {
 function buildMainEmbed(memory, interaction) {
     const occupation = memory?.personalInfo?.occupation || interaction.t('commands.personalize.not_set');
     const instructions = memory?.personalInfo?.customInstructions || interaction.t('commands.personalize.not_set');
-    const searchHistory = memory?.privacy?.allowSearchHistoryReference !== false;
-    const savedMemory = memory?.privacy?.allowMemoryStorage !== false;
+    const searchHistory = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
+    const savedMemory = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
 
     return new EmbedBuilder()
         .setColor(COLORS.LUNABY)
@@ -115,39 +112,21 @@ function buildMainEmbed(memory, interaction) {
         .setTimestamp();
 }
 
-function buildSelectMenuRow(interaction) {
-    const select = new StringSelectMenuBuilder()
-        .setCustomId('personalize-select')
-        .setPlaceholder(interaction.t('commands.personalize.select_ph'));
+function buildActionButtonRows(interaction, disabled = false) {
+    const row = new ActionRowBuilder();
 
-    for (const opt of MENU_OPTIONS) {
-        select.addOptions(
-            new StringSelectMenuOptionBuilder()
-                .setLabel(interaction.t(opt.labelKey))
-                .setDescription(interaction.t(opt.descriptionKey))
-                .setValue(opt.value)
-                .setEmoji(opt.emoji)
+    for (const button of ACTION_BUTTONS) {
+        row.addComponents(
+            new ButtonBuilder()
+                .setCustomId(button.customId)
+                .setLabel(interaction.t(button.labelKey))
+                .setEmoji(button.emoji)
+                .setStyle(button.style)
+                .setDisabled(disabled)
         );
     }
 
-    return new ActionRowBuilder().addComponents(select);
-}
-
-async function handleMenuSelection(i, userId, interaction) {
-    const selected = i.values[0];
-
-    switch (selected) {
-        case 'personal_info':
-            return showPersonalInfoModal(i, userId, interaction);
-        case 'toggle_search':
-            return handleToggleSearch(i, userId, interaction);
-        case 'toggle_memory':
-            return handleToggleMemory(i, userId, interaction);
-        case 'manage':
-            return handleManageMemories(i, userId, interaction);
-        case 'clear':
-            return handleClear(i, userId, interaction);
-    }
+    return [row];
 }
 
 async function showPersonalInfoModal(i, userId, interaction) {
@@ -201,17 +180,27 @@ async function showPersonalInfoModal(i, userId, interaction) {
         const updatedMemory = await MemoryService.getUserMemory(userId);
         await modalInteraction.update({
             embeds: [buildMainEmbed(updatedMemory, interaction)],
-            components: [buildSelectMenuRow(interaction)],
+            components: buildActionButtonRows(interaction),
         });
     } catch { }
 }
 
 async function handleToggleSearch(i, userId, interaction) {
     const memory = await MemoryService.getUserMemory(userId);
-    const current = memory?.privacy?.allowSearchHistoryReference !== false;
+    const current = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
     const newValue = !current;
 
-    await MemoryService.updatePrivacySettings(userId, { allowSearchHistoryReference: newValue });
+    const updated = await MemoryService.updatePrivacySettings(userId, { allowSearchHistoryReference: newValue });
+    if (!updated) {
+        const latestMemory = await MemoryService.getUserMemory(userId);
+        return i.update({
+            embeds: [
+                buildMainEmbed(latestMemory, interaction),
+                new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.error_occurred')).setTimestamp(),
+            ],
+            components: buildActionButtonRows(interaction),
+        });
+    }
 
     const updatedMemory = await MemoryService.getUserMemory(userId);
     const statusText = newValue
@@ -225,7 +214,7 @@ async function handleToggleSearch(i, userId, interaction) {
 
     await i.update({
         embeds: [buildMainEmbed(updatedMemory, interaction), embed],
-        components: [buildSelectMenuRow(interaction)],
+        components: buildActionButtonRows(interaction),
     });
 
     autoRemoveNotification(i, updatedMemory, interaction);
@@ -233,10 +222,20 @@ async function handleToggleSearch(i, userId, interaction) {
 
 async function handleToggleMemory(i, userId, interaction) {
     const memory = await MemoryService.getUserMemory(userId);
-    const current = memory?.privacy?.allowMemoryStorage !== false;
+    const current = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
     const newValue = !current;
 
-    await MemoryService.updatePrivacySettings(userId, { allowMemoryStorage: newValue });
+    const updated = await MemoryService.updatePrivacySettings(userId, { allowMemoryStorage: newValue });
+    if (!updated) {
+        const latestMemory = await MemoryService.getUserMemory(userId);
+        return i.update({
+            embeds: [
+                buildMainEmbed(latestMemory, interaction),
+                new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.error_occurred')).setTimestamp(),
+            ],
+            components: buildActionButtonRows(interaction),
+        });
+    }
 
     const updatedMemory = await MemoryService.getUserMemory(userId);
     const statusText = newValue
@@ -250,74 +249,10 @@ async function handleToggleMemory(i, userId, interaction) {
 
     await i.update({
         embeds: [buildMainEmbed(updatedMemory, interaction), embed],
-        components: [buildSelectMenuRow(interaction)],
+        components: buildActionButtonRows(interaction),
     });
 
     autoRemoveNotification(i, updatedMemory, interaction);
-}
-
-async function handleManageMemories(i, userId, interaction) {
-    const summary = await MemoryService.getMemorySummary(userId);
-
-    if (!summary) {
-        return i.update({
-            embeds: [buildMainEmbed(await MemoryService.getUserMemory(userId), interaction),
-            new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.manage_error'))],
-            components: [buildSelectMenuRow(interaction)],
-        });
-    }
-
-    const embed = new EmbedBuilder()
-        .setColor(0x3498DB)
-        .setTitle(interaction.t('commands.personalize.manage_title'))
-        .setTimestamp();
-
-    const personalInfo = [];
-    if (summary.personalInfo.name) personalInfo.push(interaction.t('commands.personalize.manage_pi_name', { value: summary.personalInfo.name }));
-    if (summary.personalInfo.nickname) personalInfo.push(interaction.t('commands.personalize.manage_pi_nickname', { value: summary.personalInfo.nickname }));
-    if (summary.personalInfo.age) personalInfo.push(interaction.t('commands.personalize.manage_pi_age', { value: summary.personalInfo.age }));
-    if (summary.personalInfo.location) personalInfo.push(interaction.t('commands.personalize.manage_pi_location', { value: summary.personalInfo.location }));
-    if (summary.personalInfo.occupation) personalInfo.push(interaction.t('commands.personalize.manage_pi_occupation', { value: summary.personalInfo.occupation }));
-
-    if (personalInfo.length > 0) {
-        embed.addFields({ name: interaction.t('commands.personalize.manage_field_pi'), value: personalInfo.join('\n'), inline: false });
-    }
-
-    const preferences = [];
-    if (summary.preferences.likes.length > 0) preferences.push(interaction.t('commands.personalize.manage_pref_likes', { value: summary.preferences.likes.slice(0, 5).join(', ') }));
-    if (summary.preferences.hobbies.length > 0) preferences.push(interaction.t('commands.personalize.manage_pref_hobbies', { value: summary.preferences.hobbies.slice(0, 5).join(', ') }));
-    if (summary.preferences.topics.length > 0) preferences.push(interaction.t('commands.personalize.manage_pref_topics', { value: summary.preferences.topics.slice(0, 5).join(', ') }));
-
-    if (preferences.length > 0) {
-        embed.addFields({ name: interaction.t('commands.personalize.manage_field_pref'), value: preferences.join('\n'), inline: false });
-    }
-
-    if (summary.importantMemories.length > 0) {
-        const memoryList = summary.importantMemories
-            .slice(0, 5)
-            .map((mem, idx) => `${idx + 1}. ${mem.content} (${emojis.personalize.importance} ${mem.importance}/10)`)
-            .join('\n');
-        embed.addFields({ name: interaction.t('commands.personalize.manage_field_imp'), value: memoryList, inline: false });
-    }
-
-    embed.addFields({
-        name: interaction.t('commands.personalize.manage_stats'),
-        value: [
-            interaction.t('commands.personalize.manage_stats_total', { total: summary.totalMemories }),
-            interaction.t('commands.personalize.manage_stats_msgs', { msgs: summary.interactionStats.totalMessages }),
-            interaction.t('commands.personalize.manage_stats_first', { time: Math.floor(new Date(summary.interactionStats.firstInteraction).getTime() / 1000) }),
-        ].join('\n'),
-        inline: false,
-    });
-
-    if (summary.totalMemories === 0 && personalInfo.length === 0 && preferences.length === 0) {
-        embed.setDescription(interaction.t('commands.personalize.manage_no_data'));
-    }
-
-    await i.update({
-        embeds: [buildMainEmbed(await MemoryService.getUserMemory(userId), interaction), embed],
-        components: [buildSelectMenuRow(interaction)],
-    });
 }
 
 async function handleClear(i, userId, interaction) {
@@ -345,6 +280,22 @@ async function handleClear(i, userId, interaction) {
 }
 
 async function handleButtonClick(i, userId, interaction) {
+    if (i.customId === 'personalize_personal_info') {
+        return showPersonalInfoModal(i, userId, interaction);
+    }
+
+    if (i.customId === 'personalize_toggle_search') {
+        return handleToggleSearch(i, userId, interaction);
+    }
+
+    if (i.customId === 'personalize_toggle_memory') {
+        return handleToggleMemory(i, userId, interaction);
+    }
+
+    if (i.customId === 'personalize_clear') {
+        return handleClear(i, userId, interaction);
+    }
+
     if (i.customId === 'personalize_clear_confirm') {
         try {
             const memoryCleared = await MemoryService.clearUserMemories(userId);
@@ -363,7 +314,7 @@ async function handleButtonClick(i, userId, interaction) {
             const updatedMemory = await MemoryService.getUserMemory(userId);
             await i.update({
                 embeds: [buildMainEmbed(updatedMemory, interaction), successEmbed],
-                components: [buildSelectMenuRow(interaction)],
+                components: buildActionButtonRows(interaction),
             });
 
             autoRemoveNotification(i, updatedMemory, interaction);
@@ -373,14 +324,14 @@ async function handleButtonClick(i, userId, interaction) {
             logger.error('personalize', 'Error clearing data:', error);
             await i.update({
                 embeds: [new EmbedBuilder().setColor(0xE74C3C).setDescription(interaction.t('commands.personalize.clear_error'))],
-                components: [buildSelectMenuRow(interaction)],
+                components: buildActionButtonRows(interaction),
             });
         }
     } else if (i.customId === 'personalize_clear_cancel') {
         const updatedMemory = await MemoryService.getUserMemory(userId);
         await i.update({
             embeds: [buildMainEmbed(updatedMemory, interaction)],
-            components: [buildSelectMenuRow(interaction)],
+            components: buildActionButtonRows(interaction),
         });
     }
 }
@@ -390,7 +341,7 @@ function autoRemoveNotification(i, memory, interaction) {
         try {
             await i.editReply({
                 embeds: [buildMainEmbed(memory, interaction)],
-                components: [buildSelectMenuRow(interaction)],
+                components: buildActionButtonRows(interaction),
             });
         } catch { }
     }, 5000);

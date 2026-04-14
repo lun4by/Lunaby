@@ -8,6 +8,7 @@ const conversationManager = require('../conversationManager');
 const prompts = require('../../config/prompts');
 const ErrorHandler = require('../../utils/core/ErrorHandler');
 const QuotaService = require('../../services/user/QuotaService');
+const MemoryService = require('../../services/ai/MemoryService');
 
 function formatCodeResponse(text) {
   const { LANGUAGE_DETECTION_PATTERNS } = require('../../config/patterns');
@@ -43,11 +44,12 @@ async function handleCodeRequest(message, content, ConversationService) {
     let messages = conversationManager.getHistory(conversationId);
 
     const isNewConversation = messages.length <= 2;
+    const memoryAwarePrompt = await ConversationService.enrichPromptWithMemory(promptContent, conversationId);
     const enhancedPrompt = [
       prompts.chat.responseStyle,
       isNewConversation ? prompts.chat.newConversation : prompts.chat.ongoingConversation,
       prompts.chat.generalInstructions,
-      `Code request: ${promptContent}`,
+      `Code request: ${memoryAwarePrompt}`,
     ].join('\n');
 
     await conversationManager.addMessage(conversationId, 'user', enhancedPrompt);
@@ -61,6 +63,8 @@ async function handleCodeRequest(message, content, ConversationService) {
 
     const response = await sendStreamingMessage(message.channel, validMessages);
     await conversationManager.addMessage(conversationId, 'assistant', response);
+    await MemoryService.extractMemoryFromConversation(conversationId, promptContent, response);
+    await MemoryService.updateInteractionStats(conversationId);
     await QuotaService.recordMessageUsage(globalUserId, 1);
 
   } catch (streamError) {
