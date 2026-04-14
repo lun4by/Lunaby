@@ -652,6 +652,8 @@
       "field_memory": "{{_emoji.locale.memory}} Lưu trữ trí nhớ",
       "status_on": "Bật",
       "status_off": "Tắt",
+      "toggle_btn_on": "Bật",
+      "toggle_btn_off": "Tắt",
       "modal_title_info": "Personal info & Instructions",
       "modal_occupation_label": "{{_emoji.locale.pencil}} Nghề nghiệp",
       "modal_occupation_ph": "Engineer, student, designer...",

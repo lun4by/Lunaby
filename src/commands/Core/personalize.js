@@ -151,6 +151,12 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
     const { disabled = false, notice = null } = options;
     const searchEnabled = isPrivacyEnabled(memory?.privacy?.allowSearchHistoryReference);
     const memoryEnabled = isPrivacyEnabled(memory?.privacy?.allowMemoryStorage);
+    const searchToggleLabel = interaction.t(
+        searchEnabled ? 'commands.personalize.toggle_btn_on' : 'commands.personalize.toggle_btn_off'
+    );
+    const memoryToggleLabel = interaction.t(
+        memoryEnabled ? 'commands.personalize.toggle_btn_on' : 'commands.personalize.toggle_btn_off'
+    );
     const components = [];
 
     const mainContainer = new ContainerBuilder()
@@ -181,7 +187,7 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                 .setButtonAccessory((button) =>
                     button
                         .setCustomId('personalize_toggle_search')
-                        .setLabel(interaction.t('commands.personalize.menu_search'))
+                        .setLabel(searchToggleLabel)
                         .setEmoji(toButtonEmoji(emojis.personalize.search))
                         .setStyle(searchEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
                         .setDisabled(disabled)
@@ -195,7 +201,7 @@ function buildPersonalizeComponents(interaction, memory, options = {}) {
                 .setButtonAccessory((button) =>
                     button
                         .setCustomId('personalize_toggle_memory')
-                        .setLabel(interaction.t('commands.personalize.menu_memory'))
+                        .setLabel(memoryToggleLabel)
                         .setEmoji(toButtonEmoji(emojis.personalize.memory))
                         .setStyle(memoryEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
                         .setDisabled(disabled)
@@ -323,20 +329,9 @@ async function handleToggleSearch(i, userId, interaction) {
     }
 
     const updatedMemory = await MemoryService.getUserMemory(userId);
-    const statusText = newValue
-        ? `${emojis.statusOn} ${interaction.t('commands.personalize.search_on')}`
-        : `${emojis.statusOff} ${interaction.t('commands.personalize.search_off')}`;
-
     await i.update({
-        components: buildPersonalizeComponents(interaction, updatedMemory, {
-            notice: {
-                color: newValue ? 0x2ECC71 : 0xE74C3C,
-                text: statusText,
-            },
-        }),
+        components: buildPersonalizeComponents(interaction, updatedMemory),
     });
-
-    autoRemoveNotification(i, updatedMemory, interaction);
 }
 
 async function handleToggleMemory(i, userId, interaction) {
@@ -358,20 +353,9 @@ async function handleToggleMemory(i, userId, interaction) {
     }
 
     const updatedMemory = await MemoryService.getUserMemory(userId);
-    const statusText = newValue
-        ? `${emojis.statusOn} ${interaction.t('commands.personalize.memory_on')}`
-        : `${emojis.statusOff} ${interaction.t('commands.personalize.memory_off')}`;
-
     await i.update({
-        components: buildPersonalizeComponents(interaction, updatedMemory, {
-            notice: {
-                color: newValue ? 0x2ECC71 : 0xE74C3C,
-                text: statusText,
-            },
-        }),
+        components: buildPersonalizeComponents(interaction, updatedMemory),
     });
-
-    autoRemoveNotification(i, updatedMemory, interaction);
 }
 
 async function handleClear(i, userId, interaction) {

@@ -652,6 +652,8 @@
       "field_memory": "{{_emoji.locale.memory}} Saved memories",
       "status_on": "Enabled",
       "status_off": "Disabled",
+      "toggle_btn_on": "On",
+      "toggle_btn_off": "Off",
       "modal_title_info": "Personal info & Instructions",
       "modal_occupation_label": "{{_emoji.locale.pencil}} Occupation",
       "modal_occupation_ph": "Engineer, student, designer...",
