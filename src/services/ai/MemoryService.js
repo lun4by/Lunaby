@@ -5,8 +5,11 @@ const AICore = require('./AICore.js');
 const prompts = require('../../config/prompts.js');
 const SecurityUtils = require('../../utils/security/SecurityUtils.js');
 const CryptoUtils = require('../../utils/security/CryptoUtils.js');
-
-const CACHE_EXPIRY = 30 * 60 * 1000;
+const {
+  MEMORY_CACHE_EXPIRY_MS,
+  MEMORY_EXTRACTION_MAX_TOKENS,
+  MEMORY_EXTRACTION_TEMPERATURE,
+} = require('../../config/constants.js');
 
 function coerceBoolean(value, fallback = undefined) {
   if (typeof value === 'boolean') return value;
@@ -107,16 +110,24 @@ class MemoryService {
     if (memory.personalInfo) {
       for (const field of this.sensitiveFields) {
         if (memory.personalInfo[field]) {
-          memory.personalInfo[field] = CryptoUtils.decrypt(memory.personalInfo[field]);
+          try {
+            memory.personalInfo[field] = CryptoUtils.decrypt(memory.personalInfo[field]);
+          } catch (err) {
+            logger.warn('memory_service', `Failed to decrypt personalInfo.${field}, keeping raw value: ${err.message}`);
+          }
         }
       }
     }
 
     if (Array.isArray(memory.memories)) {
-      memory.memories = memory.memories.map(m => ({
-        ...m,
-        content: CryptoUtils.decrypt(m.content)
-      }));
+      memory.memories = memory.memories.map(m => {
+        try {
+          return { ...m, content: CryptoUtils.decrypt(m.content) };
+        } catch (err) {
+          logger.warn('memory_service', `Failed to decrypt memory ${m.id}: ${err.message}`);
+          return m;
+        }
+      });
     }
 
     return memory;
@@ -182,7 +193,7 @@ class MemoryService {
   async getUserMemory(userId) {
     try {
       const cached = this.memoryCache.get(userId);
-      if (cached && (Date.now() - cached.timestamp < CACHE_EXPIRY)) {
+      if (cached && (Date.now() - cached.timestamp < MEMORY_CACHE_EXPIRY_MS)) {
         return cached.data;
       }
 
@@ -349,7 +360,7 @@ class MemoryService {
       const result = await AICore.processChatCompletion([
         { role: 'system', content: prompts.system.main },
         { role: 'user', content: extractionPrompt }
-      ], { max_tokens: 500, temperature: 0.3 });
+      ], { max_tokens: MEMORY_EXTRACTION_MAX_TOKENS, temperature: MEMORY_EXTRACTION_TEMPERATURE });
 
       let extracted;
       try {

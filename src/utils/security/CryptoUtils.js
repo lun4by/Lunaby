@@ -40,25 +40,13 @@ class CryptoUtils {
   }
 
   decrypt(text) {
-    if (!text || !text.includes(':')) return text;
+    if (!text) return text;
+    if (!this.isEncrypted(text)) return text;
 
     this.ensureEncryptionReady();
 
-    const parts = text.split(':');
-    if (parts.length !== 2) {
-      throw new Error('Encrypted payload has an invalid format.');
-    }
-
-    const [ivHex, encryptedHex] = parts;
-    if (!/^[0-9a-fA-F]+$/.test(ivHex) || !/^[0-9a-fA-F]+$/.test(encryptedHex)) {
-      throw new Error('Encrypted payload contains non-hex characters.');
-    }
-
+    const [ivHex, encryptedHex] = text.split(':');
     const iv = Buffer.from(ivHex, 'hex');
-    if (iv.length !== IV_LENGTH) {
-      throw new Error('Encrypted payload has an invalid IV.');
-    }
-
     const encryptedText = Buffer.from(encryptedHex, 'hex');
     const decipher = crypto.createDecipheriv(ALGORITHM, encryptionKey, iv);
     let decrypted = decipher.update(encryptedText);

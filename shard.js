@@ -30,3 +30,18 @@ manager.on('shardCreate', (shard) => {
 manager.spawn().catch((error) => {
     logger.error('shard', 'Không thể khởi tạo shards:', error);
 });
+
+const API_URL = process.env.Lunaby_BASE + '/health';
+
+setInterval(async () => {
+    try {
+        const response = await fetch(API_URL);
+        if (response.ok) {
+            logger.info("ping", "Pinged API to keep it awake!");
+        } else {
+            logger.warn("ping", `API returned status: ${response.status}`);
+        }
+    } catch (error) {
+        logger.error("ping", "Failed to ping API:", error.message);
+    }
+}, 20 * 60 * 1000);
