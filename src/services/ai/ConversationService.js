@@ -225,10 +225,20 @@ class ConversationService {
   }
 
   async buildEnhancedPrompt(prompt, conversationHistory) {
-    return `
-      ${prompts.chat.instructions}
-      ${prompt}
-    `;
+    const historyState = Array.isArray(conversationHistory) && conversationHistory.length > 1
+      ? prompts.chat.ongoingConversation
+      : prompts.chat.newConversation;
+
+    return [
+      "[Response guidance]",
+      prompts.chat.instructions,
+      prompts.chat.responseStyle,
+      historyState,
+      prompts.chat.generalInstructions,
+      "[/Response guidance]",
+      "",
+      prompt.trim(),
+    ].join("\n");
   }
 
   async loadAndPrepareHistory(userId, systemPrompt, enhancedPrompt) {
@@ -259,14 +269,19 @@ class ConversationService {
   }
 
   async callAIWithTimeout(validMessages, config) {
+    let timeoutId;
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("AICore timeout after 25 seconds")), AI_TIMEOUT_MS);
+      timeoutId = setTimeout(() => reject(new Error(`AICore timeout after ${AI_TIMEOUT_MS}ms`)), AI_TIMEOUT_MS);
     });
 
-    return await Promise.race([
-      AICore.processChatCompletion(validMessages, config),
-      timeoutPromise
-    ]);
+    try {
+      return await Promise.race([
+        AICore.processChatCompletion(validMessages, config),
+        timeoutPromise,
+      ]);
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   async handleCompletionResult(userId, prompt, result) {
@@ -302,7 +317,7 @@ class ConversationService {
       const validMessages = this.validateAndCleanMessages(messages);
 
       const config = {
-        model: additionalConfig.model || AICore.CoreModel,
+        model: additionalConfig.model || DEFAULT_MODEL,
         max_tokens: additionalConfig.max_tokens || 2048,
         ...additionalConfig,
       };

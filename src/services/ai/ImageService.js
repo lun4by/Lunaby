@@ -10,17 +10,9 @@ class ImageService {
       throw error;
     }
 
-    const client = AICore.getClient();
-    if (!client) {
-      throw new Error("SDK client not initialized");
-    }
-
     let result;
     try {
-      result = await client.images.generateBuffer(prompt, {
-        aspect_ratio: options.aspect_ratio || "1:1",
-        output_format: options.output_format || "png",
-      });
+      result = await AICore.generateImage(prompt, options);
     } catch (error) {
       throw AICore.normalizeApiError(error);
     }

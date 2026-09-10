@@ -7,18 +7,52 @@ const DISCORD_CLIENT_TYPE = "discord";
 const LEGACY_MAIN_SYSTEM_PROMPT = "Your name is Lunaby, created by s4ory";
 const MODEL_RUNTIME_NOTE_REGEX = /^You are running on .+ model\.$/;
 const EMPTY_USAGE = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+const DEFAULT_MAX_TOKENS = 2048;
+const DEFAULT_LANGUAGE = "Vietnamese";
+
+function renderTemplate(template, variables = {}) {
+  if (typeof template !== "string") return "";
+
+  return template.replace(/\$\{(\w+)\}/g, (_, key) => (
+    variables[key] === undefined ? "" : String(variables[key])
+  ));
+}
+
+function buildRequestConfig(config, model) {
+  const {
+    clientType: _clientType,
+    modelType: _modelType,
+    stream: _stream,
+    max_tokens: maxTokens,
+    ...providerConfig
+  } = config;
+
+  return {
+    model,
+    max_tokens: maxTokens || DEFAULT_MAX_TOKENS,
+    ...providerConfig,
+  };
+}
 
 class AICore {
   constructor() {
-    this.systemPrompt = prompts.system.main;
+    this.systemPrompt = renderTemplate(prompts.system.main, { language: DEFAULT_LANGUAGE });
     const apiKey = process.env.LUNABY_API_KEY;
 
     if (!apiKey) {
-      logger.error("aicore", "lunaby_api_key not configured!");
+      logger.error("lunaby_api", "LUNABY_API_KEY is not configured");
     } else {
-      this.client = new Lunaby({ apiKey });
-      logger.debug("aicore", "Lunaby client initialized");
+      this.lunabyApi = new Lunaby({ apiKey });
+      logger.debug("lunaby_api", "LunabyAPI initialized");
     }
+  }
+
+  ensureApi() {
+    if (!this.lunabyApi) {
+      throw new Error("LunabyAPI chưa được khởi tạo");
+    }
+
+    return this.lunabyApi;
   }
 
   stripLegacyBaseSystemPrompt(content) {
@@ -36,7 +70,7 @@ class AICore {
 
   getClientSystemPrompt(clientType = null) {
     if (clientType === DISCORD_CLIENT_TYPE) {
-      return prompts.system.main;
+      return this.systemPrompt;
     }
 
     return null;
@@ -213,21 +247,19 @@ class AICore {
   }
 
   async processChatCompletion(messages, config = {}) {
-    if (!this.client) {
-      throw new Error("Lunaby client chưa được khởi tạo");
-    }
+    const api = this.ensureApi();
 
     const model = MODEL_MAP[config.modelType] || MODEL_MAP.default;
-    const { clientType, ...requestConfig } = config;
+    const { clientType } = config;
 
     if (config.modelType === "image") {
       try {
         const prompt = messages.find((message) => message.role === "user")?.content || "";
-        const response = await this.client.images.generate(prompt, {
-          model,
+        const response = await api.images.generate(prompt, buildRequestConfig({
+          ...config,
           aspect_ratio: config.aspect_ratio || "1:1",
           output_format: config.output_format || "png",
-        });
+        }, model));
         const payload = this.extractResponsePayload(response);
         const imageData = Array.isArray(payload.data) ? payload.data[0] : null;
 
@@ -249,11 +281,10 @@ class AICore {
 
     if (config.stream === false) {
       try {
-        const response = await this.client.chat.create(requestMessages, {
-          model,
-          max_tokens: requestConfig.max_tokens || 2048,
-          ...requestConfig,
-        });
+        const response = await api.chat.create(
+          requestMessages,
+          buildRequestConfig(config, model)
+        );
         const content = this.extractChatContent(response);
 
         if (!content) {
@@ -267,14 +298,36 @@ class AICore {
     }
 
     try {
-      const stream = await this.client.chat.createStream(requestMessages, {
-        model,
-        max_tokens: requestConfig.max_tokens || 2048,
-        ...requestConfig,
-      });
+      const stream = await api.chat.createStream(
+        requestMessages,
+        buildRequestConfig(config, model)
+      );
       const content = await stream.toContent();
 
       if (!content) {
+        throw new Error("No content received");
+      }
+
+      return { content, usage: this.extractUsage(stream) };
+    } catch (error) {
+      throw this.normalizeApiError(error);
+    }
+  }
+
+  async processChatStream(messages, config = {}, onContent = async () => {}) {
+    const api = this.ensureApi();
+
+    const model = MODEL_MAP[config.modelType] || config.model || MODEL_MAP.default;
+    const requestMessages = this.prepareMessagesForClient(messages, config.clientType);
+
+    try {
+      const stream = await api.chat.createStream(
+        requestMessages,
+        buildRequestConfig(config, model)
+      );
+      const content = await stream.process({ onContent });
+
+      if (!content || !content.trim()) {
         throw new Error("No content received");
       }
 
@@ -312,8 +365,31 @@ class AICore {
     return result.content;
   }
 
-  getClient() {
-    return this.client;
+  async generateImage(prompt, options = {}) {
+    const api = this.ensureApi();
+
+    try {
+      const result = await api.images.generateBuffer(prompt, {
+        aspect_ratio: options.aspect_ratio || "1:1",
+        output_format: options.output_format || "png",
+      });
+
+      if (!result?.buffer) {
+        throw new Error("Không nhận được hình ảnh từ LunabyAPI");
+      }
+
+      return {
+        buffer: result.buffer,
+        revisedPrompt: result.revisedPrompt || result.revised_prompt || prompt,
+        usage: result.usage || EMPTY_USAGE,
+      };
+    } catch (error) {
+      throw this.normalizeApiError(error);
+    }
+  }
+
+  get CoreModel() {
+    return MODEL_MAP.default;
   }
 }
 

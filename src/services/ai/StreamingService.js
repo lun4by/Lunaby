@@ -21,15 +21,9 @@ function splitByLength(text, maxLength) {
 }
 
 async function sendStreamingMessage(channel, messages, config = {}, replyToMessage = null) {
-    const client = AICore.getClient();
-    if (!client) throw new Error('SDK client not initialized');
-
     const validMessages = Validators.cleanMessages(messages);
     if (!validMessages.length) throw new Error('No valid messages');
-    const requestConfig = { ...config };
-    const clientType = requestConfig.clientType || 'discord';
-    delete requestConfig.clientType;
-    const requestMessages = AICore.prepareMessagesForClient(validMessages, clientType);
+    const requestConfig = { clientType: config.clientType || 'discord', ...config };
 
     let sentMessage = null;
     let isEditing = false;
@@ -67,17 +61,13 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
         let fullContent = '';
 
         try {
-            const stream = await client.chat.createStream(requestMessages, {
-                max_tokens: requestConfig.max_tokens || 2048,
-                ...requestConfig
-            });
-
-            fullContent = await stream.process({
-                onContent: async (_chunk, accumulated) => {
+            const result = await AICore.processChatStream(validMessages, requestConfig,
+                async (_chunk, accumulated) => {
                     pendingAccumulated = accumulated;
                     processDisplayQueue();
                 }
-            });
+            );
+            fullContent = result.content;
         } catch (error) {
             throw AICore.normalizeApiError(error);
         }
