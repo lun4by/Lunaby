@@ -388,9 +388,6 @@ class AICore {
     }
   }
 
-  get CoreModel() {
-    return MODEL_MAP.default;
-  }
 }
 
 module.exports = new AICore();

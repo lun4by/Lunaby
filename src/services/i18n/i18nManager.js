@@ -59,13 +59,13 @@ class I18nManager {
         const elapsed = Date.now() - startTime;
 
         if (results.totalIssues === 0) {
-            logger.info('i18n', `Verification passed in ${elapsed}ms — ${results.totalKeysScanned} keys across ${results.filesScanned} files, locale parity OK`);
+            logger.info('i18n', `Verification passed in ${elapsed}ms: ${results.totalKeysScanned} keys across ${results.filesScanned} files, locale parity OK`);
             return;
         }
 
         // Báo cáo khóa bị thiếu (được dùng trong code nhưng không có trong file locale)
         for (const item of results.missingKeys) {
-            logger.warn('i18n', `Missing key [${item.locale.toUpperCase()}]: "${item.key}" — used in ${item.files.join(', ')}`);
+            logger.warn('i18n', `Missing key [${item.locale.toUpperCase()}]: "${item.key}"; used in ${item.files.join(', ')}`);
         }
 
         // Báo cáo lệch cấu trúc locale (khóa có ở locale này nhưng thiếu ở locale kia)
@@ -73,7 +73,7 @@ class I18nManager {
             logger.warn('i18n', `Locale parity mismatch: "${item.key}" exists in ${item.presentIn.toUpperCase()} but missing in ${item.missingIn.toUpperCase()}`);
         }
 
-        logger.warn('i18n', `Verification completed in ${elapsed}ms — ${results.totalIssues} issue(s) found`);
+        logger.warn('i18n', `Verification completed in ${elapsed}ms: ${results.totalIssues} issue(s) found`);
 
         if (process.env.I18N_STRICT === 'true') {
             throw new Error(`I18n verification failed with ${results.totalIssues} issue(s).`);

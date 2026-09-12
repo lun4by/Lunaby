@@ -76,9 +76,6 @@ class MemoryService {
     }
   }
 
-  /**
-   * Mã hóa các trường nhạy cảm trong đối tượng bộ nhớ trước khi lưu.
-   */
   _encryptPII(memory) {
     if (!memory) return memory;
     const encrypted = JSON.parse(JSON.stringify(memory));
@@ -101,9 +98,6 @@ class MemoryService {
     return encrypted;
   }
 
-  /**
-   * Giải mã các trường nhạy cảm sau khi lấy dữ liệu từ database.
-   */
   _decryptPII(memory) {
     if (!memory) return memory;
 
@@ -241,7 +235,6 @@ class MemoryService {
     try {
       const collection = await this.getMemoryCollection();
 
-      // Mã hóa các trường nhạy cảm trong updates
       const encryptedUpdates = { ...updates };
       for (const key of Object.keys(encryptedUpdates)) {
         const piiField = this.sensitiveFields.find(f => key === `personalInfo.${f}` || key === f);
@@ -340,13 +333,6 @@ class MemoryService {
     }
   }
 
-  /**
-   * Phân tích cuộc hội thoại và trích xuất trí nhớ ngầm (Implicit Memory).
-   * Cơ chế hoạt động:
-   * 1. Kiểm tra quyền riêng tư (allowPersonalInfoExtraction).
-   * 2. Gửi prompt đặc chứa tin nhắn của User & AI yêu cầu trả về định dạng JSON.
-   * 3. Parse JSON an toàn và merge dữ liệu vào hồ sơ (personalInfo, preferences).
-   */
   async extractMemoryFromConversation(userId, userMessage, aiResponse) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -452,10 +438,6 @@ class MemoryService {
     }
   }
 
-  /**
-   * Đóng gói toàn bộ Context của User (thông tin cá nhân, sở thích, trí nhớ tính điểm cao)
-   * thành một chuỗi văn bản (String) để tiêm thẳng vào System Prompt trước khi gọi AI.
-   */
   async buildMemoryContext(userId, currentMessage) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -518,10 +500,6 @@ class MemoryService {
     }
   }
 
-  /**
-   * Lấy bản tóm tắt hồ sơ và trí nhớ của người dùng.
-   * Trình bày dưới dạng JSON dễ tiêu thụ cho các tính năng xem trước hoặc phân tích.
-   */
   async getMemorySummary(userId) {
     try {
       const memory = await this.getUserMemory(userId);
@@ -542,9 +520,6 @@ class MemoryService {
     }
   }
 
-  /**
-   * Xóa một mẩu trí nhớ cụ thể theo ID.
-   */
   async deleteMemory(userId, memoryId) {
     try {
       const collection = await this.getMemoryCollection();
@@ -560,9 +535,6 @@ class MemoryService {
     }
   }
 
-  /**
-   * Xóa toàn bộ hồ sơ trí nhớ của người dùng khỏi database và cache.
-   */
   async clearUserMemories(userId) {
     try {
       const collection = await this.getMemoryCollection();

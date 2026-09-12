@@ -104,5 +104,5 @@ async function sendStreamingMessage(channel, messages, config = {}, replyToMessa
     }
 }
 
-module.exports = { sendStreamingMessage, splitByLength };
+module.exports = { sendStreamingMessage };
 

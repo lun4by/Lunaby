@@ -78,7 +78,7 @@ async function sendVoteNotifications(client, vote) {
 
         if (avatarURL) embed.setThumbnail(avatarURL);
         if (isWeekend) {
-          embed.addFields({ name: `${emojis.topgg.weekend} Weekend Bonus`, value: 'Vote trong cuối tuần — x2 điểm!', inline: false });
+          embed.addFields({ name: `${emojis.topgg.weekend} Weekend Bonus`, value: 'Vote trong cuối tuần: x2 điểm!', inline: false });
         }
 
         embed.setFooter({ text: 'Top.gg Vote System' });

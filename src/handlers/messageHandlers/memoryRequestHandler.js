@@ -52,9 +52,6 @@ function splitMessageIntoChunks(text, maxLength = DISCORD_MESSAGE_MAX_LENGTH) {
 async function handleMemoryRequest(message, ConversationService, memoryRequest) {
   try {
     const conversationId = ConversationService.extractUserId(message);
-    const globalUserId = message.author.id;
-
-
 
     const memoryAnalysis = await ConversationService.getMemoryAnalysis(conversationId, memoryRequest);
 
