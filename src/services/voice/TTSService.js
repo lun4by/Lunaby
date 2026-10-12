@@ -28,11 +28,14 @@ class TTSService {
     if (session && newState.channelId !== session.channelId) this.destroy(session);
   }
 
-  stop(guildId, channelId) {
+  leave(guildId) {
     const session = this.sessions.get(guildId);
-    if (!session) throw new TTSError('no_session');
-    if (session.channelId !== channelId) throw new TTSError('different_channel');
-    this.destroy(session);
+    const connection = this.voice.getVoiceConnection(guildId);
+    if (session) this.destroy(session);
+    if (connection && connection.state.status !== this.voice.VoiceConnectionStatus.Destroyed) {
+      connection.destroy();
+    }
+    return Boolean(session || connection);
   }
 
   async speak(guild, channelId, text, onStart) {

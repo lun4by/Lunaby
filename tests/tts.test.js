@@ -116,7 +116,32 @@ function fakeVoice() {
 }
 const guild = { id: 'guild', voiceAdapterCreator: {} };
 
-test('session is reserved before awaits, blocks other channels, and stop unlocks it', async () => {
+test('leave requires Manage Server for both slash and prefix', async () => {
+  const { PermissionFlagsBits, PermissionsBitField } = require('discord.js');
+  const command = require('../src/commands/social/leave');
+  const singleton = require('../src/services/voice/TTSService');
+  const originalLeave = singleton.leave;
+  let calls = 0;
+  singleton.leave = guildId => { assert.equal(guildId, guild.id); calls++; return true; };
+  try {
+    assert.equal(command.data.toJSON().default_member_permissions, String(PermissionFlagsBits.ManageGuild));
+    for (const slash of [true, false]) {
+      let reply;
+      const interaction = { guild, member: { permissions: new PermissionsBitField() },
+        isChatInputCommand: () => slash, t: key => key, reply: async payload => { reply = payload; } };
+      await command.execute(interaction);
+      assert.equal(reply.content, 'commands.leave.permission');
+      assert.equal(calls, slash ? 0 : 1);
+      interaction.member.permissions.add(PermissionFlagsBits.ManageGuild);
+      await command.execute(interaction);
+      assert.equal(reply.content, 'commands.leave.done');
+      assert.equal(Boolean(reply.flags), slash);
+    }
+    assert.equal(calls, 2);
+  } finally { singleton.leave = originalLeave; }
+});
+
+test('session is reserved before awaits, blocks other channels, and cleanup unlocks it', async () => {
   let signal;
   const service = new TTSService({ voiceApi: fakeVoice(), provider: {
     createStream(_, abortSignal) {
@@ -127,10 +152,10 @@ test('session is reserved before awaits, blocks other channels, and stop unlocks
   const first = service.speak(guild, 'channel-a', 'hello');
   const interrupted = assert.rejects(first, { code: 'interrupted' });
   await assert.rejects(service.speak(guild, 'channel-b', 'hello'), { code: 'busy' });
-  assert.throws(() => service.stop(guild.id, 'channel-b'), { code: 'different_channel' });
-  service.stop(guild.id, 'channel-a');
+  assert.equal(service.leave(guild.id), true);
   await interrupted;
   assert.equal(service.sessions.size, 0);
+  assert.equal(service.leave(guild.id), false);
 });
 
 test('successful playback waits for notification, then leaves after idle timeout', async () => {
