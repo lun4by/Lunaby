@@ -3,7 +3,11 @@
   "version": "3.1.10-native",
   "description": "Bot Discord hỗ trợ trò chuyện AI và tạo hình ảnh, phiên bản native chỉ dùng cho model Lunaby",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
+    "test:tts": "node --test tests/tts.test.js",
     "start": "npm run bot",
     "bot": "node shard.js",
     "bot:dev": "cross-env NODE_ENV=development nodemon src/index.js",
@@ -24,6 +28,7 @@
     "url": "https://github.com/Lun4by/Lunaby.git"
   },
   "dependencies": {
+    "@discordjs/voice": "^0.19.2",
     "@gradio/client": "^2.1.0",
     "@top-gg/sdk": "^3.1.6",
     "discord.js": "^14.26.2",
@@ -34,6 +39,7 @@
     "lunaby-sdk": "^2.1.1",
     "mariadb": "^3.5.2",
     "mongodb": "^7.1.1",
+    "opusscript": "^0.1.1",
     "topgg-autoposter": "^2.0.2"
   },
   "devDependencies": {

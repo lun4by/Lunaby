@@ -15,6 +15,32 @@
     "levelup_congrats": "{{_emoji.locale.partyPopper}} Congratulations {{user}}! You just reached level **{{level}}**!"
   },
   "commands": {
+    "tts": {
+      "playing": "Reading aloud in {{channel}}.",
+      "truncated": "The speech stream was cut short. Playback has stopped.",
+      "done": "Finished reading!",
+      "guild_only": "This command is only available in servers.",
+      "error": "Unable to generate or play speech. Please try again later.",
+      "invalid_audio": "VieNeu returned an unsupported audio format.",
+      "different_channel": "Join the TTS session voice channel to stop the bot.",
+      "permissions": "The bot needs View Channel, Connect, and Speak permissions in your voice channel.",
+      "voice_only": "TTS supports regular voice channels only, not Stage channels.",
+      "too_long": "Please enter no more than 150 characters.",
+      "stopped": "Stopped TTS and left the voice channel.",
+      "api_error": "VieNeu cannot generate speech right now. Please try again later.",
+      "join_voice": "Join a voice channel to use this command.",
+      "intent_required": "Enable GuildVoiceStates in gatewayIntents.json and restart the bot.",
+      "rate_limit": "VieNeu is rate limiting requests. Please try again later.",
+      "not_configured": "VIENEU_API_KEY has not been configured.",
+      "busy": "Someone is already using TTS in this server. Please wait until playback finishes.",
+      "channel_full": "The voice channel is full; the bot cannot join.",
+      "api_access": "The VieNeu API key is invalid or lacks access/quota.",
+      "empty": "Please enter some text to read.",
+      "empty_audio": "VieNeu did not generate audio for this text.",
+      "playback_error": "Unable to play audio in the voice channel.",
+      "interrupted": "TTS stopped after a disconnect, stop command, or timeout.",
+      "no_session": "There is no active TTS session in this server."
+    },
     "moderation_common": {
       "datetime_locale": "en-US",
       "no_reason": "No specific reason",

@@ -1,5 +1,6 @@
 const { Events } = require('discord.js');
 const logger = require('../utils/core/logger.js');
+const tts = require('../services/voice/TTSService');
 const {
   activeVoiceChannels,
   cleanupZombieChannels,
@@ -11,6 +12,7 @@ const {
 function setupVoiceStateEvent(client) {
   client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
     try {
+      tts.handleVoiceStateUpdate(oldState, newState);
       await processVoiceStateUpdate(oldState, newState);
     } catch (error) {
       logger.error('voice_toggle', 'Error handling voice state update:', error);

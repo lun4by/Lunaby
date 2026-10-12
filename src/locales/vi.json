@@ -15,6 +15,32 @@
     "levelup_congrats": "{{_emoji.locale.partyPopper}} Chúc mừng {{user}}! Bạn vừa đạt cấp **{{level}}**!"
   },
   "commands": {
+    "tts": {
+      "playing": "Đang đọc trong {{channel}}.",
+      "truncated": "Luồng giọng đọc bị ngắt giữa chừng. Bot đã dừng phát.",
+      "done": "Đã đọc xong!",
+      "guild_only": "Lệnh này chỉ dùng trong server.",
+      "error": "Có lỗi khi tạo hoặc phát giọng đọc. Vui lòng thử lại sau.",
+      "invalid_audio": "VieNeu trả về định dạng audio không hợp lệ.",
+      "different_channel": "Bạn phải ở cùng kênh voice với phiên TTS để dừng bot.",
+      "permissions": "Bot cần quyền Xem kênh, Kết nối và Nói trong kênh voice của bạn.",
+      "voice_only": "TTS chỉ hỗ trợ kênh voice thông thường, chưa hỗ trợ Stage.",
+      "too_long": "Vui lòng nhập tối đa 150 ký tự.",
+      "stopped": "Đã dừng TTS và rời kênh voice.",
+      "api_error": "VieNeu chưa thể tạo giọng đọc. Vui lòng thử lại sau.",
+      "join_voice": "Bạn phải vào kênh voice để sử dụng lệnh này!",
+      "intent_required": "Cần bật GuildVoiceStates trong gatewayIntents.json và khởi động lại bot.",
+      "rate_limit": "VieNeu đang giới hạn lượt gọi. Vui lòng thử lại sau.",
+      "not_configured": "Chưa cấu hình VIENEU_API_KEY cho bot.",
+      "busy": "Có người khác đang dùng TTS trong server này. Vui lòng đợi đọc xong!",
+      "channel_full": "Kênh voice đã đầy, bot không thể tham gia.",
+      "api_access": "API key VieNeu không hợp lệ hoặc không còn quyền/quota sử dụng.",
+      "empty": "Vui lòng nhập nội dung cần đọc.",
+      "empty_audio": "VieNeu không tạo được âm thanh cho nội dung này.",
+      "playback_error": "Không thể phát âm thanh trong kênh voice.",
+      "interrupted": "TTS đã dừng do bị ngắt kết nối, có lệnh dừng hoặc hết thời gian chờ.",
+      "no_session": "Server này không có phiên TTS đang hoạt động."
+    },
     "moderation_common": {
       "datetime_locale": "vi-VN",
       "no_reason": "Không có lý do cụ thể",
