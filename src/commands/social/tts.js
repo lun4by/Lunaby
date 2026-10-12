@@ -5,7 +5,7 @@ const {
   GatewayIntentBits,
   ChannelType,
 } = require('discord.js');
-const tts = require('../../services/voice/TTSService');
+const tts = require('../../services/ai/voice/TTSService');
 const config = require('../../config/tts');
 const logger = require('../../utils/core/logger');
 

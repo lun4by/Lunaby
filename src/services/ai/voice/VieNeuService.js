@@ -1,5 +1,5 @@
 const { Readable } = require('node:stream');
-const defaultConfig = require('../../config/tts');
+const defaultConfig = require('../../../config/tts');
 
 class TTSError extends Error {
   constructor(code) {

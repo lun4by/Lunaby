@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { hasMemberPermission } = require('../../utils/discord/permissionUtils');
-const tts = require('../../services/voice/TTSService');
+const tts = require('../../services/ai/voice/TTSService');
 
 module.exports = {
   data: new SlashCommandBuilder()

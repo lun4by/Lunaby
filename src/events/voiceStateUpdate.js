@@ -1,6 +1,6 @@
 const { Events } = require('discord.js');
 const logger = require('../utils/core/logger.js');
-const tts = require('../services/voice/TTSService');
+const tts = require('../services/ai/voice/TTSService');
 const {
   activeVoiceChannels,
   cleanupZombieChannels,

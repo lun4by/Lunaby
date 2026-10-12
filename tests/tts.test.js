@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { Readable } = require('node:stream');
 const { EventEmitter } = require('node:events');
-const { VieNeuService, decodeFrames, wavToStereo } = require('../src/services/voice/VieNeuService');
-const { TTSService } = require('../src/services/voice/TTSService');
+const { VieNeuService, decodeFrames, wavToStereo } = require('../src/services/ai/voice/VieNeuService');
+const { TTSService } = require('../src/services/ai/voice/TTSService');
 const config = require('../src/config/tts');
 
 function wav(samples = [100, -100], channels = 1) {
@@ -119,7 +119,7 @@ const guild = { id: 'guild', voiceAdapterCreator: {} };
 test('leave requires Manage Server for both slash and prefix', async () => {
   const { PermissionFlagsBits, PermissionsBitField } = require('discord.js');
   const command = require('../src/commands/social/leave');
-  const singleton = require('../src/services/voice/TTSService');
+  const singleton = require('../src/services/ai/voice/TTSService');
   const originalLeave = singleton.leave;
   let calls = 0;
   singleton.leave = guildId => { assert.equal(guildId, guild.id); calls++; return true; };
@@ -222,7 +222,7 @@ test('slash and prefix commands use the same voice service and preserve prefix m
   const { GatewayIntentBits, IntentsBitField, ChannelType } = require('discord.js');
   const { PseudoInteraction } = require('../src/handlers/commands/prefixCommandRuntime');
   const command = require('../src/commands/social/tts');
-  const singleton = require('../src/services/voice/TTSService');
+  const singleton = require('../src/services/ai/voice/TTSService');
   const originalSpeak = singleton.speak;
   const originalKey = process.env.VIENEU_API_KEY;
   process.env.VIENEU_API_KEY = 'test-placeholder';

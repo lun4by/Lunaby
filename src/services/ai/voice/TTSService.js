@@ -1,5 +1,5 @@
 const voice = require('@discordjs/voice');
-const config = require('../../config/tts');
+const config = require('../../../config/tts');
 const { VieNeuService, TTSError } = require('./VieNeuService');
 
 class TTSService {
