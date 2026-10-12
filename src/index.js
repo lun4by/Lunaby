@@ -15,20 +15,17 @@ const { setupVoiceStateEvent } = require("./events/voiceStateUpdate");
 const { setupGuildMemberAddEvent } = require("./events/guildMemberAdd");
 const logger = require("./utils/core/logger.js");
 const { initializeFileLogging } = require("./utils/core/logger.js");
+const gatewayIntents = require("../gatewayIntents.json");
 
 void initializeFileLogging();
 
 const client = new Client({
-	intents: [
-		GatewayIntentBits.Guilds,
-		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.MessageContent,
-		GatewayIntentBits.DirectMessages,
-		GatewayIntentBits.GuildMembers,
-		GatewayIntentBits.GuildMessageReactions,
-		GatewayIntentBits.GuildVoiceStates,
-		GatewayIntentBits.GuildPresences,
-	],
+	intents: Object.entries(gatewayIntents).map(([name, enabled]) => {
+		if (!(name in GatewayIntentBits) || typeof enabled !== "boolean") {
+			throw new Error(`Invalid gateway intent config: ${name}. Use a valid intent name and true/false.`);
+		}
+		return enabled ? GatewayIntentBits[name] : 0;
+	}).filter((intent) => intent !== 0),
 	partials: [Partials.Channel, Partials.Message, Partials.Reaction],
 });
 

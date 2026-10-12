@@ -1,0 +1,10 @@
+{
+  "Guilds": true,
+  "GuildMessages": true,
+  "MessageContent": false,
+  "DirectMessages": true,
+  "GuildMembers": false,
+  "GuildMessageReactions": true,
+  "GuildVoiceStates": true,
+  "GuildPresences": false
+}
