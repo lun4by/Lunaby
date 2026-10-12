@@ -6,6 +6,12 @@ const logger = require('../utils/core/logger.js');
 const MariaModDB = require('../services/database/MariaModDB.js');
 const { getCachedGuildSettings } = require('../utils/guild/guildLocale.js');
 const { hasChannelPermission } = require('../utils/discord/permissionUtils.js');
+const {
+  rememberGuildName,
+  resolveGuildLogName,
+  forgetGuildName,
+  shouldLogGuildMembership,
+} = require('../utils/guild/guildLogUtils');
 
 const guildCommandDeployDelayMs = 1000;
 const defaultGuildProfile = { xp: { isActive: false, exceptions: [] } };
@@ -22,6 +28,7 @@ const sendGlobalLog = async (client, message) => {
 
 
 async function storeGuildInDB(guild) {
+  rememberGuildName(guild);
   try {
     const guildSettings = await getCachedGuildSettings(guild.id);
 
@@ -116,7 +123,15 @@ function findDefaultChannel(guild) {
 }
 
 async function handleGuildLeave(guild) {
-  await sendGlobalLog(guild.client, `Bot rời khỏi guild: ${guild.name} (${guild.id})`);
+  const guildName = resolveGuildLogName(guild);
+  if (shouldLogGuildMembership(guild)) {
+    try {
+      await sendGlobalLog(guild.client, `Bot rời khỏi guild: ${guildName} (${guild.id})`);
+    } catch (error) {
+      logger.error('guild_deploy', `Error sending guild leave log for ${guildName}:`, error);
+    }
+  }
+  forgetGuildName(guild);
   try {
     await removeGuildFromDB(guild.id);
   } catch (error) {
@@ -160,7 +175,15 @@ async function deployCommandsToGuild(guildId, existingCommands = null, client = 
 }
 
 async function handleGuildJoin(guild, commands) {
-  await sendGlobalLog(guild.client, `Bot tham gia guild mới: ${guild.name} (${guild.id}) - ${guild.memberCount} members`);
+  const guildName = resolveGuildLogName(guild);
+  if (shouldLogGuildMembership(guild)) {
+    const memberCount = Number.isInteger(guild.memberCount) ? ` - ${guild.memberCount} members` : '';
+    try {
+      await sendGlobalLog(guild.client, `Bot tham gia guild mới: ${guildName} (${guild.id})${memberCount}`);
+    } catch (error) {
+      logger.error('guild_deploy', `Error sending guild join log for ${guildName}:`, error);
+    }
+  }
 
   try {
     if (!(await ensureGuildAllowed(guild))) {
