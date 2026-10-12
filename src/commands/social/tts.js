@@ -43,8 +43,6 @@ module.exports = {
     if (!interaction.client.options.intents.has(GatewayIntentBits.GuildVoiceStates)) {
       return deny('intent_required');
     }
-
-    // Preserve mentions in prefix text, the shared option parser removes user mentions.
     const text = (interaction.message
       ? interaction.args.join(' ')
       : interaction.options.getString('noidung'))?.trim();
