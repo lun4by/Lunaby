@@ -118,7 +118,7 @@ const guild = { id: 'guild', voiceAdapterCreator: {} };
 
 test('leave requires Manage Server for both slash and prefix', async () => {
   const { PermissionFlagsBits, PermissionsBitField } = require('discord.js');
-  const command = require('../src/commands/social/leave');
+  const command = require('../src/commands/voice/leave');
   const singleton = require('../src/services/ai/voice/TTSService');
   const originalLeave = singleton.leave;
   let calls = 0;
@@ -221,7 +221,7 @@ test('playback timeout aborts a stalled stream and releases the session', async 
 test('slash and prefix commands use the same voice service and preserve prefix mentions', async () => {
   const { GatewayIntentBits, IntentsBitField, ChannelType } = require('discord.js');
   const { PseudoInteraction } = require('../src/handlers/commands/prefixCommandRuntime');
-  const command = require('../src/commands/social/tts');
+  const command = require('../src/commands/voice/tts');
   const singleton = require('../src/services/ai/voice/TTSService');
   const originalSpeak = singleton.speak;
   const originalKey = process.env.VIENEU_API_KEY;
